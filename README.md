@@ -10,7 +10,7 @@ The app is a static site. Serve the folder over HTTP (the runtime loads `support
 py -m http.server 8080
 ```
 
-Then browse to `http://localhost:8080/Cubic%20PM%20System.dc.html`.
+Then browse to `http://localhost:8080/`.
 
 > Opening the file directly with `file://` will not work — the DC runtime must be served over HTTP.
 
@@ -31,7 +31,7 @@ Built out so far:
 
 | File | Purpose |
 |------|---------|
-| `Cubic PM System.dc.html` | The whole application — logic (`DCLogic`) + templates. |
+| `index.html` | The whole application — logic (`DCLogic`) + templates (a `.dc.html`-style page served as the site index). |
 | `support.js` | DC runtime. |
 | `logo-data.js` | Embedded company logo data. |
 | `Cubic_CMS_Scoping_Document_FINAL.docx` | Project scoping document. |
