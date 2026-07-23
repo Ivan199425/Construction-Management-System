@@ -1575,8 +1575,8 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
               <sc-for list="{{ contactsV.subs }}" as="c" hint-placeholder-count="3">
                 <div style="display:grid;grid-template-columns:42px 1.5fr 1.5fr 148px 1.6fr 60px;gap:10px;align-items:center;padding:10px 16px;border-bottom:1px solid #f4f6f9">
                   <div style="width:34px;height:34px;border-radius:50%;background:#fbf1e3;color:#b45309;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center">{{ c.initials }}</div>
-                  <div style="min-width:0"><div style="font-size:12.5px;font-weight:600;color:#0f1720;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.company }}</div><div style="font-size:10.5px;color:#8894a2"><span class="mono">{{ c.ref }}</span> · {{ c.typeLabel }}</div></div>
-                  <div style="font-size:11.5px;color:#4a5765;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.scope }}</div>
+                  <div style="min-width:0"><div style="font-size:12.5px;font-weight:600;color:#0f1720;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.company }}</div><div style="font-size:10.5px;color:#8894a2">{{ c.typeLabel }}</div></div>
+                  <div style="font-size:11px;color:#8894a2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="Engaged via">{{ c.engagement }}</div>
                   <div class="mono" style="font-size:11px;color:#4a5765">{{ c.phone }}</div>
                   <div style="font-size:11.5px;color:#4a5765;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.rep }}<sc-if value="{{ c.hasEmail }}" hint-placeholder-val="{{ true }}"><span style="color:#8894a2"> · {{ c.email }}</span></sc-if></div>
                   <div style="display:flex;align-items:center;justify-content:flex-end;gap:5px">
@@ -3759,11 +3759,22 @@ class Component extends DCLogic {
         onPhone: e => this.setPersonnel(i, 'phone', e.target.value), onEmail: e => this.setPersonnel(i, 'email', e.target.value),
         onDelete: () => this.deletePersonnel(i),
       }));
-      const subs = (p.commitments || []).map(cm => {
-        const v = (S.vendors || []).find(x => x.company === cm.vendor) || null;
-        return { company: cm.vendor || '', ref: cm.ref || '', typeLabel: this.typeLabel(cm.type), scope: cm.scope || '', initials: initialsOf(cm.vendor),
-          rep: v ? (v.rep || '') : '', phone: v ? (v.phone || '') : '', email: v ? (v.email || '') : '', hasContact: !!v,
-          hasEmail: !!(v && v.email), hasPhone: !!(v && v.phone), mailto: mailHref(v ? v.email : ''), tel: telHref(v ? v.phone : '') };
+      // External parties auto-extracted from THIS project's engagements (subcontracts/POs + bills), deduped, details pulled from the vendor record
+      const extMap = {};
+      const ensureExt = (v, nameFallback, typeFallback) => {
+        const k = v ? ('id:' + v.id) : ('nm:' + (nameFallback || '').toLowerCase());
+        if (!extMap[k]) extMap[k] = { company: v ? v.company : (nameFallback || ''), type: v ? v.type : typeFallback, rep: v ? (v.rep || '') : '', phone: v ? (v.phone || '') : '', email: v ? (v.email || '') : '', hasVendor: !!v, refs: [], billCount: 0, order: Object.keys(extMap).length };
+        return extMap[k];
+      };
+      (p.commitments || []).forEach(cm => { const v = (S.vendors || []).find(x => x.company === cm.vendor) || null; const e = ensureExt(v, cm.vendor, cm.type === 'purchase_order' ? 'supplier' : 'contractor'); if (cm.ref) e.refs.push(cm.ref); });
+      (p.bills || []).forEach(b => { if (!b.vendorId) return; const v = (S.vendors || []).find(x => x.id === b.vendorId) || null; if (!v) return; const e = ensureExt(v, v.company, 'supplier'); e.billCount++; });
+      const subs = Object.keys(extMap).sort((a, b) => extMap[a].order - extMap[b].order).map(k => {
+        const e = extMap[k]; const parts = [];
+        if (e.refs.length) parts.push(e.refs.join(', '));
+        if (e.billCount) parts.push(e.billCount + ' bill' + (e.billCount > 1 ? 's' : ''));
+        return { company: e.company, initials: initialsOf(e.company), typeLabel: this.vendorTypeLabel(e.type) || 'Vendor',
+          engagement: parts.join(' · ') || '—', rep: e.rep, phone: e.phone, email: e.email, hasContact: e.hasVendor,
+          hasEmail: !!e.email, hasPhone: !!e.phone, mailto: mailHref(e.email), tel: telHref(e.phone) };
       });
       const total = customers.length + reps.length + team.length + subs.length;
       contactsV = {
