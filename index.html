@@ -1535,7 +1535,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                 <div style="display:grid;grid-template-columns:36px 1fr 92px;gap:12px;align-items:center;padding:11px 16px;border-bottom:1px solid #f4f6f9" style-hover="background:#f9fafc">
                   <div style="font-size:20px">📄</div>
                   <div style="min-width:0"><div style="font-size:12.5px;font-weight:600;color:#0f1720;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.title }}</div><div style="font-size:11px;color:#8894a2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.sub }}</div></div>
-                  <div style="text-align:right"><button onClick="{{ r.onView }}" title="View online" style="border:1px solid #dbe3ee;background:#f2f6fd;color:#2b59c3;border-radius:6px;padding:5px 10px;font-size:11.5px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="border-color:#2b59c3">👁 View</button></div>
+                  <div style="text-align:right"><button onClick="{{ r.onView }}" title="Preview file" style="border:1px solid #dbe3ee;background:#f2f6fd;color:#2b59c3;border-radius:6px;padding:5px 10px;font-size:11.5px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="border-color:#2b59c3">👁 Preview</button></div>
                 </div>
               </sc-for>
             </sc-if>
@@ -1548,7 +1548,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                   <div style="display:grid;grid-template-columns:36px 1fr 92px;gap:12px;align-items:center;padding:11px 16px 11px 26px;border-bottom:1px solid #f4f6f9" style-hover="background:#f9fafc">
                     <div style="font-size:20px">📄</div>
                     <div style="min-width:0"><div style="font-size:12.5px;font-weight:600;color:#0f1720;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.title }}</div><div style="font-size:11px;color:#8894a2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.sub }}</div></div>
-                    <div style="text-align:right"><button onClick="{{ r.onView }}" title="View online" style="border:1px solid #dbe3ee;background:#f2f6fd;color:#2b59c3;border-radius:6px;padding:5px 10px;font-size:11.5px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="border-color:#2b59c3">👁 View</button></div>
+                    <div style="text-align:right"><button onClick="{{ r.onView }}" title="Preview file" style="border:1px solid #dbe3ee;background:#f2f6fd;color:#2b59c3;border-radius:6px;padding:5px 10px;font-size:11.5px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="border-color:#2b59c3">👁 Preview</button></div>
                   </div>
                 </sc-for>
               </sc-for>
@@ -1566,9 +1566,16 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                 <div style="padding:8px 16px;background:#f7f9fc;border-bottom:1px solid #eef1f4;font-size:11px;font-weight:700;letter-spacing:.3px;color:#4a5765;text-transform:uppercase">{{ g.label }} <span style="color:#a4afba;font-weight:500">· {{ g.count }}</span></div>
                 <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;padding:14px 16px">
                   <sc-for list="{{ g.items }}" as="r" hint-placeholder-count="3">
-                    <div onClick="{{ r.onView }}" style="border:1px solid #e4e8ee;border-radius:10px;overflow:hidden;cursor:pointer;background:#fff" style-hover="border-color:#2b59c3">
-                      <img src="{{ r.url }}" alt="{{ r.name }}" style="width:100%;height:110px;object-fit:cover;display:block;background:#eef1f5">
-                      <div style="padding:7px 9px"><div style="font-size:11.5px;font-weight:600;color:#0f1720;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.name }}</div><div style="font-size:10px;color:#8894a2">{{ r.source }}</div></div>
+                    <div style="border:1px solid #e4e8ee;border-radius:10px;overflow:hidden;background:#fff" style-hover="border-color:#2b59c3">
+                      <div onClick="{{ r.onView }}" title="Click to preview" style="position:relative;cursor:pointer">
+                        <img src="{{ r.url }}" alt="{{ r.name }}" style="width:100%;height:110px;object-fit:cover;display:block;background:#eef1f5">
+                        <span style="position:absolute;top:6px;right:6px;background:rgba(15,23,32,.6);color:#fff;border-radius:6px;padding:2px 7px;font-size:10px;font-weight:600">🔍 Preview</span>
+                      </div>
+                      <div style="padding:7px 9px">
+                        <div style="font-size:11.5px;font-weight:600;color:#0f1720;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.name }}</div>
+                        <div style="font-size:10px;color:#8894a2;margin-bottom:5px">{{ r.source }}</div>
+                        <input value="{{ r.desc }}" onInput="{{ r.onDesc }}" placeholder="＋ Add a description…" style="width:100%;border:1px solid #eef1f4;border-radius:6px;padding:5px 7px;font-size:11px;font-family:inherit;color:#4a5765;background:#fafbfc" style-focus="border-color:#2b59c3;outline:none;background:#fff">
+                      </div>
                     </div>
                   </sc-for>
                 </div>
@@ -2914,7 +2921,7 @@ class Component extends DCLogic {
       const reader = new FileReader();
       reader.onload = ev => {
         const url = ev.target.result;
-        const photo = { id: 'ph' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), name: file.name || 'photo', url, at: this.todayLocal() };
+        const photo = { id: 'ph' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), name: file.name || 'photo', url, at: this.todayLocal(), desc: '' };
         this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, defects: (p.defects || []).map(x => x.id === id ? { ...x, photos: [...(x.photos || []), photo] } : x) }) }));
       };
       reader.readAsDataURL(file);
@@ -3084,6 +3091,7 @@ class Component extends DCLogic {
   setPhotoGroup(v) { this.setState({ photoGroup: v }); }
   setBillSort(v) { this.setState({ billSort: v }); }
   setBillStatus(v) { this.setState({ billStatus: v }); }
+  setPhotoDesc(id, val) { this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, defects: (p.defects || []).map(d => ({ ...d, photos: (d.photos || []).map(ph => ph.id === id ? { ...ph, desc: val } : ph) })), docs: (p.docs || []).map(d => ({ ...d, attachments: (d.attachments || []).map(a => a.id === id ? { ...a, desc: val } : a) })) }) })); }
   postRfiMessage(id, dir, author, text) { if (!text || !text.trim()) return; const msg = { id: 'm' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), dir, author, text: text.trim(), at: this.todayLocal() }; this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, docs: (p.docs || []).map(d => d.id === id ? { ...d, thread: [...(d.thread || []), msg] } : d) }) })); }
   setRfiDraft(id, v) { this.setState(s => ({ rfiDraft: { ...(s.rfiDraft || {}), [id]: v } })); }
   postRfiOurNote(id) { const t = ((this.state.rfiDraft || {})[id] || '').trim(); if (!t) return; this.postRfiMessage(id, 'out', 'Cubic (PM)', t); this.setState(s => ({ rfiDraft: { ...(s.rfiDraft || {}), [id]: '' } })); }
@@ -4008,8 +4016,8 @@ class Component extends DCLogic {
       const drawGroups = Object.keys(dgMap).sort().map(k => ({ label: k, count: String(dgMap[k].length), items: dgMap[k] }));
       // PHOTOS — grouped by date period (day/week/month)
       const photos = [];
-      (p.defects || []).forEach(df => (df.photos || []).forEach(ph => photos.push({ id: ph.id, url: ph.url, name: ph.name || 'photo', source: df.ref, at: ph.at || df.raised || '', onView: () => this.openAttachment(ph) })));
-      (p.docs || []).forEach(d => (d.attachments || []).forEach(a => { if (isImg(a)) photos.push({ id: a.id, url: a.url, name: a.name || 'image', source: d.ref, at: a.at || d.date || '', onView: () => this.openAttachment(a) }); }));
+      (p.defects || []).forEach(df => (df.photos || []).forEach(ph => photos.push({ id: ph.id, url: ph.url, name: ph.name || 'photo', source: df.ref, at: ph.at || df.raised || '', desc: ph.desc || '', onView: () => this.openAttachment(ph), onDesc: e => this.setPhotoDesc(ph.id, e.target.value) })));
+      (p.docs || []).forEach(d => (d.attachments || []).forEach(a => { if (isImg(a)) photos.push({ id: a.id, url: a.url, name: a.name || 'image', source: d.ref, at: a.at || d.date || '', desc: a.desc || '', onView: () => this.openAttachment(a), onDesc: e => this.setPhotoDesc(a.id, e.target.value) }); }));
       const photoGroup = ['day', 'week', 'month'].indexOf(S.photoGroup) >= 0 ? S.photoGroup : 'day';
       const monN = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
       const mondayIso = at => { const pr = at.split('-').map(Number); const dt = new Date(pr[0], pr[1] - 1, pr[2]); const off = (dt.getDay() + 6) % 7; dt.setDate(dt.getDate() - off); const pad = n => (n < 10 ? '0' : '') + n; return dt.getFullYear() + '-' + pad(dt.getMonth() + 1) + '-' + pad(dt.getDate()); };
