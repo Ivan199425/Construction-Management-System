@@ -1556,21 +1556,33 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
             <div style="display:grid;grid-template-columns:1.4fr 1fr;gap:16px;margin-bottom:16px">
               <div style="background:#fff;border:1px solid #e4e8ee;border-radius:12px;overflow:hidden;display:flex;flex-direction:column">
                 <div style="padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px;border-bottom:1px solid #eef1f4">
-                  <div style="font-size:13px;font-weight:600;color:#0f1720">Progress S-curve <span style="font-weight:400;color:#a4afba;font-size:11px">· planned vs actual</span></div>
+                  <div style="font-size:13px;font-weight:600;color:#0f1720">Progress S-curve <span style="font-weight:400;color:#a4afba;font-size:11px">· planned · actual · forecast</span></div>
                   <span style="font-size:12px;font-weight:700;color:{{ scheduleV.schColor }};background:{{ scheduleV.schBg }};border-radius:14px;padding:3px 12px">{{ scheduleV.schStatus }} · {{ scheduleV.varPP }}</span>
                 </div>
                 <div style="padding:8px 10px 4px;overflow-x:auto">
-                  <svg viewBox="0 0 {{ scheduleV.scurve.w }} {{ scheduleV.scurve.h }}" style="width:100%;min-width:560px;height:auto;display:block">
-                    <sc-for list="{{ scheduleV.scurve.yGrid }}" as="g" hint-placeholder-count="5"><line x1="{{ scheduleV.scurve.plotLeft }}" y1="{{ g.y }}" x2="{{ scheduleV.scurve.plotRight }}" y2="{{ g.y }}" stroke="#eef1f4" stroke-width="1"></line><text x="{{ scheduleV.scurve.plotLeft }}" y="{{ g.y }}" dx="-6" dy="3" text-anchor="end" font-size="9" fill="#a4afba">{{ g.label }}</text></sc-for>
-                    <sc-for list="{{ scheduleV.scurve.xTicks }}" as="t" hint-placeholder-count="8"><text x="{{ t.x }}" y="{{ scheduleV.scurve.plotBottom }}" dy="16" text-anchor="middle" font-size="8.5" fill="#a4afba">{{ t.label }}</text></sc-for>
-                    <sc-if value="{{ scheduleV.scurve.todayIn }}" hint-placeholder-val="{{ false }}"><line x1="{{ scheduleV.scurve.todayX }}" y1="{{ scheduleV.scurve.todayY0 }}" x2="{{ scheduleV.scurve.todayX }}" y2="{{ scheduleV.scurve.todayY1 }}" stroke="#dc2626" stroke-width="1.4" stroke-dasharray="4 3"></line><text x="{{ scheduleV.scurve.todayX }}" y="{{ scheduleV.scurve.todayY0 }}" dy="-3" text-anchor="middle" font-size="8.5" font-weight="700" fill="#dc2626">Today</text></sc-if>
-                    <polyline points="{{ scheduleV.scurve.plannedPts }}" fill="none" stroke="#94a3b8" stroke-width="2" stroke-dasharray="5 4"></polyline>
-                    <polyline points="{{ scheduleV.scurve.actualPts }}" fill="none" stroke="{{ scheduleV.schColor }}" stroke-width="2.6"></polyline>
-                    <circle cx="{{ scheduleV.scurve.todayX }}" cy="{{ scheduleV.scurve.actualTodayY }}" r="4" fill="{{ scheduleV.schColor }}"></circle>
-                    <circle cx="{{ scheduleV.scurve.todayX }}" cy="{{ scheduleV.scurve.plannedTodayY }}" r="3.5" fill="#fff" stroke="#94a3b8" stroke-width="1.6"></circle>
+                  <svg viewBox="0 0 {{ scheduleV.scurve.w }} {{ scheduleV.scurve.h }}" style="width:100%;min-width:600px;height:auto;display:block">
+                    <sc-for list="{{ scheduleV.scurve.yGrid }}" as="g" hint-placeholder-count="6"><line x1="{{ scheduleV.scurve.plotLeft }}" y1="{{ g.y }}" x2="{{ scheduleV.scurve.plotRight }}" y2="{{ g.y }}" stroke="#eef1f4" stroke-width="1"></line><text x="{{ scheduleV.scurve.plotLeft }}" y="{{ g.y }}" dx="-6" dy="3" text-anchor="end" font-size="9" fill="#a4afba">{{ g.label }}</text></sc-for>
+                    <sc-for list="{{ scheduleV.scurve.xTicks }}" as="t" hint-placeholder-count="9"><text x="{{ t.x }}" y="{{ scheduleV.scurve.plotBottom }}" dy="16" text-anchor="middle" font-size="8.5" fill="#a4afba">{{ t.label }}</text></sc-for>
+                    <sc-if value="{{ scheduleV.scurve.todayIn }}" hint-placeholder-val="{{ false }}"><line x1="{{ scheduleV.scurve.todayX }}" y1="{{ scheduleV.scurve.todayY0 }}" x2="{{ scheduleV.scurve.todayX }}" y2="{{ scheduleV.scurve.todayY1 }}" stroke="#dc2626" stroke-width="1.2" stroke-dasharray="4 3"></line><text x="{{ scheduleV.scurve.todayX }}" y="{{ scheduleV.scurve.todayY0 }}" dy="-3" text-anchor="middle" font-size="8.5" font-weight="700" fill="#dc2626">Today</text></sc-if>
+                    <polyline points="{{ scheduleV.scurve.plannedPts }}" fill="none" stroke="#9aa7b5" stroke-width="1.8" stroke-dasharray="5 4"></polyline>
+                    <sc-for list="{{ scheduleV.scurve.plannedDots }}" as="d" hint-placeholder-count="13"><circle cx="{{ d.cx }}" cy="{{ d.cy }}" r="2.6" fill="#fff" stroke="#9aa7b5" stroke-width="1.4"></circle></sc-for>
+                    <sc-if value="{{ scheduleV.scurve.hasForecast }}" hint-placeholder-val="{{ false }}">
+                      <polyline points="{{ scheduleV.scurve.forecastPts }}" fill="none" stroke="{{ scheduleV.scurve.fcColor }}" stroke-width="2" stroke-dasharray="2 3"></polyline>
+                      <sc-for list="{{ scheduleV.scurve.forecastDots }}" as="d" hint-placeholder-count="4"><circle cx="{{ d.cx }}" cy="{{ d.cy }}" r="2.6" fill="{{ scheduleV.scurve.fcColor }}"></circle></sc-for>
+                      <circle cx="{{ scheduleV.scurve.forecastEndX }}" cy="{{ scheduleV.scurve.forecastEndY }}" r="4.5" fill="#fff" stroke="{{ scheduleV.scurve.fcColor }}" stroke-width="2"></circle>
+                    </sc-if>
+                    <polyline points="{{ scheduleV.scurve.actualPts }}" fill="none" stroke="{{ scheduleV.schColor }}" stroke-width="2.8"></polyline>
+                    <sc-for list="{{ scheduleV.scurve.actualDots }}" as="d" hint-placeholder-count="8"><circle cx="{{ d.cx }}" cy="{{ d.cy }}" r="3" fill="{{ scheduleV.schColor }}"></circle></sc-for>
                   </svg>
-                  <div style="display:flex;gap:16px;padding:2px 8px 8px 46px;font-size:10.5px;color:#8894a2"><span><span style="display:inline-block;width:14px;height:0;border-top:2px dashed #94a3b8;vertical-align:middle;margin-right:5px"></span>Planned {{ scheduleV.plannedTodayPct }}%</span><span><span style="display:inline-block;width:14px;height:0;border-top:2.6px solid {{ scheduleV.schColor }};vertical-align:middle;margin-right:5px"></span>Actual {{ scheduleV.actualTodayPct }}%</span></div>
+                  <div style="display:flex;gap:16px;padding:2px 8px 6px 46px;font-size:10.5px;color:#8894a2;flex-wrap:wrap"><span><span style="display:inline-block;width:14px;height:0;border-top:1.8px dashed #9aa7b5;vertical-align:middle;margin-right:5px"></span>Planned {{ scheduleV.plannedTodayPct }}%</span><span><span style="display:inline-block;width:14px;height:0;border-top:2.8px solid {{ scheduleV.schColor }};vertical-align:middle;margin-right:5px"></span>Actual {{ scheduleV.actualTodayPct }}%</span><sc-if value="{{ scheduleV.hasForecast }}" hint-placeholder-val="{{ false }}"><span><span style="display:inline-block;width:14px;height:0;border-top:2px dotted {{ scheduleV.forecast.fcColor }};vertical-align:middle;margin-right:5px"></span>Forecast → 100%</span></sc-if></div>
                 </div>
+                <sc-if value="{{ scheduleV.hasForecast }}" hint-placeholder-val="{{ false }}">
+                  <div style="border-top:1px solid #eef1f4;padding:11px 16px;display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:12px;background:#fbfcfe">
+                    <div><div style="font-size:9.5px;font-weight:700;letter-spacing:.3px;color:#8894a2;text-transform:uppercase">Forecast completion</div><div class="mono" style="font-size:14px;font-weight:700;color:{{ scheduleV.forecast.fcColor }};margin-top:2px">{{ scheduleV.forecast.finishFmt }}</div><div style="font-size:10px;color:{{ scheduleV.forecast.fcColor }}">{{ scheduleV.forecast.slipLabel }}</div></div>
+                    <div><div style="font-size:9.5px;font-weight:700;letter-spacing:.3px;color:#8894a2;text-transform:uppercase">Schedule index (SPI)</div><div class="mono" style="font-size:14px;font-weight:700;color:{{ scheduleV.schColor }};margin-top:2px">{{ scheduleV.forecast.spi }}</div><div style="font-size:10px;color:#8894a2">&lt;1 = behind pace</div></div>
+                    <div><div style="font-size:9.5px;font-weight:700;letter-spacing:.3px;color:#8894a2;text-transform:uppercase">Pace / week</div><div class="mono" style="font-size:14px;font-weight:700;color:#0f1720;margin-top:2px">{{ scheduleV.forecast.currentPace }}%</div><div style="font-size:10px;color:#8894a2">need {{ scheduleV.forecast.requiredPace }}% to hit baseline</div></div>
+                  </div>
+                </sc-if>
               </div>
               <div style="display:flex;flex-direction:column;gap:12px">
                 <div style="background:#fff;border:1px solid #e4e8ee;border-radius:12px;padding:14px 16px">
@@ -4446,18 +4458,37 @@ class Component extends DCLogic {
       const schStatus = varPP > 3 ? 'Ahead of schedule' : (varPP < -3 ? 'Behind schedule' : 'On schedule');
       const schColor = varPP > 3 ? '#15803d' : (varPP < -3 ? '#b91c1c' : '#1d4ed8');
       const schBg = varPP > 3 ? '#e6f4ea' : (varPP < -3 ? '#fbeef0' : '#e7eefc');
-      // SVG geometry
+      // FORECAST — project completion from current progress velocity (EVM-style)
+      const elapsed = Math.max(1, todayN - minN); const velocity = actualToday / elapsed; const remaining = Math.max(0, 100 - actualToday);
+      let forecastFinishN; if (actualToday >= 100) forecastFinishN = todayN; else if (velocity > 0.004) forecastFinishN = Math.round(todayN + remaining / velocity); else forecastFinishN = baselineFinishN;
+      const fcCap = minN + Math.round((baselineFinishN - minN) * 3); if (forecastFinishN > fcCap) forecastFinishN = fcCap;
+      const spi = plannedToday > 0 ? (actualToday / plannedToday) : 1; const reqDays = Math.max(1, baselineFinishN - todayN); const reqVel = remaining / reqDays; const slipDays = forecastFinishN - baselineFinishN;
+      const fcColor = slipDays > 5 ? '#b45309' : (slipDays < -5 ? '#15803d' : '#1d4ed8');
+      // SVG geometry (own span, extended to fit the forecast)
+      const scMaxN = Math.max(chartMaxN, forecastFinishN, baselineFinishN); const scSpan = Math.max(1, scMaxN - minN);
       const W = 820, H = 300, padL = 46, padR = 18, padT = 14, padB = 40, plotW = W - padL - padR, plotH = H - padT - padB;
-      const xF = n => padL + (n - minN) / span * plotW; const yF = v => padT + (1 - Math.max(0, Math.min(100, v)) / 100) * plotH;
-      let sampleNs = [minN]; { let d0 = new Date(minN * 864e5); let ty = d0.getUTCFullYear(), tm = d0.getUTCMonth(); let cur = Math.round(Date.UTC(ty, tm + 1, 1) / 864e5); let g = 0; while (cur < chartMaxN && g < 200) { sampleNs.push(cur); tm++; if (tm > 11) { tm = 0; ty++; } cur = Math.round(Date.UTC(ty, tm + 1, 1) / 864e5); g++; } sampleNs.push(chartMaxN); }
-      const plannedPts = sampleNs.map(n => Math.round(xF(n)) + ',' + Math.round(yF(plannedAt(n))) ).join(' ');
-      let actualNs = sampleNs.filter(n => n <= todayN); if (!actualNs.length || actualNs[actualNs.length - 1] !== todayN) actualNs.push(todayN);
-      const actualPts = actualNs.map(n => Math.round(xF(n)) + ',' + Math.round(yF(actualAt(n))) ).join(' ');
-      const yGrid = [0, 25, 50, 75, 100].map(v => ({ y: Math.round(yF(v)), label: v + '%' }));
-      const xTicks = ticks.map(t => ({ x: Math.round(padL + t.left / 100 * plotW), label: t.label }));
-      const scurve = { w: W, h: H, plannedPts, actualPts, todayX: Math.round(xF(todayN)), todayY0: padT, todayY1: padT + plotH, todayIn,
-        plannedTodayY: Math.round(yF(plannedToday)), actualTodayY: Math.round(yF(actualToday)), yGrid, xTicks, plotLeft: padL, plotRight: W - padR, plotTop: padT, plotBottom: padT + plotH,
+      const xF = n => padL + (n - minN) / scSpan * plotW; const yF = v => padT + (1 - Math.max(0, Math.min(100, v)) / 100) * plotH;
+      const samp = (a, b, n) => { const o = []; for (let i = 0; i <= n; i++) o.push(Math.round(a + (b - a) * i / n)); return o; };
+      const plannedNs = samp(minN, baselineFinishN, 12);
+      const plannedPts = plannedNs.map(n => Math.round(xF(n)) + ',' + Math.round(yF(plannedAt(n)))).join(' ');
+      const plannedDots = plannedNs.map(n => ({ cx: Math.round(xF(n)), cy: Math.round(yF(plannedAt(n))) }));
+      const actN = Math.max(2, Math.round(12 * (todayN - minN) / Math.max(1, baselineFinishN - minN)));
+      const actualNs = samp(minN, todayN, actN);
+      const actualPts = actualNs.map(n => Math.round(xF(n)) + ',' + Math.round(yF(actualAt(n)))).join(' ');
+      const actualDots = actualNs.map(n => ({ cx: Math.round(xF(n)), cy: Math.round(yF(actualAt(n))) }));
+      const fcAt = M => actualToday + (100 - actualToday) * c01((M - todayN) / Math.max(1, forecastFinishN - todayN));
+      const forecastNs = (forecastFinishN > todayN && actualToday < 100) ? samp(todayN, forecastFinishN, 3) : [];
+      const forecastPts = forecastNs.map(n => Math.round(xF(n)) + ',' + Math.round(yF(fcAt(n)))).join(' ');
+      const forecastDots = forecastNs.map(n => ({ cx: Math.round(xF(n)), cy: Math.round(yF(fcAt(n))) }));
+      const yGrid = [0, 20, 40, 60, 80, 100].map(v => ({ y: Math.round(yF(v)), label: v + '%' }));
+      let scTicks = []; { const sd = new Date(minN * 864e5); let ty2 = sd.getUTCFullYear(), tm2 = sd.getUTCMonth(); let cur2 = Math.round(Date.UTC(ty2, tm2, 1) / 864e5); let g2 = 0; while (cur2 <= scMaxN && g2 < 200) { if (cur2 >= minN) scTicks.push(cur2); tm2++; if (tm2 > 11) { tm2 = 0; ty2++; } cur2 = Math.round(Date.UTC(ty2, tm2, 1) / 864e5); g2++; } if (scTicks.length > 9) { const st2 = Math.ceil(scTicks.length / 9); scTicks = scTicks.filter((_, i) => i % st2 === 0); } }
+      const xTicks = scTicks.map(n => { const d = new Date(n * 864e5); return { x: Math.round(xF(n)), label: monShort[d.getUTCMonth()] + " '" + String(d.getUTCFullYear()).slice(2) }; });
+      const scurve = { w: W, h: H, plannedPts, plannedDots, actualPts, actualDots, forecastPts, forecastDots, hasForecast: forecastNs.length > 0,
+        todayX: Math.round(xF(todayN)), todayY0: padT, todayY1: padT + plotH, todayIn, fcColor,
+        forecastEndX: Math.round(xF(forecastFinishN)), forecastEndY: Math.round(yF(100)),
+        yGrid, xTicks, plotLeft: padL, plotRight: W - padR, plotTop: padT, plotBottom: padT + plotH,
         plannedTodayPct: String(plannedToday), actualTodayPct: String(actualToday) };
+      const forecastV = { finishFmt: this.fmtDate(numToIso(forecastFinishN)), slipDays: (slipDays > 0 ? '+' : '') + slipDays, slipLabel: slipDays > 5 ? (slipDays + ' days late vs baseline') : (slipDays < -5 ? (Math.abs(slipDays) + ' days ahead of baseline') : 'tracking to baseline'), fcColor, spi: spi.toFixed(2), currentPace: (velocity * 7).toFixed(1), requiredPace: (reqVel * 7).toFixed(1), behindPace: reqVel > velocity };
       // delay watchlist
       const watch = [];
       acts.forEach(a => { const s = dnum(a.start), f = dnum(a.finish); const pct = Math.max(0, Math.min(100, Number(a.pct) || 0)); if (pct >= 100) return; const expected = expectedOf(s, f); const variance = pct - expected; const overdueA = f != null && f < todayN; const behindA = variance < -4 && s != null && s <= todayN; if (!overdueA && !behindA) return;
@@ -4480,6 +4511,7 @@ class Component extends DCLogic {
         depLinks, hasDeps: depLinks.length > 0, ganttH: String(ganttH), ganttHpx: String(ganttH) + 'px',
         // S-curve + status
         scurve, schStatus, schColor, schBg, plannedTodayPct: String(plannedToday), actualTodayPct: String(actualToday), varPP: (varPP > 0 ? '+' : '') + varPP + '%', varColor: schColor,
+        forecast: forecastV, hasForecast: scurve.hasForecast,
         // summary + duration + EOT
         startFmt: this.fmtDate(numToIso(minN)), baselineFinishFmt: this.fmtDate(baselineFinishIso), revisedFinishFmt: this.fmtDate(revisedFinishIso),
         durationMonths: String(Math.max(1, Math.round(revDurDays / 30.44))), durationDays: String(revDurDays),
