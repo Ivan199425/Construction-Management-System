@@ -1481,6 +1481,59 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
           </div>
         </sc-if>
 
+        <!-- ============ FILES & PHOTOS ============ -->
+        <sc-if value="{{ filesV.show }}" hint-placeholder-val="{{ false }}">
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px">
+            <sc-for list="{{ filesV.folders }}" as="f" hint-placeholder-count="4">
+              <div onClick="{{ f.onClick }}" style="border:1px solid {{ f.borderC }};background:{{ f.bgC }};border-radius:12px;padding:15px 16px;cursor:pointer;display:flex;align-items:center;gap:12px" style-hover="border-color:#2b59c3">
+                <div style="font-size:26px;line-height:1">{{ f.icon }}</div>
+                <div style="min-width:0"><div style="font-size:14px;font-weight:600;color:{{ f.fgC }}">{{ f.label }}</div><div style="font-size:11px;color:#8894a2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ f.count }} item(s) · {{ f.hint }}</div></div>
+              </div>
+            </sc-for>
+          </div>
+
+          <div style="background:#fff;border:1px solid #e4e8ee;border-radius:12px;overflow:hidden">
+            <div style="padding:13px 16px;border-bottom:1px solid #eef1f4;background:#fafbfc;font-size:13px;font-weight:600;color:#0f1720">{{ filesV.activeIcon }} {{ filesV.activeLabel }} <span style="font-weight:500;color:#8894a2">· {{ filesV.count }} item(s)</span> <span style="font-weight:400;color:#a4afba;font-size:11.5px">· auto-populated from the project</span></div>
+
+            <sc-if value="{{ filesV.showRecords }}" hint-placeholder-val="{{ false }}">
+              <sc-for list="{{ filesV.records }}" as="r" hint-placeholder-count="3">
+                <div style="display:grid;grid-template-columns:36px 1fr 120px 130px 92px;gap:12px;align-items:center;padding:11px 16px;border-bottom:1px solid #f4f6f9" style-hover="background:#f9fafc">
+                  <div style="font-size:20px">📄</div>
+                  <div style="min-width:0"><div class="mono" style="font-size:12.5px;font-weight:600;color:#0f1720">{{ r.title }}</div><div style="font-size:11px;color:#8894a2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.sub }}</div></div>
+                  <div class="mono" style="font-size:11px;color:#4a5765">{{ r.meta }}</div>
+                  <div class="mono" style="font-size:12.5px;font-weight:600;color:#0f1720;text-align:right">{{ r.amount }}</div>
+                  <div style="text-align:right"><span style="display:inline-block;font-size:10px;font-weight:700;color:{{ r.statusColor }};background:{{ r.statusBg }};border-radius:12px;padding:2px 9px">{{ r.statusLabel }}</span></div>
+                </div>
+              </sc-for>
+            </sc-if>
+
+            <sc-if value="{{ filesV.showDrawings }}" hint-placeholder-val="{{ false }}">
+              <sc-for list="{{ filesV.drawItems }}" as="r" hint-placeholder-count="2">
+                <div style="display:grid;grid-template-columns:36px 1fr 92px;gap:12px;align-items:center;padding:11px 16px;border-bottom:1px solid #f4f6f9" style-hover="background:#f9fafc">
+                  <div style="font-size:20px">📄</div>
+                  <div style="min-width:0"><div style="font-size:12.5px;font-weight:600;color:#0f1720;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.title }}</div><div style="font-size:11px;color:#8894a2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.sub }}</div></div>
+                  <div style="text-align:right"><button onClick="{{ r.onView }}" title="View online" style="border:1px solid #dbe3ee;background:#f2f6fd;color:#2b59c3;border-radius:6px;padding:5px 10px;font-size:11.5px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="border-color:#2b59c3">👁 View</button></div>
+                </div>
+              </sc-for>
+            </sc-if>
+
+            <sc-if value="{{ filesV.showPhotos }}" hint-placeholder-val="{{ false }}">
+              <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;padding:16px">
+                <sc-for list="{{ filesV.photoItems }}" as="r" hint-placeholder-count="4">
+                  <div onClick="{{ r.onView }}" style="border:1px solid #e4e8ee;border-radius:10px;overflow:hidden;cursor:pointer;background:#fff" style-hover="border-color:#2b59c3">
+                    <img src="{{ r.url }}" alt="{{ r.name }}" style="width:100%;height:110px;object-fit:cover;display:block;background:#eef1f5">
+                    <div style="padding:7px 9px"><div style="font-size:11.5px;font-weight:600;color:#0f1720;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.name }}</div><div style="font-size:10px;color:#8894a2">{{ r.source }}</div></div>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ filesV.showEmpty }}" hint-placeholder-val="{{ false }}">
+              <div style="padding:34px 24px;text-align:center;color:#8894a2;font-size:13px">Nothing in <strong style="color:#6b7787">{{ filesV.activeLabel }}</strong> yet. This folder fills automatically as you add them elsewhere in the project.</div>
+            </sc-if>
+          </div>
+        </sc-if>
+
         <!-- ============ CONTACTS DIRECTORY ============ -->
         <sc-if value="{{ contactsV.show }}" hint-placeholder-val="{{ false }}">
           <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px">
@@ -2980,6 +3033,7 @@ class Component extends DCLogic {
   addEmailComposeRecipient() { this.setState(s => { if (!s.emailCompose) return {}; const e = (s.emailCompose.newEmail || '').trim(); if (!e) return {}; const cur = s.emailCompose.to || []; if (cur.indexOf(e) >= 0) return { emailCompose: { ...s.emailCompose, newEmail: '' } }; return { emailCompose: { ...s.emailCompose, to: [...cur, e], newEmail: '' } }; }); }
   emailComposeMailto() { const c = this.state.emailCompose; if (!c) return; const to = (c.to || []).join(','); const url = 'mailto:' + to + '?subject=' + encodeURIComponent(c.subject || '') + '&body=' + encodeURIComponent(c.message || ''); window.open(url, '_blank'); }
   sendEmailCompose() { this.setState(s => { if (!s.emailCompose) return {}; const n = (s.emailCompose.to || []).length; if (!n) return {}; return { emailCompose: { ...s.emailCompose, sent: true, sentCount: n } }; }); }
+  setFileFolder(k) { this.setState({ fileFolder: k }); }
   postRfiMessage(id, dir, author, text) { if (!text || !text.trim()) return; const msg = { id: 'm' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), dir, author, text: text.trim(), at: this.todayLocal() }; this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, docs: (p.docs || []).map(d => d.id === id ? { ...d, thread: [...(d.thread || []), msg] } : d) }) })); }
   setRfiDraft(id, v) { this.setState(s => ({ rfiDraft: { ...(s.rfiDraft || {}), [id]: v } })); }
   postRfiOurNote(id) { const t = ((this.state.rfiDraft || {})[id] || '').trim(); if (!t) return; this.postRfiMessage(id, 'out', 'Cubic (PM)', t); this.setState(s => ({ rfiDraft: { ...(s.rfiDraft || {}), [id]: '' } })); }
@@ -3633,7 +3687,7 @@ class Component extends DCLogic {
       mkMod('commitments', 'Financial', '$', true),
       mkMod('documents', 'Documents', '❏', true),
       mkMod('eot', 'EOT', '⏱', true),
-      mkMod('files', 'Files & Photos', '❐', false),
+      mkMod('files', 'Files & Photos', '❐', true),
       mkMod('contacts', 'Contacts', '☰', true),
       mkMod('schedule', 'Schedule', '▦', false),
       mkMod('defects', 'Defects List', '⚠', true),
@@ -3642,7 +3696,6 @@ class Component extends DCLogic {
 
     // Placeholder sections — nav slot + "planned contents", no functionality yet
     const sectionMeta = {
-      files: { title: 'Files & Photos', desc: 'All project files and imagery in one place.', bullets: ['Bills', 'Invoices', 'Drawings', 'Site photos'] },
       schedule: { title: 'Schedule', desc: 'Project programme / timeline.', bullets: ['Tasks & milestones', 'Gantt timeline'] },
       report: { title: 'Report Design', desc: 'Design and export project reports.', bullets: ['Report templates', 'Branded PDF export'] },
     };
@@ -3668,6 +3721,7 @@ class Component extends DCLogic {
     const showVariations = moduleCommitments && S.commitTab === 'variations';
     const showDefects = inProject && S.module === 'defects';
     const showContacts = inProject && S.module === 'contacts';
+    const showFiles = inProject && S.module === 'files';
 
     // header / title
     let pageTitle = '', pageSub = '', crumb1 = '', crumb2 = '', pageStatus = { show: false }, primaryAction = { show: false };
@@ -3689,6 +3743,7 @@ class Component extends DCLogic {
       if (showEot) { pageTitle = 'EOT — Extension of Time'; pageSub = 'Delay events & time-extension claims against the completion date — ' + p.name; crumb2 = 'EOT'; }
       if (showDocuments) { pageTitle = 'Documents'; pageSub = 'RFIs · Permits · To-Do’s · Drawings · Meetings · Inspections · Incidents — ' + p.name; crumb2 = 'Documents'; }
       if (showContacts) { pageTitle = 'Contacts'; pageSub = 'Everyone on the project — client, team, representatives & subcontractors — ' + p.name; crumb2 = 'Contacts'; primaryAction = { show: true, label: '✉ Compose email', onClick: () => this.openEmailCompose('') }; }
+      if (showFiles) { pageTitle = 'Files & Photos'; pageSub = 'Invoices · Drawings · Photos · Bills — auto-populated from the project — ' + p.name; crumb2 = 'Files & Photos'; }
       if (showPlaceholder) { pageTitle = placeholder.title; pageSub = placeholder.desc; crumb2 = placeholder.title; }
     }
 
@@ -3752,7 +3807,7 @@ class Component extends DCLogic {
         kpiCard('Unassigned', String(uncoded), uncoded ? 'need a cost code' : 'all coded', uncoded ? '#b45309' : '#15803d'),
         kpiCard('Vendors', String(new Set(bills.map(x => x.vendorId).filter(Boolean)).size), 'directory: ' + S.vendors.length),
       ];
-    } else if (inProject && !showEot && !showDocuments && !showContacts) {
+    } else if (inProject && !showEot && !showDocuments && !showContacts && !showFiles) {
       const r = this.rollup(p);
       kpis = [
         kpiCard('Contract value', this.moneyM(r.contract), this.typeLabel(p.contract.type)),
@@ -3869,6 +3924,38 @@ class Component extends DCLogic {
         subs, subCount: String(subs.length), hasSubs: subs.length > 0, noSubs: subs.length === 0,
         onAddCustomer: () => this.addCustomer(), onAddRep: () => this.addClientRep(), onAddTeam: () => this.addPersonnel(),
         onGoVendors: () => this.goVendors(),
+      };
+    }
+
+    // files & photos — folders auto-populated from live project data
+    let filesV = { show: false };
+    if (showFiles) {
+      const folderKey = ['invoices', 'drawings', 'photos', 'bills'].indexOf(S.fileFolder) >= 0 ? S.fileFolder : 'invoices';
+      const billItems = (p.bills || []).map(b => {
+        const vn = this.vendorName(b.vendorId) || b.vendorId || 'Vendor'; const st = b.status || 'unpaid';
+        const sm = st === 'paid' ? { c: '#15803d', bg: '#e6f4ea', l: 'Paid' } : st === 'partial' ? { c: '#b45309', bg: '#fbf1e3', l: 'Partial' } : { c: '#6b7787', bg: '#eef1f5', l: 'Unpaid' };
+        return { id: b.id, title: b.billNo, sub: vn + (b.desc ? ' · ' + b.desc : ''), meta: b.billDate ? this.fmtDate(b.billDate) : '—', amount: this.money(this.billTotal(b)), statusLabel: sm.l, statusColor: sm.c, statusBg: sm.bg };
+      });
+      const invItems = (p.invoices || []).map(iv => {
+        const paid = iv.status === 'paid';
+        return { id: iv.id, title: iv.no, sub: ((iv.recipients || []).length) + ' recipient(s)' + (iv.subject ? ' · ' + iv.subject : ''), meta: iv.date ? this.fmtDate(iv.date) : '—', amount: this.money(iv.total || iv.amount || 0), statusLabel: paid ? 'Paid' : 'Sent', statusColor: paid ? '#15803d' : '#1d4ed8', statusBg: paid ? '#e6f4ea' : '#e7eefc' };
+      });
+      const drawItems = [];
+      (p.docs || []).filter(d => d.category === 'drawing').forEach(d => { (d.attachments || []).forEach(a => drawItems.push({ id: a.id, title: a.name, sub: d.ref + ' — ' + (d.title || 'Drawing') + (d.revision ? ' · Rev ' + d.revision : ''), onView: () => this.openAttachment(a) })); });
+      const isImg = a => /^data:image/i.test(a.url || '') || /\.(png|jpe?g|gif|webp|bmp|heic)$/i.test(a.name || '') || /image/i.test(a.type || '');
+      const photoItems = [];
+      (p.defects || []).forEach(df => (df.photos || []).forEach(ph => photoItems.push({ id: ph.id, url: ph.url, name: ph.name || 'photo', source: df.ref, onView: () => this.openAttachment(ph) })));
+      (p.docs || []).forEach(d => (d.attachments || []).forEach(a => { if (isImg(a)) photoItems.push({ id: a.id, url: a.url, name: a.name || 'image', source: d.ref, onView: () => this.openAttachment(a) }); }));
+      const counts = { invoices: invItems.length, drawings: drawItems.length, photos: photoItems.length, bills: billItems.length };
+      const metaF = [ { key: 'invoices', label: 'Invoices', icon: '🧾', hint: 'sent to the client' }, { key: 'drawings', label: 'Drawings', icon: '📐', hint: 'attached drawing files' }, { key: 'photos', label: 'Photos', icon: '🖼', hint: 'site & defect imagery' }, { key: 'bills', label: 'Bills', icon: '📄', hint: 'vendor bills' } ];
+      const folders = metaF.map(m => ({ key: m.key, label: m.label, icon: m.icon, hint: m.hint, count: String(counts[m.key]), active: m.key === folderKey, borderC: m.key === folderKey ? '#2b59c3' : '#e4e8ee', bgC: m.key === folderKey ? '#f2f6fd' : '#fff', fgC: m.key === folderKey ? '#2b59c3' : '#0f1720', onClick: () => this.setFileFolder(m.key) }));
+      const activeMeta = metaF.find(m => m.key === folderKey); const hasItems = counts[folderKey] > 0;
+      filesV = {
+        show: true, folders, activeLabel: activeMeta.label, activeIcon: activeMeta.icon, count: String(counts[folderKey]),
+        showRecords: (folderKey === 'bills' || folderKey === 'invoices') && hasItems, records: folderKey === 'bills' ? billItems : (folderKey === 'invoices' ? invItems : []),
+        showDrawings: folderKey === 'drawings' && hasItems, drawItems,
+        showPhotos: folderKey === 'photos' && hasItems, photoItems,
+        showEmpty: !hasItems,
       };
     }
 
@@ -4880,7 +4967,7 @@ class Component extends DCLogic {
       claimRows, claimTotals, onAddClaim: () => this.addClaim(),
       moduleCommitments, subModalV, signModalV, shareModalV,
       onAddContractVar: () => this.openModal('contract'),
-      projDescription, clientRepRows, teamRows, clientNameV, detailsV, contactsV, invoiceV, invoiceSendV, variationSendV, eotV, eotSendV, documentsV, rfiSendV, meetingSendV,
+      projDescription, clientRepRows, teamRows, clientNameV, detailsV, contactsV, filesV, invoiceV, invoiceSendV, variationSendV, eotV, eotSendV, documentsV, rfiSendV, meetingSendV,
       docViewerV: S.docViewer ? { open: true, name: S.docViewer.name, url: S.docViewer.url, isPdf: S.docViewer.kind === 'pdf', isImage: S.docViewer.kind === 'image', isOther: S.docViewer.kind === 'other', onClose: () => this.closeDocViewer(), onNewTab: () => this.docViewerNewTab() } : { open: false },
       onDescInput: e => this.setProjectField('description', e.target.value),
       onAddClientRep: () => this.addClientRep(), onAddPersonnel: () => this.addPersonnel(),
