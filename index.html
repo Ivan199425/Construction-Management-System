@@ -1493,7 +1493,12 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
           </div>
 
           <div style="background:#fff;border:1px solid #e4e8ee;border-radius:12px;overflow:hidden">
-            <div style="padding:13px 16px;border-bottom:1px solid #eef1f4;background:#fafbfc;font-size:13px;font-weight:600;color:#0f1720">{{ filesV.activeIcon }} {{ filesV.activeLabel }} <span style="font-weight:500;color:#8894a2">· {{ filesV.count }} item(s)</span> <span style="font-weight:400;color:#a4afba;font-size:11.5px">· auto-populated from the project</span></div>
+            <div style="padding:11px 16px;border-bottom:1px solid #eef1f4;background:#fafbfc;display:flex;align-items:center;justify-content:space-between;gap:10px">
+              <div style="font-size:13px;font-weight:600;color:#0f1720">{{ filesV.activeIcon }} {{ filesV.activeLabel }} <span style="font-weight:500;color:#8894a2">· {{ filesV.count }} item(s)</span> <span style="font-weight:400;color:#a4afba;font-size:11.5px">· auto-populated from the project</span></div>
+              <sc-if value="{{ filesV.canUpload }}" hint-placeholder-val="{{ false }}">
+                <label style="display:inline-flex;align-items:center;gap:6px;border:1px solid #2b59c3;background:#2b59c3;color:#fff;border-radius:8px;padding:7px 13px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap" style-hover="background:#244dab">＋ Upload photos<input type="file" accept="image/*" multiple onChange="{{ filesV.onUploadPhoto }}" style="display:none"></label>
+              </sc-if>
+            </div>
 
             <!-- INVOICES (records) -->
             <sc-if value="{{ filesV.showRecords }}" hint-placeholder-val="{{ false }}">
@@ -1567,9 +1572,12 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                 <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;padding:14px 16px">
                   <sc-for list="{{ g.items }}" as="r" hint-placeholder-count="3">
                     <div style="border:1px solid #e4e8ee;border-radius:10px;overflow:hidden;background:#fff" style-hover="border-color:#2b59c3">
-                      <div onClick="{{ r.onView }}" title="Click to preview" style="position:relative;cursor:pointer">
-                        <img src="{{ r.url }}" alt="{{ r.name }}" style="width:100%;height:110px;object-fit:cover;display:block;background:#eef1f5">
-                        <span style="position:absolute;top:6px;right:6px;background:rgba(15,23,32,.6);color:#fff;border-radius:6px;padding:2px 7px;font-size:10px;font-weight:600">🔍 Preview</span>
+                      <div style="position:relative">
+                        <div onClick="{{ r.onView }}" title="Click to preview" style="cursor:pointer">
+                          <img src="{{ r.url }}" alt="{{ r.name }}" style="width:100%;height:110px;object-fit:cover;display:block;background:#eef1f5">
+                          <span style="position:absolute;top:6px;right:6px;background:rgba(15,23,32,.6);color:#fff;border-radius:6px;padding:2px 7px;font-size:10px;font-weight:600">🔍 Preview</span>
+                        </div>
+                        <sc-if value="{{ r.canRemove }}" hint-placeholder-val="{{ false }}"><button onClick="{{ r.onRemove }}" title="Remove uploaded photo" style="position:absolute;top:6px;left:6px;width:22px;height:22px;border:0;border-radius:50%;background:rgba(15,23,32,.6);color:#fff;font-size:12px;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center" style-hover="background:#b91c1c">✕</button></sc-if>
                       </div>
                       <div style="padding:7px 9px">
                         <div style="font-size:11.5px;font-weight:600;color:#0f1720;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.name }}</div>
@@ -1583,7 +1591,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
             </sc-if>
 
             <sc-if value="{{ filesV.showEmpty }}" hint-placeholder-val="{{ false }}">
-              <div style="padding:34px 24px;text-align:center;color:#8894a2;font-size:13px">Nothing in <strong style="color:#6b7787">{{ filesV.activeLabel }}</strong> yet. This folder fills automatically as you add them elsewhere in the project.</div>
+              <div style="padding:34px 24px;text-align:center;color:#8894a2;font-size:13px">Nothing in <strong style="color:#6b7787">{{ filesV.activeLabel }}</strong> yet. This folder fills automatically as you add them elsewhere in the project.<sc-if value="{{ filesV.showPhotoEmptyUpload }}" hint-placeholder-val="{{ false }}"><div style="margin-top:14px"><label style="display:inline-flex;align-items:center;gap:6px;border:1px solid #2b59c3;background:#2b59c3;color:#fff;border-radius:8px;padding:8px 15px;font-size:12.5px;font-weight:600;cursor:pointer" style-hover="background:#244dab">＋ Upload photos<input type="file" accept="image/*" multiple onChange="{{ filesV.onUploadPhoto }}" style="display:none"></label></div></sc-if></div>
             </sc-if>
           </div>
         </sc-if>
@@ -2090,18 +2098,26 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
     <div onClick="{{ docViewerV.onClose }}" style="position:fixed;inset:0;background:rgba(15,23,32,.55);display:flex;align-items:center;justify-content:center;z-index:60;padding:24px;animation:fadeUp .15s ease">
       <div onClick="{{ stop }}" style="background:#fff;border-radius:14px;width:1000px;max-width:96vw;height:90vh;box-shadow:0 24px 60px rgba(15,23,32,.34);overflow:hidden;display:flex;flex-direction:column">
         <div style="padding:14px 20px;border-bottom:1px solid #eef1f4;display:flex;align-items:center;justify-content:space-between;gap:12px">
-          <div style="display:flex;align-items:center;gap:10px;min-width:0"><span style="font-size:17px">📄</span><div style="font-size:14.5px;font-weight:600;color:#0f1720;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ docViewerV.name }}</div></div>
+          <div style="display:flex;align-items:center;gap:10px;min-width:0"><span style="font-size:17px">📄</span><div style="font-size:14.5px;font-weight:600;color:#0f1720;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ docViewerV.name }}</div><sc-if value="{{ docViewerV.hasNav }}" hint-placeholder-val="{{ false }}"><span class="mono" style="font-size:11.5px;color:#8894a2;background:#eef1f5;border-radius:12px;padding:2px 9px;flex-shrink:0">{{ docViewerV.position }}</span></sc-if></div>
           <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+            <sc-if value="{{ docViewerV.hasNav }}" hint-placeholder-val="{{ false }}">
+              <button onClick="{{ docViewerV.onPrev }}" title="Previous (←)" style="border:1px solid #cfd8e2;background:#fff;color:#4a5765;border-radius:7px;padding:6px 11px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="border-color:#2b59c3;color:#2b59c3">‹ Prev</button>
+              <button onClick="{{ docViewerV.onNext }}" title="Next (→)" style="border:1px solid #cfd8e2;background:#fff;color:#4a5765;border-radius:7px;padding:6px 11px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="border-color:#2b59c3;color:#2b59c3">Next ›</button>
+            </sc-if>
             <button onClick="{{ docViewerV.onNewTab }}" title="Open in a new browser tab" style="border:1px solid #cfd8e2;background:#fff;color:#2b59c3;border-radius:7px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="background:#f2f6fd">↗ New tab</button>
             <button onClick="{{ docViewerV.onClose }}" title="Close" style="border:1px solid #cfd8e2;background:#fff;color:#4a5765;border-radius:7px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="background:#f6f8fb">✕ Close</button>
           </div>
         </div>
-        <div style="flex:1;overflow:auto;background:#525659;display:flex;align-items:center;justify-content:center">
+        <div style="flex:1;overflow:auto;background:#525659;display:flex;align-items:center;justify-content:center;position:relative">
+          <sc-if value="{{ docViewerV.hasNav }}" hint-placeholder-val="{{ false }}">
+            <button onClick="{{ docViewerV.onPrev }}" title="Previous (←)" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);z-index:2;width:42px;height:42px;border:0;border-radius:50%;background:rgba(255,255,255,.9);color:#0f1720;font-size:20px;font-weight:700;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.25);display:flex;align-items:center;justify-content:center" style-hover="background:#fff">‹</button>
+            <button onClick="{{ docViewerV.onNext }}" title="Next (→)" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);z-index:2;width:42px;height:42px;border:0;border-radius:50%;background:rgba(255,255,255,.9);color:#0f1720;font-size:20px;font-weight:700;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.25);display:flex;align-items:center;justify-content:center" style-hover="background:#fff">›</button>
+          </sc-if>
           <sc-if value="{{ docViewerV.isPdf }}" hint-placeholder-val="{{ true }}">
             <iframe src="{{ docViewerV.url }}" style="width:100%;height:100%;border:0;background:#fff"></iframe>
           </sc-if>
           <sc-if value="{{ docViewerV.isImage }}" hint-placeholder-val="{{ false }}">
-            <img src="{{ docViewerV.url }}" alt="{{ docViewerV.name }}" style="max-width:100%;max-height:100%;object-fit:contain;display:block">
+            <img src="{{ docViewerV.url }}" alt="{{ docViewerV.name }}" style="max-width:100%;max-height:100%;object-fit:contain;display:block;animation:fadeUp .18s ease">
           </sc-if>
           <sc-if value="{{ docViewerV.isOther }}" hint-placeholder-val="{{ false }}">
             <div style="background:#fff;border-radius:12px;padding:34px 30px;text-align:center;max-width:420px;margin:24px"><div style="font-size:34px">📎</div><div style="font-size:14px;font-weight:600;color:#0f1720;margin-top:10px">{{ docViewerV.name }}</div><div style="font-size:12.5px;color:#8894a2;margin-top:6px;line-height:1.5">This file type can't be previewed inline. Open it in a new tab to view or download.</div><button onClick="{{ docViewerV.onNewTab }}" style="margin-top:14px;border:0;background:#2b59c3;color:#fff;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="background:#244dab">↗ Open in new tab</button></div>
@@ -3091,7 +3107,9 @@ class Component extends DCLogic {
   setPhotoGroup(v) { this.setState({ photoGroup: v }); }
   setBillSort(v) { this.setState({ billSort: v }); }
   setBillStatus(v) { this.setState({ billStatus: v }); }
-  setPhotoDesc(id, val) { this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, defects: (p.defects || []).map(d => ({ ...d, photos: (d.photos || []).map(ph => ph.id === id ? { ...ph, desc: val } : ph) })), docs: (p.docs || []).map(d => ({ ...d, attachments: (d.attachments || []).map(a => a.id === id ? { ...a, desc: val } : a) })) }) })); }
+  setPhotoDesc(id, val) { this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, photos: (p.photos || []).map(ph => ph.id === id ? { ...ph, desc: val } : ph), defects: (p.defects || []).map(d => ({ ...d, photos: (d.photos || []).map(ph => ph.id === id ? { ...ph, desc: val } : ph) })), docs: (p.docs || []).map(d => ({ ...d, attachments: (d.attachments || []).map(a => a.id === id ? { ...a, desc: val } : a) })) }) })); }
+  addProjectPhoto(e) { const files = Array.from((e.target && e.target.files) || []); if (!files.length) return; files.forEach(file => { const reader = new FileReader(); reader.onload = ev => { const ph = { id: 'ph' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), name: file.name || 'photo', url: ev.target.result, at: this.todayLocal(), desc: '' }; this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, photos: [...(p.photos || []), ph] }) })); }; reader.readAsDataURL(file); }); if (e.target) e.target.value = ''; }
+  removeProjectPhoto(id) { this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, photos: (p.photos || []).filter(ph => ph.id !== id) }) })); }
   postRfiMessage(id, dir, author, text) { if (!text || !text.trim()) return; const msg = { id: 'm' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), dir, author, text: text.trim(), at: this.todayLocal() }; this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, docs: (p.docs || []).map(d => d.id === id ? { ...d, thread: [...(d.thread || []), msg] } : d) }) })); }
   setRfiDraft(id, v) { this.setState(s => ({ rfiDraft: { ...(s.rfiDraft || {}), [id]: v } })); }
   postRfiOurNote(id) { const t = ((this.state.rfiDraft || {})[id] || '').trim(); if (!t) return; this.postRfiMessage(id, 'out', 'Cubic (PM)', t); this.setState(s => ({ rfiDraft: { ...(s.rfiDraft || {}), [id]: '' } })); }
@@ -3099,9 +3117,13 @@ class Component extends DCLogic {
   simulateRfiInbound(id) { const p = this.proj(this.state.pid); if (!p) return; const who = (p.customers && p.customers[0] && (p.customers[0].name || p.customers[0].company)) || 'Client'; const samples = ['Thanks — please see our marked-up sketch attached. Proceed as noted.', 'Reviewed. Use the revised detail on the attached SK; no change to the interface line.', 'Confirmed. Response attached — proceed to fabrication.', 'Noted. We will issue a formal response by end of week; interim guidance attached.']; const txt = '[Inbound email] ' + samples[Math.floor(Math.random() * samples.length)]; this.postRfiMessage(id, 'in', who, txt); }
   addDocAttachment(id, e) { const files = Array.from((e.target && e.target.files) || []); if (!files.length) return; files.forEach(file => { const reader = new FileReader(); reader.onload = ev => { const att = { id: 'att' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), name: file.name || 'file', type: file.type || '', size: file.size || 0, url: ev.target.result, at: this.todayLocal() }; this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, docs: (p.docs || []).map(d => d.id === id ? { ...d, attachments: [...(d.attachments || []), att] } : d) }) })); }; reader.readAsDataURL(file); }); if (e.target) e.target.value = ''; }
   removeDocAttachment(id, aid) { this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, docs: (p.docs || []).map(d => d.id === id ? { ...d, attachments: (d.attachments || []).filter(a => a.id !== aid) } : d) }) })); }
-  openAttachment(att) { if (!att || !att.url) return; let objUrl = att.url, mime = att.type || ''; try { const parts = String(att.url).split(','); mime = (parts[0].match(/data:([^;]+)/) || [])[1] || att.type || 'application/octet-stream'; const bin = atob(parts[1] || ''); const arr = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i); objUrl = URL.createObjectURL(new Blob([arr], { type: mime })); } catch (err) { objUrl = att.url; } const kind = /pdf/i.test(mime) ? 'pdf' : (/^image\//i.test(mime) ? 'image' : 'other'); this.setState({ docViewer: { name: att.name || 'document', kind, url: objUrl } }); }
-  closeDocViewer() { const dv = this.state.docViewer; if (dv && dv.url && String(dv.url).indexOf('blob:') === 0) { try { URL.revokeObjectURL(dv.url); } catch (e) {} } this.setState({ docViewer: null }); }
-  docViewerNewTab() { const dv = this.state.docViewer; if (!dv || !dv.url) return; const w = window.open(dv.url, '_blank'); if (!w) { const a = document.createElement('a'); a.href = dv.url; a.download = dv.name || 'document'; a.click(); } }
+  _decodeBlob(rawUrl, type) { try { const parts = String(rawUrl).split(','); const mime = (parts[0].match(/data:([^;]+)/) || [])[1] || type || 'application/octet-stream'; const bin = atob(parts[1] || ''); const arr = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i); return { url: URL.createObjectURL(new Blob([arr], { type: mime })), mime }; } catch (err) { return { url: rawUrl, mime: type || '' }; } }
+  _showGalleryItem(items, index) { const dv = this.state.docViewer; if (dv && dv.curUrl && String(dv.curUrl).indexOf('blob:') === 0) { try { URL.revokeObjectURL(dv.curUrl); } catch (e) {} } const n = items.length; if (!n) return; const i = ((index % n) + n) % n; const it = items[i]; const dec = this._decodeBlob(it.url, it.type); const kind = /pdf/i.test(dec.mime) ? 'pdf' : (/^image\//i.test(dec.mime) ? 'image' : 'other'); this.setState({ docViewer: { items, index: i, curUrl: dec.url, curKind: kind, curName: it.name || 'document' } }); }
+  openGallery(items, index) { if (!items || !items.length) return; this._showGalleryItem(items, index || 0); }
+  openAttachment(att) { if (!att || !att.url) return; this.openGallery([{ name: att.name, url: att.url, type: att.type }], 0); }
+  docViewerNav(dir) { const dv = this.state.docViewer; if (!dv || !dv.items) return; this._showGalleryItem(dv.items, dv.index + dir); }
+  closeDocViewer() { const dv = this.state.docViewer; if (dv && dv.curUrl && String(dv.curUrl).indexOf('blob:') === 0) { try { URL.revokeObjectURL(dv.curUrl); } catch (e) {} } this.setState({ docViewer: null }); }
+  docViewerNewTab() { const dv = this.state.docViewer; if (!dv || !dv.curUrl) return; const w = window.open(dv.curUrl, '_blank'); if (!w) { const a = document.createElement('a'); a.href = dv.curUrl; a.download = dv.curName || 'document'; a.click(); } }
   // RFI review & send for answer
   openRfiSend(id) { const p = this.proj(this.state.pid); if (!p) return; const d = (p.docs || []).find(x => x.id === id); if (!d) return; const emails = (p.customers || []).map(c => c.email).filter(Boolean); this.setState({ rfiSend: { id, recipients: emails, newEmail: '', message: '', from: p.senderEmail || 'ivan@cubiccm.com', subject: 'RFI ' + d.ref + ' — response requested — ' + p.name } }); }
   closeRfiSend() { this.setState({ rfiSend: null }); }
@@ -4006,24 +4028,31 @@ class Component extends DCLogic {
         const paid = iv.status === 'paid';
         return { id: iv.id, title: iv.no, sub: ((iv.recipients || []).length) + ' recipient(s)' + (iv.subject ? ' · ' + iv.subject : ''), meta: iv.date ? this.fmtDate(iv.date) : '—', amount: this.money(iv.total || iv.amount || 0), statusLabel: paid ? 'Paid' : 'Sent', statusColor: paid ? '#15803d' : '#1d4ed8', statusBg: paid ? '#e6f4ea' : '#e7eefc' };
       });
-      // PERMITS — attached documents on permit docs
+      // PERMITS — attached documents on permit docs (with gallery navigation)
       const permitItems = [];
-      (p.docs || []).filter(d => d.category === 'permit').forEach(d => { (d.attachments || []).forEach(a => permitItems.push({ id: a.id, title: a.name, sub: d.ref + ' — ' + (d.title || 'Permit') + (d.party ? ' · ' + d.party : ''), onView: () => this.openAttachment(a) })); });
-      // DRAWINGS — grouped by specialty (discipline)
+      (p.docs || []).filter(d => d.category === 'permit').forEach(d => { (d.attachments || []).forEach(a => permitItems.push({ id: a.id, title: a.name, url: a.url, type: a.type, sub: d.ref + ' — ' + (d.title || 'Permit') + (d.party ? ' · ' + d.party : '') })); });
+      const permitView = permitItems.map(it => ({ name: it.title, url: it.url, type: it.type }));
+      permitItems.forEach((it, i) => { it.onView = () => this.openGallery(permitView, i); });
+      // DRAWINGS — grouped by specialty (discipline), gallery over the discipline-ordered list
       const drawFiles = [];
-      (p.docs || []).filter(d => d.category === 'drawing').forEach(d => { (d.attachments || []).forEach(a => drawFiles.push({ id: a.id, title: a.name, sub: d.ref + ' — ' + (d.title || 'Drawing') + (d.revision ? ' · Rev ' + d.revision : ''), discipline: (d.party || '').trim() || 'Unspecified', onView: () => this.openAttachment(a) })); });
+      (p.docs || []).filter(d => d.category === 'drawing').forEach(d => { (d.attachments || []).forEach(a => drawFiles.push({ id: a.id, title: a.name, url: a.url, type: a.type, sub: d.ref + ' — ' + (d.title || 'Drawing') + (d.revision ? ' · Rev ' + d.revision : ''), discipline: (d.party || '').trim() || 'Unspecified' })); });
       const dgMap = {}; drawFiles.forEach(f => { (dgMap[f.discipline] = dgMap[f.discipline] || []).push(f); });
       const drawGroups = Object.keys(dgMap).sort().map(k => ({ label: k, count: String(dgMap[k].length), items: dgMap[k] }));
-      // PHOTOS — grouped by date period (day/week/month)
+      const drawView = []; drawGroups.forEach(g => g.items.forEach(it => { it._vi = drawView.length; drawView.push({ name: it.title, url: it.url, type: it.type }); }));
+      drawGroups.forEach(g => g.items.forEach(it => { it.onView = () => this.openGallery(drawView, it._vi); }));
+      // PHOTOS — uploaded + defect + doc images, grouped by date period (day/week/month), with gallery + description
       const photos = [];
-      (p.defects || []).forEach(df => (df.photos || []).forEach(ph => photos.push({ id: ph.id, url: ph.url, name: ph.name || 'photo', source: df.ref, at: ph.at || df.raised || '', desc: ph.desc || '', onView: () => this.openAttachment(ph), onDesc: e => this.setPhotoDesc(ph.id, e.target.value) })));
-      (p.docs || []).forEach(d => (d.attachments || []).forEach(a => { if (isImg(a)) photos.push({ id: a.id, url: a.url, name: a.name || 'image', source: d.ref, at: a.at || d.date || '', desc: a.desc || '', onView: () => this.openAttachment(a), onDesc: e => this.setPhotoDesc(a.id, e.target.value) }); }));
+      (p.photos || []).forEach(ph => photos.push({ id: ph.id, url: ph.url, name: ph.name || 'photo', type: '', source: 'Uploaded', at: ph.at || '', desc: ph.desc || '', isUploaded: true }));
+      (p.defects || []).forEach(df => (df.photos || []).forEach(ph => photos.push({ id: ph.id, url: ph.url, name: ph.name || 'photo', type: '', source: df.ref, at: ph.at || df.raised || '', desc: ph.desc || '', isUploaded: false })));
+      (p.docs || []).forEach(d => (d.attachments || []).forEach(a => { if (isImg(a)) photos.push({ id: a.id, url: a.url, name: a.name || 'image', type: a.type || '', source: d.ref, at: a.at || d.date || '', desc: a.desc || '', isUploaded: false }); }));
       const photoGroup = ['day', 'week', 'month'].indexOf(S.photoGroup) >= 0 ? S.photoGroup : 'day';
       const monN = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
       const mondayIso = at => { const pr = at.split('-').map(Number); const dt = new Date(pr[0], pr[1] - 1, pr[2]); const off = (dt.getDay() + 6) % 7; dt.setDate(dt.getDate() - off); const pad = n => (n < 10 ? '0' : '') + n; return dt.getFullYear() + '-' + pad(dt.getMonth() + 1) + '-' + pad(dt.getDate()); };
       const periodOf = at => { if (!at) return { k: 'zzzz-undated', label: 'Undated' }; const pr = at.split('-'); if (photoGroup === 'month') return { k: pr[0] + '-' + pr[1], label: monN[Number(pr[1]) - 1] + ' ' + pr[0] }; if (photoGroup === 'week') { const mon = mondayIso(at); return { k: mon, label: 'Week of ' + this.fmtDate(mon) }; } return { k: at, label: this.fmtDate(at) }; };
       const pgMap = {}, pgLabel = {}; photos.forEach(ph => { const g = periodOf(ph.at); (pgMap[g.k] = pgMap[g.k] || []).push(ph); pgLabel[g.k] = g.label; });
       const photoGroups = Object.keys(pgMap).sort((a, b) => b < a ? -1 : b > a ? 1 : 0).map(k => ({ label: pgLabel[k], count: String(pgMap[k].length), items: pgMap[k] }));
+      const photoView = []; photoGroups.forEach(g => g.items.forEach(it => { it._vi = photoView.length; photoView.push({ name: it.name, url: it.url, type: it.type }); }));
+      photoGroups.forEach(g => g.items.forEach(it => { it.onView = () => this.openGallery(photoView, it._vi); it.onDesc = e => this.setPhotoDesc(it.id, e.target.value); it.canRemove = !!it.isUploaded; it.onRemove = it.isUploaded ? () => this.removeProjectPhoto(it.id) : (() => {}); }));
       const counts = { invoices: invItems.length, permits: permitItems.length, drawings: drawFiles.length, photos: photos.length, bills: totalBills };
       const metaF = [ { key: 'invoices', label: 'Invoices', icon: '🧾', hint: 'sent to the client' }, { key: 'permits', label: 'Permits', icon: '📋', hint: 'permit documents' }, { key: 'drawings', label: 'Drawings', icon: '📐', hint: 'by specialty' }, { key: 'photos', label: 'Photos', icon: '🖼', hint: 'by date' }, { key: 'bills', label: 'Bills', icon: '📄', hint: 'vendor bills' } ];
       const folders = metaF.map(m => ({ key: m.key, label: m.label, icon: m.icon, hint: m.hint, count: String(counts[m.key]), active: m.key === folderKey, borderC: m.key === folderKey ? '#2b59c3' : '#e4e8ee', bgC: m.key === folderKey ? '#f2f6fd' : '#fff', fgC: m.key === folderKey ? '#2b59c3' : '#0f1720', onClick: () => this.setFileFolder(m.key) }));
@@ -4037,7 +4066,8 @@ class Component extends DCLogic {
         showPermits: folderKey === 'permits' && hasItems, permitItems,
         showDrawings: folderKey === 'drawings' && hasItems, drawGroups,
         showPhotos: folderKey === 'photos' && hasItems, photoGroups, photoGroupOpts: [pgOpt('day', 'Day'), pgOpt('week', 'Week'), pgOpt('month', 'Month')],
-        showEmpty: !hasItems,
+        canUpload: folderKey === 'photos', onUploadPhoto: e => this.addProjectPhoto(e),
+        showEmpty: !hasItems, showPhotoEmptyUpload: folderKey === 'photos' && !hasItems,
       };
     }
 
@@ -5050,7 +5080,7 @@ class Component extends DCLogic {
       moduleCommitments, subModalV, signModalV, shareModalV,
       onAddContractVar: () => this.openModal('contract'),
       projDescription, clientRepRows, teamRows, clientNameV, detailsV, contactsV, filesV, invoiceV, invoiceSendV, variationSendV, eotV, eotSendV, documentsV, rfiSendV, meetingSendV,
-      docViewerV: S.docViewer ? { open: true, name: S.docViewer.name, url: S.docViewer.url, isPdf: S.docViewer.kind === 'pdf', isImage: S.docViewer.kind === 'image', isOther: S.docViewer.kind === 'other', onClose: () => this.closeDocViewer(), onNewTab: () => this.docViewerNewTab() } : { open: false },
+      docViewerV: S.docViewer ? { open: true, name: S.docViewer.curName, url: S.docViewer.curUrl, isPdf: S.docViewer.curKind === 'pdf', isImage: S.docViewer.curKind === 'image', isOther: S.docViewer.curKind === 'other', hasNav: (S.docViewer.items || []).length > 1, position: (S.docViewer.index + 1) + ' / ' + (S.docViewer.items || []).length, onPrev: () => this.docViewerNav(-1), onNext: () => this.docViewerNav(1), onClose: () => this.closeDocViewer(), onNewTab: () => this.docViewerNewTab() } : { open: false },
       onDescInput: e => this.setProjectField('description', e.target.value),
       onAddClientRep: () => this.addClientRep(), onAddPersonnel: () => this.addPersonnel(),
       contractModalV: S.contractModal && S.contractForm ? { open: true, ...S.contractForm, hasFile: !!S.contractForm.fileRef, fileLabel: S.contractForm.fileRef ? 'Replace PDF' : 'Insert contract PDF', onAttach: () => this.attachContractPdf(),
