@@ -2891,6 +2891,21 @@ class Component extends DCLogic {
       },
       {
         id: 'p2', name: 'Harbour Bridge Retrofit', code: 'HBR-25', client: 'State Transport Authority', status: 'active', projectType: 'Infrastructure', address: 'Bradfield Hwy, Sydney NSW 2000', gstRate: 10,
+        schedule: {
+          fileName: 'Harbour Bridge Retrofit — Programme Rev 2.xer', fileType: '', fileUrl: '', uploadedAt: '2026-06-20', version: 2,
+          versions: [{ name: 'Harbour Bridge Retrofit — Programme Rev 1.xer', version: 1, at: '2025-02-10' }],
+          activities: [
+            { id: 'hb1', name: 'Mobilisation & site establishment', start: '2025-01-15', finish: '2025-03-15', pct: 100, critical: true },
+            { id: 'hb2', name: 'Traffic management & access scaffolding', start: '2025-02-01', finish: '2027-03-31', pct: 62, critical: false },
+            { id: 'hb3', name: 'Structural survey & condition assessment', start: '2025-03-01', finish: '2025-06-30', pct: 100, critical: true },
+            { id: 'hb4', name: 'Deck strengthening — Spans 1–3', start: '2025-06-01', finish: '2026-03-31', pct: 90, critical: true },
+            { id: 'hb5', name: 'Deck strengthening — Spans 4–6', start: '2026-02-01', finish: '2026-11-30', pct: 44, critical: true },
+            { id: 'hb6', name: 'Corrosion removal & abrasive blasting', start: '2025-09-01', finish: '2026-08-31', pct: 58, critical: false },
+            { id: 'hb7', name: 'Protective coatings application', start: '2026-04-01', finish: '2027-02-28', pct: 18, critical: true },
+            { id: 'hb8', name: 'Expansion joint replacement', start: '2026-06-01', finish: '2026-12-31', pct: 8, critical: false },
+            { id: 'hb9', name: 'Load testing, rating & handover', start: '2027-01-15', finish: '2027-04-30', pct: 0, critical: true },
+          ],
+        },
         customers: [{ name: 'Priya Menon', company: 'State Transport Authority', cell: '+61 419 555 118', email: 'p.menon@statetransport.gov.au' }],
         description: 'Structural strengthening and corrosion-protection retrofit of an existing steel road bridge, including deck strengthening, protective coatings, and night-works traffic management while maintaining live traffic throughout the program.',
         clientReps: [
@@ -2939,6 +2954,20 @@ class Component extends DCLogic {
       },
       {
         id: 'p3', name: 'Meadowbrook Estate', code: 'MBE-25', client: 'Greenfield Homes', status: 'on_hold', projectType: 'Residential', address: 'Meadowbrook Dr, Springfield QLD 4300', gstRate: 10,
+        schedule: {
+          fileName: 'Meadowbrook Estate — Construction Programme Rev 1.mpp', fileType: '', fileUrl: '', uploadedAt: '2026-05-10', version: 1, versions: [],
+          activities: [
+            { id: 'mb1', name: 'Earthworks & bulk civil', start: '2025-06-01', finish: '2025-10-31', pct: 100, critical: true },
+            { id: 'mb2', name: 'Roads, kerbs & stormwater drainage', start: '2025-09-01', finish: '2026-01-31', pct: 95, critical: true },
+            { id: 'mb3', name: 'Wet & dry services reticulation', start: '2025-11-01', finish: '2026-02-28', pct: 88, critical: false },
+            { id: 'mb4', name: 'Stage 1 slabs — Lots 1–24', start: '2025-12-01', finish: '2026-04-30', pct: 70, critical: true },
+            { id: 'mb5', name: 'Stage 1 framing & lock-up', start: '2026-02-15', finish: '2026-07-31', pct: 48, critical: true },
+            { id: 'mb6', name: 'Stage 1 fit-out & finishes', start: '2026-05-01', finish: '2026-09-30', pct: 22, critical: true },
+            { id: 'mb7', name: 'Electrical & solar-PV / battery install', start: '2026-06-01', finish: '2026-10-31', pct: 12, critical: false },
+            { id: 'mb8', name: 'Stage 2 slabs — Lots 25–48 (on hold)', start: '2026-08-01', finish: '2026-11-30', pct: 0, critical: true },
+            { id: 'mb9', name: 'Landscaping, titles & handover', start: '2026-10-01', finish: '2026-12-15', pct: 0, critical: true },
+          ],
+        },
         customers: [{ name: 'Daniel Cho', company: 'Greenfield Homes', cell: '+61 405 555 340', email: 'd.cho@greenfieldhomes.com' }],
         description: 'Delivery of a 48-lot residential estate including groundworks, timber-framed dwellings, electrical and renewable (solar PV + battery) packages. Currently on hold pending client finance approval for stage 2.',
         clientReps: [
