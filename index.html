@@ -191,6 +191,47 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
             <textarea value="{{ projDescription }}" onInput="{{ onDescInput }}" rows="3" placeholder="Describe the project scope, structure and key characteristics…" style="width:100%;border:1px solid #e4e8ee;border-radius:8px;padding:11px 13px;font-size:13.5px;font-family:inherit;color:#0f1720;line-height:1.6;resize:vertical" style-focus="border-color:#2b59c3;outline:none"></textarea>
           </div>
 
+          <sc-if value="{{ scheduleSummary.show }}" hint-placeholder-val="{{ false }}">
+            <div style="background:#fff;border:1px solid #e4e8ee;border-radius:12px;padding:18px 20px;margin-top:16px">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:10px;flex-wrap:wrap">
+                <div style="font-size:12px;font-weight:600;letter-spacing:.4px;color:#8894a2;text-transform:uppercase">🗓 Schedule — as at {{ scheduleSummary.todayLabel }}</div>
+                <div style="display:flex;align-items:center;gap:12px">
+                  <div style="display:flex;align-items:center;gap:8px"><div style="width:120px;height:8px;background:#eef1f5;border-radius:5px;overflow:hidden"><div style="width:{{ scheduleSummary.overallPct }}%;height:100%;background:#2b59c3"></div></div><span class="mono" style="font-size:12.5px;font-weight:600;color:#0f1720">{{ scheduleSummary.overallPct }}%</span></div>
+                  <button onClick="{{ scheduleSummary.onOpen }}" style="border:1px solid #cfd8e2;background:#fff;color:#2b59c3;border-radius:7px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="border-color:#2b59c3">Open schedule ↗</button>
+                </div>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px">
+                <div>
+                  <div style="font-size:10.5px;font-weight:700;letter-spacing:.3px;color:#1d4ed8;text-transform:uppercase;margin-bottom:7px">In progress today · {{ scheduleSummary.activeCount }}</div>
+                  <sc-if value="{{ scheduleSummary.hasActive }}" hint-placeholder-val="{{ true }}">
+                    <sc-for list="{{ scheduleSummary.activeNow }}" as="a" hint-placeholder-count="3">
+                      <div style="display:flex;align-items:center;gap:7px;margin-bottom:6px"><span style="width:7px;height:7px;border-radius:2px;background:{{ a.barColor }};flex:0 0 auto"></span><div style="min-width:0;flex:1"><div style="font-size:12px;color:#0f1720;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ a.name }}</div><div style="font-size:10px;color:#8894a2">{{ a.pct }}% · due {{ a.finishFmt }}</div></div></div>
+                    </sc-for>
+                  </sc-if>
+                  <sc-if value="{{ scheduleSummary.hasActive }}" hint-placeholder-val="{{ false }}"><div style="font-size:11.5px;color:#a4afba">Nothing active today.</div></sc-if>
+                </div>
+                <div>
+                  <div style="font-size:10.5px;font-weight:700;letter-spacing:.3px;color:#b91c1c;text-transform:uppercase;margin-bottom:7px">Overdue · {{ scheduleSummary.overdueCount }}</div>
+                  <sc-if value="{{ scheduleSummary.hasOverdue }}" hint-placeholder-val="{{ true }}">
+                    <sc-for list="{{ scheduleSummary.overdue }}" as="a" hint-placeholder-count="2">
+                      <div style="margin-bottom:6px"><div style="font-size:12px;color:#0f1720;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ a.name }}</div><div style="font-size:10px;color:#b91c1c">{{ a.pct }}% · was due {{ a.finishFmt }}</div></div>
+                    </sc-for>
+                  </sc-if>
+                  <sc-if value="{{ scheduleSummary.hasOverdue }}" hint-placeholder-val="{{ false }}"><div style="font-size:11.5px;color:#15803d">None overdue.</div></sc-if>
+                </div>
+                <div>
+                  <div style="font-size:10.5px;font-weight:700;letter-spacing:.3px;color:#8894a2;text-transform:uppercase;margin-bottom:7px">Starting soon</div>
+                  <sc-if value="{{ scheduleSummary.hasUpcoming }}" hint-placeholder-val="{{ true }}">
+                    <sc-for list="{{ scheduleSummary.upcoming }}" as="a" hint-placeholder-count="2">
+                      <div style="margin-bottom:6px"><div style="font-size:12px;color:#0f1720;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ a.name }}</div><div style="font-size:10px;color:#8894a2">starts {{ a.startFmt }}</div></div>
+                    </sc-for>
+                  </sc-if>
+                  <sc-if value="{{ scheduleSummary.hasUpcoming }}" hint-placeholder-val="{{ false }}"><div style="font-size:11.5px;color:#a4afba">Nothing in the next 45 days.</div></sc-if>
+                </div>
+              </div>
+            </div>
+          </sc-if>
+
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px">
             <div style="background:#fff;border:1px solid #e4e8ee;border-radius:12px;padding:20px">
               <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
@@ -1481,6 +1522,94 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
           </div>
         </sc-if>
 
+        <!-- ============ SCHEDULE ============ -->
+        <sc-if value="{{ scheduleV.show }}" hint-placeholder-val="{{ false }}">
+          <!-- File upload / replace bar -->
+          <div style="background:#fff;border:1px solid #e4e8ee;border-radius:12px;padding:14px 16px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+            <sc-if value="{{ scheduleV.hasFile }}" hint-placeholder-val="{{ true }}">
+              <div style="display:flex;align-items:center;gap:12px;min-width:0">
+                <div style="font-size:24px">🗓</div>
+                <div style="min-width:0"><div style="font-size:13.5px;font-weight:600;color:#0f1720;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ scheduleV.fileName }}</div><div style="font-size:11.5px;color:#8894a2">{{ scheduleV.version }} · uploaded {{ scheduleV.uploadedAt }}<sc-if value="{{ scheduleV.hasVersions }}" hint-placeholder-val="{{ false }}"> · {{ scheduleV.count }} activities</sc-if></div></div>
+              </div>
+              <div style="display:flex;gap:8px;align-items:center">
+                <sc-if value="{{ scheduleV.canPreview }}" hint-placeholder-val="{{ false }}"><button onClick="{{ scheduleV.onPreview }}" style="border:1px solid #dbe3ee;background:#f2f6fd;color:#2b59c3;border-radius:8px;padding:8px 13px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="border-color:#2b59c3">👁 Preview file</button></sc-if>
+                <label style="display:inline-flex;align-items:center;gap:6px;border:1px solid #2b59c3;background:#2b59c3;color:#fff;border-radius:8px;padding:8px 13px;font-size:12.5px;font-weight:600;cursor:pointer;white-space:nowrap" style-hover="background:#244dab">⟳ Replace with new version<input type="file" accept=".mpp,.mpx,.xer,.pp,.xml,.ppx,.pdf" onChange="{{ scheduleV.onUpload }}" style="display:none"></label>
+              </div>
+            </sc-if>
+            <sc-if value="{{ scheduleV.noFile }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;align-items:center;gap:12px"><div style="font-size:24px">🗓</div><div><div style="font-size:13.5px;font-weight:600;color:#0f1720">No programme uploaded</div><div style="font-size:11.5px;color:#8894a2">Upload an MPP, MPX, XER, PP, XML, PPX or PDF programme file.</div></div></div>
+              <label style="display:inline-flex;align-items:center;gap:6px;border:1px solid #2b59c3;background:#2b59c3;color:#fff;border-radius:8px;padding:8px 14px;font-size:12.5px;font-weight:600;cursor:pointer" style-hover="background:#244dab">＋ Upload schedule<input type="file" accept=".mpp,.mpx,.xer,.pp,.xml,.ppx,.pdf" onChange="{{ scheduleV.onUpload }}" style="display:none"></label>
+            </sc-if>
+          </div>
+
+          <!-- KPI strip -->
+          <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:16px">
+            <div style="background:#0f1a24;border-radius:11px;padding:14px 15px"><div style="font-size:10.5px;font-weight:600;letter-spacing:.4px;color:#9fb0c4;text-transform:uppercase">Overall progress</div><div class="mono" style="font-size:22px;font-weight:700;color:#fff;margin-top:4px">{{ scheduleV.overallPct }}%</div></div>
+            <div style="background:#fff;border:1px solid #e4e8ee;border-radius:11px;padding:14px 15px"><div style="font-size:10.5px;font-weight:600;letter-spacing:.4px;color:#8894a2;text-transform:uppercase">In progress</div><div class="mono" style="font-size:22px;font-weight:600;color:#1d4ed8;margin-top:4px">{{ scheduleV.activeCount }}</div><div style="font-size:10.5px;color:#8894a2">as of today</div></div>
+            <div style="background:#fff;border:1px solid #e4e8ee;border-radius:11px;padding:14px 15px"><div style="font-size:10.5px;font-weight:600;letter-spacing:.4px;color:#8894a2;text-transform:uppercase">Overdue</div><div class="mono" style="font-size:22px;font-weight:600;color:{{ scheduleV.overdueColor }};margin-top:4px">{{ scheduleV.overdueCount }}</div><div style="font-size:10.5px;color:#8894a2">past finish, incomplete</div></div>
+            <div style="background:#fff;border:1px solid #e4e8ee;border-radius:11px;padding:14px 15px"><div style="font-size:10.5px;font-weight:600;letter-spacing:.4px;color:#8894a2;text-transform:uppercase">Complete</div><div class="mono" style="font-size:22px;font-weight:600;color:#15803d;margin-top:4px">{{ scheduleV.doneCount }}</div></div>
+            <div style="background:#fff;border:1px solid #e4e8ee;border-radius:11px;padding:14px 15px"><div style="font-size:10.5px;font-weight:600;letter-spacing:.4px;color:#8894a2;text-transform:uppercase">On critical path</div><div class="mono" style="font-size:22px;font-weight:600;color:#dc2626;margin-top:4px">{{ scheduleV.criticalCount }}</div></div>
+          </div>
+
+          <sc-if value="{{ scheduleV.hasActivities }}" hint-placeholder-val="{{ true }}">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:10px;flex-wrap:wrap">
+              <div style="font-size:13px;font-weight:600;color:#0f1720">Programme · <span style="font-weight:500;color:#8894a2">{{ scheduleV.count }} activities</span></div>
+              <div style="display:flex;gap:8px">
+                <button onClick="{{ scheduleV.onToggleCritical }}" title="Show only critical-path activities" style="border:1px solid {{ scheduleV.critBtnBorder }};background:{{ scheduleV.critBtnBg }};color:{{ scheduleV.critBtnFg }};border-radius:8px;padding:7px 13px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit">◆ {{ scheduleV.critBtnLabel }}</button>
+                <button onClick="{{ scheduleV.onAddActivity }}" style="border:1px solid #2b59c3;background:#fff;color:#2b59c3;border-radius:8px;padding:7px 13px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="background:#f2f6fd">＋ Activity</button>
+              </div>
+            </div>
+
+            <!-- Gantt -->
+            <div style="background:#fff;border:1px solid #e4e8ee;border-radius:12px;overflow:hidden;margin-bottom:16px">
+              <div style="overflow-x:auto"><div style="min-width:820px">
+                <div style="display:flex;border-bottom:1px solid #eef1f4;background:#fafbfc">
+                  <div style="width:210px;flex:0 0 210px;padding:9px 14px;font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#8894a2;text-transform:uppercase">Activity</div>
+                  <div style="flex:1;position:relative;height:34px">
+                    <sc-for list="{{ scheduleV.ticks }}" as="t" hint-placeholder-count="8"><span style="position:absolute;left:{{ t.left }}%;top:10px;font-size:9.5px;color:#a4afba;transform:translateX(-50%);white-space:nowrap">{{ t.label }}</span></sc-for>
+                    <sc-if value="{{ scheduleV.todayIn }}" hint-placeholder-val="{{ false }}"><span style="position:absolute;left:{{ scheduleV.todayPct }}%;top:1px;font-size:9px;font-weight:700;color:#dc2626;transform:translateX(-50%);white-space:nowrap">▼ Today</span></sc-if>
+                  </div>
+                </div>
+                <sc-for list="{{ scheduleV.rows }}" as="r" hint-placeholder-count="6">
+                  <div style="display:flex;align-items:center;border-bottom:1px solid #f4f6f9" style-hover="background:#f9fafc">
+                    <div style="width:210px;flex:0 0 210px;padding:8px 14px;font-size:12px;color:#0f1720;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><sc-if value="{{ r.critical }}" hint-placeholder-val="{{ false }}"><span style="color:#dc2626;font-size:9px">◆ </span></sc-if>{{ r.name }}</div>
+                    <div style="flex:1;position:relative;height:30px">
+                      <sc-if value="{{ scheduleV.todayIn }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;left:{{ scheduleV.todayPct }}%;top:0;bottom:0;width:0;border-left:1.5px dashed #dc2626"></div></sc-if>
+                      <div title="{{ r.startFmt }} → {{ r.finishFmt }} · {{ r.pct }}%" style="position:absolute;left:{{ r.left }}%;width:{{ r.width }}%;top:8px;height:14px;background:{{ r.barColor }};opacity:.28;border-radius:4px"></div>
+                      <div style="position:absolute;left:{{ r.left }}%;width:{{ r.width }}%;top:8px;height:14px;border-radius:4px;overflow:hidden"><div style="width:{{ r.pct }}%;height:100%;background:{{ r.barFill }};border-radius:4px"></div></div>
+                    </div>
+                  </div>
+                </sc-for>
+              </div></div>
+            </div>
+
+            <!-- Activity register (editable) -->
+            <div style="background:#fff;border:1px solid #e4e8ee;border-radius:12px;overflow:hidden">
+              <div style="overflow-x:auto"><div style="min-width:900px">
+                <div style="display:grid;grid-template-columns:1.6fr 120px 120px 66px 150px 118px 62px 34px;gap:10px;padding:10px 16px;background:#fafbfc;border-bottom:1px solid #e4e8ee;font-size:10px;font-weight:600;letter-spacing:.3px;color:#8894a2;text-transform:uppercase">
+                  <div>Activity</div><div>Start</div><div>Finish</div><div style="text-align:center">Dur</div><div>% complete</div><div style="text-align:center">Status</div><div style="text-align:center">Critical</div><div></div>
+                </div>
+                <sc-for list="{{ scheduleV.rows }}" as="r" hint-placeholder-count="6">
+                  <div style="display:grid;grid-template-columns:1.6fr 120px 120px 66px 150px 118px 62px 34px;gap:10px;align-items:center;padding:8px 16px;border-bottom:1px solid #f4f6f9">
+                    <input value="{{ r.name }}" onInput="{{ r.onName }}" placeholder="Activity name" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 8px;font-size:12px;font-family:inherit;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none">
+                    <input value="{{ r.start }}" onInput="{{ r.onStart }}" type="date" class="mono" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 6px;font-size:10.5px;font-family:'IBM Plex Mono',monospace;color:#4a5765;background:#fff" style-focus="border-color:#2b59c3;outline:none">
+                    <input value="{{ r.finish }}" onInput="{{ r.onFinish }}" type="date" class="mono" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 6px;font-size:10.5px;font-family:'IBM Plex Mono',monospace;color:#4a5765;background:#fff" style-focus="border-color:#2b59c3;outline:none">
+                    <div class="mono" style="font-size:11px;color:#8894a2;text-align:center">{{ r.durLabel }}</div>
+                    <div style="display:flex;align-items:center;gap:6px"><input value="{{ r.pct }}" onInput="{{ r.onPct }}" type="range" min="0" max="100" step="5" style="flex:1;cursor:pointer"><span class="mono" style="font-size:11px;color:#0f1720;width:30px;text-align:right">{{ r.pct }}%</span></div>
+                    <div style="text-align:center"><span style="display:inline-block;font-size:10px;font-weight:700;color:{{ r.statusColor }};background:{{ r.statusBg }};border-radius:12px;padding:2px 8px">{{ r.statusLabel }}</span></div>
+                    <div style="text-align:center"><button onClick="{{ r.onCritical }}" title="Toggle critical path" style="border:0;background:transparent;cursor:pointer;font-size:15px;padding:2px;line-height:1;color:{{ r.barColor }}"><sc-if value="{{ r.critical }}" hint-placeholder-val="{{ true }}">◆</sc-if><sc-if value="{{ r.critical }}" hint-placeholder-val="{{ false }}"><span style="color:#c7d0db">◇</span></sc-if></button></div>
+                    <button onClick="{{ r.onDelete }}" title="Delete" style="border:0;background:transparent;color:#c0c8d1;cursor:pointer;font-size:13px;padding:2px;line-height:1" style-hover="color:#b91c1c">✕</button>
+                  </div>
+                </sc-for>
+              </div></div>
+            </div>
+            <div style="font-size:11.5px;color:#8894a2;line-height:1.5;margin-top:10px">The uploaded programme file is the source of record. Activities, the <strong style="color:#dc2626">critical path</strong> (◆) and % complete drive the Gantt, the KPIs and the today marker, and feed the project <strong style="color:#6b7787">Summary</strong>. Binary formats (MPP/XER/…) are stored and downloadable; a parser would map them to these activities on a connected backend.</div>
+          </sc-if>
+          <sc-if value="{{ scheduleV.noActivities }}" hint-placeholder-val="{{ false }}">
+            <div style="background:#fff;border:1px dashed #d7dde5;border-radius:12px;padding:30px 24px;text-align:center;color:#8894a2;font-size:13px">No activities yet. Upload a programme file above, or click <strong style="color:#6b7787">＋ Activity</strong> to build the schedule manually.<div style="margin-top:12px"><button onClick="{{ scheduleV.onAddActivity }}" style="border:1px solid #2b59c3;background:#fff;color:#2b59c3;border-radius:8px;padding:8px 15px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="background:#f2f6fd">＋ Add activity</button></div></div>
+          </sc-if>
+        </sc-if>
+
         <!-- ============ FILES & PHOTOS ============ -->
         <sc-if value="{{ filesV.show }}" hint-placeholder-val="{{ false }}">
           <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:20px">
@@ -2685,6 +2814,22 @@ class Component extends DCLogic {
           { id: 'd11', category: 'inspection', ref: 'INSP-015', title: 'Facade waterproofing — East L18', party: 'Gordon Xue', date: '2026-07-18', dueDate: '', status: 'conditional', priority: '', notes: 'Re-test after gasket rework.' },
           { id: 'd12', category: 'incident', ref: 'INC-003', title: 'Near miss — dropped tool at L15 hoist', party: 'Marco Tran', date: '2026-06-28', dueDate: '', status: 'investigating', priority: 'high', notes: 'Exclusion zone reviewed; toolbox talk scheduled.' },
         ],
+        schedule: {
+          fileName: 'Riverside Tower — Master Programme Rev 4.xer', fileType: '', fileUrl: '', uploadedAt: '2026-07-15', version: 4,
+          versions: [{ name: 'Riverside Tower — Master Programme Rev 3.xer', version: 3, at: '2026-04-02' }],
+          activities: [
+            { id: 'ac1', name: 'Site establishment & enabling works', start: '2024-03-01', finish: '2024-04-15', pct: 100, critical: true },
+            { id: 'ac2', name: 'Bulk excavation & shoring', start: '2024-04-16', finish: '2024-07-31', pct: 100, critical: true },
+            { id: 'ac3', name: 'Piling & foundations', start: '2024-06-15', finish: '2024-10-31', pct: 100, critical: true },
+            { id: 'ac4', name: 'Substructure — 2 basement levels', start: '2024-10-01', finish: '2025-02-28', pct: 100, critical: true },
+            { id: 'ac5', name: 'Superstructure L1–L16', start: '2025-02-01', finish: '2025-11-30', pct: 92, critical: true },
+            { id: 'ac6', name: 'Superstructure L17–L32', start: '2025-10-01', finish: '2026-08-31', pct: 74, critical: true },
+            { id: 'ac7', name: 'Curtain-wall facade', start: '2026-01-15', finish: '2026-10-31', pct: 48, critical: false },
+            { id: 'ac8', name: 'MEP rough-in', start: '2025-09-01', finish: '2026-09-30', pct: 61, critical: false },
+            { id: 'ac9', name: 'Internal fit-out', start: '2026-05-01', finish: '2026-12-20', pct: 22, critical: false },
+            { id: 'ac10', name: 'Commissioning & handover', start: '2026-11-01', finish: '2027-01-31', pct: 0, critical: true },
+          ],
+        },
         description: 'Construction of a 32-storey mixed-use residential tower with two basement levels, ground-floor retail and a unitised curtain-wall facade. Works include substructure, structural steel frame, full MEP fit-out and external works on a constrained inner-city site.',
         clientReps: [
           { name: 'Alan Reyes', role: 'Development Director', phone: '+1 415 555 0201', email: 'a.reyes@meridiandev.com' },
@@ -3110,6 +3255,14 @@ class Component extends DCLogic {
   setPhotoDesc(id, val) { this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, photos: (p.photos || []).map(ph => ph.id === id ? { ...ph, desc: val } : ph), defects: (p.defects || []).map(d => ({ ...d, photos: (d.photos || []).map(ph => ph.id === id ? { ...ph, desc: val } : ph) })), docs: (p.docs || []).map(d => ({ ...d, attachments: (d.attachments || []).map(a => a.id === id ? { ...a, desc: val } : a) })) }) })); }
   addProjectPhoto(e) { const files = Array.from((e.target && e.target.files) || []); if (!files.length) return; files.forEach(file => { const reader = new FileReader(); reader.onload = ev => { const ph = { id: 'ph' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), name: file.name || 'photo', url: ev.target.result, at: this.todayLocal(), desc: '' }; this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, photos: [...(p.photos || []), ph] }) })); }; reader.readAsDataURL(file); }); if (e.target) e.target.value = ''; }
   removeProjectPhoto(id) { this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, photos: (p.photos || []).filter(ph => ph.id !== id) }) })); }
+  // ---- Schedule ----
+  uploadSchedule(e) { const file = e.target && e.target.files && e.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = ev => { this.setState(s => ({ projects: s.projects.map(p => { if (p.id !== s.pid) return p; const sc = p.schedule || { activities: [], versions: [], version: 0 }; const versions = sc.fileName ? [{ name: sc.fileName, version: sc.version || 0, at: sc.uploadedAt || '' }, ...(sc.versions || [])] : (sc.versions || []); return { ...p, schedule: { ...sc, fileName: file.name, fileType: file.type || '', fileUrl: ev.target.result, uploadedAt: this.todayLocal(), version: (Number(sc.version) || 0) + 1, versions } }; }) })); }; reader.readAsDataURL(file); if (e.target) e.target.value = ''; }
+  previewScheduleFile() { const p = this.proj(this.state.pid); if (!p || !p.schedule || !p.schedule.fileUrl) return; this.openAttachment({ name: p.schedule.fileName, url: p.schedule.fileUrl, type: p.schedule.fileType }); }
+  setScheduleActivity(id, field, val) { this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, schedule: { ...(p.schedule || {}), activities: ((p.schedule || {}).activities || []).map(a => a.id === id ? { ...a, [field]: val } : a) } }) })); }
+  toggleActivityCritical(id) { this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, schedule: { ...(p.schedule || {}), activities: ((p.schedule || {}).activities || []).map(a => a.id === id ? { ...a, critical: !a.critical } : a) } }) })); }
+  addActivity() { const a = { id: 'ac' + Date.now().toString(36), name: '', start: this.todayLocal(), finish: this.todayLocal(), pct: 0, critical: false }; this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, schedule: { ...(p.schedule || { activities: [] }), activities: [...((p.schedule || {}).activities || []), a] } }) })); }
+  deleteActivity(id) { this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, schedule: { ...(p.schedule || {}), activities: ((p.schedule || {}).activities || []).filter(a => a.id !== id) } }) })); }
+  toggleCriticalOnly() { this.setState(s => ({ scheduleCriticalOnly: !s.scheduleCriticalOnly })); }
   postRfiMessage(id, dir, author, text) { if (!text || !text.trim()) return; const msg = { id: 'm' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), dir, author, text: text.trim(), at: this.todayLocal() }; this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, docs: (p.docs || []).map(d => d.id === id ? { ...d, thread: [...(d.thread || []), msg] } : d) }) })); }
   setRfiDraft(id, v) { this.setState(s => ({ rfiDraft: { ...(s.rfiDraft || {}), [id]: v } })); }
   postRfiOurNote(id) { const t = ((this.state.rfiDraft || {})[id] || '').trim(); if (!t) return; this.postRfiMessage(id, 'out', 'Cubic (PM)', t); this.setState(s => ({ rfiDraft: { ...(s.rfiDraft || {}), [id]: '' } })); }
@@ -3769,14 +3922,13 @@ class Component extends DCLogic {
       mkMod('eot', 'EOT', '⏱', true),
       mkMod('files', 'Files & Photos', '❐', true),
       mkMod('contacts', 'Contacts', '☰', true),
-      mkMod('schedule', 'Schedule', '▦', false),
+      mkMod('schedule', 'Schedule', '▦', true),
       mkMod('defects', 'Defects List', '⚠', true),
       mkMod('report', 'Report Design', '◫', false),
     ];
 
     // Placeholder sections — nav slot + "planned contents", no functionality yet
     const sectionMeta = {
-      schedule: { title: 'Schedule', desc: 'Project programme / timeline.', bullets: ['Tasks & milestones', 'Gantt timeline'] },
       report: { title: 'Report Design', desc: 'Design and export project reports.', bullets: ['Report templates', 'Branded PDF export'] },
     };
     const placeholderKeys = Object.keys(sectionMeta);
@@ -3802,6 +3954,7 @@ class Component extends DCLogic {
     const showDefects = inProject && S.module === 'defects';
     const showContacts = inProject && S.module === 'contacts';
     const showFiles = inProject && S.module === 'files';
+    const showSchedule = inProject && S.module === 'schedule';
 
     // header / title
     let pageTitle = '', pageSub = '', crumb1 = '', crumb2 = '', pageStatus = { show: false }, primaryAction = { show: false };
@@ -3824,6 +3977,7 @@ class Component extends DCLogic {
       if (showDocuments) { pageTitle = 'Documents'; pageSub = 'RFIs · Permits · To-Do’s · Drawings · Meetings · Inspections · Incidents — ' + p.name; crumb2 = 'Documents'; }
       if (showContacts) { pageTitle = 'Contacts'; pageSub = 'Everyone on the project — client, team, representatives & subcontractors — ' + p.name; crumb2 = 'Contacts'; primaryAction = { show: true, label: '✉ Compose email', onClick: () => this.openEmailCompose('') }; }
       if (showFiles) { pageTitle = 'Files & Photos'; pageSub = 'Invoices · Drawings · Photos · Bills — auto-populated from the project — ' + p.name; crumb2 = 'Files & Photos'; }
+      if (showSchedule) { pageTitle = 'Schedule'; pageSub = 'Project programme, critical path & progress — ' + p.name; crumb2 = 'Schedule'; }
       if (showPlaceholder) { pageTitle = placeholder.title; pageSub = placeholder.desc; crumb2 = placeholder.title; }
     }
 
@@ -3887,7 +4041,7 @@ class Component extends DCLogic {
         kpiCard('Unassigned', String(uncoded), uncoded ? 'need a cost code' : 'all coded', uncoded ? '#b45309' : '#15803d'),
         kpiCard('Vendors', String(new Set(bills.map(x => x.vendorId).filter(Boolean)).size), 'directory: ' + S.vendors.length),
       ];
-    } else if (inProject && !showEot && !showDocuments && !showContacts && !showFiles) {
+    } else if (inProject && !showEot && !showDocuments && !showContacts && !showFiles && !showSchedule) {
       const r = this.rollup(p);
       kpis = [
         kpiCard('Contract value', this.moneyM(r.contract), this.typeLabel(p.contract.type)),
@@ -3932,10 +4086,30 @@ class Component extends DCLogic {
     }
 
     // dashboard overview (description, client reps, key personnel)
+    let scheduleSummary = { show: false };
     let projDescription = '', clientRepRows = [], teamRows = [], clientNameV = '';
     if (showDashboard) {
       projDescription = p.description || '';
       clientNameV = p.client;
+      // Schedule snapshot as of today → surfaced on the Summary
+      const ssc = p.schedule; const sacts = (ssc && ssc.activities) || [];
+      if (sacts.length) {
+        const dn = iso => { if (!iso) return null; const q = iso.split('-').map(Number); return Math.round(Date.UTC(q[0], q[1] - 1, q[2]) / 864e5); };
+        const tN = dn(this.todayLocal());
+        let sumD = 0, sumP = 0; const activeNow = [], overdueNow = [], upcoming = [];
+        sacts.forEach(a => { const s = dn(a.start), f = dn(a.finish); const dur = (f != null && s != null) ? (f - s + 1) : 0; const pct = Math.max(0, Math.min(100, Number(a.pct) || 0)); sumD += dur; sumP += dur * pct / 100;
+          const item = { name: a.name, pct: String(pct), critical: a.critical, startFmt: a.start ? this.fmtDate(a.start) : '—', finishFmt: a.finish ? this.fmtDate(a.finish) : '—', barColor: a.critical ? '#dc2626' : '#2b59c3' };
+          if (pct >= 100) return;
+          if (f != null && f < tN) overdueNow.push(item);
+          else if (s != null && s <= tN && (f == null || f >= tN)) activeNow.push(item);
+          else if (s != null && s > tN && s <= tN + 45) upcoming.push(item); });
+        upcoming.sort((a, b) => a.finishFmt < b.finishFmt ? -1 : 1);
+        scheduleSummary = { show: true, overallPct: String(sumD ? Math.round(sumP / sumD * 100) : 0),
+          activeNow: activeNow.slice(0, 6), hasActive: activeNow.length > 0, activeCount: String(activeNow.length),
+          overdue: overdueNow.slice(0, 4), hasOverdue: overdueNow.length > 0, overdueCount: String(overdueNow.length),
+          upcoming: upcoming.slice(0, 4), hasUpcoming: upcoming.length > 0,
+          todayLabel: this.fmtDate(this.todayLocal()), onOpen: () => this.setModule('schedule') };
+      }
       clientRepRows = (p.clientReps || []).map((r, i) => ({
         name: r.name, role: r.role, phone: r.phone, email: r.email,
         onName: e => this.setClientRep(i, 'name', e.target.value), onRole: e => this.setClientRep(i, 'role', e.target.value),
@@ -4068,6 +4242,59 @@ class Component extends DCLogic {
         showPhotos: folderKey === 'photos' && hasItems, photoGroups, photoGroupOpts: [pgOpt('day', 'Day'), pgOpt('week', 'Week'), pgOpt('month', 'Month')],
         canUpload: folderKey === 'photos', onUploadPhoto: e => this.addProjectPhoto(e),
         showEmpty: !hasItems, showPhotoEmptyUpload: folderKey === 'photos' && !hasItems,
+      };
+    }
+
+    // schedule — programme, Gantt + critical path, uploaded file
+    let scheduleV = { show: false };
+    if (showSchedule) {
+      const sc = p.schedule || { activities: [], versions: [] };
+      const acts = sc.activities || [];
+      const dnum = iso => { if (!iso) return null; const q = iso.split('-').map(Number); return Math.round(Date.UTC(q[0], q[1] - 1, q[2]) / 864e5); };
+      const today = this.todayLocal(); const todayN = dnum(today);
+      const criticalOnly = !!S.scheduleCriticalOnly;
+      const shown = criticalOnly ? acts.filter(a => a.critical) : acts;
+      let minN = Infinity, maxN = -Infinity;
+      acts.forEach(a => { const s = dnum(a.start), f = dnum(a.finish); if (s != null) minN = Math.min(minN, s); if (f != null) maxN = Math.max(maxN, f); });
+      if (!isFinite(minN)) { minN = todayN; maxN = todayN + 30; }
+      const span = Math.max(1, maxN - minN);
+      const pctPos = n => Math.max(0, Math.min(100, ((n - minN) / span) * 100));
+      const todayPct = pctPos(todayN); const todayIn = todayN >= minN && todayN <= maxN;
+      const monShort = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      let ticks = []; { const sd = new Date(minN * 864e5); let ty = sd.getUTCFullYear(), tm = sd.getUTCMonth(); let cur = Math.round(Date.UTC(ty, tm, 1) / 864e5); let guard = 0;
+        while (cur <= maxN && guard < 200) { if (cur >= minN) { const d = new Date(cur * 864e5); ticks.push({ left: pctPos(cur), label: monShort[d.getUTCMonth()] + " '" + String(d.getUTCFullYear()).slice(2) }); } tm++; if (tm > 11) { tm = 0; ty++; } cur = Math.round(Date.UTC(ty, tm, 1) / 864e5); guard++; }
+        if (ticks.length > 10) { const step = Math.ceil(ticks.length / 10); ticks = ticks.filter((_, i) => i % step === 0); } }
+      const rowOf = a => {
+        const s = dnum(a.start), f = dnum(a.finish); const dur = (f != null && s != null) ? (f - s + 1) : 0;
+        const pct = Math.max(0, Math.min(100, Number(a.pct) || 0));
+        let st, col, bg;
+        if (pct >= 100) { st = 'Complete'; col = '#15803d'; bg = '#e6f4ea'; }
+        else if (f != null && f < todayN) { st = 'Overdue'; col = '#b91c1c'; bg = '#fbeef0'; }
+        else if (s != null && s <= todayN && (f == null || f >= todayN)) { st = 'In progress'; col = '#1d4ed8'; bg = '#e7eefc'; }
+        else { st = 'Not started'; col = '#6b7787'; bg = '#eef1f5'; }
+        return { id: a.id, name: a.name || '(unnamed activity)', start: a.start, finish: a.finish, startFmt: a.start ? this.fmtDate(a.start) : '—', finishFmt: a.finish ? this.fmtDate(a.finish) : '—',
+          left: s != null ? pctPos(s) : 0, width: (s != null && f != null) ? Math.max(1.2, pctPos(f) - pctPos(s)) : 1.2,
+          pct: String(pct), durLabel: dur + ' d', statusLabel: st, statusColor: col, statusBg: bg,
+          critical: a.critical, barColor: a.critical ? '#dc2626' : '#2b59c3', barFill: a.critical ? '#b91c1c' : '#1d4ed8',
+          onName: e => this.setScheduleActivity(a.id, 'name', e.target.value), onStart: e => this.setScheduleActivity(a.id, 'start', e.target.value), onFinish: e => this.setScheduleActivity(a.id, 'finish', e.target.value),
+          onPct: e => this.setScheduleActivity(a.id, 'pct', Number(e.target.value) || 0), onCritical: () => this.toggleActivityCritical(a.id), onDelete: () => this.deleteActivity(a.id) };
+      };
+      const rows = shown.map(rowOf);
+      let sumDur = 0, sumProg = 0, active = 0, overdue = 0, done = 0;
+      acts.forEach(a => { const s = dnum(a.start), f = dnum(a.finish); const dur = (f != null && s != null) ? (f - s + 1) : 0; const pct = Math.max(0, Math.min(100, Number(a.pct) || 0)); sumDur += dur; sumProg += dur * pct / 100; if (pct >= 100) done++; else if (f != null && f < todayN) overdue++; else if (s != null && s <= todayN && (f == null || f >= todayN)) active++; });
+      const overallPct = sumDur ? Math.round(sumProg / sumDur * 100) : 0;
+      const hasFile = !!(sc && sc.fileName);
+      const isPdf = /pdf/i.test(sc.fileType || '') || /\.pdf$/i.test(sc.fileName || '');
+      const versions = (sc.versions || []).map(v => ({ name: v.name, version: 'Rev ' + v.version, at: v.at ? this.fmtDate(v.at) : '' }));
+      scheduleV = {
+        show: true, hasFile, noFile: !hasFile, fileName: sc.fileName || '', version: 'v' + (sc.version || 1), uploadedAt: sc.uploadedAt ? this.fmtDate(sc.uploadedAt) : '',
+        canPreview: hasFile && !!sc.fileUrl, isPdf, versions, hasVersions: versions.length > 0,
+        onUpload: e => this.uploadSchedule(e), onPreview: () => this.previewScheduleFile(),
+        hasActivities: acts.length > 0, noActivities: acts.length === 0, rows, hasRows: rows.length > 0, count: String(acts.length),
+        ticks, todayPct: todayPct, todayIn, todayLabel: this.fmtDate(today),
+        overallPct: String(overallPct), activeCount: String(active), overdueCount: String(overdue), overdueColor: overdue > 0 ? '#b91c1c' : '#15803d', doneCount: String(done), criticalCount: String(acts.filter(a => a.critical).length),
+        criticalOnly, critBtnLabel: criticalOnly ? '✓ Critical path' : 'Critical path', critBtnBg: criticalOnly ? '#dc2626' : '#fff', critBtnFg: criticalOnly ? '#fff' : '#b91c1c', critBtnBorder: criticalOnly ? '#dc2626' : '#efc9c9',
+        onToggleCritical: () => this.toggleCriticalOnly(), onAddActivity: () => this.addActivity(),
       };
     }
 
@@ -5079,7 +5306,7 @@ class Component extends DCLogic {
       claimRows, claimTotals, onAddClaim: () => this.addClaim(),
       moduleCommitments, subModalV, signModalV, shareModalV,
       onAddContractVar: () => this.openModal('contract'),
-      projDescription, clientRepRows, teamRows, clientNameV, detailsV, contactsV, filesV, invoiceV, invoiceSendV, variationSendV, eotV, eotSendV, documentsV, rfiSendV, meetingSendV,
+      projDescription, clientRepRows, teamRows, clientNameV, scheduleSummary, detailsV, contactsV, filesV, scheduleV, invoiceV, invoiceSendV, variationSendV, eotV, eotSendV, documentsV, rfiSendV, meetingSendV,
       docViewerV: S.docViewer ? { open: true, name: S.docViewer.curName, url: S.docViewer.curUrl, isPdf: S.docViewer.curKind === 'pdf', isImage: S.docViewer.curKind === 'image', isOther: S.docViewer.curKind === 'other', hasNav: (S.docViewer.items || []).length > 1, position: (S.docViewer.index + 1) + ' / ' + (S.docViewer.items || []).length, onPrev: () => this.docViewerNav(-1), onNext: () => this.docViewerNav(1), onClose: () => this.closeDocViewer(), onNewTab: () => this.docViewerNewTab() } : { open: false },
       onDescInput: e => this.setProjectField('description', e.target.value),
       onAddClientRep: () => this.addClientRep(), onAddPersonnel: () => this.addPersonnel(),
