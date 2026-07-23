@@ -1626,33 +1626,43 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                     <sc-if value="{{ scheduleV.todayIn }}" hint-placeholder-val="{{ false }}"><span style="position:absolute;left:{{ scheduleV.todayPct }}%;top:1px;font-size:9px;font-weight:700;color:#dc2626;transform:translateX(-50%);white-space:nowrap">▼ Today</span></sc-if>
                   </div>
                 </div>
-                <sc-for list="{{ scheduleV.rows }}" as="r" hint-placeholder-count="6">
-                  <div style="display:flex;align-items:center;border-bottom:1px solid #f4f6f9" style-hover="background:#f9fafc">
-                    <div style="width:210px;flex:0 0 210px;padding:8px 14px;font-size:12px;color:#0f1720;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><sc-if value="{{ r.critical }}" hint-placeholder-val="{{ false }}"><span style="color:#dc2626;font-size:9px">◆ </span></sc-if>{{ r.name }}</div>
-                    <div style="flex:1;position:relative;height:30px">
-                      <sc-if value="{{ scheduleV.todayIn }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;left:{{ scheduleV.todayPct }}%;top:0;bottom:0;width:0;border-left:1.5px dashed #dc2626"></div></sc-if>
-                      <div title="{{ r.startFmt }} → {{ r.finishFmt }} · {{ r.pct }}%" style="position:absolute;left:{{ r.left }}%;width:{{ r.width }}%;top:8px;height:14px;background:{{ r.barColor }};opacity:.28;border-radius:4px"></div>
-                      <div style="position:absolute;left:{{ r.left }}%;width:{{ r.width }}%;top:8px;height:14px;border-radius:4px;overflow:hidden"><div style="width:{{ r.pct }}%;height:100%;background:{{ r.barFill }};border-radius:4px"></div></div>
+                <div style="position:relative">
+                  <sc-if value="{{ scheduleV.hasDeps }}" hint-placeholder-val="{{ false }}">
+                    <svg viewBox="0 0 100 {{ scheduleV.ganttH }}" preserveAspectRatio="none" style="position:absolute;left:210px;top:0;right:0;height:{{ scheduleV.ganttHpx }};z-index:2;pointer-events:none;overflow:visible">
+                      <sc-for list="{{ scheduleV.depLinks }}" as="d" hint-placeholder-count="6"><polyline points="{{ d.points }}" fill="none" stroke="{{ d.color }}" stroke-width="1.3" vector-effect="non-scaling-stroke" opacity="0.85"></polyline><circle cx="{{ d.dotX }}" cy="{{ d.dotY }}" r="3" fill="{{ d.color }}" vector-effect="non-scaling-stroke"></circle></sc-for>
+                    </svg>
+                  </sc-if>
+                  <sc-for list="{{ scheduleV.rows }}" as="r" hint-placeholder-count="6">
+                    <div style="display:flex;align-items:center;border-bottom:1px solid #f4f6f9;height:30px" style-hover="background:#f9fafc">
+                      <div style="width:210px;flex:0 0 210px;padding:0 14px;font-size:12px;color:#0f1720;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><span class="mono" style="color:#c0c8d1;font-size:10px">{{ r.num }}</span> <sc-if value="{{ r.critical }}" hint-placeholder-val="{{ false }}"><span style="color:#dc2626;font-size:9px">◆ </span></sc-if>{{ r.name }}</div>
+                      <div style="flex:1;position:relative;height:30px">
+                        <sc-if value="{{ scheduleV.todayIn }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;left:{{ scheduleV.todayPct }}%;top:0;bottom:0;width:0;border-left:1.5px dashed #dc2626"></div></sc-if>
+                        <div title="{{ r.startFmt }} → {{ r.finishFmt }} · {{ r.pct }}%" style="position:absolute;left:{{ r.left }}%;width:{{ r.width }}%;top:8px;height:14px;background:{{ r.barColor }};opacity:.28;border-radius:4px"></div>
+                        <div style="position:absolute;left:{{ r.left }}%;width:{{ r.width }}%;top:8px;height:14px;border-radius:4px;overflow:hidden"><div style="width:{{ r.pct }}%;height:100%;background:{{ r.barFill }};border-radius:4px"></div></div>
+                      </div>
                     </div>
-                  </div>
-                </sc-for>
+                  </sc-for>
+                </div>
               </div></div>
+              <div style="padding:8px 16px;border-top:1px solid #eef1f4;background:#fafbfc;font-size:10.5px;color:#8894a2;display:flex;gap:16px;flex-wrap:wrap"><span><span style="display:inline-block;width:14px;height:0;border-top:1.5px solid #9aa7b5;vertical-align:middle;margin-right:5px"></span>Dependency link</span><span style="color:#6b7787"><strong>FS</strong> finish→start</span><span style="color:#6b7787"><strong>SS</strong> start→start</span><span style="color:#6b7787"><strong>FF</strong> finish→finish</span><span style="color:#6b7787"><strong>SF</strong> start→finish</span></div>
             </div>
 
             <!-- Activity register (editable) -->
             <div style="background:#fff;border:1px solid #e4e8ee;border-radius:12px;overflow:hidden">
-              <div style="overflow-x:auto"><div style="min-width:900px">
-                <div style="display:grid;grid-template-columns:1.6fr 120px 120px 66px 150px 118px 62px 34px;gap:10px;padding:10px 16px;background:#fafbfc;border-bottom:1px solid #e4e8ee;font-size:10px;font-weight:600;letter-spacing:.3px;color:#8894a2;text-transform:uppercase">
-                  <div>Activity</div><div>Start</div><div>Finish</div><div style="text-align:center">Dur</div><div>% complete</div><div style="text-align:center">Status</div><div style="text-align:center">Critical</div><div></div>
+              <div style="overflow-x:auto"><div style="min-width:1040px">
+                <div style="display:grid;grid-template-columns:36px 1.5fr 116px 116px 58px 132px 118px 108px 54px 30px;gap:9px;padding:10px 16px;background:#fafbfc;border-bottom:1px solid #e4e8ee;font-size:10px;font-weight:600;letter-spacing:.3px;color:#8894a2;text-transform:uppercase">
+                  <div style="text-align:center">#</div><div>Activity</div><div>Start</div><div>Finish</div><div style="text-align:center">Dur</div><div>% complete</div><div style="text-align:center">Status</div><div>Predecessors</div><div style="text-align:center">Crit</div><div></div>
                 </div>
                 <sc-for list="{{ scheduleV.rows }}" as="r" hint-placeholder-count="6">
-                  <div style="display:grid;grid-template-columns:1.6fr 120px 120px 66px 150px 118px 62px 34px;gap:10px;align-items:center;padding:8px 16px;border-bottom:1px solid #f4f6f9">
+                  <div style="display:grid;grid-template-columns:36px 1.5fr 116px 116px 58px 132px 118px 108px 54px 30px;gap:9px;align-items:center;padding:8px 16px;border-bottom:1px solid #f4f6f9">
+                    <div class="mono" style="font-size:11px;color:#8894a2;text-align:center">{{ r.num }}</div>
                     <input value="{{ r.name }}" onInput="{{ r.onName }}" placeholder="Activity name" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 8px;font-size:12px;font-family:inherit;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none">
-                    <input value="{{ r.start }}" onInput="{{ r.onStart }}" type="date" class="mono" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 6px;font-size:10.5px;font-family:'IBM Plex Mono',monospace;color:#4a5765;background:#fff" style-focus="border-color:#2b59c3;outline:none">
-                    <input value="{{ r.finish }}" onInput="{{ r.onFinish }}" type="date" class="mono" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 6px;font-size:10.5px;font-family:'IBM Plex Mono',monospace;color:#4a5765;background:#fff" style-focus="border-color:#2b59c3;outline:none">
+                    <input value="{{ r.start }}" onInput="{{ r.onStart }}" type="date" class="mono" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 5px;font-size:10px;font-family:'IBM Plex Mono',monospace;color:#4a5765;background:#fff" style-focus="border-color:#2b59c3;outline:none">
+                    <input value="{{ r.finish }}" onInput="{{ r.onFinish }}" type="date" class="mono" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 5px;font-size:10px;font-family:'IBM Plex Mono',monospace;color:#4a5765;background:#fff" style-focus="border-color:#2b59c3;outline:none">
                     <div class="mono" style="font-size:11px;color:#8894a2;text-align:center">{{ r.durLabel }}</div>
-                    <div style="display:flex;align-items:center;gap:6px"><input value="{{ r.pct }}" onInput="{{ r.onPct }}" type="range" min="0" max="100" step="5" style="flex:1;cursor:pointer"><span class="mono" style="font-size:11px;color:#0f1720;width:30px;text-align:right">{{ r.pct }}%</span></div>
+                    <div style="display:flex;align-items:center;gap:6px"><input value="{{ r.pct }}" onInput="{{ r.onPct }}" type="range" min="0" max="100" step="5" style="flex:1;min-width:0;cursor:pointer"><span class="mono" style="font-size:11px;color:#0f1720;width:28px;text-align:right">{{ r.pct }}%</span></div>
                     <div style="text-align:center"><span style="display:inline-block;font-size:10px;font-weight:700;color:{{ r.statusColor }};background:{{ r.statusBg }};border-radius:12px;padding:2px 8px">{{ r.statusLabel }}</span></div>
+                    <input value="{{ r.predText }}" onInput="{{ r.onPreds }}" placeholder="e.g. 3FS, 5SS+10" title="Predecessors: task # + type (FS/SS/FF/SF) + lag (e.g. 3FS, 5SS+10)" class="mono" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 6px;font-size:10px;font-family:'IBM Plex Mono',monospace;color:#4a5765;background:#fff" style-focus="border-color:#2b59c3;outline:none">
                     <div style="text-align:center"><button onClick="{{ r.onCritical }}" title="Toggle critical path" style="border:0;background:transparent;cursor:pointer;font-size:15px;padding:2px;line-height:1;color:{{ r.barColor }}"><sc-if value="{{ r.critical }}" hint-placeholder-val="{{ true }}">◆</sc-if><sc-if value="{{ r.critical }}" hint-placeholder-val="{{ false }}"><span style="color:#c7d0db">◇</span></sc-if></button></div>
                     <button onClick="{{ r.onDelete }}" title="Delete" style="border:0;background:transparent;color:#c0c8d1;cursor:pointer;font-size:13px;padding:2px;line-height:1" style-hover="color:#b91c1c">✕</button>
                   </div>
@@ -2874,16 +2884,16 @@ class Component extends DCLogic {
           fileName: 'Riverside Tower — Master Programme Rev 4.xer', fileType: '', fileUrl: '', uploadedAt: '2026-07-15', version: 4,
           versions: [{ name: 'Riverside Tower — Master Programme Rev 3.xer', version: 3, at: '2026-04-02' }],
           activities: [
-            { id: 'ac1', name: 'Site establishment & enabling works', start: '2024-03-01', finish: '2024-04-15', pct: 100, critical: true },
-            { id: 'ac2', name: 'Bulk excavation & shoring', start: '2024-04-16', finish: '2024-07-31', pct: 100, critical: true },
-            { id: 'ac3', name: 'Piling & foundations', start: '2024-06-15', finish: '2024-10-31', pct: 100, critical: true },
-            { id: 'ac4', name: 'Substructure — 2 basement levels', start: '2024-10-01', finish: '2025-02-28', pct: 100, critical: true },
-            { id: 'ac5', name: 'Superstructure L1–L16', start: '2025-02-01', finish: '2025-11-30', pct: 92, critical: true },
-            { id: 'ac6', name: 'Superstructure L17–L32', start: '2025-10-01', finish: '2026-08-31', pct: 74, critical: true },
-            { id: 'ac7', name: 'Curtain-wall facade', start: '2026-01-15', finish: '2026-10-31', pct: 48, critical: false },
-            { id: 'ac8', name: 'MEP rough-in', start: '2025-09-01', finish: '2026-09-30', pct: 61, critical: false },
-            { id: 'ac9', name: 'Internal fit-out', start: '2026-05-01', finish: '2026-12-20', pct: 22, critical: false },
-            { id: 'ac10', name: 'Commissioning & handover', start: '2026-11-01', finish: '2027-01-31', pct: 0, critical: true },
+            { id: 'ac1', name: 'Site establishment & enabling works', start: '2024-03-01', finish: '2024-04-15', pct: 100, critical: true, preds: [] },
+            { id: 'ac2', name: 'Bulk excavation & shoring', start: '2024-04-16', finish: '2024-07-31', pct: 100, critical: true, preds: [{ id: 'ac1', type: 'FS', lag: 0 }] },
+            { id: 'ac3', name: 'Piling & foundations', start: '2024-06-15', finish: '2024-10-31', pct: 100, critical: true, preds: [{ id: 'ac2', type: 'SS', lag: 45 }] },
+            { id: 'ac4', name: 'Substructure — 2 basement levels', start: '2024-10-01', finish: '2025-02-28', pct: 100, critical: true, preds: [{ id: 'ac3', type: 'FS', lag: 0 }] },
+            { id: 'ac5', name: 'Superstructure L1–L16', start: '2025-02-01', finish: '2025-11-30', pct: 92, critical: true, preds: [{ id: 'ac4', type: 'FS', lag: 0 }] },
+            { id: 'ac6', name: 'Superstructure L17–L32', start: '2025-10-01', finish: '2026-08-31', pct: 74, critical: true, preds: [{ id: 'ac5', type: 'SS', lag: 250 }] },
+            { id: 'ac7', name: 'Curtain-wall facade', start: '2026-01-15', finish: '2026-10-31', pct: 48, critical: false, preds: [{ id: 'ac6', type: 'SS', lag: 110 }] },
+            { id: 'ac8', name: 'MEP rough-in', start: '2025-09-01', finish: '2026-09-30', pct: 61, critical: false, preds: [{ id: 'ac5', type: 'SS', lag: 210 }] },
+            { id: 'ac9', name: 'Internal fit-out', start: '2026-05-01', finish: '2026-12-20', pct: 22, critical: false, preds: [{ id: 'ac7', type: 'SS', lag: 75 }, { id: 'ac8', type: 'FF', lag: 0 }] },
+            { id: 'ac10', name: 'Commissioning & handover', start: '2026-11-01', finish: '2027-01-31', pct: 0, critical: true, preds: [{ id: 'ac9', type: 'FS', lag: 0 }] },
           ],
         },
         description: 'Construction of a 32-storey mixed-use residential tower with two basement levels, ground-floor retail and a unitised curtain-wall facade. Works include substructure, structural steel frame, full MEP fit-out and external works on a constrained inner-city site.',
@@ -2951,15 +2961,15 @@ class Component extends DCLogic {
           fileName: 'Harbour Bridge Retrofit — Programme Rev 2.xer', fileType: '', fileUrl: '', uploadedAt: '2026-06-20', version: 2,
           versions: [{ name: 'Harbour Bridge Retrofit — Programme Rev 1.xer', version: 1, at: '2025-02-10' }],
           activities: [
-            { id: 'hb1', name: 'Mobilisation & site establishment', start: '2025-01-15', finish: '2025-03-15', pct: 100, critical: true },
-            { id: 'hb2', name: 'Traffic management & access scaffolding', start: '2025-02-01', finish: '2027-03-31', pct: 62, critical: false },
-            { id: 'hb3', name: 'Structural survey & condition assessment', start: '2025-03-01', finish: '2025-06-30', pct: 100, critical: true },
-            { id: 'hb4', name: 'Deck strengthening — Spans 1–3', start: '2025-06-01', finish: '2026-03-31', pct: 90, critical: true },
-            { id: 'hb5', name: 'Deck strengthening — Spans 4–6', start: '2026-02-01', finish: '2026-11-30', pct: 44, critical: true },
-            { id: 'hb6', name: 'Corrosion removal & abrasive blasting', start: '2025-09-01', finish: '2026-08-31', pct: 58, critical: false },
-            { id: 'hb7', name: 'Protective coatings application', start: '2026-04-01', finish: '2027-02-28', pct: 18, critical: true },
-            { id: 'hb8', name: 'Expansion joint replacement', start: '2026-06-01', finish: '2026-12-31', pct: 8, critical: false },
-            { id: 'hb9', name: 'Load testing, rating & handover', start: '2027-01-15', finish: '2027-04-30', pct: 0, critical: true },
+            { id: 'hb1', name: 'Mobilisation & site establishment', start: '2025-01-15', finish: '2025-03-15', pct: 100, critical: true, preds: [] },
+            { id: 'hb2', name: 'Traffic management & access scaffolding', start: '2025-02-01', finish: '2027-03-31', pct: 62, critical: false, preds: [{ id: 'hb1', type: 'SS', lag: 15 }] },
+            { id: 'hb3', name: 'Structural survey & condition assessment', start: '2025-03-01', finish: '2025-06-30', pct: 100, critical: true, preds: [{ id: 'hb1', type: 'FS', lag: 0 }] },
+            { id: 'hb4', name: 'Deck strengthening — Spans 1–3', start: '2025-06-01', finish: '2026-03-31', pct: 90, critical: true, preds: [{ id: 'hb3', type: 'FS', lag: 0 }] },
+            { id: 'hb5', name: 'Deck strengthening — Spans 4–6', start: '2026-02-01', finish: '2026-11-30', pct: 44, critical: true, preds: [{ id: 'hb4', type: 'SS', lag: 240 }] },
+            { id: 'hb6', name: 'Corrosion removal & abrasive blasting', start: '2025-09-01', finish: '2026-08-31', pct: 58, critical: false, preds: [{ id: 'hb4', type: 'SS', lag: 90 }] },
+            { id: 'hb7', name: 'Protective coatings application', start: '2026-04-01', finish: '2027-02-28', pct: 18, critical: true, preds: [{ id: 'hb6', type: 'SS', lag: 210 }] },
+            { id: 'hb8', name: 'Expansion joint replacement', start: '2026-06-01', finish: '2026-12-31', pct: 8, critical: false, preds: [{ id: 'hb5', type: 'SS', lag: 120 }] },
+            { id: 'hb9', name: 'Load testing, rating & handover', start: '2027-01-15', finish: '2027-04-30', pct: 0, critical: true, preds: [{ id: 'hb7', type: 'FS', lag: 0 }, { id: 'hb8', type: 'FS', lag: 0 }] },
           ],
         },
         customers: [{ name: 'Priya Menon', company: 'State Transport Authority', cell: '+61 419 555 118', email: 'p.menon@statetransport.gov.au' }],
@@ -3013,15 +3023,15 @@ class Component extends DCLogic {
         schedule: {
           fileName: 'Meadowbrook Estate — Construction Programme Rev 1.mpp', fileType: '', fileUrl: '', uploadedAt: '2026-05-10', version: 1, versions: [],
           activities: [
-            { id: 'mb1', name: 'Earthworks & bulk civil', start: '2025-06-01', finish: '2025-10-31', pct: 100, critical: true },
-            { id: 'mb2', name: 'Roads, kerbs & stormwater drainage', start: '2025-09-01', finish: '2026-01-31', pct: 95, critical: true },
-            { id: 'mb3', name: 'Wet & dry services reticulation', start: '2025-11-01', finish: '2026-02-28', pct: 88, critical: false },
-            { id: 'mb4', name: 'Stage 1 slabs — Lots 1–24', start: '2025-12-01', finish: '2026-04-30', pct: 70, critical: true },
-            { id: 'mb5', name: 'Stage 1 framing & lock-up', start: '2026-02-15', finish: '2026-07-31', pct: 48, critical: true },
-            { id: 'mb6', name: 'Stage 1 fit-out & finishes', start: '2026-05-01', finish: '2026-09-30', pct: 22, critical: true },
-            { id: 'mb7', name: 'Electrical & solar-PV / battery install', start: '2026-06-01', finish: '2026-10-31', pct: 12, critical: false },
-            { id: 'mb8', name: 'Stage 2 slabs — Lots 25–48 (on hold)', start: '2026-08-01', finish: '2026-11-30', pct: 0, critical: true },
-            { id: 'mb9', name: 'Landscaping, titles & handover', start: '2026-10-01', finish: '2026-12-15', pct: 0, critical: true },
+            { id: 'mb1', name: 'Earthworks & bulk civil', start: '2025-06-01', finish: '2025-10-31', pct: 100, critical: true, preds: [] },
+            { id: 'mb2', name: 'Roads, kerbs & stormwater drainage', start: '2025-09-01', finish: '2026-01-31', pct: 95, critical: true, preds: [{ id: 'mb1', type: 'SS', lag: 90 }] },
+            { id: 'mb3', name: 'Wet & dry services reticulation', start: '2025-11-01', finish: '2026-02-28', pct: 88, critical: false, preds: [{ id: 'mb2', type: 'SS', lag: 60 }] },
+            { id: 'mb4', name: 'Stage 1 slabs — Lots 1–24', start: '2025-12-01', finish: '2026-04-30', pct: 70, critical: true, preds: [{ id: 'mb2', type: 'FS', lag: 0 }] },
+            { id: 'mb5', name: 'Stage 1 framing & lock-up', start: '2026-02-15', finish: '2026-07-31', pct: 48, critical: true, preds: [{ id: 'mb4', type: 'SS', lag: 75 }] },
+            { id: 'mb6', name: 'Stage 1 fit-out & finishes', start: '2026-05-01', finish: '2026-09-30', pct: 22, critical: true, preds: [{ id: 'mb5', type: 'SS', lag: 75 }] },
+            { id: 'mb7', name: 'Electrical & solar-PV / battery install', start: '2026-06-01', finish: '2026-10-31', pct: 12, critical: false, preds: [{ id: 'mb5', type: 'FS', lag: 0 }] },
+            { id: 'mb8', name: 'Stage 2 slabs — Lots 25–48 (on hold)', start: '2026-08-01', finish: '2026-11-30', pct: 0, critical: true, preds: [{ id: 'mb4', type: 'FS', lag: 0 }] },
+            { id: 'mb9', name: 'Landscaping, titles & handover', start: '2026-10-01', finish: '2026-12-15', pct: 0, critical: true, preds: [{ id: 'mb6', type: 'FS', lag: 0 }, { id: 'mb8', type: 'FS', lag: 0 }] },
           ],
         },
         customers: [{ name: 'Daniel Cho', company: 'Greenfield Homes', cell: '+61 405 555 340', email: 'd.cho@greenfieldhomes.com' }],
@@ -3345,7 +3355,8 @@ class Component extends DCLogic {
   previewScheduleFile() { const p = this.proj(this.state.pid); if (!p || !p.schedule || !p.schedule.fileUrl) return; this.openAttachment({ name: p.schedule.fileName, url: p.schedule.fileUrl, type: p.schedule.fileType }); }
   setScheduleActivity(id, field, val) { this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, schedule: { ...(p.schedule || {}), activities: ((p.schedule || {}).activities || []).map(a => a.id === id ? { ...a, [field]: val } : a) } }) })); }
   toggleActivityCritical(id) { this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, schedule: { ...(p.schedule || {}), activities: ((p.schedule || {}).activities || []).map(a => a.id === id ? { ...a, critical: !a.critical } : a) } }) })); }
-  addActivity() { const a = { id: 'ac' + Date.now().toString(36), name: '', start: this.todayLocal(), finish: this.todayLocal(), pct: 0, critical: false }; this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, schedule: { ...(p.schedule || { activities: [] }), activities: [...((p.schedule || {}).activities || []), a] } }) })); }
+  setActivityPreds(id, text) { const p = this.proj(this.state.pid); if (!p || !p.schedule) return; const list = p.schedule.activities || []; const preds = []; String(text || '').split(',').forEach(tok => { const m = tok.trim().match(/^(\d+)\s*(FS|SS|FF|SF)?\s*([+-]\s*\d+)?\s*d?$/i); if (!m) return; const idx = Number(m[1]) - 1; const pa = list[idx]; if (!pa || pa.id === id) return; const type = (m[2] || 'FS').toUpperCase(); const lag = m[3] ? Number(m[3].replace(/\s+/g, '')) : 0; if (!preds.some(x => x.id === pa.id)) preds.push({ id: pa.id, type, lag }); }); this.setScheduleActivity(id, 'preds', preds); }
+  addActivity() { const a = { id: 'ac' + Date.now().toString(36), name: '', start: this.todayLocal(), finish: this.todayLocal(), pct: 0, critical: false, preds: [] }; this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, schedule: { ...(p.schedule || { activities: [] }), activities: [...((p.schedule || {}).activities || []), a] } }) })); }
   deleteActivity(id) { this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, schedule: { ...(p.schedule || {}), activities: ((p.schedule || {}).activities || []).filter(a => a.id !== id) } }) })); }
   toggleCriticalOnly() { this.setState(s => ({ scheduleCriticalOnly: !s.scheduleCriticalOnly })); }
   _scheduleReport(p) {
@@ -4391,6 +4402,8 @@ class Component extends DCLogic {
         while (cur <= chartMaxN && guard < 200) { if (cur >= minN) { const d = new Date(cur * 864e5); ticks.push({ left: pctPos(cur), label: monShort[d.getUTCMonth()] + " '" + String(d.getUTCFullYear()).slice(2) }); } tm++; if (tm > 11) { tm = 0; ty++; } cur = Math.round(Date.UTC(ty, tm, 1) / 864e5); guard++; }
         if (ticks.length > 10) { const step = Math.ceil(ticks.length / 10); ticks = ticks.filter((_, i) => i % step === 0); } }
       const expectedOf = (s, f) => (s != null && f != null && f > s) ? Math.round(c01((todayN - s) / (f - s)) * 100) : (s != null && todayN >= s ? 100 : 0);
+      const idToNum = {}; acts.forEach((x, i) => idToNum[x.id] = i + 1);
+      const predToStr = a => (a.preds || []).map(pr => idToNum[pr.id] ? (idToNum[pr.id] + (pr.type && pr.type !== 'FS' ? pr.type : (pr.lag ? 'FS' : '')) + (pr.lag ? (pr.lag > 0 ? '+' + pr.lag : String(pr.lag)) : '')) : '').filter(Boolean).join(', ');
       const rowOf = a => {
         const s = dnum(a.start), f = dnum(a.finish); const dur = (f != null && s != null) ? (f - s + 1) : 0;
         const pct = Math.max(0, Math.min(100, Number(a.pct) || 0));
@@ -4402,15 +4415,26 @@ class Component extends DCLogic {
         else if (behind) { st = 'Behind'; col = '#b45309'; bg = '#fbf1e3'; }
         else if (s != null && s <= todayN && (f == null || f >= todayN)) { st = 'In progress'; col = '#1d4ed8'; bg = '#e7eefc'; }
         else { st = 'Not started'; col = '#6b7787'; bg = '#eef1f5'; }
-        return { id: a.id, name: a.name || '(unnamed activity)', start: a.start, finish: a.finish, startFmt: a.start ? this.fmtDate(a.start) : '—', finishFmt: a.finish ? this.fmtDate(a.finish) : '—',
+        return { id: a.id, num: String(idToNum[a.id] || ''), name: a.name || '(unnamed activity)', start: a.start, finish: a.finish, startFmt: a.start ? this.fmtDate(a.start) : '—', finishFmt: a.finish ? this.fmtDate(a.finish) : '—',
           left: s != null ? pctPos(s) : 0, width: (s != null && f != null) ? Math.max(1.2, pctPos(f) - pctPos(s)) : 1.2,
           pct: String(pct), durLabel: dur + ' d', statusLabel: st, statusColor: col, statusBg: bg,
+          predText: predToStr(a),
           variance: (variance > 0 ? '+' : '') + variance + '%', varColor: variance < -4 ? '#b91c1c' : (variance > 4 ? '#15803d' : '#8894a2'), showVar: pct < 100 && s != null && s <= todayN,
           critical: a.critical, barColor: a.critical ? '#dc2626' : '#2b59c3', barFill: a.critical ? '#b91c1c' : '#1d4ed8',
           onName: e => this.setScheduleActivity(a.id, 'name', e.target.value), onStart: e => this.setScheduleActivity(a.id, 'start', e.target.value), onFinish: e => this.setScheduleActivity(a.id, 'finish', e.target.value),
+          onPreds: e => this.setActivityPreds(a.id, e.target.value),
           onPct: e => this.setScheduleActivity(a.id, 'pct', Number(e.target.value) || 0), onCritical: () => this.toggleActivityCritical(a.id), onDelete: () => this.deleteActivity(a.id) };
       };
       const rows = shown.map(rowOf);
+      // dependency links between shown activities (drawn as Gantt connectors, per relationship type)
+      const rowH = 30; const idToShown = {}; shown.forEach((a, i) => idToShown[a.id] = i);
+      const depLinks = [];
+      shown.forEach((succ, si) => { (succ.preds || []).forEach(pr => { const pi = idToShown[pr.id]; if (pi == null || pi === si) return; const pb = rows[pi], sb = rows[si]; const type = pr.type || 'FS';
+        const px = (type === 'FS' || type === 'FF') ? (pb.left + pb.width) : pb.left; const sx = (type === 'FS' || type === 'SS') ? sb.left : (sb.left + sb.width);
+        const py = pi * rowH + rowH / 2, sy = si * rowH + rowH / 2; const stub = Math.min(px + 1.4, 99.5);
+        const points = px.toFixed(2) + ',' + py + ' ' + stub.toFixed(2) + ',' + py + ' ' + stub.toFixed(2) + ',' + sy + ' ' + sx.toFixed(2) + ',' + sy;
+        depLinks.push({ points, dotX: sx.toFixed(2), dotY: sy, color: (pb.critical && sb.critical) ? '#dc2626' : '#9aa7b5' }); }); });
+      const ganttH = shown.length * rowH;
       let sumDur = 0, sumProg = 0, active = 0, overdue = 0, done = 0, behindN = 0;
       acts.forEach(a => { const s = dnum(a.start), f = dnum(a.finish); const dur = (f != null && s != null) ? (f - s + 1) : 0; const pct = Math.max(0, Math.min(100, Number(a.pct) || 0)); sumDur += dur; sumProg += dur * pct / 100; const expected = expectedOf(s, f); const beh = pct < 100 && (pct - expected) < -4 && s != null && s <= todayN; if (pct >= 100) done++; else if (f != null && f < todayN) overdue++; else if (beh) behindN++; else if (s != null && s <= todayN && (f == null || f >= todayN)) active++; });
       const overallPct = sumDur ? Math.round(sumProg / sumDur * 100) : 0;
@@ -4452,6 +4476,8 @@ class Component extends DCLogic {
         overallPct: String(overallPct), activeCount: String(active), overdueCount: String(overdue), overdueColor: overdue > 0 ? '#b91c1c' : '#15803d', doneCount: String(done), behindCount: String(behindN), criticalCount: String(acts.filter(a => a.critical).length),
         criticalOnly, critBtnLabel: criticalOnly ? '✓ Critical path' : 'Critical path', critBtnBg: criticalOnly ? '#dc2626' : '#fff', critBtnFg: criticalOnly ? '#fff' : '#b91c1c', critBtnBorder: criticalOnly ? '#dc2626' : '#efc9c9',
         onToggleCritical: () => this.toggleCriticalOnly(), onAddActivity: () => this.addActivity(),
+        // dependency links
+        depLinks, hasDeps: depLinks.length > 0, ganttH: String(ganttH), ganttHpx: String(ganttH) + 'px',
         // S-curve + status
         scurve, schStatus, schColor, schBg, plannedTodayPct: String(plannedToday), actualTodayPct: String(actualToday), varPP: (varPP > 0 ? '+' : '') + varPP + '%', varColor: schColor,
         // summary + duration + EOT
