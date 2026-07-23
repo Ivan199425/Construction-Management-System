@@ -1481,6 +1481,115 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
           </div>
         </sc-if>
 
+        <!-- ============ CONTACTS DIRECTORY ============ -->
+        <sc-if value="{{ contactsV.show }}" hint-placeholder-val="{{ false }}">
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px">
+            <div style="background:#0f1a24;border:1px solid #0f1a24;border-radius:11px;padding:14px 15px"><div style="font-size:10.5px;font-weight:600;letter-spacing:.4px;color:#9fb0c4;text-transform:uppercase">Total contacts</div><div class="mono" style="font-size:22px;font-weight:700;color:#fff;margin-top:4px">{{ contactsV.total }}</div></div>
+            <div style="background:#fff;border:1px solid #e4e8ee;border-radius:11px;padding:14px 15px"><div style="font-size:10.5px;font-weight:600;letter-spacing:.4px;color:#8894a2;text-transform:uppercase">Client side</div><div class="mono" style="font-size:22px;font-weight:600;color:#0f1720;margin-top:4px">{{ contactsV.customerCount }} · {{ contactsV.repCount }}</div><div style="font-size:10.5px;color:#8894a2;margin-top:1px">customers · representatives</div></div>
+            <div style="background:#fff;border:1px solid #e4e8ee;border-radius:11px;padding:14px 15px"><div style="font-size:10.5px;font-weight:600;letter-spacing:.4px;color:#8894a2;text-transform:uppercase">Internal team</div><div class="mono" style="font-size:22px;font-weight:600;color:#0f1720;margin-top:4px">{{ contactsV.teamCount }}</div></div>
+            <div style="background:#fff;border:1px solid #e4e8ee;border-radius:11px;padding:14px 15px"><div style="font-size:10.5px;font-weight:600;letter-spacing:.4px;color:#8894a2;text-transform:uppercase">Subcontractors</div><div class="mono" style="font-size:22px;font-weight:600;color:#0f1720;margin-top:4px">{{ contactsV.subCount }}</div></div>
+          </div>
+
+          <!-- Client / Customer -->
+          <div style="background:#fff;border:1px solid #e4e8ee;border-radius:12px;overflow:hidden;margin-bottom:16px">
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 16px;border-bottom:1px solid #eef1f4;background:#fafbfc">
+              <div style="font-size:13px;font-weight:600;color:#0f1720">🏢 Client / customer <span style="font-weight:500;color:#8894a2">· {{ contactsV.customerCount }}</span></div>
+              <button onClick="{{ contactsV.onAddCustomer }}" style="border:1px solid #2b59c3;background:#fff;color:#2b59c3;border-radius:7px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="background:#f2f6fd">＋ Add customer</button>
+            </div>
+            <sc-if value="{{ contactsV.hasCustomers }}" hint-placeholder-val="{{ true }}">
+              <sc-for list="{{ contactsV.customers }}" as="c" hint-placeholder-count="1">
+                <div style="display:grid;grid-template-columns:42px 1.2fr 1.2fr 148px 1.6fr 88px;gap:10px;align-items:center;padding:9px 16px;border-bottom:1px solid #f4f6f9">
+                  <div style="width:34px;height:34px;border-radius:50%;background:#e7eefc;color:#2b59c3;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center">{{ c.initials }}</div>
+                  <input value="{{ c.name }}" onInput="{{ c.onName }}" placeholder="Name" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 8px;font-size:12.5px;font-weight:600;font-family:inherit;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none">
+                  <input value="{{ c.company }}" onInput="{{ c.onCompany }}" placeholder="Company" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 8px;font-size:12px;font-family:inherit;color:#4a5765;background:#fff" style-focus="border-color:#2b59c3;outline:none">
+                  <input value="{{ c.cell }}" onInput="{{ c.onCell }}" placeholder="Mobile" class="mono" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 8px;font-size:11px;font-family:'IBM Plex Mono',monospace;color:#4a5765;background:#fff" style-focus="border-color:#2b59c3;outline:none">
+                  <input value="{{ c.email }}" onInput="{{ c.onEmail }}" placeholder="Email" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 8px;font-size:11.5px;font-family:inherit;color:#4a5765;background:#fff" style-focus="border-color:#2b59c3;outline:none">
+                  <div style="display:flex;align-items:center;justify-content:flex-end;gap:5px">
+                    <sc-if value="{{ c.hasEmail }}" hint-placeholder-val="{{ true }}"><a href="{{ c.mailto }}" title="Email" style="text-decoration:none;border:1px solid #e4e8ee;border-radius:6px;padding:4px 7px;font-size:12px;color:#2b59c3" style-hover="border-color:#2b59c3">✉</a></sc-if>
+                    <sc-if value="{{ c.hasPhone }}" hint-placeholder-val="{{ true }}"><a href="{{ c.tel }}" title="Call" style="text-decoration:none;border:1px solid #e4e8ee;border-radius:6px;padding:4px 7px;font-size:12px;color:#15803d" style-hover="border-color:#15803d">☎</a></sc-if>
+                    <button onClick="{{ c.onDelete }}" title="Remove" style="border:0;background:transparent;color:#c0c8d1;cursor:pointer;font-size:13px;padding:2px;line-height:1" style-hover="color:#b91c1c">✕</button>
+                  </div>
+                </div>
+              </sc-for>
+            </sc-if>
+            <sc-if value="{{ contactsV.hasCustomers }}" hint-placeholder-val="{{ false }}"><div style="padding:16px;text-align:center;color:#8894a2;font-size:12.5px">No customer contacts yet.</div></sc-if>
+          </div>
+
+          <!-- Client representatives -->
+          <div style="background:#fff;border:1px solid #e4e8ee;border-radius:12px;overflow:hidden;margin-bottom:16px">
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 16px;border-bottom:1px solid #eef1f4;background:#fafbfc">
+              <div style="font-size:13px;font-weight:600;color:#0f1720">👤 Client representatives <span style="font-weight:500;color:#8894a2">· {{ contactsV.repCount }}</span></div>
+              <button onClick="{{ contactsV.onAddRep }}" style="border:1px solid #2b59c3;background:#fff;color:#2b59c3;border-radius:7px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="background:#f2f6fd">＋ Add representative</button>
+            </div>
+            <sc-if value="{{ contactsV.hasReps }}" hint-placeholder-val="{{ true }}">
+              <sc-for list="{{ contactsV.reps }}" as="c" hint-placeholder-count="2">
+                <div style="display:grid;grid-template-columns:42px 1.2fr 1.2fr 148px 1.6fr 88px;gap:10px;align-items:center;padding:9px 16px;border-bottom:1px solid #f4f6f9">
+                  <div style="width:34px;height:34px;border-radius:50%;background:#eef1f5;color:#4a5765;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center">{{ c.initials }}</div>
+                  <input value="{{ c.name }}" onInput="{{ c.onName }}" placeholder="Name" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 8px;font-size:12.5px;font-weight:600;font-family:inherit;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none">
+                  <input value="{{ c.role }}" onInput="{{ c.onRole }}" placeholder="Role" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 8px;font-size:12px;font-family:inherit;color:#4a5765;background:#fff" style-focus="border-color:#2b59c3;outline:none">
+                  <input value="{{ c.phone }}" onInput="{{ c.onPhone }}" placeholder="Phone" class="mono" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 8px;font-size:11px;font-family:'IBM Plex Mono',monospace;color:#4a5765;background:#fff" style-focus="border-color:#2b59c3;outline:none">
+                  <input value="{{ c.email }}" onInput="{{ c.onEmail }}" placeholder="Email" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 8px;font-size:11.5px;font-family:inherit;color:#4a5765;background:#fff" style-focus="border-color:#2b59c3;outline:none">
+                  <div style="display:flex;align-items:center;justify-content:flex-end;gap:5px">
+                    <sc-if value="{{ c.hasEmail }}" hint-placeholder-val="{{ true }}"><a href="{{ c.mailto }}" title="Email" style="text-decoration:none;border:1px solid #e4e8ee;border-radius:6px;padding:4px 7px;font-size:12px;color:#2b59c3" style-hover="border-color:#2b59c3">✉</a></sc-if>
+                    <sc-if value="{{ c.hasPhone }}" hint-placeholder-val="{{ true }}"><a href="{{ c.tel }}" title="Call" style="text-decoration:none;border:1px solid #e4e8ee;border-radius:6px;padding:4px 7px;font-size:12px;color:#15803d" style-hover="border-color:#15803d">☎</a></sc-if>
+                    <button onClick="{{ c.onDelete }}" title="Remove" style="border:0;background:transparent;color:#c0c8d1;cursor:pointer;font-size:13px;padding:2px;line-height:1" style-hover="color:#b91c1c">✕</button>
+                  </div>
+                </div>
+              </sc-for>
+            </sc-if>
+            <sc-if value="{{ contactsV.hasReps }}" hint-placeholder-val="{{ false }}"><div style="padding:16px;text-align:center;color:#8894a2;font-size:12.5px">No client representatives yet.</div></sc-if>
+          </div>
+
+          <!-- Internal team -->
+          <div style="background:#fff;border:1px solid #e4e8ee;border-radius:12px;overflow:hidden;margin-bottom:16px">
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 16px;border-bottom:1px solid #eef1f4;background:#fafbfc">
+              <div style="font-size:13px;font-weight:600;color:#0f1720">🛠 Internal team <span style="font-weight:500;color:#8894a2">· {{ contactsV.teamCount }}</span></div>
+              <button onClick="{{ contactsV.onAddTeam }}" style="border:1px solid #2b59c3;background:#fff;color:#2b59c3;border-radius:7px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="background:#f2f6fd">＋ Add team member</button>
+            </div>
+            <sc-if value="{{ contactsV.hasTeam }}" hint-placeholder-val="{{ true }}">
+              <sc-for list="{{ contactsV.team }}" as="c" hint-placeholder-count="3">
+                <div style="display:grid;grid-template-columns:42px 1.2fr 1.2fr 148px 1.6fr 88px;gap:10px;align-items:center;padding:9px 16px;border-bottom:1px solid #f4f6f9">
+                  <div style="width:34px;height:34px;border-radius:50%;background:#e6f0ea;color:#15803d;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center">{{ c.initials }}</div>
+                  <input value="{{ c.name }}" onInput="{{ c.onName }}" placeholder="Name" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 8px;font-size:12.5px;font-weight:600;font-family:inherit;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none">
+                  <input value="{{ c.role }}" onInput="{{ c.onRole }}" placeholder="Role (e.g. Site manager, Estimator)" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 8px;font-size:12px;font-family:inherit;color:#4a5765;background:#fff" style-focus="border-color:#2b59c3;outline:none">
+                  <input value="{{ c.phone }}" onInput="{{ c.onPhone }}" placeholder="Phone" class="mono" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 8px;font-size:11px;font-family:'IBM Plex Mono',monospace;color:#4a5765;background:#fff" style-focus="border-color:#2b59c3;outline:none">
+                  <input value="{{ c.email }}" onInput="{{ c.onEmail }}" placeholder="Email" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 8px;font-size:11.5px;font-family:inherit;color:#4a5765;background:#fff" style-focus="border-color:#2b59c3;outline:none">
+                  <div style="display:flex;align-items:center;justify-content:flex-end;gap:5px">
+                    <sc-if value="{{ c.hasEmail }}" hint-placeholder-val="{{ true }}"><a href="{{ c.mailto }}" title="Email" style="text-decoration:none;border:1px solid #e4e8ee;border-radius:6px;padding:4px 7px;font-size:12px;color:#2b59c3" style-hover="border-color:#2b59c3">✉</a></sc-if>
+                    <sc-if value="{{ c.hasPhone }}" hint-placeholder-val="{{ true }}"><a href="{{ c.tel }}" title="Call" style="text-decoration:none;border:1px solid #e4e8ee;border-radius:6px;padding:4px 7px;font-size:12px;color:#15803d" style-hover="border-color:#15803d">☎</a></sc-if>
+                    <button onClick="{{ c.onDelete }}" title="Remove" style="border:0;background:transparent;color:#c0c8d1;cursor:pointer;font-size:13px;padding:2px;line-height:1" style-hover="color:#b91c1c">✕</button>
+                  </div>
+                </div>
+              </sc-for>
+            </sc-if>
+            <sc-if value="{{ contactsV.hasTeam }}" hint-placeholder-val="{{ false }}"><div style="padding:16px;text-align:center;color:#8894a2;font-size:12.5px">No internal team members yet.</div></sc-if>
+          </div>
+
+          <!-- Subcontractors & suppliers (read-only, from Financial) -->
+          <div style="background:#fff;border:1px solid #e4e8ee;border-radius:12px;overflow:hidden">
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 16px;border-bottom:1px solid #eef1f4;background:#fafbfc">
+              <div style="font-size:13px;font-weight:600;color:#0f1720">🏗 Subcontractors &amp; suppliers <span style="font-weight:500;color:#8894a2">· {{ contactsV.subCount }}</span></div>
+              <button onClick="{{ contactsV.onGoVendors }}" style="border:1px solid #cfd8e2;background:#fff;color:#4a5765;border-radius:7px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="border-color:#2b59c3;color:#2b59c3">Vendor directory ↗</button>
+            </div>
+            <sc-if value="{{ contactsV.hasSubs }}" hint-placeholder-val="{{ true }}">
+              <sc-for list="{{ contactsV.subs }}" as="c" hint-placeholder-count="3">
+                <div style="display:grid;grid-template-columns:42px 1.5fr 1.5fr 148px 1.6fr 60px;gap:10px;align-items:center;padding:10px 16px;border-bottom:1px solid #f4f6f9">
+                  <div style="width:34px;height:34px;border-radius:50%;background:#fbf1e3;color:#b45309;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center">{{ c.initials }}</div>
+                  <div style="min-width:0"><div style="font-size:12.5px;font-weight:600;color:#0f1720;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.company }}</div><div style="font-size:10.5px;color:#8894a2"><span class="mono">{{ c.ref }}</span> · {{ c.typeLabel }}</div></div>
+                  <div style="font-size:11.5px;color:#4a5765;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.scope }}</div>
+                  <div class="mono" style="font-size:11px;color:#4a5765">{{ c.phone }}</div>
+                  <div style="font-size:11.5px;color:#4a5765;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.rep }}<sc-if value="{{ c.hasEmail }}" hint-placeholder-val="{{ true }}"><span style="color:#8894a2"> · {{ c.email }}</span></sc-if></div>
+                  <div style="display:flex;align-items:center;justify-content:flex-end;gap:5px">
+                    <sc-if value="{{ c.hasEmail }}" hint-placeholder-val="{{ true }}"><a href="{{ c.mailto }}" title="Email" style="text-decoration:none;border:1px solid #e4e8ee;border-radius:6px;padding:4px 7px;font-size:12px;color:#2b59c3" style-hover="border-color:#2b59c3">✉</a></sc-if>
+                    <sc-if value="{{ c.hasPhone }}" hint-placeholder-val="{{ true }}"><a href="{{ c.tel }}" title="Call" style="text-decoration:none;border:1px solid #e4e8ee;border-radius:6px;padding:4px 7px;font-size:12px;color:#15803d" style-hover="border-color:#15803d">☎</a></sc-if>
+                  </div>
+                </div>
+              </sc-for>
+            </sc-if>
+            <sc-if value="{{ contactsV.noSubs }}" hint-placeholder-val="{{ false }}"><div style="padding:16px;text-align:center;color:#8894a2;font-size:12.5px">No subcontractors or suppliers engaged yet — add them under <strong style="color:#6b7787">Financial</strong>.</div></sc-if>
+          </div>
+        </sc-if>
+
         <!-- ============ PLACEHOLDER SECTIONS (built step by step) ============ -->
         <sc-if value="{{ showPlaceholder }}" hint-placeholder-val="{{ false }}">
           <div style="background:#fff;border:1px dashed #d7dde5;border-radius:12px;padding:34px 30px;max-width:640px">
@@ -3441,7 +3550,7 @@ class Component extends DCLogic {
       mkMod('documents', 'Documents', '❏', true),
       mkMod('eot', 'EOT', '⏱', true),
       mkMod('files', 'Files & Photos', '❐', false),
-      mkMod('contacts', 'Contacts', '☰', false),
+      mkMod('contacts', 'Contacts', '☰', true),
       mkMod('schedule', 'Schedule', '▦', false),
       mkMod('defects', 'Defects List', '⚠', true),
       mkMod('report', 'Report Design', '◫', false),
@@ -3450,7 +3559,6 @@ class Component extends DCLogic {
     // Placeholder sections — nav slot + "planned contents", no functionality yet
     const sectionMeta = {
       files: { title: 'Files & Photos', desc: 'All project files and imagery in one place.', bullets: ['Bills', 'Invoices', 'Drawings', 'Site photos'] },
-      contacts: { title: 'Contacts', desc: 'Everyone on the project.', bullets: ['Customer contacts', 'Internal contacts', 'External contacts', 'Site manager & Project manager', 'Safety contact, Estimator, Accountant'] },
       schedule: { title: 'Schedule', desc: 'Project programme / timeline.', bullets: ['Tasks & milestones', 'Gantt timeline'] },
       report: { title: 'Report Design', desc: 'Design and export project reports.', bullets: ['Report templates', 'Branded PDF export'] },
     };
@@ -3475,6 +3583,7 @@ class Component extends DCLogic {
     const showInvoices = moduleCommitments && S.commitTab === 'invoices';
     const showVariations = moduleCommitments && S.commitTab === 'variations';
     const showDefects = inProject && S.module === 'defects';
+    const showContacts = inProject && S.module === 'contacts';
 
     // header / title
     let pageTitle = '', pageSub = '', crumb1 = '', crumb2 = '', pageStatus = { show: false }, primaryAction = { show: false };
@@ -3495,6 +3604,7 @@ class Component extends DCLogic {
       if (showDetails) { pageTitle = 'Details'; pageSub = 'Project details — type, address, customer & key information — ' + p.name; crumb2 = 'Details'; }
       if (showEot) { pageTitle = 'EOT — Extension of Time'; pageSub = 'Delay events & time-extension claims against the completion date — ' + p.name; crumb2 = 'EOT'; }
       if (showDocuments) { pageTitle = 'Documents'; pageSub = 'RFIs · Permits · To-Do’s · Drawings · Meetings · Inspections · Incidents — ' + p.name; crumb2 = 'Documents'; }
+      if (showContacts) { pageTitle = 'Contacts'; pageSub = 'Everyone on the project — client, team, representatives & subcontractors — ' + p.name; crumb2 = 'Contacts'; }
       if (showPlaceholder) { pageTitle = placeholder.title; pageSub = placeholder.desc; crumb2 = placeholder.title; }
     }
 
@@ -3620,6 +3730,51 @@ class Component extends DCLogic {
         onPhone: e => this.setPersonnel(i, 'phone', e.target.value), onEmail: e => this.setPersonnel(i, 'email', e.target.value),
         onDelete: () => this.deletePersonnel(i),
       }));
+    }
+
+    // contacts directory (everyone on the project)
+    let contactsV = { show: false };
+    if (showContacts) {
+      const telHref = ph => 'tel:' + String(ph || '').replace(/[^+\d]/g, '');
+      const mailHref = em => 'mailto:' + String(em || '');
+      const initialsOf = nm => (nm || '?').trim().split(/\s+/).map(x => x[0] || '').slice(0, 2).join('').toUpperCase() || '?';
+      const customers = (p.customers || []).map((c, i) => ({
+        name: c.name || '', company: c.company || '', cell: c.cell || '', email: c.email || '', initials: initialsOf(c.name || c.company),
+        hasEmail: !!(c.email || '').trim(), hasPhone: !!(c.cell || '').trim(), mailto: mailHref(c.email), tel: telHref(c.cell),
+        onName: e => this.setCustomer(i, 'name', e.target.value), onCompany: e => this.setCustomer(i, 'company', e.target.value),
+        onCell: e => this.setCustomer(i, 'cell', e.target.value), onEmail: e => this.setCustomer(i, 'email', e.target.value),
+        onDelete: () => this.deleteCustomer(i),
+      }));
+      const reps = (p.clientReps || []).map((r, i) => ({
+        name: r.name || '', role: r.role || '', phone: r.phone || '', email: r.email || '', initials: initialsOf(r.name),
+        hasEmail: !!(r.email || '').trim(), hasPhone: !!(r.phone || '').trim(), mailto: mailHref(r.email), tel: telHref(r.phone),
+        onName: e => this.setClientRep(i, 'name', e.target.value), onRole: e => this.setClientRep(i, 'role', e.target.value),
+        onPhone: e => this.setClientRep(i, 'phone', e.target.value), onEmail: e => this.setClientRep(i, 'email', e.target.value),
+        onDelete: () => this.deleteClientRep(i),
+      }));
+      const team = (p.team || []).map((r, i) => ({
+        name: r.name || '', role: r.role || '', phone: r.phone || '', email: r.email || '', initials: initialsOf(r.name),
+        hasEmail: !!(r.email || '').trim(), hasPhone: !!(r.phone || '').trim(), mailto: mailHref(r.email), tel: telHref(r.phone),
+        onRole: e => this.setPersonnel(i, 'role', e.target.value), onName: e => this.setPersonnel(i, 'name', e.target.value),
+        onPhone: e => this.setPersonnel(i, 'phone', e.target.value), onEmail: e => this.setPersonnel(i, 'email', e.target.value),
+        onDelete: () => this.deletePersonnel(i),
+      }));
+      const subs = (p.commitments || []).map(cm => {
+        const v = (S.vendors || []).find(x => x.company === cm.vendor) || null;
+        return { company: cm.vendor || '', ref: cm.ref || '', typeLabel: this.typeLabel(cm.type), scope: cm.scope || '', initials: initialsOf(cm.vendor),
+          rep: v ? (v.rep || '') : '', phone: v ? (v.phone || '') : '', email: v ? (v.email || '') : '', hasContact: !!v,
+          hasEmail: !!(v && v.email), hasPhone: !!(v && v.phone), mailto: mailHref(v ? v.email : ''), tel: telHref(v ? v.phone : '') };
+      });
+      const total = customers.length + reps.length + team.length + subs.length;
+      contactsV = {
+        show: true, total: String(total),
+        customers, customerCount: String(customers.length), hasCustomers: customers.length > 0,
+        reps, repCount: String(reps.length), hasReps: reps.length > 0,
+        team, teamCount: String(team.length), hasTeam: team.length > 0,
+        subs, subCount: String(subs.length), hasSubs: subs.length > 0, noSubs: subs.length === 0,
+        onAddCustomer: () => this.addCustomer(), onAddRep: () => this.addClientRep(), onAddTeam: () => this.addPersonnel(),
+        onGoVendors: () => this.goVendors(),
+      };
     }
 
     // details section
@@ -4605,7 +4760,7 @@ class Component extends DCLogic {
       claimRows, claimTotals, onAddClaim: () => this.addClaim(),
       moduleCommitments, subModalV, signModalV, shareModalV,
       onAddContractVar: () => this.openModal('contract'),
-      projDescription, clientRepRows, teamRows, clientNameV, detailsV, invoiceV, invoiceSendV, variationSendV, eotV, eotSendV, documentsV, rfiSendV, meetingSendV,
+      projDescription, clientRepRows, teamRows, clientNameV, detailsV, contactsV, invoiceV, invoiceSendV, variationSendV, eotV, eotSendV, documentsV, rfiSendV, meetingSendV,
       docViewerV: S.docViewer ? { open: true, name: S.docViewer.name, url: S.docViewer.url, isPdf: S.docViewer.kind === 'pdf', isImage: S.docViewer.kind === 'image', isOther: S.docViewer.kind === 'other', onClose: () => this.closeDocViewer(), onNewTab: () => this.docViewerNewTab() } : { open: false },
       onDescInput: e => this.setProjectField('description', e.target.value),
       onAddClientRep: () => this.addClientRep(), onAddPersonnel: () => this.addPersonnel(),
