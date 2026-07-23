@@ -1508,7 +1508,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                   <input value="{{ c.cell }}" onInput="{{ c.onCell }}" placeholder="Mobile" class="mono" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 8px;font-size:11px;font-family:'IBM Plex Mono',monospace;color:#4a5765;background:#fff" style-focus="border-color:#2b59c3;outline:none">
                   <input value="{{ c.email }}" onInput="{{ c.onEmail }}" placeholder="Email" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 8px;font-size:11.5px;font-family:inherit;color:#4a5765;background:#fff" style-focus="border-color:#2b59c3;outline:none">
                   <div style="display:flex;align-items:center;justify-content:flex-end;gap:5px">
-                    <sc-if value="{{ c.hasEmail }}" hint-placeholder-val="{{ true }}"><a href="{{ c.mailto }}" title="Email" style="text-decoration:none;border:1px solid #e4e8ee;border-radius:6px;padding:4px 7px;font-size:12px;color:#2b59c3" style-hover="border-color:#2b59c3">✉</a></sc-if>
+                    <sc-if value="{{ c.hasEmail }}" hint-placeholder-val="{{ true }}"><button onClick="{{ c.onCompose }}" title="Compose email" style="border:1px solid #e4e8ee;background:#fff;border-radius:6px;padding:4px 7px;font-size:12px;color:#2b59c3;cursor:pointer;font-family:inherit" style-hover="border-color:#2b59c3">✉</button></sc-if>
                     <sc-if value="{{ c.hasPhone }}" hint-placeholder-val="{{ true }}"><a href="{{ c.tel }}" title="Call" style="text-decoration:none;border:1px solid #e4e8ee;border-radius:6px;padding:4px 7px;font-size:12px;color:#15803d" style-hover="border-color:#15803d">☎</a></sc-if>
                     <button onClick="{{ c.onDelete }}" title="Remove" style="border:0;background:transparent;color:#c0c8d1;cursor:pointer;font-size:13px;padding:2px;line-height:1" style-hover="color:#b91c1c">✕</button>
                   </div>
@@ -1536,7 +1536,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                   <input value="{{ c.phone }}" onInput="{{ c.onPhone }}" placeholder="Phone" class="mono" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 8px;font-size:11px;font-family:'IBM Plex Mono',monospace;color:#4a5765;background:#fff" style-focus="border-color:#2b59c3;outline:none">
                   <input value="{{ c.email }}" onInput="{{ c.onEmail }}" placeholder="Email" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 8px;font-size:11.5px;font-family:inherit;color:#4a5765;background:#fff" style-focus="border-color:#2b59c3;outline:none">
                   <div style="display:flex;align-items:center;justify-content:flex-end;gap:5px">
-                    <sc-if value="{{ c.hasEmail }}" hint-placeholder-val="{{ true }}"><a href="{{ c.mailto }}" title="Email" style="text-decoration:none;border:1px solid #e4e8ee;border-radius:6px;padding:4px 7px;font-size:12px;color:#2b59c3" style-hover="border-color:#2b59c3">✉</a></sc-if>
+                    <sc-if value="{{ c.hasEmail }}" hint-placeholder-val="{{ true }}"><button onClick="{{ c.onCompose }}" title="Compose email" style="border:1px solid #e4e8ee;background:#fff;border-radius:6px;padding:4px 7px;font-size:12px;color:#2b59c3;cursor:pointer;font-family:inherit" style-hover="border-color:#2b59c3">✉</button></sc-if>
                     <sc-if value="{{ c.hasPhone }}" hint-placeholder-val="{{ true }}"><a href="{{ c.tel }}" title="Call" style="text-decoration:none;border:1px solid #e4e8ee;border-radius:6px;padding:4px 7px;font-size:12px;color:#15803d" style-hover="border-color:#15803d">☎</a></sc-if>
                     <button onClick="{{ c.onDelete }}" title="Remove" style="border:0;background:transparent;color:#c0c8d1;cursor:pointer;font-size:13px;padding:2px;line-height:1" style-hover="color:#b91c1c">✕</button>
                   </div>
@@ -1564,7 +1564,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                   <input value="{{ c.phone }}" onInput="{{ c.onPhone }}" placeholder="Phone" class="mono" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 8px;font-size:11px;font-family:'IBM Plex Mono',monospace;color:#4a5765;background:#fff" style-focus="border-color:#2b59c3;outline:none">
                   <input value="{{ c.email }}" onInput="{{ c.onEmail }}" placeholder="Email" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 8px;font-size:11.5px;font-family:inherit;color:#4a5765;background:#fff" style-focus="border-color:#2b59c3;outline:none">
                   <div style="display:flex;align-items:center;justify-content:flex-end;gap:5px">
-                    <sc-if value="{{ c.hasEmail }}" hint-placeholder-val="{{ true }}"><a href="{{ c.mailto }}" title="Email" style="text-decoration:none;border:1px solid #e4e8ee;border-radius:6px;padding:4px 7px;font-size:12px;color:#2b59c3" style-hover="border-color:#2b59c3">✉</a></sc-if>
+                    <sc-if value="{{ c.hasEmail }}" hint-placeholder-val="{{ true }}"><button onClick="{{ c.onCompose }}" title="Compose email" style="border:1px solid #e4e8ee;background:#fff;border-radius:6px;padding:4px 7px;font-size:12px;color:#2b59c3;cursor:pointer;font-family:inherit" style-hover="border-color:#2b59c3">✉</button></sc-if>
                     <sc-if value="{{ c.hasPhone }}" hint-placeholder-val="{{ true }}"><a href="{{ c.tel }}" title="Call" style="text-decoration:none;border:1px solid #e4e8ee;border-radius:6px;padding:4px 7px;font-size:12px;color:#15803d" style-hover="border-color:#15803d">☎</a></sc-if>
                     <button onClick="{{ c.onDelete }}" title="Remove" style="border:0;background:transparent;color:#c0c8d1;cursor:pointer;font-size:13px;padding:2px;line-height:1" style-hover="color:#b91c1c">✕</button>
                   </div>
@@ -1592,7 +1592,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                   <div class="mono" style="font-size:11px;color:#4a5765">{{ c.phone }}</div>
                   <div style="font-size:11.5px;color:#4a5765;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.rep }}<sc-if value="{{ c.hasEmail }}" hint-placeholder-val="{{ true }}"><span style="color:#8894a2"> · {{ c.email }}</span></sc-if></div>
                   <div style="display:flex;align-items:center;justify-content:flex-end;gap:5px">
-                    <sc-if value="{{ c.hasEmail }}" hint-placeholder-val="{{ true }}"><a href="{{ c.mailto }}" title="Email" style="text-decoration:none;border:1px solid #e4e8ee;border-radius:6px;padding:4px 7px;font-size:12px;color:#2b59c3" style-hover="border-color:#2b59c3">✉</a></sc-if>
+                    <sc-if value="{{ c.hasEmail }}" hint-placeholder-val="{{ true }}"><button onClick="{{ c.onCompose }}" title="Compose email" style="border:1px solid #e4e8ee;background:#fff;border-radius:6px;padding:4px 7px;font-size:12px;color:#2b59c3;cursor:pointer;font-family:inherit" style-hover="border-color:#2b59c3">✉</button></sc-if>
                     <sc-if value="{{ c.hasPhone }}" hint-placeholder-val="{{ true }}"><a href="{{ c.tel }}" title="Call" style="text-decoration:none;border:1px solid #e4e8ee;border-radius:6px;padding:4px 7px;font-size:12px;color:#15803d" style-hover="border-color:#15803d">☎</a></sc-if>
                   </div>
                 </div>
@@ -2045,6 +2045,70 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
           <button onClick="{{ meetingSendV.onClose }}" style="border:1px solid #cfd8e2;background:#fff;color:#4a5765;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Cancel</button>
           <button onClick="{{ meetingSendV.onConfirm }}" style="border:0;background:#2b59c3;color:#fff;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="background:#244dab">✉ Send invitations</button>
         </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- COMPOSE EMAIL MODAL (from Contacts) -->
+  <sc-if value="{{ emailComposeV.open }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ emailComposeV.onClose }}" style="position:fixed;inset:0;background:rgba(15,23,32,.42);display:flex;align-items:center;justify-content:center;z-index:55;padding:24px;animation:fadeUp .15s ease">
+      <div onClick="{{ stop }}" style="background:#fff;border-radius:14px;width:660px;max-width:96vw;max-height:92vh;box-shadow:0 24px 60px rgba(15,23,32,.28);overflow:hidden;display:flex;flex-direction:column">
+        <div style="padding:18px 22px;border-bottom:1px solid #eef1f4;display:flex;align-items:center;justify-content:space-between">
+          <div><div style="font-size:16px;font-weight:600;color:#0f1720">✉ Compose email</div><div style="font-size:12.5px;color:#8894a2;margin-top:2px">To project contacts · {{ emailComposeV.toCount }} recipient(s)</div></div>
+          <button onClick="{{ emailComposeV.onClose }}" title="Close" style="border:1px solid #cfd8e2;background:#fff;color:#4a5765;border-radius:7px;padding:6px 11px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="background:#f6f8fb">✕</button>
+        </div>
+
+        <sc-if value="{{ emailComposeV.sent }}" hint-placeholder-val="{{ true }}">
+          <div style="padding:34px 24px;text-align:center">
+            <div style="font-size:34px">✅</div>
+            <div style="font-size:15px;font-weight:600;color:#0f1720;margin-top:8px">Email sent to {{ emailComposeV.sentCount }} recipient(s)</div>
+            <div style="font-size:12.5px;color:#8894a2;margin-top:6px;line-height:1.5;max-width:420px;margin-left:auto;margin-right:auto">Prototype: sending is simulated (no live mail gateway). Use <strong style="color:#6b7787">Open in mail app</strong> to send it for real from your own email client.</div>
+            <div style="display:flex;gap:10px;justify-content:center;margin-top:18px">
+              <button onClick="{{ emailComposeV.onMailto }}" style="border:1px solid #2b59c3;background:#fff;color:#2b59c3;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="background:#f2f6fd">↗ Open in mail app</button>
+              <button onClick="{{ emailComposeV.onClose }}" style="border:0;background:#2b59c3;color:#fff;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="background:#244dab">Done</button>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ emailComposeV.notSent }}" hint-placeholder-val="{{ true }}">
+          <div style="padding:18px 22px;overflow-y:auto">
+            <div style="font-size:11px;font-weight:700;letter-spacing:.5px;color:#8894a2;text-transform:uppercase;margin-bottom:8px">Recipients</div>
+            <div style="border:1px solid #eef1f4;border-radius:10px;overflow:hidden;max-height:190px;overflow-y:auto">
+              <sc-for list="{{ emailComposeV.recipients }}" as="r" hint-placeholder-count="6">
+                <div onClick="{{ r.onToggle }}" style="display:flex;align-items:center;gap:10px;padding:8px 11px;border-bottom:1px solid #f4f6f9;cursor:pointer" style-hover="background:#f7f9fc">
+                  <span style="width:17px;height:17px;flex-shrink:0;border:1.5px solid {{ r.checkBorder }};background:{{ r.checkBg }};border-radius:5px;color:#fff;font-size:11px;display:flex;align-items:center;justify-content:center;font-weight:700">{{ r.check }}</span>
+                  <div style="flex:1;min-width:0"><div style="font-size:12.5px;font-weight:600;color:#0f1720;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.name }}</div><div style="font-size:10.5px;color:#8894a2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.sub }} · {{ r.email }}</div></div>
+                </div>
+              </sc-for>
+            </div>
+            <sc-if value="{{ emailComposeV.hasCustom }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">
+                <sc-for list="{{ emailComposeV.custom }}" as="e" hint-placeholder-count="0">
+                  <span style="display:inline-flex;align-items:center;gap:6px;background:#eef4ff;border:1px solid #d3e0f7;border-radius:14px;padding:3px 10px;font-size:11.5px;color:#2b4a86">{{ e.email }}<button onClick="{{ e.onRemove }}" style="border:0;background:transparent;color:#6b86c0;cursor:pointer;font-size:12px;padding:0;line-height:1">✕</button></span>
+                </sc-for>
+              </div>
+            </sc-if>
+            <div style="display:flex;gap:8px;margin-top:8px">
+              <input value="{{ emailComposeV.newEmail }}" onInput="{{ emailComposeV.onNewEmail }}" type="email" placeholder="Add another email…" style="flex:1;min-width:0;border:1px solid #cfd8e2;border-radius:8px;padding:8px 10px;font-size:12.5px;font-family:inherit;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none">
+              <button onClick="{{ emailComposeV.onAddEmail }}" style="border:1px solid #cfd8e2;background:#fff;color:#2b59c3;border-radius:8px;padding:8px 13px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap" style-hover="background:#f2f6fd">＋ Add</button>
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px">
+              <div><div style="font-size:11px;font-weight:700;letter-spacing:.5px;color:#8894a2;text-transform:uppercase;margin-bottom:6px">From</div><input value="{{ emailComposeV.from }}" onInput="{{ emailComposeV.onFrom }}" placeholder="you@company.com" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:8px 11px;font-size:12.5px;font-family:inherit;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none"></div>
+              <div><div style="font-size:11px;font-weight:700;letter-spacing:.5px;color:#8894a2;text-transform:uppercase;margin-bottom:6px">Subject</div><input value="{{ emailComposeV.subject }}" onInput="{{ emailComposeV.onSubject }}" placeholder="Email subject" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:8px 11px;font-size:12.5px;font-family:inherit;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none"></div>
+            </div>
+            <div style="font-size:11px;font-weight:700;letter-spacing:.5px;color:#8894a2;text-transform:uppercase;margin:14px 0 6px">Message</div>
+            <textarea value="{{ emailComposeV.message }}" onInput="{{ emailComposeV.onMessage }}" rows="6" placeholder="Write your message…" style="width:100%;border:1px solid #cfd8e2;border-radius:9px;padding:10px 12px;font-size:12.5px;font-family:inherit;color:#0f1720;line-height:1.6;resize:vertical" style-focus="border-color:#2b59c3;outline:none"></textarea>
+            <div style="font-size:10.5px;color:#a4afba;margin-top:8px;line-height:1.5">Prototype: “Send” is simulated (no live mail gateway). <strong style="color:#8894a2">Open in mail app</strong> composes the message in your own email client so you can send it for real.</div>
+          </div>
+          <div style="padding:14px 22px;border-top:1px solid #eef1f4;display:flex;align-items:center;justify-content:space-between;gap:10px">
+            <button onClick="{{ emailComposeV.onMailto }}" style="border:1px solid #cfd8e2;background:#fff;color:#2b59c3;border-radius:8px;padding:9px 14px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="background:#f2f6fd">↗ Open in mail app</button>
+            <div style="display:flex;gap:10px">
+              <button onClick="{{ emailComposeV.onClose }}" style="border:1px solid #cfd8e2;background:#fff;color:#4a5765;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Cancel</button>
+              <button onClick="{{ emailComposeV.onSend }}" style="border:0;background:#2b59c3;color:#fff;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="background:#244dab">✉ Send</button>
+            </div>
+          </div>
+        </sc-if>
       </div>
     </div>
   </sc-if>
@@ -2908,6 +2972,14 @@ class Component extends DCLogic {
   addMeetingAction(id) { const a = { id: 'ma' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), text: '', owner: '', due: '', notes: '' }; this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, docs: (p.docs || []).map(d => d.id === id ? { ...d, actions: [...(d.actions || []), a] } : d) }) })); }
   setMeetingAction(mtgId, actId, field, val) { this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, docs: (p.docs || []).map(d => d.id !== mtgId ? d : { ...d, actions: (d.actions || []).map(a => a.id === actId ? { ...a, [field]: val } : a) }) }) })); }
   deleteMeetingAction(mtgId, actId) { this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, docs: (p.docs || []).map(d => d.id !== mtgId ? d : { ...d, actions: (d.actions || []).filter(a => a.id !== actId) }) }) })); }
+  // ---- Compose email (from Contacts) ----
+  openEmailCompose(email) { const p = this.proj(this.state.pid); const from = (p && p.senderEmail) || 'ivan@cubiccm.com'; this.setState({ emailCompose: { to: email ? [email] : [], from, subject: '', message: '', newEmail: '', sent: false, sentCount: 0 } }); }
+  closeEmailCompose() { this.setState({ emailCompose: null }); }
+  toggleEmailRecipient(email) { this.setState(s => { if (!s.emailCompose || !email) return {}; const cur = s.emailCompose.to || []; const has = cur.indexOf(email) >= 0; return { emailCompose: { ...s.emailCompose, to: has ? cur.filter(e => e !== email) : [...cur, email] } }; }); }
+  setEmailComposeField(field, val) { this.setState(s => s.emailCompose ? { emailCompose: { ...s.emailCompose, [field]: val } } : {}); }
+  addEmailComposeRecipient() { this.setState(s => { if (!s.emailCompose) return {}; const e = (s.emailCompose.newEmail || '').trim(); if (!e) return {}; const cur = s.emailCompose.to || []; if (cur.indexOf(e) >= 0) return { emailCompose: { ...s.emailCompose, newEmail: '' } }; return { emailCompose: { ...s.emailCompose, to: [...cur, e], newEmail: '' } }; }); }
+  emailComposeMailto() { const c = this.state.emailCompose; if (!c) return; const to = (c.to || []).join(','); const url = 'mailto:' + to + '?subject=' + encodeURIComponent(c.subject || '') + '&body=' + encodeURIComponent(c.message || ''); window.open(url, '_blank'); }
+  sendEmailCompose() { this.setState(s => { if (!s.emailCompose) return {}; const n = (s.emailCompose.to || []).length; if (!n) return {}; return { emailCompose: { ...s.emailCompose, sent: true, sentCount: n } }; }); }
   postRfiMessage(id, dir, author, text) { if (!text || !text.trim()) return; const msg = { id: 'm' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), dir, author, text: text.trim(), at: this.todayLocal() }; this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, docs: (p.docs || []).map(d => d.id === id ? { ...d, thread: [...(d.thread || []), msg] } : d) }) })); }
   setRfiDraft(id, v) { this.setState(s => ({ rfiDraft: { ...(s.rfiDraft || {}), [id]: v } })); }
   postRfiOurNote(id) { const t = ((this.state.rfiDraft || {})[id] || '').trim(); if (!t) return; this.postRfiMessage(id, 'out', 'Cubic (PM)', t); this.setState(s => ({ rfiDraft: { ...(s.rfiDraft || {}), [id]: '' } })); }
@@ -3616,7 +3688,7 @@ class Component extends DCLogic {
       if (showDetails) { pageTitle = 'Details'; pageSub = 'Project details — type, address, customer & key information — ' + p.name; crumb2 = 'Details'; }
       if (showEot) { pageTitle = 'EOT — Extension of Time'; pageSub = 'Delay events & time-extension claims against the completion date — ' + p.name; crumb2 = 'EOT'; }
       if (showDocuments) { pageTitle = 'Documents'; pageSub = 'RFIs · Permits · To-Do’s · Drawings · Meetings · Inspections · Incidents — ' + p.name; crumb2 = 'Documents'; }
-      if (showContacts) { pageTitle = 'Contacts'; pageSub = 'Everyone on the project — client, team, representatives & subcontractors — ' + p.name; crumb2 = 'Contacts'; }
+      if (showContacts) { pageTitle = 'Contacts'; pageSub = 'Everyone on the project — client, team, representatives & subcontractors — ' + p.name; crumb2 = 'Contacts'; primaryAction = { show: true, label: '✉ Compose email', onClick: () => this.openEmailCompose('') }; }
       if (showPlaceholder) { pageTitle = placeholder.title; pageSub = placeholder.desc; crumb2 = placeholder.title; }
     }
 
@@ -3752,21 +3824,21 @@ class Component extends DCLogic {
       const initialsOf = nm => (nm || '?').trim().split(/\s+/).map(x => x[0] || '').slice(0, 2).join('').toUpperCase() || '?';
       const customers = (p.customers || []).map((c, i) => ({
         name: c.name || '', company: c.company || '', cell: c.cell || '', email: c.email || '', initials: initialsOf(c.name || c.company),
-        hasEmail: !!(c.email || '').trim(), hasPhone: !!(c.cell || '').trim(), mailto: mailHref(c.email), tel: telHref(c.cell),
+        hasEmail: !!(c.email || '').trim(), hasPhone: !!(c.cell || '').trim(), mailto: mailHref(c.email), tel: telHref(c.cell), onCompose: () => this.openEmailCompose(c.email),
         onName: e => this.setCustomer(i, 'name', e.target.value), onCompany: e => this.setCustomer(i, 'company', e.target.value),
         onCell: e => this.setCustomer(i, 'cell', e.target.value), onEmail: e => this.setCustomer(i, 'email', e.target.value),
         onDelete: () => this.deleteCustomer(i),
       }));
       const reps = (p.clientReps || []).map((r, i) => ({
         name: r.name || '', role: r.role || '', phone: r.phone || '', email: r.email || '', initials: initialsOf(r.name),
-        hasEmail: !!(r.email || '').trim(), hasPhone: !!(r.phone || '').trim(), mailto: mailHref(r.email), tel: telHref(r.phone),
+        hasEmail: !!(r.email || '').trim(), hasPhone: !!(r.phone || '').trim(), mailto: mailHref(r.email), tel: telHref(r.phone), onCompose: () => this.openEmailCompose(r.email),
         onName: e => this.setClientRep(i, 'name', e.target.value), onRole: e => this.setClientRep(i, 'role', e.target.value),
         onPhone: e => this.setClientRep(i, 'phone', e.target.value), onEmail: e => this.setClientRep(i, 'email', e.target.value),
         onDelete: () => this.deleteClientRep(i),
       }));
       const team = (p.team || []).map((r, i) => ({
         name: r.name || '', role: r.role || '', phone: r.phone || '', email: r.email || '', initials: initialsOf(r.name),
-        hasEmail: !!(r.email || '').trim(), hasPhone: !!(r.phone || '').trim(), mailto: mailHref(r.email), tel: telHref(r.phone),
+        hasEmail: !!(r.email || '').trim(), hasPhone: !!(r.phone || '').trim(), mailto: mailHref(r.email), tel: telHref(r.phone), onCompose: () => this.openEmailCompose(r.email),
         onRole: e => this.setPersonnel(i, 'role', e.target.value), onName: e => this.setPersonnel(i, 'name', e.target.value),
         onPhone: e => this.setPersonnel(i, 'phone', e.target.value), onEmail: e => this.setPersonnel(i, 'email', e.target.value),
         onDelete: () => this.deletePersonnel(i),
@@ -3786,7 +3858,7 @@ class Component extends DCLogic {
         if (e.billCount) parts.push(e.billCount + ' bill' + (e.billCount > 1 ? 's' : ''));
         return { company: e.company, initials: initialsOf(e.company), typeLabel: this.vendorTypeLabel(e.type) || 'Vendor',
           engagement: parts.join(' · ') || '—', rep: e.rep, phone: e.phone, email: e.email, hasContact: e.hasVendor,
-          hasEmail: !!e.email, hasPhone: !!e.phone, mailto: mailHref(e.email), tel: telHref(e.phone) };
+          hasEmail: !!e.email, hasPhone: !!e.phone, mailto: mailHref(e.email), tel: telHref(e.phone), onCompose: () => this.openEmailCompose(e.email) };
       });
       const total = customers.length + reps.length + team.length + subs.length;
       contactsV = {
@@ -4770,9 +4842,34 @@ class Component extends DCLogic {
         statusOptions: [mkStatus('draft', 'Draft'), mkStatus('submitted', 'Submitted')] };
     }
 
+    // compose-email modal (from Contacts)
+    let emailComposeV = { open: false };
+    if (S.emailCompose && p) {
+      const ec = S.emailCompose; const to = ec.to || [];
+      const pool = [], seen = {};
+      const push = (name, email, sub) => { if (!email || seen[email]) return; seen[email] = 1; pool.push({ name: name || email, email, sub: sub || '' }); };
+      (p.customers || []).forEach(c => push(c.name || c.company, c.email, (c.company ? c.company + ' · ' : '') + 'Customer'));
+      (p.clientReps || []).forEach(c => push(c.name, c.email, c.role || 'Client representative'));
+      (p.team || []).forEach(c => push(c.name, c.email, c.role || 'Internal team'));
+      (p.commitments || []).forEach(cm => { const v = (S.vendors || []).find(x => x.company === cm.vendor); if (v && v.email) push(v.company, v.email, 'Subcontractor / supplier'); });
+      (p.bills || []).forEach(b => { if (!b.vendorId) return; const v = (S.vendors || []).find(x => x.id === b.vendorId); if (v && v.email) push(v.company, v.email, 'Subcontractor / supplier'); });
+      const recipients = pool.map(c => { const on = to.indexOf(c.email) >= 0; return { name: c.name, email: c.email, sub: c.sub, checked: on, check: on ? '✓' : '', checkBg: on ? '#2b59c3' : '#fff', checkBorder: on ? '#2b59c3' : '#cfd8e2', onToggle: () => this.toggleEmailRecipient(c.email) }; });
+      const custom = to.filter(e => !seen[e]).map(e => ({ email: e, onRemove: () => this.toggleEmailRecipient(e) }));
+      emailComposeV = {
+        open: true, sent: !!ec.sent, notSent: !ec.sent, sentCount: String(ec.sentCount || 0),
+        recipients, custom, hasCustom: custom.length > 0, toCount: String(to.length), canSend: to.length > 0 && !ec.sent,
+        from: ec.from || '', subject: ec.subject || '', message: ec.message || '', newEmail: ec.newEmail || '',
+        onFrom: e => this.setEmailComposeField('from', e.target.value), onSubject: e => this.setEmailComposeField('subject', e.target.value),
+        onMessage: e => this.setEmailComposeField('message', e.target.value), onNewEmail: e => this.setEmailComposeField('newEmail', e.target.value),
+        onAddEmail: () => this.addEmailComposeRecipient(),
+        onClose: () => this.closeEmailCompose(), onSend: () => this.sendEmailCompose(), onMailto: () => this.emailComposeMailto(),
+      };
+    }
+
     return {
       orgName, currencySymbol: this.cur, animKey: 'v' + S.anim,
       logo: (typeof window !== 'undefined' && window.CUBIC_LOGO) ? window.CUBIC_LOGO : '',
+      emailComposeV,
       switcherProjects, navPortfolio, moduleNav, showPlaceholder, placeholder, placeholderBullets, inProject, currentProjectName: p ? p.name : '',
       onGoPortfolio: () => this.goPortfolio(), onGoVendors: () => this.goVendors(), navVendors,
       showPortfolio, showVendors, vendorRows,
