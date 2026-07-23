@@ -1497,6 +1497,9 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
               <button onClick="{{ contactsV.onAddCustomer }}" style="border:1px solid #2b59c3;background:#fff;color:#2b59c3;border-radius:7px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="background:#f2f6fd">＋ Add customer</button>
             </div>
             <sc-if value="{{ contactsV.hasCustomers }}" hint-placeholder-val="{{ true }}">
+              <div style="display:grid;grid-template-columns:42px 1.2fr 1.2fr 148px 1.6fr 88px;gap:10px;padding:8px 16px;border-bottom:1px solid #eef1f4;font-size:10px;font-weight:600;letter-spacing:.3px;color:#8894a2;text-transform:uppercase">
+                <div></div><div>Name</div><div>Company</div><div>Mobile</div><div>Email</div><div style="text-align:right">Quick</div>
+              </div>
               <sc-for list="{{ contactsV.customers }}" as="c" hint-placeholder-count="1">
                 <div style="display:grid;grid-template-columns:42px 1.2fr 1.2fr 148px 1.6fr 88px;gap:10px;align-items:center;padding:9px 16px;border-bottom:1px solid #f4f6f9">
                   <div style="width:34px;height:34px;border-radius:50%;background:#e7eefc;color:#2b59c3;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center">{{ c.initials }}</div>
@@ -1512,7 +1515,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                 </div>
               </sc-for>
             </sc-if>
-            <sc-if value="{{ contactsV.hasCustomers }}" hint-placeholder-val="{{ false }}"><div style="padding:16px;text-align:center;color:#8894a2;font-size:12.5px">No customer contacts yet.</div></sc-if>
+            <sc-if value="{{ contactsV.noCustomers }}" hint-placeholder-val="{{ false }}"><div style="padding:16px;text-align:center;color:#8894a2;font-size:12.5px">No customer contacts yet.</div></sc-if>
           </div>
 
           <!-- Client representatives -->
@@ -1522,6 +1525,9 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
               <button onClick="{{ contactsV.onAddRep }}" style="border:1px solid #2b59c3;background:#fff;color:#2b59c3;border-radius:7px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="background:#f2f6fd">＋ Add representative</button>
             </div>
             <sc-if value="{{ contactsV.hasReps }}" hint-placeholder-val="{{ true }}">
+              <div style="display:grid;grid-template-columns:42px 1.2fr 1.2fr 148px 1.6fr 88px;gap:10px;padding:8px 16px;border-bottom:1px solid #eef1f4;font-size:10px;font-weight:600;letter-spacing:.3px;color:#8894a2;text-transform:uppercase">
+                <div></div><div>Name</div><div>Role</div><div>Phone</div><div>Email</div><div style="text-align:right">Quick</div>
+              </div>
               <sc-for list="{{ contactsV.reps }}" as="c" hint-placeholder-count="2">
                 <div style="display:grid;grid-template-columns:42px 1.2fr 1.2fr 148px 1.6fr 88px;gap:10px;align-items:center;padding:9px 16px;border-bottom:1px solid #f4f6f9">
                   <div style="width:34px;height:34px;border-radius:50%;background:#eef1f5;color:#4a5765;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center">{{ c.initials }}</div>
@@ -1537,7 +1543,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                 </div>
               </sc-for>
             </sc-if>
-            <sc-if value="{{ contactsV.hasReps }}" hint-placeholder-val="{{ false }}"><div style="padding:16px;text-align:center;color:#8894a2;font-size:12.5px">No client representatives yet.</div></sc-if>
+            <sc-if value="{{ contactsV.noReps }}" hint-placeholder-val="{{ false }}"><div style="padding:16px;text-align:center;color:#8894a2;font-size:12.5px">No client representatives yet.</div></sc-if>
           </div>
 
           <!-- Internal team -->
@@ -1547,6 +1553,9 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
               <button onClick="{{ contactsV.onAddTeam }}" style="border:1px solid #2b59c3;background:#fff;color:#2b59c3;border-radius:7px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="background:#f2f6fd">＋ Add team member</button>
             </div>
             <sc-if value="{{ contactsV.hasTeam }}" hint-placeholder-val="{{ true }}">
+              <div style="display:grid;grid-template-columns:42px 1.2fr 1.2fr 148px 1.6fr 88px;gap:10px;padding:8px 16px;border-bottom:1px solid #eef1f4;font-size:10px;font-weight:600;letter-spacing:.3px;color:#8894a2;text-transform:uppercase">
+                <div></div><div>Name</div><div>Role</div><div>Phone</div><div>Email</div><div style="text-align:right">Quick</div>
+              </div>
               <sc-for list="{{ contactsV.team }}" as="c" hint-placeholder-count="3">
                 <div style="display:grid;grid-template-columns:42px 1.2fr 1.2fr 148px 1.6fr 88px;gap:10px;align-items:center;padding:9px 16px;border-bottom:1px solid #f4f6f9">
                   <div style="width:34px;height:34px;border-radius:50%;background:#e6f0ea;color:#15803d;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center">{{ c.initials }}</div>
@@ -1562,7 +1571,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                 </div>
               </sc-for>
             </sc-if>
-            <sc-if value="{{ contactsV.hasTeam }}" hint-placeholder-val="{{ false }}"><div style="padding:16px;text-align:center;color:#8894a2;font-size:12.5px">No internal team members yet.</div></sc-if>
+            <sc-if value="{{ contactsV.noTeam }}" hint-placeholder-val="{{ false }}"><div style="padding:16px;text-align:center;color:#8894a2;font-size:12.5px">No internal team members yet.</div></sc-if>
           </div>
 
           <!-- Subcontractors & suppliers (read-only, from Financial) -->
@@ -1572,6 +1581,9 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
               <button onClick="{{ contactsV.onGoVendors }}" style="border:1px solid #cfd8e2;background:#fff;color:#4a5765;border-radius:7px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="border-color:#2b59c3;color:#2b59c3">Vendor directory ↗</button>
             </div>
             <sc-if value="{{ contactsV.hasSubs }}" hint-placeholder-val="{{ true }}">
+              <div style="display:grid;grid-template-columns:42px 1.5fr 1.5fr 148px 1.6fr 60px;gap:10px;padding:8px 16px;border-bottom:1px solid #eef1f4;font-size:10px;font-weight:600;letter-spacing:.3px;color:#8894a2;text-transform:uppercase">
+                <div></div><div>Company</div><div>Engaged via</div><div>Phone</div><div>Rep &amp; email</div><div style="text-align:right">Quick</div>
+              </div>
               <sc-for list="{{ contactsV.subs }}" as="c" hint-placeholder-count="3">
                 <div style="display:grid;grid-template-columns:42px 1.5fr 1.5fr 148px 1.6fr 60px;gap:10px;align-items:center;padding:10px 16px;border-bottom:1px solid #f4f6f9">
                   <div style="width:34px;height:34px;border-radius:50%;background:#fbf1e3;color:#b45309;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center">{{ c.initials }}</div>
@@ -3668,7 +3680,7 @@ class Component extends DCLogic {
         kpiCard('Unassigned', String(uncoded), uncoded ? 'need a cost code' : 'all coded', uncoded ? '#b45309' : '#15803d'),
         kpiCard('Vendors', String(new Set(bills.map(x => x.vendorId).filter(Boolean)).size), 'directory: ' + S.vendors.length),
       ];
-    } else if (inProject && !showEot && !showDocuments) {
+    } else if (inProject && !showEot && !showDocuments && !showContacts) {
       const r = this.rollup(p);
       kpis = [
         kpiCard('Contract value', this.moneyM(r.contract), this.typeLabel(p.contract.type)),
@@ -3779,9 +3791,9 @@ class Component extends DCLogic {
       const total = customers.length + reps.length + team.length + subs.length;
       contactsV = {
         show: true, total: String(total),
-        customers, customerCount: String(customers.length), hasCustomers: customers.length > 0,
-        reps, repCount: String(reps.length), hasReps: reps.length > 0,
-        team, teamCount: String(team.length), hasTeam: team.length > 0,
+        customers, customerCount: String(customers.length), hasCustomers: customers.length > 0, noCustomers: customers.length === 0,
+        reps, repCount: String(reps.length), hasReps: reps.length > 0, noReps: reps.length === 0,
+        team, teamCount: String(team.length), hasTeam: team.length > 0, noTeam: team.length === 0,
         subs, subCount: String(subs.length), hasSubs: subs.length > 0, noSubs: subs.length === 0,
         onAddCustomer: () => this.addCustomer(), onAddRep: () => this.addClientRep(), onAddTeam: () => this.addPersonnel(),
         onGoVendors: () => this.goVendors(),
