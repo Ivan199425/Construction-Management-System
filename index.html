@@ -28,6 +28,53 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
 </style>
 </helmet>
 <div style="display:flex;height:100vh;overflow:hidden">
+  <!-- ===== LOGIN / AUTH GATE ===== -->
+  <sc-if value="{{ authV.showLogin }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed;inset:0;z-index:300;background:linear-gradient(135deg,#0f1a24,#213443);display:flex;align-items:center;justify-content:center;padding:24px;font-family:inherit">
+      <div style="width:404px;max-width:94vw;background:#fff;border-radius:16px;box-shadow:0 24px 60px rgba(0,0,0,.4);overflow:hidden">
+        <div style="padding:26px 30px 6px;text-align:center">
+          <div style="background:#fff;display:inline-flex;align-items:center;justify-content:center"><img src="{{ logo }}" alt="Cubic Construction Management" style="height:46px;display:block"></div>
+          <div style="font-size:12px;color:#8894a2;margin-top:10px;letter-spacing:.3px">Construction Management System</div>
+        </div>
+        <div style="padding:10px 30px 28px">
+          <sc-if value="{{ authV.hasNotice }}" hint-placeholder-val="{{ false }}"><div style="background:#eef4ff;border:1px solid #d3e0f7;border-radius:9px;padding:9px 12px;font-size:12px;color:#2b4a86;margin-bottom:14px">{{ authV.notice }}</div></sc-if>
+
+          <sc-if value="{{ authV.isLogin }}" hint-placeholder-val="{{ true }}">
+            <div style="font-size:16px;font-weight:700;color:#0f1720;margin-bottom:2px">Sign in</div>
+            <div style="font-size:12px;color:#8894a2;margin-bottom:16px">Enter your work email and password.</div>
+            <div style="font-size:11px;font-weight:600;letter-spacing:.3px;color:#6b7787;text-transform:uppercase;margin-bottom:5px">Email</div>
+            <input value="{{ authV.email }}" onInput="{{ authV.onEmail }}" type="email" placeholder="you@company.com" style="width:100%;border:1px solid #cfd8e2;border-radius:9px;padding:10px 12px;font-size:13px;font-family:inherit;color:#0f1720;background:#fff;margin-bottom:13px" style-focus="border-color:#2b59c3;outline:none;box-shadow:0 0 0 3px rgba(43,89,195,.12)">
+            <div style="font-size:11px;font-weight:600;letter-spacing:.3px;color:#6b7787;text-transform:uppercase;margin-bottom:5px">Password</div>
+            <input value="{{ authV.password }}" onInput="{{ authV.onPassword }}" type="password" placeholder="••••••••" style="width:100%;border:1px solid #cfd8e2;border-radius:9px;padding:10px 12px;font-size:13px;font-family:inherit;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none;box-shadow:0 0 0 3px rgba(43,89,195,.12)">
+            <sc-if value="{{ authV.hasError }}" hint-placeholder-val="{{ false }}"><div style="background:#fbeef0;border:1px solid #efd0d0;border-radius:9px;padding:8px 11px;font-size:12px;color:#b91c1c;margin-top:12px">{{ authV.error }}</div></sc-if>
+            <button onClick="{{ authV.onLogin }}" style="width:100%;margin-top:16px;border:0;background:#2b59c3;color:#fff;border-radius:9px;padding:11px;font-size:13.5px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="background:#244dab">Sign in</button>
+            <div style="text-align:center;margin-top:14px"><button onClick="{{ authV.onForgot }}" style="border:0;background:transparent;color:#2b59c3;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit">Forgot password?</button></div>
+          </sc-if>
+
+          <sc-if value="{{ authV.isForgot }}" hint-placeholder-val="{{ false }}">
+            <div style="font-size:16px;font-weight:700;color:#0f1720;margin-bottom:2px">Reset password</div>
+            <div style="font-size:12px;color:#8894a2;margin-bottom:16px">Enter your email and we'll send a reset link.</div>
+            <div style="font-size:11px;font-weight:600;letter-spacing:.3px;color:#6b7787;text-transform:uppercase;margin-bottom:5px">Email</div>
+            <input value="{{ authV.resetEmail }}" onInput="{{ authV.onResetEmail }}" type="email" placeholder="you@company.com" style="width:100%;border:1px solid #cfd8e2;border-radius:9px;padding:10px 12px;font-size:13px;font-family:inherit;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none;box-shadow:0 0 0 3px rgba(43,89,195,.12)">
+            <button onClick="{{ authV.onRecover }}" style="width:100%;margin-top:16px;border:0;background:#2b59c3;color:#fff;border-radius:9px;padding:11px;font-size:13.5px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="background:#244dab">Send reset link</button>
+            <div style="text-align:center;margin-top:14px"><button onClick="{{ authV.onBackLogin }}" style="border:0;background:transparent;color:#8894a2;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit">← Back to sign in</button></div>
+          </sc-if>
+
+          <sc-if value="{{ authV.isReset }}" hint-placeholder-val="{{ false }}">
+            <div style="font-size:16px;font-weight:700;color:#0f1720;margin-bottom:2px">Set a new password</div>
+            <div style="font-size:12px;color:#8894a2;margin-bottom:14px">Choose a new password (min 6 characters).</div>
+            <sc-if value="{{ authV.hasToken }}" hint-placeholder-val="{{ false }}"><div style="background:#f7f9fc;border:1px dashed #cfd8e2;border-radius:9px;padding:9px 12px;font-size:11.5px;color:#6b7787;margin-bottom:14px">Reset token (demo): <strong class="mono" style="color:#0f1720">{{ authV.resetToken }}</strong></div></sc-if>
+            <div style="font-size:11px;font-weight:600;letter-spacing:.3px;color:#6b7787;text-transform:uppercase;margin-bottom:5px">New password</div>
+            <input value="{{ authV.newPassword }}" onInput="{{ authV.onNewPassword }}" type="password" placeholder="••••••••" style="width:100%;border:1px solid #cfd8e2;border-radius:9px;padding:10px 12px;font-size:13px;font-family:inherit;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none;box-shadow:0 0 0 3px rgba(43,89,195,.12)">
+            <sc-if value="{{ authV.hasError }}" hint-placeholder-val="{{ false }}"><div style="background:#fbeef0;border:1px solid #efd0d0;border-radius:9px;padding:8px 11px;font-size:12px;color:#b91c1c;margin-top:12px">{{ authV.error }}</div></sc-if>
+            <button onClick="{{ authV.onReset }}" style="width:100%;margin-top:16px;border:0;background:#2b59c3;color:#fff;border-radius:9px;padding:11px;font-size:13.5px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="background:#244dab">Update password</button>
+            <div style="text-align:center;margin-top:14px"><button onClick="{{ authV.onBackLogin }}" style="border:0;background:transparent;color:#8894a2;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit">← Back to sign in</button></div>
+          </sc-if>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
   <!-- SIDEBAR -->
   <aside style="width:248px;flex:0 0 248px;background:#0f1a24;color:#8493a3;display:flex;flex-direction:column;height:100vh">
     <div style="padding:18px 16px 16px;border-bottom:1px solid rgba(255,255,255,.07)">
@@ -67,8 +114,9 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
       </sc-if>
     </div>
     <div style="padding:12px 16px;border-top:1px solid rgba(255,255,255,.07);display:flex;align-items:center;gap:10px">
-      <div style="width:28px;height:28px;border-radius:50%;background:#2b3a48;color:#c3ccd6;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600">JD</div>
-      <div style="flex:1;font-size:12px"><div style="color:#c3ccd6">J. Doe</div><div style="color:#5f7080;font-size:10.5px">Project Manager</div></div>
+      <div style="width:28px;height:28px;border-radius:50%;background:#2b3a48;color:#c3ccd6;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600">{{ authV.initials }}</div>
+      <div style="flex:1;min-width:0;font-size:12px"><div style="color:#c3ccd6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ authV.userName }}</div><div style="color:#5f7080;font-size:10.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ authV.roleLabel }}</div></div>
+      <button onClick="{{ authV.onLogout }}" title="Log out" style="border:1px solid rgba(255,255,255,.14);background:transparent;color:#8493a3;border-radius:7px;padding:5px 9px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap" style-hover="border-color:#e57373;color:#e57373">Log out</button>
     </div>
   </aside>
 
@@ -2817,6 +2865,9 @@ class Component extends DCLogic {
       vendorModal: null,
       vendorForm: { type: 'supplier', company: '', rep: '', phone: '', email: '', address: '' },
       role: 'PM',
+      users: this.seedUsers(),
+      session: (typeof localStorage !== 'undefined' && localStorage.getItem('cubicSession')) ? { userId: localStorage.getItem('cubicSession') } : null,
+      auth: { view: 'login', email: '', password: '', error: '', notice: '', resetEmail: '', resetToken: '', newPassword: '' },
       companyRetainagePct: 5,
       contractModal: null,
       contractForm: null,
@@ -3188,6 +3239,65 @@ class Component extends DCLogic {
   billTotal(b) { const amt = Number(b.amount) || 0; return amt + amt * (Number(b.taxRate) || 0) / 100; }
   commitmentBilled(cmId, p) { const proj = p || this.proj(this.state.pid) || {}; return (proj.bills || []).filter(b => b.commitmentId === cmId).reduce((s, b) => s + this.billTotal(b), 0); }
   canIssue() { return this.state.role === 'PM' || this.state.role === 'Admin'; }
+  // ===== Authentication & RBAC (Phase 1) =====
+  roleList() { return [
+    { key: 'Admin', label: 'Administrator' }, { key: 'PM', label: 'Project Manager' }, { key: 'Superintendent', label: 'Superintendent' },
+    { key: 'Finance', label: 'Finance' }, { key: 'HR', label: 'HR' }, { key: 'ContractAdmin', label: 'Contract Administrator' },
+    { key: 'Field', label: 'Field / Crew' }, { key: 'Employee', label: 'Employee' }, { key: 'Architect', label: 'Architect / Engineer (external)' },
+    { key: 'ClientSuper', label: 'Client Superintendent (view-only)' }, { key: 'Student', label: 'Student (read-only)' },
+  ]; }
+  roleLabel(key) { const r = this.roleList().find(x => x.key === key); return r ? r.label : (key || ''); }
+  seedUsers() { const u = (id, name, email, role, projectIds, opts) => ({ id, name, email, password: (opts && opts.pw) || 'cubic123', role, status: (opts && opts.status) || 'active', external: !!(opts && opts.external), projectIds: projectIds || [], lastLogin: '', createdAt: '2026-07-01', mustReset: false });
+    return [
+      u('u_admin', 'Ivan Abad Garcia', 'ivan@cubiccm.com', 'Admin', ['p1', 'p2', 'p3']),
+      u('u_pm', 'James Doe', 'j.doe@cubiccm.com', 'PM', ['p1', 'p2', 'p3']),
+      u('u_super', 'Marco Tran', 'm.tran@cubiccm.com', 'Superintendent', ['p1']),
+      u('u_fin', 'Sara Bell', 's.bell@cubiccm.com', 'Finance', ['p1', 'p2', 'p3']),
+      u('u_hr', 'Nadia Rahman', 'n.rahman@cubiccm.com', 'HR', []),
+      u('u_ca', 'Leah Fischer', 'l.fischer@cubiccm.com', 'ContractAdmin', ['p2']),
+      u('u_field', 'Danny Prelac', 'd.prelac@cubiccm.com', 'Field', ['p1']),
+      u('u_emp', 'Priya Anand', 'p.anand@cubiccm.com', 'Employee', ['p3']),
+      u('u_arch', 'Dr. Helen Osei', 'h.osei@statetransport.gov', 'Architect', ['p2'], { external: true }),
+      u('u_client', 'Alan Reyes', 'a.reyes@meridiandev.com', 'ClientSuper', ['p1'], { external: true }),
+      u('u_student', 'Tom Whitaker', 'intern@cubiccm.com', 'Student', ['p1']),
+    ]; }
+  _buildPerms() { const P = {};
+    P.directory = { _default: 0, Field: 1, Employee: 1, PM: 2, Superintendent: 2, Finance: 1, HR: 2, Admin: 2 };
+    P.dashboard = { _default: 1 };
+    P.projectSetup = { _default: 1, PM: 2, Superintendent: 2, Admin: 2, HR: 0, Architect: 1 };
+    P.financial = { _default: 0, Field: 1, Employee: 1, PM: 3, Superintendent: 3, Finance: 3, Admin: 2, ContractAdmin: 1 };
+    P.agreements = { _default: 0, PM: 2, Superintendent: 2, Finance: 1, Admin: 2, ContractAdmin: 1 };
+    P.variations = { _default: 0, Field: 2, Employee: 2, PM: 3, Superintendent: 2, Finance: 3, Admin: 2, ContractAdmin: 1, ClientSuper: 1 };
+    P.documents = { _default: 0, Field: 2, Employee: 2, PM: 2, Superintendent: 2, Finance: 1, Admin: 2, Architect: 1, ContractAdmin: 1, ClientSuper: 1, Student: 1 };
+    P.rfis = { _default: 0, Field: 2, Employee: 2, PM: 3, Superintendent: 3, Admin: 2, Architect: 3, ClientSuper: 1, Student: 1 };
+    P.punchList = { _default: 0, Field: 2, Employee: 2, PM: 3, Superintendent: 3, Admin: 2, ClientSuper: 1, Student: 1 };
+    P.reporting = { _default: 0, Field: 1, Employee: 1, PM: 1, Superintendent: 1, Finance: 1, Admin: 1, ContractAdmin: 1 };
+    P.schedule = { _default: 1, PM: 3, Superintendent: 2, Admin: 2 };
+    P.eot = { _default: 1, PM: 3, Superintendent: 2, Finance: 3, Admin: 2, ContractAdmin: 1 };
+    P.invoices = { _default: 1, PM: 2, Finance: 3, Admin: 2 };
+    P.bills = { _default: 1, PM: 2, Finance: 3, Admin: 2 };
+    P.claims = { _default: 1, PM: 2, Finance: 3, Admin: 2 };
+    P.admin = { _default: 0, Admin: 2 };
+    return P; }
+  permLevel(role, resource) { if (resource === 'meetings') resource = 'documents'; if (!this._perms) this._perms = this._buildPerms(); const r = this._perms[resource]; if (!r) return 0; const v = (role in r) ? r[role] : r._default; return v == null ? 0 : v; }
+  currentUser() { const s = this.state.session; if (!s || !s.userId) return null; const u = (this.state.users || []).find(x => x.id === s.userId); return (u && u.status === 'active') ? u : null; }
+  can(resource, action) { const u = this.currentUser(); if (!u) return false; const need = action === 'approve' ? 3 : action === 'edit' ? 2 : 1; return this.permLevel(u.role, resource) >= need; }
+  setAuthField(k, v) { this.setState(s => ({ auth: { ...s.auth, [k]: v, error: '' } })); }
+  authGoto(view) { this.setState(s => ({ auth: { ...s.auth, view, error: '', notice: '' } })); }
+  doLogin() { const a = this.state.auth || {}; const email = (a.email || '').trim().toLowerCase(); const u = (this.state.users || []).find(x => (x.email || '').toLowerCase() === email);
+    if (!u || u.password !== a.password) { this.setState(s => ({ auth: { ...s.auth, error: 'Incorrect email or password.' } })); return; }
+    if (u.status !== 'active') { this.setState(s => ({ auth: { ...s.auth, error: 'This account has been deactivated. Contact your administrator.' } })); return; }
+    try { localStorage.setItem('cubicSession', u.id); } catch (e) {}
+    const today = this.todayLocal();
+    this.setState(s => ({ session: { userId: u.id, loginAt: today }, role: u.role, users: s.users.map(x => x.id === u.id ? { ...x, lastLogin: today } : x), view: 'portfolio', auth: { view: 'login', email: '', password: '', error: '', notice: '', resetEmail: '', resetToken: '', newPassword: '' } })); }
+  doLogout() { try { localStorage.removeItem('cubicSession'); } catch (e) {} this.setState({ session: null, auth: { view: 'login', email: '', password: '', error: '', notice: 'You have been logged out.', resetEmail: '', resetToken: '', newPassword: '' } }); }
+  doPasswordRecover() { const a = this.state.auth || {}; const email = (a.resetEmail || '').trim().toLowerCase(); const u = (this.state.users || []).find(x => (x.email || '').toLowerCase() === email && x.status === 'active');
+    if (!u) { this.setState(s => ({ auth: { ...s.auth, view: 'reset', resetToken: '', notice: 'If that email is registered, a reset link has been sent.', error: '' } })); return; }
+    const token = Math.random().toString(36).slice(2, 8).toUpperCase();
+    this.setState(s => ({ auth: { ...s.auth, view: 'reset', resetToken: token, notice: 'Reset link generated (demo). In production this is emailed to ' + u.email + '.', error: '' } })); }
+  doPasswordReset() { const a = this.state.auth || {}; const email = (a.resetEmail || '').trim().toLowerCase(); const np = a.newPassword || '';
+    if (np.length < 6) { this.setState(s => ({ auth: { ...s.auth, error: 'Password must be at least 6 characters.' } })); return; }
+    this.setState(s => ({ users: s.users.map(x => (x.email || '').toLowerCase() === email ? { ...x, password: np, mustReset: false } : x), auth: { view: 'login', email: a.resetEmail, password: '', error: '', notice: 'Password updated — please log in.', resetEmail: '', resetToken: '', newPassword: '' } })); }
   getAgr(cm) {
     const a = cm.agr || {};
     const status = a.status || ({ signed: 'signed', issued: 'sent', draft: 'draft', closed: 'signed' }[cm.status] || 'draft');
@@ -5656,8 +5766,24 @@ class Component extends DCLogic {
       };
     }
 
+    // ===== auth view =====
+    const cu = this.currentUser(); const A = S.auth || { view: 'login' };
+    const initialsOfName = nm => (nm || '?').trim().split(/\s+/).map(x => x[0] || '').slice(0, 2).join('').toUpperCase() || '?';
+    const authV = {
+      loggedIn: !!cu, showLogin: !cu,
+      isLogin: A.view === 'login', isForgot: A.view === 'forgot', isReset: A.view === 'reset',
+      email: A.email || '', password: A.password || '', resetEmail: A.resetEmail || '', newPassword: A.newPassword || '',
+      error: A.error || '', hasError: !!A.error, notice: A.notice || '', hasNotice: !!A.notice,
+      resetToken: A.resetToken || '', hasToken: !!A.resetToken,
+      userName: cu ? cu.name : '', roleLabel: cu ? this.roleLabel(cu.role) : '', initials: cu ? initialsOfName(cu.name) : '',
+      onEmail: e => this.setAuthField('email', e.target.value), onPassword: e => this.setAuthField('password', e.target.value),
+      onResetEmail: e => this.setAuthField('resetEmail', e.target.value), onNewPassword: e => this.setAuthField('newPassword', e.target.value),
+      onLogin: () => this.doLogin(), onLogout: () => this.doLogout(), onForgot: () => this.authGoto('forgot'), onBackLogin: () => this.authGoto('login'),
+      onRecover: () => this.doPasswordRecover(), onReset: () => this.doPasswordReset(),
+    };
+
     return {
-      orgName, currencySymbol: this.cur, animKey: 'v' + S.anim,
+      orgName, currencySymbol: this.cur, animKey: 'v' + S.anim, authV,
       logo: (typeof window !== 'undefined' && window.CUBIC_LOGO) ? window.CUBIC_LOGO : '',
       emailComposeV,
       switcherProjects, navPortfolio, moduleNav, showPlaceholder, placeholder, placeholderBullets, inProject, currentProjectName: p ? p.name : '',
