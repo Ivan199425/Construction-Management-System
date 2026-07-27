@@ -3049,6 +3049,22 @@ class Component extends DCLogic {
       defectSearch: '',
       anim: 0,
     };
+    this._SB = { url: 'https://vzxenkijxzzrgnmopnxh.supabase.co', key: 'sb_publishable_dqhiUAGqlZ6gSt-INv1KNA_kJeRNimR' };
+  }
+
+  componentDidMount() {
+    // Phase 1: pull the SHARED cost-code catalogue from Supabase (server = source of truth).
+    // If the server has none yet, seed it from whatever this browser already holds.
+    this._sbLoadCatalog('cost_codes').then(serverData => {
+      if (Array.isArray(serverData)) {
+        const norm = this._normCodes(serverData);
+        try { if (typeof localStorage !== 'undefined') localStorage.setItem('cubicCostCodes', JSON.stringify(norm)); } catch (e) {}
+        this.setState({ customCodes: norm });
+      } else {
+        const local = this.state.customCodes || [];
+        if (local.length) this._sbSaveCatalog('cost_codes', local);
+      }
+    }).catch(() => {});
   }
 
   defaultSubcontractTerms() {
@@ -3451,17 +3467,38 @@ class Component extends DCLogic {
     return P; }
   _loadPerms() { const def = this._buildPerms(); try { if (typeof localStorage === 'undefined') return def; const raw = localStorage.getItem('cubicPerms'); if (!raw) return def; const saved = JSON.parse(raw); if (!saved || typeof saved !== 'object') return def; const out = {}; Object.keys(def).forEach(k => { out[k] = Object.assign({}, def[k], saved[k] || {}); }); Object.keys(saved).forEach(k => { if (!out[k]) out[k] = saved[k]; }); return out; } catch (e) { return def; } }
   _savePerms(p) { try { if (typeof localStorage !== 'undefined') localStorage.setItem('cubicPerms', JSON.stringify(p)); } catch (e) {} }
+  _normCodes(arr) {
+    if (!Array.isArray(arr)) return [];
+    return arr.map(p => ({ id: p.id || this._cid(), parentCode: p.parentCode || '', parentDesc: p.parentDesc || '', children: Array.isArray(p.children) ? p.children.map(c => ({ id: c.id || this._cid(), childCode: c.childCode || '', childDesc: c.childDesc || '' })) : [] }));
+  }
   _loadCodes() {
     try {
       if (typeof localStorage === 'undefined') return [];
       const raw = localStorage.getItem('cubicCostCodes');
-      if (!raw) return [];
-      const arr = JSON.parse(raw);
-      if (!Array.isArray(arr)) return [];
-      return arr.map(p => ({ id: p.id || this._cid(), parentCode: p.parentCode || '', parentDesc: p.parentDesc || '', children: Array.isArray(p.children) ? p.children.map(c => ({ id: c.id || this._cid(), childCode: c.childCode || '', childDesc: c.childDesc || '' })) : [] }));
+      return raw ? this._normCodes(JSON.parse(raw)) : [];
     } catch (e) { return []; }
   }
-  _saveCodes(arr) { try { if (typeof localStorage !== 'undefined') localStorage.setItem('cubicCostCodes', JSON.stringify(arr || [])); } catch (e) {} }
+  _saveCodes(arr) {
+    try { if (typeof localStorage !== 'undefined') localStorage.setItem('cubicCostCodes', JSON.stringify(arr || [])); } catch (e) {}
+    if (this._sbTimer) clearTimeout(this._sbTimer);
+    this._sbTimer = setTimeout(() => this._sbSaveCatalog('cost_codes', arr || []), 500); // debounce shared save
+  }
+  _sbHeaders(extra) { const c = this._SB || {}; return Object.assign({ apikey: c.key, Authorization: 'Bearer ' + c.key }, extra || {}); }
+  _sbLoadCatalog(key) {
+    const c = this._SB; if (!c || !c.url || !c.key || typeof fetch === 'undefined') return Promise.resolve(null);
+    return fetch(c.url + '/rest/v1/app_catalog?select=data&key=eq.' + encodeURIComponent(key), { headers: this._sbHeaders() })
+      .then(r => r.ok ? r.json() : null)
+      .then(rows => (rows && rows[0]) ? rows[0].data : null)
+      .catch(() => null);
+  }
+  _sbSaveCatalog(key, data) {
+    const c = this._SB; if (!c || !c.url || !c.key || typeof fetch === 'undefined') return Promise.resolve(false);
+    return fetch(c.url + '/rest/v1/app_catalog', {
+      method: 'POST',
+      headers: this._sbHeaders({ 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates,return=minimal' }),
+      body: JSON.stringify([{ key, data, updated_at: new Date().toISOString() }])
+    }).then(r => r.ok).catch(() => false);
+  }
   permLevel(role, resource) { if (resource === 'meetings') resource = 'documents'; const P = this.state.perms || this._buildPerms(); const r = P[resource]; if (!r) return 0; const v = (role in r) ? r[role] : r._default; return v == null ? 0 : v; }
   setPerm(resource, role, level) { if (!this.can('admin', 'edit')) return; const lv = Number(level) || 0; const cur = this.state.perms || this._buildPerms(); const next = { ...cur, [resource]: { ...(cur[resource] || {}), [role]: lv } }; this._savePerms(next); this.setState({ perms: next }); }
   resetPerms() { if (!this.can('admin', 'edit')) return; try { if (typeof localStorage !== 'undefined') localStorage.removeItem('cubicPerms'); } catch (e) {} this.setState({ perms: this._buildPerms() }); }
