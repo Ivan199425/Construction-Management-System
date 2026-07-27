@@ -296,35 +296,45 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
           <sc-if value="{{ settingsV.isCodes }}" hint-placeholder-val="{{ false }}">
             <div style="background:#fff;border:1px solid #e4e8ee;border-radius:12px;overflow:hidden">
               <div style="padding:13px 16px;border-bottom:1px solid #eef1f4;background:#fafbfc;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
-                <div style="font-size:13px;font-weight:600;color:#0f1720">Cost-code catalogue <span style="font-weight:400;color:#a4afba;font-size:11.5px">· used to build project budgets · {{ settingsV.catalogCount }} in use</span></div>
+                <div style="font-size:13px;font-weight:600;color:#0f1720">Cost-code catalogue <span style="font-weight:400;color:#a4afba;font-size:11.5px">· {{ settingsV.parentCount }} parent codes · {{ settingsV.codeCount }} child codes · used to build project budgets</span></div>
                 <div style="display:flex;gap:8px">
                   <label style="display:inline-flex;align-items:center;gap:6px;border:1px solid #cfd8e2;background:#fff;color:#0f1720;border-radius:8px;padding:7px 12px;font-size:12px;font-weight:600;cursor:pointer" style-hover="border-color:#2b59c3;color:#2b59c3">⬆ Upload CSV<input type="file" accept=".csv,text/csv" onChange="{{ settingsV.onUpload }}" style="display:none"></label>
-                  <button onClick="{{ settingsV.onAddCode }}" style="border:0;background:#2b59c3;color:#fff;border-radius:8px;padding:8px 13px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="background:#244dab">＋ Add code</button>
+                  <button onClick="{{ settingsV.onAddParent }}" style="border:0;background:#2b59c3;color:#fff;border-radius:8px;padding:8px 13px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="background:#244dab">＋ Add parent code</button>
                 </div>
               </div>
               <sc-if value="{{ settingsV.hasUploadMsg }}" hint-placeholder-val="{{ false }}">
                 <div style="padding:10px 16px;font-size:12px;line-height:1.5;border-bottom:1px solid {{ settingsV.uploadBorder }};background:{{ settingsV.uploadBg }};color:{{ settingsV.uploadFg }}">{{ settingsV.uploadMsg }}</div>
               </sc-if>
               <sc-if value="{{ settingsV.hasCodes }}" hint-placeholder-val="{{ true }}">
-                <div style="overflow-x:auto"><div style="min-width:860px">
-                  <div style="display:grid;grid-template-columns:1fr 1.7fr 1fr 1.7fr 40px;gap:10px;padding:9px 16px;background:#fafbfc;border-bottom:1px solid #e4e8ee;font-size:10px;font-weight:600;letter-spacing:.3px;color:#8894a2;text-transform:uppercase">
-                    <div>Parent code</div><div>Parent code description</div><div>Child code</div><div>Child code description</div><div></div>
-                  </div>
-                  <sc-for list="{{ settingsV.codeRows }}" as="c" hint-placeholder-count="4">
-                    <div style="display:grid;grid-template-columns:1fr 1.7fr 1fr 1.7fr 40px;gap:10px;align-items:center;padding:8px 16px;border-bottom:1px solid #f4f6f9">
-                      <input value="{{ c.parentCode }}" onInput="{{ c.onParentCode }}" placeholder="e.g. 02" class="mono" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 8px;font-size:12px;font-family:'IBM Plex Mono',monospace;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none">
-                      <input value="{{ c.parentDesc }}" onInput="{{ c.onParentDesc }}" placeholder="e.g. Sitework & earthworks" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 8px;font-size:12px;font-family:inherit;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none">
-                      <input value="{{ c.childCode }}" onInput="{{ c.onChildCode }}" placeholder="e.g. 02-200" class="mono" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 8px;font-size:12px;font-family:'IBM Plex Mono',monospace;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none">
-                      <input value="{{ c.childDesc }}" onInput="{{ c.onChildDesc }}" placeholder="e.g. Bulk earthworks" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 8px;font-size:12px;font-family:inherit;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none">
-                      <button onClick="{{ c.onDelete }}" title="Delete" style="border:0;background:transparent;color:#c0c8d1;cursor:pointer;font-size:13px;padding:2px;line-height:1" style-hover="color:#b91c1c">✕</button>
+                <div style="overflow-x:auto"><div style="min-width:760px">
+                  <sc-for list="{{ settingsV.parentGroups }}" as="g" hint-placeholder-count="3">
+                    <div style="border-bottom:1px solid #e4e8ee">
+                      <div style="display:grid;grid-template-columns:150px 1fr auto;gap:10px;align-items:center;padding:11px 16px;background:#f4f7fb">
+                        <input value="{{ g.parentCode }}" onInput="{{ g.onParentCode }}" placeholder="Parent code" class="mono" style="width:100%;border:1px solid #d6dee8;border-radius:6px;padding:7px 9px;font-size:12.5px;font-weight:700;font-family:'IBM Plex Mono',monospace;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none">
+                        <input value="{{ g.parentDesc }}" onInput="{{ g.onParentDesc }}" placeholder="Parent code description (e.g. PRELIMINARIES)" style="width:100%;border:1px solid #d6dee8;border-radius:6px;padding:7px 9px;font-size:12.5px;font-weight:600;font-family:inherit;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none">
+                        <div style="display:flex;align-items:center;gap:10px"><span style="font-size:10.5px;color:#8894a2;white-space:nowrap">{{ g.childCount }} child</span><button onClick="{{ g.onDeleteParent }}" title="Delete this parent and all its child codes" style="border:1px solid #f0d4d4;background:#fff;color:#b91c1c;border-radius:7px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap" style-hover="background:#fdecec">✕ Parent</button></div>
+                      </div>
+                      <div style="padding:6px 16px 12px 16px">
+                        <div style="display:grid;grid-template-columns:150px 1fr 40px;gap:10px;padding:5px 0 4px 26px;font-size:9.5px;font-weight:700;letter-spacing:.3px;color:#a4afba;text-transform:uppercase">
+                          <div>Child code</div><div>Child code description</div><div></div>
+                        </div>
+                        <sc-for list="{{ g.children }}" as="c" hint-placeholder-count="3">
+                          <div style="display:grid;grid-template-columns:150px 1fr 40px;gap:10px;align-items:center;padding:3px 0 3px 26px">
+                            <input value="{{ c.childCode }}" onInput="{{ c.onChildCode }}" placeholder="e.g. 03-001" class="mono" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 8px;font-size:12px;font-family:'IBM Plex Mono',monospace;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none">
+                            <input value="{{ c.childDesc }}" onInput="{{ c.onChildDesc }}" placeholder="e.g. PRELIMINARIES: SCAFFOLDING" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 8px;font-size:12px;font-family:inherit;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none">
+                            <button onClick="{{ c.onDelete }}" title="Delete child code" style="border:0;background:transparent;color:#c0c8d1;cursor:pointer;font-size:13px;padding:2px;line-height:1" style-hover="color:#b91c1c">✕</button>
+                          </div>
+                        </sc-for>
+                        <button onClick="{{ g.onAddChild }}" style="margin:8px 0 0 26px;border:1px dashed #cfd8e2;background:#fff;color:#2b59c3;border-radius:7px;padding:6px 12px;font-size:11.5px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="border-color:#2b59c3;background:#f5f8ff">＋ Add child code</button>
+                      </div>
                     </div>
                   </sc-for>
                 </div></div>
               </sc-if>
               <sc-if value="{{ settingsV.noCodes }}" hint-placeholder-val="{{ false }}">
-                <div style="padding:30px 24px;text-align:center;color:#8894a2;font-size:13px">No cost codes yet. <strong style="color:#6b7787">Upload a CSV</strong> (columns: parent code, parent code description, child code, child code description) or click <strong style="color:#6b7787">＋ Add code</strong>.<br><span style="font-size:11.5px">From Excel, use <strong style="color:#6b7787">File → Save As → “CSV UTF-8 (Comma delimited)”</strong> — not the .xlsx workbook. Blank parent cells under a group are filled in automatically.</span></div>
+                <div style="padding:30px 24px;text-align:center;color:#8894a2;font-size:13px">No cost codes yet. <strong style="color:#6b7787">Upload a CSV</strong> (columns: parent code, parent code description, child code, child code description) or click <strong style="color:#6b7787">＋ Add parent code</strong>, then add child codes under it.<br><span style="font-size:11.5px">From Excel, use <strong style="color:#6b7787">File → Save As → “CSV UTF-8 (Comma delimited)”</strong> — not the .xlsx workbook. Blank parent cells under a group are filled in automatically.</span></div>
               </sc-if>
-              <div style="padding:9px 16px;font-size:11px;color:#8894a2;line-height:1.5;border-top:1px solid #eef1f4">A <strong style="color:#6b7787">parent code</strong> is a broad group (e.g. 02 — Sitework); a <strong style="color:#6b7787">child code</strong> is an item inside it (e.g. 02-200 — Bulk earthworks). CSV columns, in order: <span class="mono">parent code, parent code description, child code, child code description</span>. Child codes feed every project's <strong style="color:#6b7787">Budget</strong> cost-code selector (shown as <span class="mono">parent · child — description</span>).</div>
+              <div style="padding:9px 16px;font-size:11px;color:#8894a2;line-height:1.5;border-top:1px solid #eef1f4">A <strong style="color:#6b7787">parent code</strong> is a broad group (e.g. 03 — PRELIMINARIES); each holds one or more <strong style="color:#6b7787">child codes</strong> (e.g. 03-002 — PRELIMINARIES: SCAFFOLDING). Use <strong style="color:#6b7787">＋ Add child code</strong> to add more items to a parent. Child codes feed every project's <strong style="color:#6b7787">Budget</strong> selector (shown as <span class="mono">parent · child — description</span>).</div>
             </div>
           </sc-if>
         </sc-if>
@@ -772,7 +782,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                 <div style="display:grid;grid-template-columns:96px 1.5fr 128px 1fr 1fr 1fr 1fr 1fr 1fr 1fr .9fr 42px;padding:8px 16px;border-bottom:1px solid #eef1f4;align-items:center;gap:8px" style-hover="background:#f9fafc">
                   <select value="{{ r.code }}" onChange="{{ r.onCodeSelect }}" title="Select a saved cost code" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 5px;font-size:12px;font-family:'IBM Plex Mono',monospace;color:#4a5765;background:#fff;cursor:pointer" style-focus="border-color:#2b59c3;outline:none">
                     <option value="">Select code…</option>
-                    <sc-for list="{{ r.codeCatalog }}" as="o" hint-placeholder-count="3"><option value="{{ o.code }}">{{ o.label }}</option></sc-for>
+                    <sc-for list="{{ r.codeGroups }}" as="grp" hint-placeholder-count="3"><optgroup label="{{ grp.label }}"><sc-for list="{{ grp.options }}" as="o" hint-placeholder-count="3"><option value="{{ o.code }}">{{ o.label }}</option></sc-for></optgroup></sc-for>
                     <option value="__new__">＋ New cost code…</option>
                   </select>
                   <input value="{{ r.desc }}" onInput="{{ r.onDesc }}" placeholder="Description" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 9px;font-size:12.5px;font-family:inherit;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none">
@@ -1001,7 +1011,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                   </select>
                   <select value="{{ r.code }}" onChange="{{ r.onCode }}" title="Assign to a cost code" style="width:100%;border:1px solid {{ r.codeBorder }};border-radius:6px;padding:6px 6px;font-size:12px;font-family:inherit;color:#4a5765;background:{{ r.codeBg }};cursor:pointer" style-focus="border-color:#2b59c3;outline:none">
                     <option value="">— Unassigned —</option>
-                    <sc-for list="{{ r.codeCatalog }}" as="o" hint-placeholder-count="3"><option value="{{ o.code }}">{{ o.label }}</option></sc-for>
+                    <sc-for list="{{ r.codeGroups }}" as="grp" hint-placeholder-count="3"><optgroup label="{{ grp.label }}"><sc-for list="{{ grp.options }}" as="o" hint-placeholder-count="3"><option value="{{ o.code }}">{{ o.label }}</option></sc-for></optgroup></sc-for>
                   </select>
                   <input value="{{ r.desc }}" onInput="{{ r.onDesc }}" placeholder="Description" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 9px;font-size:12.5px;font-family:inherit;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none">
                   <input value="{{ r.billDate }}" onInput="{{ r.onBillDate }}" type="date" class="mono" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 8px;font-size:11px;font-family:'IBM Plex Mono',monospace;color:#4a5765;background:#fff" style-focus="border-color:#2b59c3;outline:none">
@@ -4341,15 +4351,28 @@ class Component extends DCLogic {
     this.state.projects.forEach(p => p.costLines.forEach(l => {
       if (l.code && !map.has(l.code)) map.set(l.code, { code: l.code, name: l.desc || '', category: l.cat, parentCode: '', parentDesc: '' });
     }));
-    // parent / child codes from Settings → Cost codes
-    (this.state.customCodes || []).forEach(c => {
-      const code = (c.childCode || '').trim();
-      if (!code) return;
-      map.set(code, { code, name: (c.childDesc || '').trim(), category: 'other', parentCode: (c.parentCode || '').trim(), parentDesc: (c.parentDesc || '').trim() });
+    // parent → child codes from Settings → Cost codes (nested)
+    (this.state.customCodes || []).forEach(par => {
+      const pc = (par.parentCode || '').trim(), pd = (par.parentDesc || '').trim();
+      (par.children || []).forEach(ch => {
+        const code = (ch.childCode || '').trim();
+        if (!code) return;
+        map.set(code, { code, name: (ch.childDesc || '').trim(), category: 'other', parentCode: pc, parentDesc: pd });
+      });
     });
     return [...map.values()].sort((a, b) => ((a.parentCode || '') + '~' + a.code).localeCompare((b.parentCode || '') + '~' + b.code));
   }
   costCodeOptions() { return this.costCodeCatalog().map(c => ({ code: c.code, label: (c.parentCode ? c.parentCode + ' · ' : '') + c.code + (c.name ? ' — ' + c.name : '') })); }
+  costCodeGroups() {
+    const groups = []; const byKey = new Map();
+    this.costCodeCatalog().forEach(c => {
+      const key = c.parentCode || '__none__';
+      let g = byKey.get(key);
+      if (!g) { g = { key, label: c.parentCode ? (c.parentCode + ' · ' + (c.parentDesc || 'Section')) : 'Other codes', options: [] }; byKey.set(key, g); groups.push(g); }
+      g.options.push({ code: c.code, label: c.parentCode ? (c.code + ' — ' + c.name) : (c.code + (c.name ? ' — ' + c.name : '')) });
+    });
+    return groups;
+  }
   applyCode(lineId, code) {
     const entry = this.costCodeCatalog().find(c => c.code === code);
     this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, costLines: p.costLines.map(l => {
@@ -4370,19 +4393,31 @@ class Component extends DCLogic {
     if (!codeModal) return;
     const childCode = (codeForm.childCode || '').trim();
     if (!childCode) return;
-    const entry = { parentCode: (codeForm.parentCode || '').trim(), parentDesc: (codeForm.parentDesc || '').trim(), childCode, childDesc: (codeForm.childDesc || '').trim() };
-    this.setState(s => ({
-      customCodes: (s.customCodes || []).some(c => c.childCode === childCode) ? s.customCodes.map(c => c.childCode === childCode ? entry : c) : [...(s.customCodes || []), entry],
-      codeModal: null,
-      projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, costLines: p.costLines.map(l => l.id === codeModal.lineId ? { ...l, code: childCode, cat: 'other', desc: (!l.desc || l.desc === 'New cost line') ? entry.childDesc : l.desc } : l) }),
-    }));
+    const pCode = (codeForm.parentCode || '').trim(), pDesc = (codeForm.parentDesc || '').trim(), cDesc = (codeForm.childDesc || '').trim();
+    this.setState(s => {
+      const parents = (s.customCodes || []).map(p => ({ ...p, children: [...(p.children || [])] }));
+      let par = parents.find(p => (p.parentCode || '') === pCode);
+      if (!par) { par = { id: this._cid(), parentCode: pCode, parentDesc: pDesc, children: [] }; parents.push(par); }
+      else if (pDesc) par.parentDesc = pDesc;
+      const ex = par.children.find(c => (c.childCode || '') === childCode);
+      if (ex) ex.childDesc = cDesc; else par.children.push({ id: this._cid(), childCode, childDesc: cDesc });
+      return {
+        customCodes: parents,
+        codeModal: null,
+        projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, costLines: p.costLines.map(l => l.id === codeModal.lineId ? { ...l, code: childCode, cat: 'other', desc: (!l.desc || l.desc === 'New cost line') ? cDesc : l.desc } : l) }),
+      };
+    });
   }
   // ===== Settings (roles reference + cost-code catalog) =====
   goSettings() { this.setState({ view: 'settings', anim: this.state.anim + 1 }); }
   setSettingsTab(t) { this.setState({ settingsTab: t }); }
-  addCustomCode() { this.setState(s => ({ customCodes: [...(s.customCodes || []), { parentCode: '', parentDesc: '', childCode: '', childDesc: '' }] })); }
-  setCustomCode(i, k, v) { this.setState(s => ({ customCodes: (s.customCodes || []).map((c, j) => j === i ? { ...c, [k]: v } : c) })); }
-  deleteCustomCode(i) { this.setState(s => ({ customCodes: (s.customCodes || []).filter((_, j) => j !== i) })); }
+  _cid() { return 'cc' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+  addParentGroup() { this.setState(s => ({ customCodes: [...(s.customCodes || []), { id: this._cid(), parentCode: '', parentDesc: '', children: [{ id: this._cid(), childCode: '', childDesc: '' }] }] })); }
+  addChildCode(parentId) { this.setState(s => ({ customCodes: (s.customCodes || []).map(p => p.id !== parentId ? p : { ...p, children: [...(p.children || []), { id: this._cid(), childCode: '', childDesc: '' }] }) })); }
+  setParentField(parentId, k, v) { this.setState(s => ({ customCodes: (s.customCodes || []).map(p => p.id !== parentId ? p : { ...p, [k]: v }) })); }
+  setChildField(parentId, childId, k, v) { this.setState(s => ({ customCodes: (s.customCodes || []).map(p => p.id !== parentId ? p : { ...p, children: (p.children || []).map(c => c.id !== childId ? c : { ...c, [k]: v }) }) })); }
+  deleteChildCode(parentId, childId) { this.setState(s => ({ customCodes: (s.customCodes || []).map(p => p.id !== parentId ? p : { ...p, children: (p.children || []).filter(c => c.id !== childId) }) })); }
+  deleteParent(parentId) { this.setState(s => ({ customCodes: (s.customCodes || []).filter(p => p.id !== parentId) })); }
   uploadCostCodes(e) {
     const file = e.target && e.target.files && e.target.files[0];
     if (e.target) e.target.value = '';
@@ -4414,10 +4449,18 @@ class Component extends DCLogic {
       }
       if (!parsed.length) { fail('No cost-code rows found. Expected 4 columns: parent code, parent code description, child code, child code description.'); return; }
       this.setState(s => {
-        const rows = [...(s.customCodes || [])];
+        const parents = (s.customCodes || []).map(p => ({ ...p, children: [...(p.children || [])] }));
         let added = 0, updated = 0;
-        parsed.forEach(pcx => { const idx = pcx.childCode ? rows.findIndex(r => r.childCode === pcx.childCode) : -1; if (idx >= 0) { rows[idx] = pcx; updated++; } else { rows.push(pcx); added++; } });
-        return { customCodes: rows, codeUpload: { ok: true, msg: 'Imported ' + parsed.length + ' cost code' + (parsed.length === 1 ? '' : 's') + ' (' + added + ' new, ' + updated + ' updated).' } };
+        parsed.forEach(row => {
+          let par = parents.find(p => (p.parentCode || '') === row.parentCode);
+          if (!par) { par = { id: this._cid(), parentCode: row.parentCode, parentDesc: row.parentDesc, children: [] }; parents.push(par); }
+          else if (row.parentDesc) par.parentDesc = row.parentDesc;
+          if (!row.childCode && !row.childDesc) return;
+          const ex = row.childCode ? par.children.find(c => (c.childCode || '') === row.childCode) : null;
+          if (ex) { ex.childDesc = row.childDesc; updated++; }
+          else { par.children.push({ id: this._cid(), childCode: row.childCode, childDesc: row.childDesc }); added++; }
+        });
+        return { customCodes: parents, codeUpload: { ok: true, msg: 'Imported ' + (added + updated) + ' cost code' + ((added + updated) === 1 ? '' : 's') + ' (' + added + ' new, ' + updated + ' updated) across ' + parents.length + ' parent code' + (parents.length === 1 ? '' : 's') + '.' } };
       });
     };
     reader.onerror = () => fail('Could not read that file. Please try again with a CSV.');
@@ -5611,7 +5654,7 @@ class Component extends DCLogic {
           onLink: e => this.setLineField(l.id, 'commitmentId', e.target.value),
           current: this.money(this.lineCurrent(l, p)), eac: this.money(this.lineForecast(l)), variance: this.signed(variance), varColor: this.varColor(variance),
           pct: this.lineForecast(l) > 0 ? Math.round(this.lineActual(l) / this.lineForecast(l) * 100) + '%' : '—',
-          codeCatalog, onCodeSelect: e => this.onCodeSelect(l.id, e.target.value),
+          codeCatalog, codeGroups: this.costCodeGroups(), onCodeSelect: e => this.onCodeSelect(l.id, e.target.value),
           onCode: e => this.setLineField(l.id, 'code', e.target.value),
           onDesc: e => this.setLineField(l.id, 'desc', e.target.value),
           onCat: e => this.setLineField(l.id, 'cat', e.target.value),
@@ -5840,7 +5883,7 @@ class Component extends DCLogic {
         const psm = this.statusMeta(status);
         const overdue = status !== 'paid' && x.dueDate && x.dueDate < today;
         return { id: x.id, billNo: x.billNo, vendorId: x.vendorId, code: x.code, desc: x.desc, amount: x.amount, taxRate: x.taxRate, billDate: x.billDate, dueDate: x.dueDate,
-          coded: !!x.code, hasVendor: !!x.vendorId, vendorOptions, codeCatalog, tax: this.money(tax), total: this.money(tot),
+          coded: !!x.code, hasVendor: !!x.vendorId, vendorOptions, codeCatalog, codeGroups: this.costCodeGroups(), tax: this.money(tax), total: this.money(tot),
           vendorBorder: x.vendorId ? '#e4e8ee' : '#e6c9a3', vendorBg: x.vendorId ? '#fff' : '#fdf6ec',
           codeBorder: x.code ? '#e4e8ee' : '#e6c9a3', codeBg: x.code ? '#fff' : '#fdf6ec',
           status, statusLabel: psm.label, statusColor: psm.color, statusBg: psm.bg, overdue, fromClaim: !!x.fromClaim,
@@ -5946,7 +5989,7 @@ class Component extends DCLogic {
       const status = agr ? agr.status : 'draft';
       const editable = status === 'draft';
       const vendorOptions = [...S.vendors].sort((a, b) => a.company.localeCompare(b.company)).map(v => ({ id: v.id, label: v.company + ' · ' + this.vendorTypeLabel(v.type) }));
-      const costCatalog = this.costCodeCatalog().map(c => ({ code: c.code, label: c.code + (c.name ? ' — ' + c.name : '') }));
+      const costCatalog = this.costCodeOptions();
       subModalV = {
         open: true, isCreate, mode: S.subModal.mode, cmId: S.subModal.cmId,
         title: isCreate ? 'New subcontract agreement' : (cm ? cm.vendor + ' · ' + cm.ref : 'Subcontract'),
@@ -6097,18 +6140,24 @@ class Component extends DCLogic {
       const roles = this.roleList(); const roleShort = { Admin: 'Admin', PM: 'PM', Superintendent: 'Super', Finance: 'Fin', HR: 'HR', ContractAdmin: 'CA', Field: 'Field', Employee: 'Emp', Architect: 'A/E', ClientSuper: 'Client', Student: 'Std' };
       const matrixHead = roles.map(r => ({ short: roleShort[r.key] || r.key }));
       const matrixRows = this.resourceLabels().map(res => ({ label: res.label, cells: roles.map(r => { const lv = this.permLevel(r.key, res.key); const b = this.permBadge(lv); return { level: String(lv), c: b.c, bg: b.bg, onChange: e => this.setPerm(res.key, r.key, e.target.value) }; }) }));
-      const codeRows = (S.customCodes || []).map((c, i) => ({ parentCode: c.parentCode || '', parentDesc: c.parentDesc || '', childCode: c.childCode || '', childDesc: c.childDesc || '',
-        onParentCode: e => this.setCustomCode(i, 'parentCode', e.target.value), onParentDesc: e => this.setCustomCode(i, 'parentDesc', e.target.value),
-        onChildCode: e => this.setCustomCode(i, 'childCode', e.target.value), onChildDesc: e => this.setCustomCode(i, 'childDesc', e.target.value),
-        onDelete: () => this.deleteCustomCode(i) }));
+      const parentGroups = (S.customCodes || []).map(par => ({
+        id: par.id, parentCode: par.parentCode || '', parentDesc: par.parentDesc || '',
+        onParentCode: e => this.setParentField(par.id, 'parentCode', e.target.value), onParentDesc: e => this.setParentField(par.id, 'parentDesc', e.target.value),
+        onAddChild: () => this.addChildCode(par.id), onDeleteParent: () => this.deleteParent(par.id),
+        childCount: String((par.children || []).length),
+        children: (par.children || []).map(ch => ({ id: ch.id, childCode: ch.childCode || '', childDesc: ch.childDesc || '',
+          onChildCode: e => this.setChildField(par.id, ch.id, 'childCode', e.target.value), onChildDesc: e => this.setChildField(par.id, ch.id, 'childDesc', e.target.value),
+          onDelete: () => this.deleteChildCode(par.id, ch.id) })),
+      }));
+      const childTotal = parentGroups.reduce((a, g) => a + g.children.length, 0);
       const inUseCount = this.costCodeCatalog().length;
       const up = S.codeUpload || null;
       settingsV = { show: true, tab, isRoles: tab === 'roles', isCodes: tab === 'codes',
         tabs: [{ k: 'roles', l: 'Roles & permissions', active: tab === 'roles', onClick: () => this.setSettingsTab('roles') }, { k: 'codes', l: 'Cost codes', active: tab === 'codes', onClick: () => this.setSettingsTab('codes') }].map(t => ({ ...t, bg: t.active ? '#2b59c3' : '#fff', fg: t.active ? '#fff' : '#4a5765', border: t.active ? '#2b59c3' : '#cfd8e2' })),
         matrixHead, matrixRows,
-        codeRows, codeCount: String(codeRows.length), hasCodes: codeRows.length > 0, noCodes: codeRows.length === 0, catalogCount: String(inUseCount),
+        parentGroups, codeCount: String(childTotal), parentCount: String(parentGroups.length), hasCodes: parentGroups.length > 0, noCodes: parentGroups.length === 0, catalogCount: String(inUseCount),
         hasUploadMsg: !!up, uploadMsg: up ? up.msg : '', uploadBg: up ? (up.ok ? '#eaf6ee' : '#fdecec') : '#fff', uploadFg: up ? (up.ok ? '#15803d' : '#b91c1c') : '#4a5765', uploadBorder: up ? (up.ok ? '#bfe3ca' : '#f4c9c9') : '#eef1f4',
-        onAddCode: () => this.addCustomCode(), onUpload: e => this.uploadCostCodes(e), onResetPerms: () => this.resetPerms() };
+        onAddParent: () => this.addParentGroup(), onUpload: e => this.uploadCostCodes(e), onResetPerms: () => this.resetPerms() };
     }
 
     // ===== read-only banner (view-but-not-edit on the current module) =====
