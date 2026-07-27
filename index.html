@@ -302,6 +302,9 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                   <button onClick="{{ settingsV.onAddCode }}" style="border:0;background:#2b59c3;color:#fff;border-radius:8px;padding:8px 13px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="background:#244dab">＋ Add code</button>
                 </div>
               </div>
+              <sc-if value="{{ settingsV.hasUploadMsg }}" hint-placeholder-val="{{ false }}">
+                <div style="padding:10px 16px;font-size:12px;line-height:1.5;border-bottom:1px solid {{ settingsV.uploadBorder }};background:{{ settingsV.uploadBg }};color:{{ settingsV.uploadFg }}">{{ settingsV.uploadMsg }}</div>
+              </sc-if>
               <sc-if value="{{ settingsV.hasCodes }}" hint-placeholder-val="{{ true }}">
                 <div style="overflow-x:auto"><div style="min-width:860px">
                   <div style="display:grid;grid-template-columns:1fr 1.7fr 1fr 1.7fr 40px;gap:10px;padding:9px 16px;background:#fafbfc;border-bottom:1px solid #e4e8ee;font-size:10px;font-weight:600;letter-spacing:.3px;color:#8894a2;text-transform:uppercase">
@@ -319,7 +322,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                 </div></div>
               </sc-if>
               <sc-if value="{{ settingsV.noCodes }}" hint-placeholder-val="{{ false }}">
-                <div style="padding:30px 24px;text-align:center;color:#8894a2;font-size:13px">No cost codes yet. <strong style="color:#6b7787">Upload a CSV</strong> (columns: parent code, parent code description, child code, child code description) or click <strong style="color:#6b7787">＋ Add code</strong>. Child codes appear in every project's Budget cost-code selector.</div>
+                <div style="padding:30px 24px;text-align:center;color:#8894a2;font-size:13px">No cost codes yet. <strong style="color:#6b7787">Upload a CSV</strong> (columns: parent code, parent code description, child code, child code description) or click <strong style="color:#6b7787">＋ Add code</strong>.<br><span style="font-size:11.5px">From Excel, use <strong style="color:#6b7787">File → Save As → “CSV UTF-8 (Comma delimited)”</strong> — not the .xlsx workbook. Blank parent cells under a group are filled in automatically.</span></div>
               </sc-if>
               <div style="padding:9px 16px;font-size:11px;color:#8894a2;line-height:1.5;border-top:1px solid #eef1f4">A <strong style="color:#6b7787">parent code</strong> is a broad group (e.g. 02 — Sitework); a <strong style="color:#6b7787">child code</strong> is an item inside it (e.g. 02-200 — Bulk earthworks). CSV columns, in order: <span class="mono">parent code, parent code description, child code, child code description</span>. Child codes feed every project's <strong style="color:#6b7787">Budget</strong> cost-code selector (shown as <span class="mono">parent · child — description</span>).</div>
             </div>
@@ -3014,6 +3017,7 @@ class Component extends DCLogic {
       modal: null,
       form: { desc: '', value: '', time: '', status: 'submitted' },
       customCodes: [],
+      codeUpload: null,
       codeModal: null,
       codeForm: { parentCode: '', parentDesc: '', childCode: '', childDesc: '' },
       vendors: this.seedVendors(),
@@ -4379,11 +4383,71 @@ class Component extends DCLogic {
   addCustomCode() { this.setState(s => ({ customCodes: [...(s.customCodes || []), { parentCode: '', parentDesc: '', childCode: '', childDesc: '' }] })); }
   setCustomCode(i, k, v) { this.setState(s => ({ customCodes: (s.customCodes || []).map((c, j) => j === i ? { ...c, [k]: v } : c) })); }
   deleteCustomCode(i) { this.setState(s => ({ customCodes: (s.customCodes || []).filter((_, j) => j !== i) })); }
-  uploadCostCodes(e) { const file = e.target && e.target.files && e.target.files[0]; if (!file) return; const reader = new FileReader();
-    reader.onload = ev => { const text = String(ev.target.result || ''); const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean); const parsed = [];
-      lines.forEach((ln, idx) => { const cols = ln.split(',').map(c => c.replace(/^"|"$/g, '').trim()); if (idx === 0 && /parent/i.test(ln) && /child/i.test(ln)) return; const parentCode = cols[0] || '', parentDesc = cols[1] || '', childCode = cols[2] || '', childDesc = cols[3] || ''; if (!parentCode && !parentDesc && !childCode && !childDesc) return; parsed.push({ parentCode, parentDesc, childCode, childDesc }); });
-      this.setState(s => { const rows = [...(s.customCodes || [])]; parsed.forEach(pc => { const idx = pc.childCode ? rows.findIndex(r => r.childCode === pc.childCode) : -1; if (idx >= 0) rows[idx] = pc; else rows.push(pc); }); return { customCodes: rows }; }); };
-    reader.readAsText(file); if (e.target) e.target.value = ''; }
+  uploadCostCodes(e) {
+    const file = e.target && e.target.files && e.target.files[0];
+    if (e.target) e.target.value = '';
+    if (!file) return;
+    const fail = msg => this.setState({ codeUpload: { ok: false, msg } });
+    const name = (file.name || '').toLowerCase();
+    if (/\.(xlsx|xlsm|xlsb|xls|numbers|ods)$/.test(name)) { fail('“' + file.name + '” is an Excel/spreadsheet file, not a text CSV — that is why the codes came through as gibberish. In Excel: File → Save As → “CSV UTF-8 (Comma delimited) (*.csv)”, then upload that .csv.'); return; }
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const bytes = new Uint8Array(ev.target.result || new ArrayBuffer(0));
+      if (bytes.length >= 2 && bytes[0] === 0x50 && bytes[1] === 0x4B) { fail('That file is a zipped spreadsheet workbook (.xlsx / .ods), not a text CSV. In Excel choose File → Save As → “CSV UTF-8 (Comma delimited)”, then upload the .csv.'); return; }
+      if (bytes.length >= 4 && bytes[0] === 0xD0 && bytes[1] === 0xCF) { fail('That is an old-style binary .xls workbook. Re-save it as “CSV UTF-8 (Comma delimited)” and upload the .csv.'); return; }
+      const text = this._decodeCsvBytes(bytes);
+      const bad = (text.match(/�/g) || []).length;
+      if (bad > 4 && bad / Math.max(1, text.length) > 0.01) { fail('Could not read this file as text — it looks like the wrong format or a binary export. Open it in Excel and Save As → “CSV UTF-8 (Comma delimited)”.'); return; }
+      const grid = this._parseCsvText(text);
+      if (!grid.length) { fail('That file appears to be empty.'); return; }
+      let start = 0; const head = (grid[0] || []).join(' ').toLowerCase();
+      if (/parent/.test(head) && /chil/.test(head)) start = 1;
+      const parsed = []; let lpc = '', lpd = '';
+      for (let i = start; i < grid.length; i++) {
+        const cols = grid[i];
+        let pc = (cols[0] || '').trim(), pd = (cols[1] || '').trim();
+        const cc = (cols[2] || '').trim(), cd = (cols[3] || '').trim();
+        if (pc) lpc = pc; else pc = lpc;   // forward-fill parent code down a group (merged cells export blank)
+        if (pd) lpd = pd; else pd = lpd;
+        if (!cc && !cd) continue;          // a group-header row with no child item — parent already captured above
+        parsed.push({ parentCode: pc, parentDesc: pd, childCode: cc, childDesc: cd });
+      }
+      if (!parsed.length) { fail('No cost-code rows found. Expected 4 columns: parent code, parent code description, child code, child code description.'); return; }
+      this.setState(s => {
+        const rows = [...(s.customCodes || [])];
+        let added = 0, updated = 0;
+        parsed.forEach(pcx => { const idx = pcx.childCode ? rows.findIndex(r => r.childCode === pcx.childCode) : -1; if (idx >= 0) { rows[idx] = pcx; updated++; } else { rows.push(pcx); added++; } });
+        return { customCodes: rows, codeUpload: { ok: true, msg: 'Imported ' + parsed.length + ' cost code' + (parsed.length === 1 ? '' : 's') + ' (' + added + ' new, ' + updated + ' updated).' } };
+      });
+    };
+    reader.onerror = () => fail('Could not read that file. Please try again with a CSV.');
+    reader.readAsArrayBuffer(file);
+  }
+  _decodeCsvBytes(bytes) {
+    try {
+      if (bytes.length >= 3 && bytes[0] === 0xEF && bytes[1] === 0xBB && bytes[2] === 0xBF) return new TextDecoder('utf-8').decode(bytes.subarray(3));
+      if (bytes.length >= 2 && bytes[0] === 0xFF && bytes[1] === 0xFE) return new TextDecoder('utf-16le').decode(bytes.subarray(2));
+      if (bytes.length >= 2 && bytes[0] === 0xFE && bytes[1] === 0xFF) return new TextDecoder('utf-16be').decode(bytes.subarray(2));
+      return new TextDecoder('utf-8').decode(bytes);
+    } catch (err) { try { return String.fromCharCode.apply(null, bytes); } catch (e2) { return ''; } }
+  }
+  _parseCsvText(text) {
+    const first = text.split(/\r?\n/)[0] || '';
+    let delim = ','; const nC = (first.match(/,/g) || []).length, nS = (first.match(/;/g) || []).length, nT = (first.match(/\t/g) || []).length;
+    if (nS > nC && nS >= nT) delim = ';'; else if (nT > nC && nT > nS) delim = '\t';
+    const rows = []; let row = [], field = '', inQ = false;
+    for (let i = 0; i < text.length; i++) {
+      const ch = text[i];
+      if (inQ) { if (ch === '"') { if (text[i + 1] === '"') { field += '"'; i++; } else inQ = false; } else field += ch; }
+      else if (ch === '"') inQ = true;
+      else if (ch === delim) { row.push(field); field = ''; }
+      else if (ch === '\n') { row.push(field); rows.push(row); row = []; field = ''; }
+      else if (ch === '\r') { /* ignore CR */ }
+      else field += ch;
+    }
+    if (field.length || row.length) { row.push(field); rows.push(row); }
+    return rows.filter(r => r.some(c => (c || '').trim() !== ''));
+  }
   costMatrix(p) {
     const cols = ['Code', 'Description', 'Category', 'Budgeted', 'Approved change', 'Committed', 'Actual', 'FTC', 'Est. at completion', 'Variance', '% complete'];
     const rows = p.costLines.map(l => {
@@ -6038,10 +6102,12 @@ class Component extends DCLogic {
         onChildCode: e => this.setCustomCode(i, 'childCode', e.target.value), onChildDesc: e => this.setCustomCode(i, 'childDesc', e.target.value),
         onDelete: () => this.deleteCustomCode(i) }));
       const inUseCount = this.costCodeCatalog().length;
+      const up = S.codeUpload || null;
       settingsV = { show: true, tab, isRoles: tab === 'roles', isCodes: tab === 'codes',
         tabs: [{ k: 'roles', l: 'Roles & permissions', active: tab === 'roles', onClick: () => this.setSettingsTab('roles') }, { k: 'codes', l: 'Cost codes', active: tab === 'codes', onClick: () => this.setSettingsTab('codes') }].map(t => ({ ...t, bg: t.active ? '#2b59c3' : '#fff', fg: t.active ? '#fff' : '#4a5765', border: t.active ? '#2b59c3' : '#cfd8e2' })),
         matrixHead, matrixRows,
         codeRows, codeCount: String(codeRows.length), hasCodes: codeRows.length > 0, noCodes: codeRows.length === 0, catalogCount: String(inUseCount),
+        hasUploadMsg: !!up, uploadMsg: up ? up.msg : '', uploadBg: up ? (up.ok ? '#eaf6ee' : '#fdecec') : '#fff', uploadFg: up ? (up.ok ? '#15803d' : '#b91c1c') : '#4a5765', uploadBorder: up ? (up.ok ? '#bfe3ca' : '#f4c9c9') : '#eef1f4',
         onAddCode: () => this.addCustomCode(), onUpload: e => this.uploadCostCodes(e), onResetPerms: () => this.resetPerms() };
     }
 
