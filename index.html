@@ -273,8 +273,11 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
 
           <sc-if value="{{ settingsV.isRoles }}" hint-placeholder-val="{{ true }}">
             <div style="background:#fff;border:1px solid #e4e8ee;border-radius:12px;overflow:hidden">
-              <div style="padding:13px 16px;border-bottom:1px solid #eef1f4;background:#fafbfc;font-size:13px;font-weight:600;color:#0f1720">Role permission matrix <span style="font-weight:400;color:#a4afba;font-size:11.5px">· V = View · E = Edit/Create · A = Approve · — = No access</span></div>
-              <div style="overflow-x:auto"><div style="min-width:900px">
+              <div style="padding:11px 16px;border-bottom:1px solid #eef1f4;background:#fafbfc;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
+                <div style="font-size:13px;font-weight:600;color:#0f1720">Role permission matrix <span style="font-weight:400;color:#a4afba;font-size:11.5px">· editable · — No access · V View · E Edit/Create · A Approve</span></div>
+                <button onClick="{{ settingsV.onResetPerms }}" style="border:1px solid #cfd8e2;background:#fff;color:#4a5765;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="border-color:#b45309;color:#b45309">↺ Reset to defaults</button>
+              </div>
+              <div style="overflow-x:auto"><div style="min-width:1040px">
                 <div style="display:grid;grid-template-columns:220px repeat(11,1fr);border-bottom:1px solid #e4e8ee;background:#fafbfc">
                   <div style="padding:9px 14px;font-size:10px;font-weight:700;letter-spacing:.3px;color:#8894a2;text-transform:uppercase">Area</div>
                   <sc-for list="{{ settingsV.matrixHead }}" as="h" hint-placeholder-count="11"><div style="padding:9px 4px;font-size:9.5px;font-weight:700;color:#8894a2;text-transform:uppercase;text-align:center">{{ h.short }}</div></sc-for>
@@ -282,7 +285,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                 <sc-for list="{{ settingsV.matrixRows }}" as="r" hint-placeholder-count="16">
                   <div style="display:grid;grid-template-columns:220px repeat(11,1fr);border-bottom:1px solid #f4f6f9;align-items:center" style-hover="background:#f9fafc">
                     <div style="padding:8px 14px;font-size:12px;color:#0f1720">{{ r.label }}</div>
-                    <sc-for list="{{ r.cells }}" as="c" hint-placeholder-count="11"><div style="padding:6px 2px;text-align:center"><span style="display:inline-block;min-width:20px;font-size:11px;font-weight:700;color:{{ c.c }};background:{{ c.bg }};border-radius:6px;padding:2px 0">{{ c.s }}</span></div></sc-for>
+                    <sc-for list="{{ r.cells }}" as="c" hint-placeholder-count="11"><div style="padding:4px 3px"><select value="{{ c.level }}" onChange="{{ c.onChange }}" title="Set access level" style="width:100%;border:1px solid #e8ecf1;border-radius:6px;padding:3px 1px;font-size:11px;font-weight:700;font-family:inherit;color:{{ c.c }};background:{{ c.bg }};cursor:pointer;text-align:center" style-focus="border-color:#2b59c3;outline:none"><option value="0">—</option><option value="1">V</option><option value="2">E</option><option value="3">A</option></select></div></sc-for>
                   </div>
                 </sc-for>
               </div></div>
@@ -3015,6 +3018,7 @@ class Component extends DCLogic {
       vendorModal: null,
       vendorForm: { type: 'supplier', company: '', rep: '', phone: '', email: '', address: '' },
       role: 'PM',
+      perms: this._buildPerms(),
       users: this.seedUsers(),
       session: (typeof localStorage !== 'undefined' && localStorage.getItem('cubicSession')) ? { userId: localStorage.getItem('cubicSession') } : null,
       auth: { view: 'login', email: '', password: '', error: '', notice: '', resetEmail: '', resetToken: '', newPassword: '' },
@@ -3429,7 +3433,9 @@ class Component extends DCLogic {
     P.claims = { _default: 1, PM: 2, Finance: 3, Admin: 2 };
     P.admin = { _default: 0, Admin: 2 };
     return P; }
-  permLevel(role, resource) { if (resource === 'meetings') resource = 'documents'; if (!this._perms) this._perms = this._buildPerms(); const r = this._perms[resource]; if (!r) return 0; const v = (role in r) ? r[role] : r._default; return v == null ? 0 : v; }
+  permLevel(role, resource) { if (resource === 'meetings') resource = 'documents'; const P = this.state.perms || this._buildPerms(); const r = P[resource]; if (!r) return 0; const v = (role in r) ? r[role] : r._default; return v == null ? 0 : v; }
+  setPerm(resource, role, level) { if (!this.can('admin', 'edit')) return; const lv = Number(level) || 0; this.setState(s => ({ perms: { ...s.perms, [resource]: { ...(s.perms[resource] || {}), [role]: lv } } })); }
+  resetPerms() { if (!this.can('admin', 'edit')) return; this.setState({ perms: this._buildPerms() }); }
   resourceLabels() { return [
     { key: 'dashboard', label: 'Dashboard' }, { key: 'directory', label: 'Directory' }, { key: 'projectSetup', label: 'Project Setup' },
     { key: 'financial', label: 'Financial / Estimates' }, { key: 'agreements', label: 'Subcontractor & Vendor Agreements' }, { key: 'variations', label: 'SoV / Variations' },
@@ -6015,7 +6021,7 @@ class Component extends DCLogic {
       const tab = ['roles', 'codes'].indexOf(S.settingsTab) >= 0 ? S.settingsTab : 'roles';
       const roles = this.roleList(); const roleShort = { Admin: 'Admin', PM: 'PM', Superintendent: 'Super', Finance: 'Fin', HR: 'HR', ContractAdmin: 'CA', Field: 'Field', Employee: 'Emp', Architect: 'A/E', ClientSuper: 'Client', Student: 'Std' };
       const matrixHead = roles.map(r => ({ short: roleShort[r.key] || r.key }));
-      const matrixRows = this.resourceLabels().map(res => ({ label: res.label, cells: roles.map(r => { const b = this.permBadge(this.permLevel(r.key, res.key)); return { s: b.s, c: b.c, bg: b.bg }; }) }));
+      const matrixRows = this.resourceLabels().map(res => ({ label: res.label, cells: roles.map(r => { const lv = this.permLevel(r.key, res.key); const b = this.permBadge(lv); return { level: String(lv), c: b.c, bg: b.bg, onChange: e => this.setPerm(res.key, r.key, e.target.value) }; }) }));
       const catOpts = [{ v: 'labor', l: 'Labour' }, { v: 'materials', l: 'Materials' }, { v: 'subcontractor', l: 'Subcontractors' }, { v: 'equipment', l: 'Equipment' }, { v: 'preliminaries', l: 'Preliminaries' }, { v: 'other', l: 'Other' }];
       const codeRows = (S.customCodes || []).map((c, i) => ({ code: c.code || '', name: c.name || '', category: c.category || 'other',
         onCode: e => this.setCustomCode(i, 'code', e.target.value), onName: e => this.setCustomCode(i, 'name', e.target.value), onCat: e => this.setCustomCode(i, 'category', e.target.value), onDelete: () => this.deleteCustomCode(i) }));
@@ -6024,7 +6030,7 @@ class Component extends DCLogic {
         tabs: [{ k: 'roles', l: 'Roles & permissions', active: tab === 'roles', onClick: () => this.setSettingsTab('roles') }, { k: 'codes', l: 'Cost codes', active: tab === 'codes', onClick: () => this.setSettingsTab('codes') }].map(t => ({ ...t, bg: t.active ? '#2b59c3' : '#fff', fg: t.active ? '#fff' : '#4a5765', border: t.active ? '#2b59c3' : '#cfd8e2' })),
         matrixHead, matrixRows,
         codeRows, catOpts, codeCount: String(codeRows.length), hasCodes: codeRows.length > 0, noCodes: codeRows.length === 0, catalogCount: String(inUseCount),
-        onAddCode: () => this.addCustomCode(), onUpload: e => this.uploadCostCodes(e) };
+        onAddCode: () => this.addCustomCode(), onUpload: e => this.uploadCostCodes(e), onResetPerms: () => this.resetPerms() };
     }
 
     // ===== read-only banner (view-but-not-edit on the current module) =====
