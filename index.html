@@ -144,9 +144,11 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
       <button onClick="{{ onGoPortfolio }}" style="width:100%;display:flex;align-items:center;gap:10px;padding:9px 10px;border:0;background:{{ navPortfolio.bg }};color:{{ navPortfolio.fg }};border-radius:7px;cursor:pointer;text-align:left;font-family:inherit;font-size:13px;font-weight:500;margin-bottom:2px" style-hover="background:rgba(255,255,255,.06)">
         <span style="font-size:14px">▦</span> Portfolio overview
       </button>
-      <button onClick="{{ onGoVendors }}" style="width:100%;display:flex;align-items:center;gap:10px;padding:9px 10px;border:0;background:{{ navVendors.bg }};color:{{ navVendors.fg }};border-radius:7px;cursor:pointer;text-align:left;font-family:inherit;font-size:13px;font-weight:500" style-hover="background:rgba(255,255,255,.06)">
-        <span style="font-size:14px">☰</span> Vendor directory
-      </button>
+      <sc-if value="{{ navVendors.show }}" hint-placeholder-val="{{ true }}">
+        <button onClick="{{ onGoVendors }}" style="width:100%;display:flex;align-items:center;gap:10px;padding:9px 10px;border:0;background:{{ navVendors.bg }};color:{{ navVendors.fg }};border-radius:7px;cursor:pointer;text-align:left;font-family:inherit;font-size:13px;font-weight:500" style-hover="background:rgba(255,255,255,.06)">
+          <span style="font-size:14px">☰</span> Vendor directory
+        </button>
+      </sc-if>
       <sc-if value="{{ navUsers.show }}" hint-placeholder-val="{{ false }}">
         <button onClick="{{ onGoUsers }}" style="width:100%;display:flex;align-items:center;gap:10px;padding:9px 10px;border:0;background:{{ navUsers.bg }};color:{{ navUsers.fg }};border-radius:7px;cursor:pointer;text-align:left;font-family:inherit;font-size:13px;font-weight:500;margin-top:2px" style-hover="background:rgba(255,255,255,.06)">
           <span style="font-size:14px">☰</span> Users &amp; access
@@ -3432,6 +3434,10 @@ class Component extends DCLogic {
   permBadge(lv) { return lv >= 3 ? { t: 'Approve', s: 'A', c: '#15803d', bg: '#e6f4ea' } : lv === 2 ? { t: 'Edit', s: 'E', c: '#1d4ed8', bg: '#e7eefc' } : lv === 1 ? { t: 'View', s: 'V', c: '#6b7787', bg: '#eef1f5' } : { t: 'No access', s: '—', c: '#c0c8d1', bg: 'transparent' }; }
   currentUser() { const s = this.state.session; if (!s || !s.userId) return null; const u = (this.state.users || []).find(x => x.id === s.userId); return (u && u.status === 'active') ? u : null; }
   can(resource, action) { const u = this.currentUser(); if (!u) return false; const need = action === 'approve' ? 3 : action === 'edit' ? 2 : 1; return this.permLevel(u.role, resource) >= need; }
+  accessibleProjects() { const u = this.currentUser(); const all = this.state.projects || []; if (!u) return []; if (u.role === 'Admin' || u.role === 'Finance') return all; return all.filter(p => (u.projectIds || []).indexOf(p.id) >= 0); }
+  projectAccessible(pid) { return this.accessibleProjects().some(p => p.id === pid); }
+  moduleResource(key) { const map = { dashboard: 'dashboard', details: 'projectSetup', documents: 'documents', eot: 'eot', files: 'documents', contacts: 'directory', schedule: 'schedule', defects: 'punchList', report: 'reporting' }; return map[key] || key; }
+  moduleVisible(key) { if (key === 'commitments') return ['financial', 'agreements', 'variations', 'invoices', 'bills', 'claims'].some(r => this.can(r, 'view')); return this.can(this.moduleResource(key), 'view'); }
   setAuthField(k, v) { this.setState(s => ({ auth: { ...s.auth, [k]: v, error: '' } })); }
   authGoto(view) { this.setState(s => ({ auth: { ...s.auth, view, error: '', notice: '' } })); }
   doLogin() { const a = this.state.auth || {}; const email = (a.email || '').trim().toLowerCase(); const u = (this.state.users || []).find(x => (x.email || '').toLowerCase() === email);
@@ -4448,7 +4454,8 @@ class Component extends DCLogic {
     const inProject = S.view === 'project';
     const orgName = this.props.orgName ?? 'Cubic';
 
-    const switcherProjects = projects.map(pr => {
+    const accessible = this.accessibleProjects();
+    const switcherProjects = accessible.map(pr => {
       const active = inProject && pr.id === S.pid;
       const sm = this.statusMeta(pr.status);
       return { id: pr.id, name: pr.name, code: pr.code, onOpen: () => this.openProject(pr.id),
@@ -4456,7 +4463,7 @@ class Component extends DCLogic {
     });
 
     const navPortfolio = { bg: S.view === 'portfolio' ? 'rgba(43,89,195,.22)' : 'transparent', fg: S.view === 'portfolio' ? '#fff' : '#8493a3' };
-    const navVendors = { bg: S.view === 'vendors' ? 'rgba(43,89,195,.22)' : 'transparent', fg: S.view === 'vendors' ? '#fff' : '#8493a3' };
+    const navVendors = { show: this.can('directory', 'view'), bg: S.view === 'vendors' ? 'rgba(43,89,195,.22)' : 'transparent', fg: S.view === 'vendors' ? '#fff' : '#8493a3' };
     const navUsers = { show: this.can('admin', 'view'), bg: S.view === 'users' ? 'rgba(43,89,195,.22)' : 'transparent', fg: S.view === 'users' ? '#fff' : '#8493a3' };
     const navSettings = { show: this.can('admin', 'view'), bg: S.view === 'settings' ? 'rgba(43,89,195,.22)' : 'transparent', fg: S.view === 'settings' ? '#fff' : '#8493a3' };
     const mkMod = (key, label, icon, ready) => { const on = inProject && S.module === key; return { key, label, icon, badgeShow: !ready, onClick: () => this.setModule(key), bg: on ? 'rgba(43,89,195,.22)' : 'transparent', fg: on ? '#fff' : '#8493a3' }; };
@@ -4472,7 +4479,7 @@ class Component extends DCLogic {
       mkMod('schedule', 'Schedule', '▦', true),
       mkMod('defects', 'Defects List', '⚠', true),
       mkMod('report', 'Report Design', '◫', true),
-    ];
+    ].filter(m => this.moduleVisible(m.key));
 
     // Placeholder sections — nav slot + "planned contents", no functionality yet
     const sectionMeta = {};
@@ -4513,15 +4520,15 @@ class Component extends DCLogic {
     else {
       crumb1 = p.name;
       const sm = this.statusMeta(p.status);
-      if (showDashboard) { pageTitle = p.name; pageStatus = { show: true, ...sm }; pageSub = p.client + ' · ' + p.code; crumb2 = 'Dashboard'; primaryAction = { show: true, label: '＋ Insert main contract', onClick: () => this.openContractModal() }; }
-      if (showCommitments) { pageTitle = 'Financial'; pageSub = 'Subcontracts & purchase orders — ' + p.name; crumb2 = 'Financial'; if (this.canIssue()) primaryAction = { show: true, label: '＋ Add subcontract', onClick: () => this.openSubCreate() }; }
+      if (showDashboard) { pageTitle = p.name; pageStatus = { show: true, ...sm }; pageSub = p.client + ' · ' + p.code; crumb2 = 'Dashboard'; if (this.can('projectSetup', 'edit')) primaryAction = { show: true, label: '＋ Insert main contract', onClick: () => this.openContractModal() }; }
+      if (showCommitments) { pageTitle = 'Financial'; pageSub = 'Subcontracts & purchase orders — ' + p.name; crumb2 = 'Financial'; if (this.can('agreements', 'edit')) primaryAction = { show: true, label: '＋ Add subcontract', onClick: () => this.openSubCreate() }; }
       if (showBills) { crumb2 = 'Financial'; }
-      if (showClaims) { pageTitle = 'Financial'; crumb2 = 'Financial'; pageSub = 'Progress claims — subcontractor payment applications — ' + p.name; if (this.canIssue()) primaryAction = { show: true, label: '＋ Add progress claim', onClick: () => this.addClaim() }; }
+      if (showClaims) { pageTitle = 'Financial'; crumb2 = 'Financial'; pageSub = 'Progress claims — subcontractor payment applications — ' + p.name; if (this.can('claims', 'edit')) primaryAction = { show: true, label: '＋ Add progress claim', onClick: () => this.addClaim() }; }
       if (showCost) { pageTitle = 'Financial'; pageSub = 'Budget — budget vs committed vs actual vs forecast — ' + p.name; crumb2 = 'Financial'; }
       if (showInvoices) { pageTitle = 'Financial'; pageSub = 'Invoices — customer billing & receivables — ' + p.name; crumb2 = 'Financial'; }
       if (showVariations) { pageTitle = 'Financial'; pageSub = 'Variations — change orders sent to the client for approval — ' + p.name; crumb2 = 'Financial'; }
-      if (showDefects) { pageTitle = 'Defects'; pageSub = 'Defect register & rectification tracking — ' + p.name; crumb2 = 'Defects'; if (this.canIssue()) primaryAction = { show: true, label: '＋ Raise defect', onClick: () => this.addDefect() }; }
-      if (showBills) { pageTitle = 'Financial'; pageSub = 'Vendor bills — planned spend per cost code — ' + p.name; primaryAction = { show: true, label: '＋ Add bill', onClick: () => this.addBill() }; }
+      if (showDefects) { pageTitle = 'Defects'; pageSub = 'Defect register & rectification tracking — ' + p.name; crumb2 = 'Defects'; if (this.can('punchList', 'edit')) primaryAction = { show: true, label: '＋ Raise defect', onClick: () => this.addDefect() }; }
+      if (showBills) { pageTitle = 'Financial'; pageSub = 'Vendor bills — planned spend per cost code — ' + p.name; if (this.can('bills', 'edit')) primaryAction = { show: true, label: '＋ Add bill', onClick: () => this.addBill() }; }
       if (showDetails) { pageTitle = 'Details'; pageSub = 'Project details — type, address, customer & key information — ' + p.name; crumb2 = 'Details'; }
       if (showEot) { pageTitle = 'EOT — Extension of Time'; pageSub = 'Delay events & time-extension claims against the completion date — ' + p.name; crumb2 = 'EOT'; }
       if (showDocuments) { pageTitle = 'Documents'; pageSub = 'RFIs · Permits · To-Do’s · Drawings · Meetings · Inspections · Incidents — ' + p.name; crumb2 = 'Documents'; }
@@ -4536,7 +4543,7 @@ class Component extends DCLogic {
     let kpis = [];
     const kpiCard = (label, value, sub, color, subColor) => ({ label, value, sub, color: color || '#0f1720', subColor: subColor || '#8894a2' });
     if (showPortfolio) {
-      const list = projects.filter(pr => S.statusFilter === 'all' || pr.status === S.statusFilter);
+      const list = accessible.filter(pr => S.statusFilter === 'all' || pr.status === S.statusFilter);
       const t = this.portfolioTotals(list);
       kpis = [
         kpiCard('Contract value', this.moneyM(t.contract || 0), list.length + ' projects'),
@@ -4609,7 +4616,7 @@ class Component extends DCLogic {
       const on = S.statusFilter === k;
       return { label, onClick: () => this.setStatusFilter(k), border: on ? '#2b59c3' : '#d7dde5', bg: on ? '#2b59c3' : '#fff', fg: on ? '#fff' : '#4a5765' };
     });
-    const filtered = projects.filter(pr => S.statusFilter === 'all' || pr.status === S.statusFilter);
+    const filtered = accessible.filter(pr => S.statusFilter === 'all' || pr.status === S.statusFilter);
     const portfolioRows = filtered.map(pr => {
       const r = this.rollup(pr); const sm = this.statusMeta(pr.status);
       return { name: pr.name, code: pr.code, client: pr.client, statusLabel: sm.label, statusColor: sm.color, statusBg: sm.bg,
