@@ -101,6 +101,15 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
               </div>
             </sc-for>
           </div>
+          <div style="margin-top:15px;background:#fbfcfe;border:1px solid #eef1f4;border-radius:10px;padding:11px 13px">
+            <div style="font-size:11px;font-weight:600;letter-spacing:.3px;color:#6b7787;text-transform:uppercase;margin-bottom:8px">What <span style="color:#2b59c3">{{ usersV.modal.roleLabel }}</span> can access</div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px">
+              <sc-for list="{{ usersV.modal.rolePerms }}" as="pm" hint-placeholder-count="6">
+                <span style="display:inline-flex;align-items:center;gap:5px;background:{{ pm.bg }};border:1px solid #eef1f4;border-radius:12px;padding:2px 9px;font-size:10.5px;color:#4a5765">{{ pm.label }} <strong style="color:{{ pm.c }}">{{ pm.s }}</strong></span>
+              </sc-for>
+            </div>
+            <div style="font-size:10px;color:#a4afba;margin-top:8px">V = View · E = Edit/Create · A = Approve — set by the role, per the company permission matrix (see Settings → Roles &amp; permissions).</div>
+          </div>
           <sc-if value="{{ usersV.modal.hasError }}" hint-placeholder-val="{{ false }}"><div style="background:#fbeef0;border:1px solid #efd0d0;border-radius:9px;padding:8px 11px;font-size:12px;color:#b91c1c;margin-top:13px">{{ usersV.modal.error }}</div></sc-if>
         </div>
         <div style="padding:14px 22px;border-top:1px solid #eef1f4;display:flex;align-items:center;justify-content:flex-end;gap:10px">
@@ -140,7 +149,12 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
       </button>
       <sc-if value="{{ navUsers.show }}" hint-placeholder-val="{{ false }}">
         <button onClick="{{ onGoUsers }}" style="width:100%;display:flex;align-items:center;gap:10px;padding:9px 10px;border:0;background:{{ navUsers.bg }};color:{{ navUsers.fg }};border-radius:7px;cursor:pointer;text-align:left;font-family:inherit;font-size:13px;font-weight:500;margin-top:2px" style-hover="background:rgba(255,255,255,.06)">
-          <span style="font-size:14px">⚙</span> Users &amp; access
+          <span style="font-size:14px">☰</span> Users &amp; access
+        </button>
+      </sc-if>
+      <sc-if value="{{ navSettings.show }}" hint-placeholder-val="{{ false }}">
+        <button onClick="{{ onGoSettings }}" style="width:100%;display:flex;align-items:center;gap:10px;padding:9px 10px;border:0;background:{{ navSettings.bg }};color:{{ navSettings.fg }};border-radius:7px;cursor:pointer;text-align:left;font-family:inherit;font-size:13px;font-weight:500;margin-top:2px" style-hover="background:rgba(255,255,255,.06)">
+          <span style="font-size:14px">⚙</span> Settings
         </button>
       </sc-if>
 
@@ -245,6 +259,60 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
         </sc-if>
 
         <!-- ============ VENDOR DIRECTORY ============ -->
+        <sc-if value="{{ showSettings }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;gap:8px;margin-bottom:16px">
+            <sc-for list="{{ settingsV.tabs }}" as="t" hint-placeholder-count="2"><button onClick="{{ t.onClick }}" style="border:1px solid {{ t.border }};background:{{ t.bg }};color:{{ t.fg }};border-radius:9px;padding:8px 16px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="border-color:#2b59c3">{{ t.l }}</button></sc-for>
+          </div>
+
+          <sc-if value="{{ settingsV.isRoles }}" hint-placeholder-val="{{ true }}">
+            <div style="background:#fff;border:1px solid #e4e8ee;border-radius:12px;overflow:hidden">
+              <div style="padding:13px 16px;border-bottom:1px solid #eef1f4;background:#fafbfc;font-size:13px;font-weight:600;color:#0f1720">Role permission matrix <span style="font-weight:400;color:#a4afba;font-size:11.5px">· V = View · E = Edit/Create · A = Approve · — = No access</span></div>
+              <div style="overflow-x:auto"><div style="min-width:900px">
+                <div style="display:grid;grid-template-columns:220px repeat(11,1fr);border-bottom:1px solid #e4e8ee;background:#fafbfc">
+                  <div style="padding:9px 14px;font-size:10px;font-weight:700;letter-spacing:.3px;color:#8894a2;text-transform:uppercase">Area</div>
+                  <sc-for list="{{ settingsV.matrixHead }}" as="h" hint-placeholder-count="11"><div style="padding:9px 4px;font-size:9.5px;font-weight:700;color:#8894a2;text-transform:uppercase;text-align:center">{{ h.short }}</div></sc-for>
+                </div>
+                <sc-for list="{{ settingsV.matrixRows }}" as="r" hint-placeholder-count="16">
+                  <div style="display:grid;grid-template-columns:220px repeat(11,1fr);border-bottom:1px solid #f4f6f9;align-items:center" style-hover="background:#f9fafc">
+                    <div style="padding:8px 14px;font-size:12px;color:#0f1720">{{ r.label }}</div>
+                    <sc-for list="{{ r.cells }}" as="c" hint-placeholder-count="11"><div style="padding:6px 2px;text-align:center"><span style="display:inline-block;min-width:20px;font-size:11px;font-weight:700;color:{{ c.c }};background:{{ c.bg }};border-radius:6px;padding:2px 0">{{ c.s }}</span></div></sc-for>
+                  </div>
+                </sc-for>
+              </div></div>
+              <div style="padding:9px 16px;font-size:11px;color:#8894a2;line-height:1.5;border-top:1px solid #eef1f4">Admin · PM · Super(intendent) · Fin(ance) · HR · CA (Contract Admin) · Field · Emp(loyee) · A/E (Architect/Engineer) · Client (Client Superintendent) · Std (Student). Permissions are set by the role and applied when you assign it to a user.</div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ settingsV.isCodes }}" hint-placeholder-val="{{ false }}">
+            <div style="background:#fff;border:1px solid #e4e8ee;border-radius:12px;overflow:hidden">
+              <div style="padding:13px 16px;border-bottom:1px solid #eef1f4;background:#fafbfc;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
+                <div style="font-size:13px;font-weight:600;color:#0f1720">Cost-code catalogue <span style="font-weight:400;color:#a4afba;font-size:11.5px">· used to build project budgets · {{ settingsV.catalogCount }} in use</span></div>
+                <div style="display:flex;gap:8px">
+                  <label style="display:inline-flex;align-items:center;gap:6px;border:1px solid #cfd8e2;background:#fff;color:#0f1720;border-radius:8px;padding:7px 12px;font-size:12px;font-weight:600;cursor:pointer" style-hover="border-color:#2b59c3;color:#2b59c3">⬆ Upload CSV<input type="file" accept=".csv,text/csv" onChange="{{ settingsV.onUpload }}" style="display:none"></label>
+                  <button onClick="{{ settingsV.onAddCode }}" style="border:0;background:#2b59c3;color:#fff;border-radius:8px;padding:8px 13px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="background:#244dab">＋ Add code</button>
+                </div>
+              </div>
+              <sc-if value="{{ settingsV.hasCodes }}" hint-placeholder-val="{{ true }}">
+                <div style="display:grid;grid-template-columns:150px 1.6fr 200px 40px;gap:10px;padding:9px 16px;background:#fafbfc;border-bottom:1px solid #e4e8ee;font-size:10px;font-weight:600;letter-spacing:.3px;color:#8894a2;text-transform:uppercase">
+                  <div>Code</div><div>Name / description</div><div>Category</div><div></div>
+                </div>
+                <sc-for list="{{ settingsV.codeRows }}" as="c" hint-placeholder-count="4">
+                  <div style="display:grid;grid-template-columns:150px 1.6fr 200px 40px;gap:10px;align-items:center;padding:8px 16px;border-bottom:1px solid #f4f6f9">
+                    <input value="{{ c.code }}" onInput="{{ c.onCode }}" placeholder="00-000" class="mono" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 8px;font-size:12px;font-family:'IBM Plex Mono',monospace;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none">
+                    <input value="{{ c.name }}" onInput="{{ c.onName }}" placeholder="e.g. Roofing & waterproofing" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 8px;font-size:12px;font-family:inherit;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none">
+                    <select value="{{ c.category }}" onChange="{{ c.onCat }}" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 6px;font-size:12px;font-family:inherit;color:#4a5765;background:#fff;cursor:pointer" style-focus="border-color:#2b59c3;outline:none"><sc-for list="{{ settingsV.catOpts }}" as="o" hint-placeholder-count="6"><option value="{{ o.v }}">{{ o.l }}</option></sc-for></select>
+                    <button onClick="{{ c.onDelete }}" title="Delete" style="border:0;background:transparent;color:#c0c8d1;cursor:pointer;font-size:13px;padding:2px;line-height:1" style-hover="color:#b91c1c">✕</button>
+                  </div>
+                </sc-for>
+              </sc-if>
+              <sc-if value="{{ settingsV.noCodes }}" hint-placeholder-val="{{ false }}">
+                <div style="padding:30px 24px;text-align:center;color:#8894a2;font-size:13px">No custom cost codes yet. <strong style="color:#6b7787">Upload a CSV</strong> (columns: code, name, category) or click <strong style="color:#6b7787">＋ Add code</strong>. These appear in the Budget's cost-code dropdown.</div>
+              </sc-if>
+              <div style="padding:9px 16px;font-size:11px;color:#8894a2;line-height:1.5;border-top:1px solid #eef1f4">Categories: Labour · Materials · Subcontractors · Equipment · Preliminaries · Other. Codes added here feed every project's <strong style="color:#6b7787">Budget</strong> cost-code selector.</div>
+            </div>
+          </sc-if>
+        </sc-if>
+
         <sc-if value="{{ showUsers }}" hint-placeholder-val="{{ false }}">
           <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px">
             <div style="background:#0f1a24;border-radius:11px;padding:14px 15px"><div style="font-size:10.5px;font-weight:600;letter-spacing:.4px;color:#9fb0c4;text-transform:uppercase">Total users</div><div class="mono" style="font-size:22px;font-weight:700;color:#fff;margin-top:4px">{{ usersV.count }}</div></div>
@@ -3355,6 +3423,13 @@ class Component extends DCLogic {
     P.admin = { _default: 0, Admin: 2 };
     return P; }
   permLevel(role, resource) { if (resource === 'meetings') resource = 'documents'; if (!this._perms) this._perms = this._buildPerms(); const r = this._perms[resource]; if (!r) return 0; const v = (role in r) ? r[role] : r._default; return v == null ? 0 : v; }
+  resourceLabels() { return [
+    { key: 'dashboard', label: 'Dashboard' }, { key: 'directory', label: 'Directory' }, { key: 'projectSetup', label: 'Project Setup' },
+    { key: 'financial', label: 'Financial / Estimates' }, { key: 'agreements', label: 'Subcontractor & Vendor Agreements' }, { key: 'variations', label: 'SoV / Variations' },
+    { key: 'documents', label: 'Document Management' }, { key: 'rfis', label: 'RFIs' }, { key: 'punchList', label: 'Punch List' }, { key: 'reporting', label: 'Reporting' },
+    { key: 'schedule', label: 'Schedule' }, { key: 'eot', label: 'EOT' }, { key: 'invoices', label: 'Invoices' }, { key: 'bills', label: 'Bills' }, { key: 'claims', label: 'Progress Claims' }, { key: 'admin', label: 'User Administration' },
+  ]; }
+  permBadge(lv) { return lv >= 3 ? { t: 'Approve', s: 'A', c: '#15803d', bg: '#e6f4ea' } : lv === 2 ? { t: 'Edit', s: 'E', c: '#1d4ed8', bg: '#e7eefc' } : lv === 1 ? { t: 'View', s: 'V', c: '#6b7787', bg: '#eef1f5' } : { t: 'No access', s: '—', c: '#c0c8d1', bg: 'transparent' }; }
   currentUser() { const s = this.state.session; if (!s || !s.userId) return null; const u = (this.state.users || []).find(x => x.id === s.userId); return (u && u.status === 'active') ? u : null; }
   can(resource, action) { const u = this.currentUser(); if (!u) return false; const need = action === 'approve' ? 3 : action === 'edit' ? 2 : 1; return this.permLevel(u.role, resource) >= need; }
   setAuthField(k, v) { this.setState(s => ({ auth: { ...s.auth, [k]: v, error: '' } })); }
@@ -4265,6 +4340,17 @@ class Component extends DCLogic {
       projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, costLines: p.costLines.map(l => l.id === codeModal.lineId ? { ...l, code, cat: entry.category, desc: (!l.desc || l.desc === 'New cost line') ? entry.name : l.desc } : l) }),
     }));
   }
+  // ===== Settings (roles reference + cost-code catalog) =====
+  goSettings() { this.setState({ view: 'settings', anim: this.state.anim + 1 }); }
+  setSettingsTab(t) { this.setState({ settingsTab: t }); }
+  addCustomCode() { this.setState(s => ({ customCodes: [...(s.customCodes || []), { code: '', name: '', category: 'subcontractor' }] })); }
+  setCustomCode(i, k, v) { this.setState(s => ({ customCodes: (s.customCodes || []).map((c, j) => j === i ? { ...c, [k]: v } : c) })); }
+  deleteCustomCode(i) { this.setState(s => ({ customCodes: (s.customCodes || []).filter((_, j) => j !== i) })); }
+  uploadCostCodes(e) { const file = e.target && e.target.files && e.target.files[0]; if (!file) return; const reader = new FileReader();
+    reader.onload = ev => { const text = String(ev.target.result || ''); const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean); const valid = ['labor', 'materials', 'subcontractor', 'equipment', 'preliminaries', 'other']; const parsed = [];
+      lines.forEach((ln, idx) => { const cols = ln.split(',').map(c => c.replace(/^"|"$/g, '').trim()); if (idx === 0 && /code/i.test(cols[0] || '') && /(name|desc)/i.test(cols[1] || '')) return; const code = cols[0]; if (!code) return; let cat = (cols[2] || '').toLowerCase(); if (valid.indexOf(cat) < 0) cat = 'other'; parsed.push({ code, name: cols[1] || '', category: cat }); });
+      this.setState(s => { const map = {}; (s.customCodes || []).forEach(c => { if (c.code) map[c.code] = c; }); parsed.forEach(c => map[c.code] = c); return { customCodes: Object.keys(map).map(k => map[k]) }; }); };
+    reader.readAsText(file); if (e.target) e.target.value = ''; }
   costMatrix(p) {
     const cols = ['Code', 'Description', 'Category', 'Budgeted', 'Approved change', 'Committed', 'Actual', 'FTC', 'Est. at completion', 'Variance', '% complete'];
     const rows = p.costLines.map(l => {
@@ -4372,6 +4458,7 @@ class Component extends DCLogic {
     const navPortfolio = { bg: S.view === 'portfolio' ? 'rgba(43,89,195,.22)' : 'transparent', fg: S.view === 'portfolio' ? '#fff' : '#8493a3' };
     const navVendors = { bg: S.view === 'vendors' ? 'rgba(43,89,195,.22)' : 'transparent', fg: S.view === 'vendors' ? '#fff' : '#8493a3' };
     const navUsers = { show: this.can('admin', 'view'), bg: S.view === 'users' ? 'rgba(43,89,195,.22)' : 'transparent', fg: S.view === 'users' ? '#fff' : '#8493a3' };
+    const navSettings = { show: this.can('admin', 'view'), bg: S.view === 'settings' ? 'rgba(43,89,195,.22)' : 'transparent', fg: S.view === 'settings' ? '#fff' : '#8493a3' };
     const mkMod = (key, label, icon, ready) => { const on = inProject && S.module === key; return { key, label, icon, badgeShow: !ready, onClick: () => this.setModule(key), bg: on ? 'rgba(43,89,195,.22)' : 'transparent', fg: on ? '#fff' : '#8493a3' }; };
     // Reorganised project sections (built ones = ready:true; the rest are placeholders we build step by step)
     const moduleNav = [
@@ -4398,6 +4485,7 @@ class Component extends DCLogic {
     const showPortfolio = S.view === 'portfolio';
     const showVendors = S.view === 'vendors';
     const showUsers = S.view === 'users' && this.can('admin', 'view');
+    const showSettings = S.view === 'settings' && this.can('admin', 'view');
     const showDashboard = inProject && S.module === 'dashboard';
     const showContract = showDashboard;
     const showDetails = inProject && S.module === 'details';
@@ -4420,6 +4508,7 @@ class Component extends DCLogic {
     let pageTitle = '', pageSub = '', crumb1 = '', crumb2 = '', pageStatus = { show: false }, primaryAction = { show: false };
     if (showPortfolio) { pageTitle = 'Portfolio overview'; crumb1 = 'Portfolio'; }
     else if (showUsers) { pageTitle = 'Users & access'; crumb1 = 'Company'; crumb2 = 'Users & access'; pageSub = 'Create and manage user accounts, roles and project assignments'; primaryAction = { show: true, label: '＋ Create user', onClick: () => this.openUserCreate() }; }
+    else if (showSettings) { pageTitle = 'Settings'; crumb1 = 'Company'; crumb2 = 'Settings'; pageSub = 'Roles & permissions and the cost-code catalogue used to build budgets'; }
     else if (showVendors) { pageTitle = 'Vendor directory'; crumb1 = 'Vendors'; pageSub = 'Contractors, suppliers & service providers across all projects'; primaryAction = { show: true, label: '＋ Add vendor', onClick: () => this.openVendorModal() }; }
     else {
       crumb1 = p.name;
@@ -5878,8 +5967,10 @@ class Component extends DCLogic {
       }));
       let modal = { open: false };
       if (S.userAdminModal) { const f = S.userForm || {}; const mode = S.userAdminModal.mode;
+        const rolePerms = this.resourceLabels().map(res => { const lv = this.permLevel(f.role || 'Field', res.key); const b = this.permBadge(lv); return { label: res.label, s: b.s, c: b.c, bg: b.bg, has: lv > 0 }; }).filter(x => x.has);
         modal = { open: true, isCreate: mode === 'create', title: mode === 'create' ? 'Create user' : 'Edit user',
           name: f.name || '', email: f.email || '', password: f.password || '', role: f.role || 'Field', status: f.status || 'active',
+          roleLabel: this.roleLabel(f.role || 'Field'), rolePerms,
           roleOptions: this.roleList(), pwPlaceholder: mode === 'create' ? 'Set a password (min 6 characters)' : 'Leave blank to keep current password',
           projects: (S.projects || []).map(pp => { const on = (f.projectIds || []).indexOf(pp.id) >= 0; return { id: pp.id, name: pp.name, checked: on, check: on ? '✓' : '', checkBg: on ? '#2b59c3' : '#fff', checkBorder: on ? '#2b59c3' : '#cfd8e2', onToggle: () => this.toggleUserFormProject(pp.id) }; }),
           error: S.userFormError || '', hasError: !!S.userFormError,
@@ -5889,6 +5980,24 @@ class Component extends DCLogic {
           onClose: () => this.closeUserAdmin(), onSave: () => this.saveUser() };
       }
       usersV = { show: true, rows, count: String(rows.length), activeCount: String(rows.filter(r => r.active).length), modal, onCreate: () => this.openUserCreate() };
+    }
+
+    // ===== settings (roles reference + cost codes) =====
+    let settingsV = { show: false };
+    if (showSettings) {
+      const tab = ['roles', 'codes'].indexOf(S.settingsTab) >= 0 ? S.settingsTab : 'roles';
+      const roles = this.roleList(); const roleShort = { Admin: 'Admin', PM: 'PM', Superintendent: 'Super', Finance: 'Fin', HR: 'HR', ContractAdmin: 'CA', Field: 'Field', Employee: 'Emp', Architect: 'A/E', ClientSuper: 'Client', Student: 'Std' };
+      const matrixHead = roles.map(r => ({ short: roleShort[r.key] || r.key }));
+      const matrixRows = this.resourceLabels().map(res => ({ label: res.label, cells: roles.map(r => { const b = this.permBadge(this.permLevel(r.key, res.key)); return { s: b.s, c: b.c, bg: b.bg }; }) }));
+      const catOpts = [{ v: 'labor', l: 'Labour' }, { v: 'materials', l: 'Materials' }, { v: 'subcontractor', l: 'Subcontractors' }, { v: 'equipment', l: 'Equipment' }, { v: 'preliminaries', l: 'Preliminaries' }, { v: 'other', l: 'Other' }];
+      const codeRows = (S.customCodes || []).map((c, i) => ({ code: c.code || '', name: c.name || '', category: c.category || 'other',
+        onCode: e => this.setCustomCode(i, 'code', e.target.value), onName: e => this.setCustomCode(i, 'name', e.target.value), onCat: e => this.setCustomCode(i, 'category', e.target.value), onDelete: () => this.deleteCustomCode(i) }));
+      const inUseCount = this.costCodeCatalog().length;
+      settingsV = { show: true, tab, isRoles: tab === 'roles', isCodes: tab === 'codes',
+        tabs: [{ k: 'roles', l: 'Roles & permissions', active: tab === 'roles', onClick: () => this.setSettingsTab('roles') }, { k: 'codes', l: 'Cost codes', active: tab === 'codes', onClick: () => this.setSettingsTab('codes') }].map(t => ({ ...t, bg: t.active ? '#2b59c3' : '#fff', fg: t.active ? '#fff' : '#4a5765', border: t.active ? '#2b59c3' : '#cfd8e2' })),
+        matrixHead, matrixRows,
+        codeRows, catOpts, codeCount: String(codeRows.length), hasCodes: codeRows.length > 0, noCodes: codeRows.length === 0, catalogCount: String(inUseCount),
+        onAddCode: () => this.addCustomCode(), onUpload: e => this.uploadCostCodes(e) };
     }
 
     // ===== auth view =====
@@ -5914,6 +6023,7 @@ class Component extends DCLogic {
       switcherProjects, navPortfolio, moduleNav, showPlaceholder, placeholder, placeholderBullets, inProject, currentProjectName: p ? p.name : '',
       onGoPortfolio: () => this.goPortfolio(), onGoVendors: () => this.goVendors(), navVendors,
       navUsers, showUsers, usersV, onGoUsers: () => this.goUsers(),
+      navSettings, showSettings, settingsV, onGoSettings: () => this.goSettings(),
       showPortfolio, showVendors, vendorRows,
       showDashboard, showContract, showDetails, showCommitments, showCost, showInvoices, showVariations, showBills, showClaims, showDefects,
       defectRows, defectSummary, defectAnalytics, defectSearch: S.defectSearch || '',
