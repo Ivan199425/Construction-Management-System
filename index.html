@@ -303,22 +303,25 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                 </div>
               </div>
               <sc-if value="{{ settingsV.hasCodes }}" hint-placeholder-val="{{ true }}">
-                <div style="display:grid;grid-template-columns:150px 1.6fr 200px 40px;gap:10px;padding:9px 16px;background:#fafbfc;border-bottom:1px solid #e4e8ee;font-size:10px;font-weight:600;letter-spacing:.3px;color:#8894a2;text-transform:uppercase">
-                  <div>Code</div><div>Name / description</div><div>Category</div><div></div>
-                </div>
-                <sc-for list="{{ settingsV.codeRows }}" as="c" hint-placeholder-count="4">
-                  <div style="display:grid;grid-template-columns:150px 1.6fr 200px 40px;gap:10px;align-items:center;padding:8px 16px;border-bottom:1px solid #f4f6f9">
-                    <input value="{{ c.code }}" onInput="{{ c.onCode }}" placeholder="00-000" class="mono" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 8px;font-size:12px;font-family:'IBM Plex Mono',monospace;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none">
-                    <input value="{{ c.name }}" onInput="{{ c.onName }}" placeholder="e.g. Roofing & waterproofing" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 8px;font-size:12px;font-family:inherit;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none">
-                    <select value="{{ c.category }}" onChange="{{ c.onCat }}" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 6px;font-size:12px;font-family:inherit;color:#4a5765;background:#fff;cursor:pointer" style-focus="border-color:#2b59c3;outline:none"><sc-for list="{{ settingsV.catOpts }}" as="o" hint-placeholder-count="6"><option value="{{ o.v }}">{{ o.l }}</option></sc-for></select>
-                    <button onClick="{{ c.onDelete }}" title="Delete" style="border:0;background:transparent;color:#c0c8d1;cursor:pointer;font-size:13px;padding:2px;line-height:1" style-hover="color:#b91c1c">✕</button>
+                <div style="overflow-x:auto"><div style="min-width:860px">
+                  <div style="display:grid;grid-template-columns:1fr 1.7fr 1fr 1.7fr 40px;gap:10px;padding:9px 16px;background:#fafbfc;border-bottom:1px solid #e4e8ee;font-size:10px;font-weight:600;letter-spacing:.3px;color:#8894a2;text-transform:uppercase">
+                    <div>Parent code</div><div>Parent code description</div><div>Child code</div><div>Child code description</div><div></div>
                   </div>
-                </sc-for>
+                  <sc-for list="{{ settingsV.codeRows }}" as="c" hint-placeholder-count="4">
+                    <div style="display:grid;grid-template-columns:1fr 1.7fr 1fr 1.7fr 40px;gap:10px;align-items:center;padding:8px 16px;border-bottom:1px solid #f4f6f9">
+                      <input value="{{ c.parentCode }}" onInput="{{ c.onParentCode }}" placeholder="e.g. 02" class="mono" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 8px;font-size:12px;font-family:'IBM Plex Mono',monospace;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none">
+                      <input value="{{ c.parentDesc }}" onInput="{{ c.onParentDesc }}" placeholder="e.g. Sitework & earthworks" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 8px;font-size:12px;font-family:inherit;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none">
+                      <input value="{{ c.childCode }}" onInput="{{ c.onChildCode }}" placeholder="e.g. 02-200" class="mono" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 8px;font-size:12px;font-family:'IBM Plex Mono',monospace;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none">
+                      <input value="{{ c.childDesc }}" onInput="{{ c.onChildDesc }}" placeholder="e.g. Bulk earthworks" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 8px;font-size:12px;font-family:inherit;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none">
+                      <button onClick="{{ c.onDelete }}" title="Delete" style="border:0;background:transparent;color:#c0c8d1;cursor:pointer;font-size:13px;padding:2px;line-height:1" style-hover="color:#b91c1c">✕</button>
+                    </div>
+                  </sc-for>
+                </div></div>
               </sc-if>
               <sc-if value="{{ settingsV.noCodes }}" hint-placeholder-val="{{ false }}">
-                <div style="padding:30px 24px;text-align:center;color:#8894a2;font-size:13px">No custom cost codes yet. <strong style="color:#6b7787">Upload a CSV</strong> (columns: code, name, category) or click <strong style="color:#6b7787">＋ Add code</strong>. These appear in the Budget's cost-code dropdown.</div>
+                <div style="padding:30px 24px;text-align:center;color:#8894a2;font-size:13px">No cost codes yet. <strong style="color:#6b7787">Upload a CSV</strong> (columns: parent code, parent code description, child code, child code description) or click <strong style="color:#6b7787">＋ Add code</strong>. Child codes appear in every project's Budget cost-code selector.</div>
               </sc-if>
-              <div style="padding:9px 16px;font-size:11px;color:#8894a2;line-height:1.5;border-top:1px solid #eef1f4">Categories: Labour · Materials · Subcontractors · Equipment · Preliminaries · Other. Codes added here feed every project's <strong style="color:#6b7787">Budget</strong> cost-code selector.</div>
+              <div style="padding:9px 16px;font-size:11px;color:#8894a2;line-height:1.5;border-top:1px solid #eef1f4">A <strong style="color:#6b7787">parent code</strong> is a broad group (e.g. 02 — Sitework); a <strong style="color:#6b7787">child code</strong> is an item inside it (e.g. 02-200 — Bulk earthworks). CSV columns, in order: <span class="mono">parent code, parent code description, child code, child code description</span>. Child codes feed every project's <strong style="color:#6b7787">Budget</strong> cost-code selector (shown as <span class="mono">parent · child — description</span>).</div>
             </div>
           </sc-if>
         </sc-if>
@@ -2945,16 +2948,15 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
   <sc-if value="{{ codeModal.open }}" hint-placeholder-val="{{ false }}">
     <div onClick="{{ onCloseCodeModal }}" style="position:fixed;inset:0;background:rgba(15,23,32,.42);display:flex;align-items:center;justify-content:center;z-index:50;animation:fadeUp .15s ease">
       <div onClick="{{ stop }}" style="background:#fff;border-radius:14px;width:420px;max-width:92vw;box-shadow:0 24px 60px rgba(15,23,32,.28);overflow:hidden">
-        <div style="padding:18px 22px;border-bottom:1px solid #eef1f4"><div style="font-size:16px;font-weight:600;color:#0f1720">New cost code</div><div style="font-size:12.5px;color:#8894a2;margin-top:2px">Adds to the system code list and applies it to this line</div></div>
+        <div style="padding:18px 22px;border-bottom:1px solid #eef1f4"><div style="font-size:16px;font-weight:600;color:#0f1720">New cost code</div><div style="font-size:12.5px;color:#8894a2;margin-top:2px">Adds a parent → child code to the catalogue and applies the child code to this line</div></div>
         <div style="padding:20px 22px;display:flex;flex-direction:column;gap:15px">
           <div style="display:flex;gap:12px">
-            <div style="flex:0 0 130px"><label style="font-size:12px;font-weight:600;color:#4a5765;display:block;margin-bottom:5px">Code</label><input value="{{ codeModal.code }}" onInput="{{ onCodeModalCode }}" placeholder="00-000" class="mono" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:'IBM Plex Mono',monospace"></div>
-            <div style="flex:1"><label style="font-size:12px;font-weight:600;color:#4a5765;display:block;margin-bottom:5px">Name</label><input value="{{ codeModal.name }}" onInput="{{ onCodeModalName }}" placeholder="e.g. Roofing & waterproofing" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:inherit"></div>
+            <div style="flex:0 0 130px"><label style="font-size:12px;font-weight:600;color:#4a5765;display:block;margin-bottom:5px">Parent code</label><input value="{{ codeModal.parentCode }}" onInput="{{ onCodeModalParentCode }}" placeholder="e.g. 02" class="mono" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:'IBM Plex Mono',monospace"></div>
+            <div style="flex:1"><label style="font-size:12px;font-weight:600;color:#4a5765;display:block;margin-bottom:5px">Parent code description</label><input value="{{ codeModal.parentDesc }}" onInput="{{ onCodeModalParentDesc }}" placeholder="e.g. Sitework & earthworks" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:inherit"></div>
           </div>
-          <div><label style="font-size:12px;font-weight:600;color:#4a5765;display:block;margin-bottom:5px">Category</label>
-            <select value="{{ codeModal.category }}" onChange="{{ onCodeModalCat }}" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:inherit;background:#fff;cursor:pointer">
-              <option value="preliminaries">Preliminaries</option><option value="labor">Labour</option><option value="materials">Materials</option><option value="subcontractor">Subcontractors</option><option value="equipment">Equipment</option><option value="other">Other</option>
-            </select>
+          <div style="display:flex;gap:12px">
+            <div style="flex:0 0 130px"><label style="font-size:12px;font-weight:600;color:#4a5765;display:block;margin-bottom:5px">Child code</label><input value="{{ codeModal.childCode }}" onInput="{{ onCodeModalChildCode }}" placeholder="e.g. 02-200" class="mono" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:'IBM Plex Mono',monospace"></div>
+            <div style="flex:1"><label style="font-size:12px;font-weight:600;color:#4a5765;display:block;margin-bottom:5px">Child code description</label><input value="{{ codeModal.childDesc }}" onInput="{{ onCodeModalChildDesc }}" placeholder="e.g. Bulk earthworks" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:inherit"></div>
           </div>
         </div>
         <div style="padding:15px 22px;border-top:1px solid #eef1f4;display:flex;justify-content:flex-end;gap:10px">
@@ -3013,7 +3015,7 @@ class Component extends DCLogic {
       form: { desc: '', value: '', time: '', status: 'submitted' },
       customCodes: [],
       codeModal: null,
-      codeForm: { code: '', name: '', category: 'subcontractor' },
+      codeForm: { parentCode: '', parentDesc: '', childCode: '', childDesc: '' },
       vendors: this.seedVendors(),
       vendorModal: null,
       vendorForm: { type: 'supplier', company: '', rep: '', phone: '', email: '', address: '' },
@@ -4331,12 +4333,19 @@ class Component extends DCLogic {
   }
   costCodeCatalog() {
     const map = new Map();
+    // legacy codes already used on project cost lines (no parent grouping)
     this.state.projects.forEach(p => p.costLines.forEach(l => {
-      if (l.code && !map.has(l.code)) map.set(l.code, { code: l.code, name: l.desc || '', category: l.cat });
+      if (l.code && !map.has(l.code)) map.set(l.code, { code: l.code, name: l.desc || '', category: l.cat, parentCode: '', parentDesc: '' });
     }));
-    this.state.customCodes.forEach(c => { if (c.code) map.set(c.code, c); });
-    return [...map.values()].sort((a, b) => a.code.localeCompare(b.code));
+    // parent / child codes from Settings → Cost codes
+    (this.state.customCodes || []).forEach(c => {
+      const code = (c.childCode || '').trim();
+      if (!code) return;
+      map.set(code, { code, name: (c.childDesc || '').trim(), category: 'other', parentCode: (c.parentCode || '').trim(), parentDesc: (c.parentDesc || '').trim() });
+    });
+    return [...map.values()].sort((a, b) => ((a.parentCode || '') + '~' + a.code).localeCompare((b.parentCode || '') + '~' + b.code));
   }
+  costCodeOptions() { return this.costCodeCatalog().map(c => ({ code: c.code, label: (c.parentCode ? c.parentCode + ' · ' : '') + c.code + (c.name ? ' — ' + c.name : '') })); }
   applyCode(lineId, code) {
     const entry = this.costCodeCatalog().find(c => c.code === code);
     this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, costLines: p.costLines.map(l => {
@@ -4347,7 +4356,7 @@ class Component extends DCLogic {
     }) }) }));
   }
   onCodeSelect(lineId, val) {
-    if (val === '__new__') { this.setState({ codeModal: { lineId }, codeForm: { code: '', name: '', category: 'subcontractor' } }); return; }
+    if (val === '__new__') { this.setState({ codeModal: { lineId }, codeForm: { parentCode: '', parentDesc: '', childCode: '', childDesc: '' } }); return; }
     this.applyCode(lineId, val);
   }
   setCodeForm(k, v) { this.setState(s => ({ codeForm: { ...s.codeForm, [k]: v } })); }
@@ -4355,25 +4364,25 @@ class Component extends DCLogic {
   saveCode() {
     const { codeModal, codeForm } = this.state;
     if (!codeModal) return;
-    const code = codeForm.code.trim();
-    if (!code) return;
-    const entry = { code, name: codeForm.name.trim(), category: codeForm.category };
+    const childCode = (codeForm.childCode || '').trim();
+    if (!childCode) return;
+    const entry = { parentCode: (codeForm.parentCode || '').trim(), parentDesc: (codeForm.parentDesc || '').trim(), childCode, childDesc: (codeForm.childDesc || '').trim() };
     this.setState(s => ({
-      customCodes: s.customCodes.some(c => c.code === code) ? s.customCodes.map(c => c.code === code ? entry : c) : [...s.customCodes, entry],
+      customCodes: (s.customCodes || []).some(c => c.childCode === childCode) ? s.customCodes.map(c => c.childCode === childCode ? entry : c) : [...(s.customCodes || []), entry],
       codeModal: null,
-      projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, costLines: p.costLines.map(l => l.id === codeModal.lineId ? { ...l, code, cat: entry.category, desc: (!l.desc || l.desc === 'New cost line') ? entry.name : l.desc } : l) }),
+      projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, costLines: p.costLines.map(l => l.id === codeModal.lineId ? { ...l, code: childCode, cat: 'other', desc: (!l.desc || l.desc === 'New cost line') ? entry.childDesc : l.desc } : l) }),
     }));
   }
   // ===== Settings (roles reference + cost-code catalog) =====
   goSettings() { this.setState({ view: 'settings', anim: this.state.anim + 1 }); }
   setSettingsTab(t) { this.setState({ settingsTab: t }); }
-  addCustomCode() { this.setState(s => ({ customCodes: [...(s.customCodes || []), { code: '', name: '', category: 'subcontractor' }] })); }
+  addCustomCode() { this.setState(s => ({ customCodes: [...(s.customCodes || []), { parentCode: '', parentDesc: '', childCode: '', childDesc: '' }] })); }
   setCustomCode(i, k, v) { this.setState(s => ({ customCodes: (s.customCodes || []).map((c, j) => j === i ? { ...c, [k]: v } : c) })); }
   deleteCustomCode(i) { this.setState(s => ({ customCodes: (s.customCodes || []).filter((_, j) => j !== i) })); }
   uploadCostCodes(e) { const file = e.target && e.target.files && e.target.files[0]; if (!file) return; const reader = new FileReader();
-    reader.onload = ev => { const text = String(ev.target.result || ''); const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean); const valid = ['labor', 'materials', 'subcontractor', 'equipment', 'preliminaries', 'other']; const parsed = [];
-      lines.forEach((ln, idx) => { const cols = ln.split(',').map(c => c.replace(/^"|"$/g, '').trim()); if (idx === 0 && /code/i.test(cols[0] || '') && /(name|desc)/i.test(cols[1] || '')) return; const code = cols[0]; if (!code) return; let cat = (cols[2] || '').toLowerCase(); if (valid.indexOf(cat) < 0) cat = 'other'; parsed.push({ code, name: cols[1] || '', category: cat }); });
-      this.setState(s => { const map = {}; (s.customCodes || []).forEach(c => { if (c.code) map[c.code] = c; }); parsed.forEach(c => map[c.code] = c); return { customCodes: Object.keys(map).map(k => map[k]) }; }); };
+    reader.onload = ev => { const text = String(ev.target.result || ''); const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean); const parsed = [];
+      lines.forEach((ln, idx) => { const cols = ln.split(',').map(c => c.replace(/^"|"$/g, '').trim()); if (idx === 0 && /parent/i.test(ln) && /child/i.test(ln)) return; const parentCode = cols[0] || '', parentDesc = cols[1] || '', childCode = cols[2] || '', childDesc = cols[3] || ''; if (!parentCode && !parentDesc && !childCode && !childDesc) return; parsed.push({ parentCode, parentDesc, childCode, childDesc }); });
+      this.setState(s => { const rows = [...(s.customCodes || [])]; parsed.forEach(pc => { const idx = pc.childCode ? rows.findIndex(r => r.childCode === pc.childCode) : -1; if (idx >= 0) rows[idx] = pc; else rows.push(pc); }); return { customCodes: rows }; }); };
     reader.readAsText(file); if (e.target) e.target.value = ''; }
   costMatrix(p) {
     const cols = ['Code', 'Description', 'Category', 'Budgeted', 'Approved change', 'Committed', 'Actual', 'FTC', 'Est. at completion', 'Variance', '% complete'];
@@ -5520,7 +5529,7 @@ class Component extends DCLogic {
     let costLineRows = [], costTotals = {}, chart = { has: false }, costInsight = { show: false }, budgetVarRows = [], budgetVarApproved = '', budgetVarHas = false, budgetVarEmpty = false;
     if (showCost) {
       const commitmentOptions = p.commitments.map(cm => ({ id: cm.id, label: cm.ref + ' — ' + cm.vendor }));
-      const codeCatalog = this.costCodeCatalog().map(c => ({ code: c.code, label: c.code + (c.name ? ' — ' + c.name : '') }));
+      const codeCatalog = this.costCodeOptions();
       const vlistAll = (p.contract && p.contract.variations) || [];
       costLineRows = p.costLines.map(l => {
         const variance = this.lineVariance(l);
@@ -5755,7 +5764,7 @@ class Component extends DCLogic {
     // bills
     let billRows = [], billTotals = { net: '', tax: '', gross: '' }, vendorOptions = [];
     if (showBills) {
-      const codeCatalog = this.costCodeCatalog().map(c => ({ code: c.code, label: c.code + (c.name ? ' — ' + c.name : '') }));
+      const codeCatalog = this.costCodeOptions();
       vendorOptions = [...S.vendors].sort((a, b) => a.company.localeCompare(b.company)).map(v => ({ id: v.id, label: v.company + ' · ' + this.vendorTypeLabel(v.type) }));
       const commitmentOptions = p.commitments.map(cm => ({ id: cm.id, label: cm.ref + ' — ' + cm.vendor }));
       const bills = [...(p.bills || [])].sort((a, b) => (b.billDate || '').localeCompare(a.billDate || ''));
@@ -6024,14 +6033,15 @@ class Component extends DCLogic {
       const roles = this.roleList(); const roleShort = { Admin: 'Admin', PM: 'PM', Superintendent: 'Super', Finance: 'Fin', HR: 'HR', ContractAdmin: 'CA', Field: 'Field', Employee: 'Emp', Architect: 'A/E', ClientSuper: 'Client', Student: 'Std' };
       const matrixHead = roles.map(r => ({ short: roleShort[r.key] || r.key }));
       const matrixRows = this.resourceLabels().map(res => ({ label: res.label, cells: roles.map(r => { const lv = this.permLevel(r.key, res.key); const b = this.permBadge(lv); return { level: String(lv), c: b.c, bg: b.bg, onChange: e => this.setPerm(res.key, r.key, e.target.value) }; }) }));
-      const catOpts = [{ v: 'labor', l: 'Labour' }, { v: 'materials', l: 'Materials' }, { v: 'subcontractor', l: 'Subcontractors' }, { v: 'equipment', l: 'Equipment' }, { v: 'preliminaries', l: 'Preliminaries' }, { v: 'other', l: 'Other' }];
-      const codeRows = (S.customCodes || []).map((c, i) => ({ code: c.code || '', name: c.name || '', category: c.category || 'other',
-        onCode: e => this.setCustomCode(i, 'code', e.target.value), onName: e => this.setCustomCode(i, 'name', e.target.value), onCat: e => this.setCustomCode(i, 'category', e.target.value), onDelete: () => this.deleteCustomCode(i) }));
+      const codeRows = (S.customCodes || []).map((c, i) => ({ parentCode: c.parentCode || '', parentDesc: c.parentDesc || '', childCode: c.childCode || '', childDesc: c.childDesc || '',
+        onParentCode: e => this.setCustomCode(i, 'parentCode', e.target.value), onParentDesc: e => this.setCustomCode(i, 'parentDesc', e.target.value),
+        onChildCode: e => this.setCustomCode(i, 'childCode', e.target.value), onChildDesc: e => this.setCustomCode(i, 'childDesc', e.target.value),
+        onDelete: () => this.deleteCustomCode(i) }));
       const inUseCount = this.costCodeCatalog().length;
       settingsV = { show: true, tab, isRoles: tab === 'roles', isCodes: tab === 'codes',
         tabs: [{ k: 'roles', l: 'Roles & permissions', active: tab === 'roles', onClick: () => this.setSettingsTab('roles') }, { k: 'codes', l: 'Cost codes', active: tab === 'codes', onClick: () => this.setSettingsTab('codes') }].map(t => ({ ...t, bg: t.active ? '#2b59c3' : '#fff', fg: t.active ? '#fff' : '#4a5765', border: t.active ? '#2b59c3' : '#cfd8e2' })),
         matrixHead, matrixRows,
-        codeRows, catOpts, codeCount: String(codeRows.length), hasCodes: codeRows.length > 0, noCodes: codeRows.length === 0, catalogCount: String(inUseCount),
+        codeRows, codeCount: String(codeRows.length), hasCodes: codeRows.length > 0, noCodes: codeRows.length === 0, catalogCount: String(inUseCount),
         onAddCode: () => this.addCustomCode(), onUpload: e => this.uploadCostCodes(e), onResetPerms: () => this.resetPerms() };
     }
 
@@ -6100,9 +6110,10 @@ class Component extends DCLogic {
       contractFields, contractVarRows, contractCalc,
       commitmentRows, costLineRows, costTotals, chart, costInsight, budgetVarRows, budgetVarApproved, budgetVarHas, budgetVarEmpty, onAddVariation: () => this.addVariation(), onAddCostLine: () => this.addCostLine(),
       onExportCsv: () => this.exportCsv(), onExportPdf: () => this.exportPdf(),
-      codeModal: S.codeModal ? { open: true, code: S.codeForm.code, name: S.codeForm.name, category: S.codeForm.category } : { open: false },
-      onCodeModalCode: (e) => this.setCodeForm('code', e.target.value), onCodeModalName: (e) => this.setCodeForm('name', e.target.value),
-      onCodeModalCat: (e) => this.setCodeForm('category', e.target.value), onCloseCodeModal: () => this.closeCodeModal(), onSaveCode: () => this.saveCode(),
+      codeModal: S.codeModal ? { open: true, parentCode: S.codeForm.parentCode, parentDesc: S.codeForm.parentDesc, childCode: S.codeForm.childCode, childDesc: S.codeForm.childDesc } : { open: false },
+      onCodeModalParentCode: (e) => this.setCodeForm('parentCode', e.target.value), onCodeModalParentDesc: (e) => this.setCodeForm('parentDesc', e.target.value),
+      onCodeModalChildCode: (e) => this.setCodeForm('childCode', e.target.value), onCodeModalChildDesc: (e) => this.setCodeForm('childDesc', e.target.value),
+      onCloseCodeModal: () => this.closeCodeModal(), onSaveCode: () => this.saveCode(),
       modal, onCloseModal: () => this.closeModal(), stop: (e) => e.stopPropagation(),
       onModalDesc: (e) => this.setForm('desc', e.target.value), onModalValue: (e) => this.setForm('value', e.target.value),
       onModalTime: (e) => this.setForm('time', e.target.value), onSaveModal: () => this.saveModal(),
