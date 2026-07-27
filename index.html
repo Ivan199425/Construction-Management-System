@@ -75,6 +75,42 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
     </div>
   </sc-if>
 
+  <!-- USER CREATE / EDIT MODAL -->
+  <sc-if value="{{ usersV.modal.open }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ usersV.modal.onClose }}" style="position:fixed;inset:0;background:rgba(15,23,32,.42);display:flex;align-items:center;justify-content:center;z-index:200;padding:24px;animation:fadeUp .15s ease">
+      <div onClick="{{ stop }}" style="background:#fff;border-radius:14px;width:560px;max-width:96vw;max-height:92vh;box-shadow:0 24px 60px rgba(15,23,32,.28);overflow:hidden;display:flex;flex-direction:column">
+        <div style="padding:18px 22px;border-bottom:1px solid #eef1f4;display:flex;align-items:center;justify-content:space-between">
+          <div style="font-size:16px;font-weight:600;color:#0f1720">{{ usersV.modal.title }}</div>
+          <button onClick="{{ usersV.modal.onClose }}" title="Close" style="border:1px solid #cfd8e2;background:#fff;color:#4a5765;border-radius:7px;padding:6px 11px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">✕</button>
+        </div>
+        <div style="padding:18px 22px;overflow-y:auto">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div><div style="font-size:11px;font-weight:600;letter-spacing:.3px;color:#6b7787;text-transform:uppercase;margin-bottom:5px">Full name</div><input value="{{ usersV.modal.name }}" onInput="{{ usersV.modal.onName }}" placeholder="Jane Smith" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:inherit;color:#0f1720" style-focus="border-color:#2b59c3;outline:none"></div>
+            <div><div style="font-size:11px;font-weight:600;letter-spacing:.3px;color:#6b7787;text-transform:uppercase;margin-bottom:5px">Role</div><select value="{{ usersV.modal.role }}" onChange="{{ usersV.modal.onRole }}" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 8px;font-size:13px;font-family:inherit;color:#0f1720;background:#fff;cursor:pointer" style-focus="border-color:#2b59c3;outline:none"><sc-for list="{{ usersV.modal.roleOptions }}" as="o" hint-placeholder-count="11"><option value="{{ o.key }}">{{ o.label }}</option></sc-for></select></div>
+          </div>
+          <div style="font-size:11px;font-weight:600;letter-spacing:.3px;color:#6b7787;text-transform:uppercase;margin:13px 0 5px">Email</div>
+          <input value="{{ usersV.modal.email }}" onInput="{{ usersV.modal.onEmail }}" type="email" placeholder="jane@company.com" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:inherit;color:#0f1720" style-focus="border-color:#2b59c3;outline:none">
+          <div style="font-size:11px;font-weight:600;letter-spacing:.3px;color:#6b7787;text-transform:uppercase;margin:13px 0 5px">Password</div>
+          <input value="{{ usersV.modal.password }}" onInput="{{ usersV.modal.onPassword }}" type="password" placeholder="{{ usersV.modal.pwPlaceholder }}" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:inherit;color:#0f1720" style-focus="border-color:#2b59c3;outline:none">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin:15px 0 7px"><div style="font-size:11px;font-weight:600;letter-spacing:.3px;color:#6b7787;text-transform:uppercase">Assigned projects</div><select value="{{ usersV.modal.status }}" onChange="{{ usersV.modal.onStatus }}" title="Account status" style="border:1px solid #cfd8e2;border-radius:7px;padding:5px 8px;font-size:11.5px;font-family:inherit;color:#0f1720;background:#fff;cursor:pointer"><option value="active">Active</option><option value="deactivated">Deactivated</option></select></div>
+          <div style="border:1px solid #eef1f4;border-radius:10px;overflow:hidden">
+            <sc-for list="{{ usersV.modal.projects }}" as="pr" hint-placeholder-count="3">
+              <div onClick="{{ pr.onToggle }}" style="display:flex;align-items:center;gap:10px;padding:8px 12px;border-bottom:1px solid #f4f6f9;cursor:pointer" style-hover="background:#f7f9fc">
+                <span style="width:17px;height:17px;flex-shrink:0;border:1.5px solid {{ pr.checkBorder }};background:{{ pr.checkBg }};border-radius:5px;color:#fff;font-size:11px;display:flex;align-items:center;justify-content:center;font-weight:700">{{ pr.check }}</span>
+                <span style="font-size:12.5px;color:#0f1720">{{ pr.name }}</span>
+              </div>
+            </sc-for>
+          </div>
+          <sc-if value="{{ usersV.modal.hasError }}" hint-placeholder-val="{{ false }}"><div style="background:#fbeef0;border:1px solid #efd0d0;border-radius:9px;padding:8px 11px;font-size:12px;color:#b91c1c;margin-top:13px">{{ usersV.modal.error }}</div></sc-if>
+        </div>
+        <div style="padding:14px 22px;border-top:1px solid #eef1f4;display:flex;align-items:center;justify-content:flex-end;gap:10px">
+          <button onClick="{{ usersV.modal.onClose }}" style="border:1px solid #cfd8e2;background:#fff;color:#4a5765;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Cancel</button>
+          <button onClick="{{ usersV.modal.onSave }}" style="border:0;background:#2b59c3;color:#fff;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="background:#244dab">Save user</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
   <!-- SIDEBAR -->
   <aside style="width:248px;flex:0 0 248px;background:#0f1a24;color:#8493a3;display:flex;flex-direction:column;height:100vh">
     <div style="padding:18px 16px 16px;border-bottom:1px solid rgba(255,255,255,.07)">
@@ -102,6 +138,11 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
       <button onClick="{{ onGoVendors }}" style="width:100%;display:flex;align-items:center;gap:10px;padding:9px 10px;border:0;background:{{ navVendors.bg }};color:{{ navVendors.fg }};border-radius:7px;cursor:pointer;text-align:left;font-family:inherit;font-size:13px;font-weight:500" style-hover="background:rgba(255,255,255,.06)">
         <span style="font-size:14px">☰</span> Vendor directory
       </button>
+      <sc-if value="{{ navUsers.show }}" hint-placeholder-val="{{ false }}">
+        <button onClick="{{ onGoUsers }}" style="width:100%;display:flex;align-items:center;gap:10px;padding:9px 10px;border:0;background:{{ navUsers.bg }};color:{{ navUsers.fg }};border-radius:7px;cursor:pointer;text-align:left;font-family:inherit;font-size:13px;font-weight:500;margin-top:2px" style-hover="background:rgba(255,255,255,.06)">
+          <span style="font-size:14px">⚙</span> Users &amp; access
+        </button>
+      </sc-if>
 
       <sc-if value="{{ inProject }}" hint-placeholder-val="{{ true }}">
         <div style="font-size:10.5px;font-weight:600;letter-spacing:.9px;color:#5f7080;padding:16px 10px 8px">{{ currentProjectName }}</div>
@@ -204,6 +245,40 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
         </sc-if>
 
         <!-- ============ VENDOR DIRECTORY ============ -->
+        <sc-if value="{{ showUsers }}" hint-placeholder-val="{{ false }}">
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px">
+            <div style="background:#0f1a24;border-radius:11px;padding:14px 15px"><div style="font-size:10.5px;font-weight:600;letter-spacing:.4px;color:#9fb0c4;text-transform:uppercase">Total users</div><div class="mono" style="font-size:22px;font-weight:700;color:#fff;margin-top:4px">{{ usersV.count }}</div></div>
+            <div style="background:#fff;border:1px solid #e4e8ee;border-radius:11px;padding:14px 15px"><div style="font-size:10.5px;font-weight:600;letter-spacing:.4px;color:#8894a2;text-transform:uppercase">Active</div><div class="mono" style="font-size:22px;font-weight:600;color:#15803d;margin-top:4px">{{ usersV.activeCount }}</div></div>
+            <div style="background:#fff;border:1px solid #e4e8ee;border-radius:11px;padding:14px 15px;display:flex;align-items:center;justify-content:flex-end"><button onClick="{{ usersV.onCreate }}" style="border:0;background:#2b59c3;color:#fff;border-radius:8px;padding:9px 16px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="background:#244dab">＋ Create user</button></div>
+          </div>
+          <div style="background:#fff;border:1px solid #e4e8ee;border-radius:12px;overflow:hidden">
+            <div style="overflow-x:auto"><div style="min-width:1040px">
+              <div style="display:grid;grid-template-columns:1.2fr 1.5fr 150px 1.3fr 100px 96px 172px;padding:11px 16px;background:#fafbfc;border-bottom:1px solid #e4e8ee;font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#8894a2;text-transform:uppercase;gap:10px">
+                <div>Name</div><div>Email</div><div>Role</div><div>Projects</div><div>Last login</div><div style="text-align:center">Status</div><div style="text-align:right">Actions</div>
+              </div>
+              <sc-for list="{{ usersV.rows }}" as="u" hint-placeholder-count="6">
+                <div style="display:grid;grid-template-columns:1.2fr 1.5fr 150px 1.3fr 100px 96px 172px;padding:9px 16px;border-bottom:1px solid #eef1f4;align-items:center;gap:10px" style-hover="background:#f9fafc">
+                  <div style="font-size:12.5px;font-weight:600;color:#0f1720;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ u.name }}<sc-if value="{{ u.external }}" hint-placeholder-val="{{ false }}"><span style="font-size:8.5px;font-weight:700;color:#b45309;background:#fbf1e3;border-radius:8px;padding:1px 6px;margin-left:6px">EXT</span></sc-if></div>
+                  <div style="font-size:12px;color:#2b59c3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ u.email }}</div>
+                  <div style="font-size:11.5px;color:#4a5765;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ u.roleLabel }}</div>
+                  <div style="font-size:11.5px;color:#6b7787;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="{{ u.projectNames }}">{{ u.projectNames }}</div>
+                  <div class="mono" style="font-size:10.5px;color:#8894a2">{{ u.lastLogin }}</div>
+                  <div style="text-align:center"><span style="display:inline-block;font-size:10px;font-weight:700;color:{{ u.statusColor }};background:{{ u.statusBg }};border-radius:12px;padding:2px 9px">{{ u.statusLabel }}</span></div>
+                  <div style="display:flex;align-items:center;justify-content:flex-end;gap:5px">
+                    <button onClick="{{ u.onEdit }}" title="Edit" style="border:1px solid #e4e8ee;background:#fff;color:#2b59c3;border-radius:6px;padding:4px 9px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="border-color:#2b59c3">Edit</button>
+                    <sc-if value="{{ u.isSelf }}" hint-placeholder-val="{{ true }}"><span style="font-size:10px;color:#a4afba">you</span></sc-if>
+                    <sc-if value="{{ u.notSelf }}" hint-placeholder-val="{{ true }}">
+                      <button onClick="{{ u.onToggle }}" title="{{ u.statusBtn }}" style="border:1px solid #e4e8ee;background:#fff;color:#4a5765;border-radius:6px;padding:4px 8px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="border-color:#b45309;color:#b45309">{{ u.statusBtn }}</button>
+                      <button onClick="{{ u.onDelete }}" title="Delete" style="border:0;background:transparent;color:#c0c8d1;cursor:pointer;font-size:13px;padding:2px;line-height:1" style-hover="color:#b91c1c">✕</button>
+                    </sc-if>
+                  </div>
+                </div>
+              </sc-for>
+            </div></div>
+          </div>
+          <div style="font-size:11.5px;color:#8894a2;line-height:1.5;margin-top:10px">Create accounts with an email &amp; password, assign a role and one or more projects. Deactivated users can't sign in but are kept for audit. <strong style="color:#6b7787">Subcontractors have no login</strong> — they access only via the one-time e-sign link on their agreement.</div>
+        </sc-if>
+
         <sc-if value="{{ showVendors }}" hint-placeholder-val="{{ true }}">
           <div style="background:#fff;border:1px solid #e4e8ee;border-radius:12px;overflow:hidden">
             <div style="overflow-x:auto"><div style="min-width:1180px">
@@ -3298,6 +3373,24 @@ class Component extends DCLogic {
   doPasswordReset() { const a = this.state.auth || {}; const email = (a.resetEmail || '').trim().toLowerCase(); const np = a.newPassword || '';
     if (np.length < 6) { this.setState(s => ({ auth: { ...s.auth, error: 'Password must be at least 6 characters.' } })); return; }
     this.setState(s => ({ users: s.users.map(x => (x.email || '').toLowerCase() === email ? { ...x, password: np, mustReset: false } : x), auth: { view: 'login', email: a.resetEmail, password: '', error: '', notice: 'Password updated — please log in.', resetEmail: '', resetToken: '', newPassword: '' } })); }
+  // ===== Admin → Users =====
+  goUsers() { this.setState({ view: 'users', anim: this.state.anim + 1 }); }
+  openUserCreate() { this.setState({ userAdminModal: { mode: 'create' }, userForm: { id: '', name: '', email: '', password: '', role: 'Field', projectIds: [], status: 'active', external: false }, userFormError: '' }); }
+  openUserEdit(id) { const u = (this.state.users || []).find(x => x.id === id); if (!u) return; this.setState({ userAdminModal: { mode: 'edit', id }, userForm: { id: u.id, name: u.name, email: u.email, password: '', role: u.role, projectIds: [...(u.projectIds || [])], status: u.status, external: !!u.external }, userFormError: '' }); }
+  closeUserAdmin() { this.setState({ userAdminModal: null, userFormError: '' }); }
+  setUserFormField(k, v) { this.setState(s => ({ userForm: { ...s.userForm, [k]: v }, userFormError: '' })); }
+  toggleUserFormProject(pid) { this.setState(s => { const cur = (s.userForm.projectIds) || []; const has = cur.indexOf(pid) >= 0; return { userForm: { ...s.userForm, projectIds: has ? cur.filter(x => x !== pid) : [...cur, pid] } }; }); }
+  saveUser() { const f = this.state.userForm || {}; const mode = this.state.userAdminModal && this.state.userAdminModal.mode; const name = (f.name || '').trim(); const email = (f.email || '').trim().toLowerCase();
+    if (!name) { this.setState({ userFormError: 'Name is required.' }); return; }
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { this.setState({ userFormError: 'A valid email address is required.' }); return; }
+    if ((this.state.users || []).some(u => (u.email || '').toLowerCase() === email && u.id !== f.id)) { this.setState({ userFormError: 'That email is already in use.' }); return; }
+    if (mode === 'create' && (f.password || '').length < 6) { this.setState({ userFormError: 'Password must be at least 6 characters.' }); return; }
+    this.setState(s => { let users = s.users || [];
+      if (mode === 'create') { const id = 'u_' + Date.now().toString(36); users = [...users, { id, name, email, password: f.password, role: f.role, status: f.status || 'active', external: !!f.external, projectIds: f.projectIds || [], lastLogin: '', createdAt: this.todayLocal(), mustReset: false }]; }
+      else { users = users.map(u => u.id !== f.id ? u : { ...u, name, email, role: f.role, status: f.status, external: !!f.external, projectIds: f.projectIds || [], password: (f.password && f.password.length >= 6) ? f.password : u.password }); }
+      return { users, userAdminModal: null, userFormError: '' }; }); }
+  toggleUserStatus(id) { const cu = this.currentUser(); if (cu && cu.id === id) return; this.setState(s => ({ users: s.users.map(u => u.id === id ? { ...u, status: u.status === 'active' ? 'deactivated' : 'active' } : u) })); }
+  deleteUser(id) { const cu = this.currentUser(); if (cu && cu.id === id) return; this.setState(s => ({ users: s.users.filter(u => u.id !== id) })); }
   getAgr(cm) {
     const a = cm.agr || {};
     const status = a.status || ({ signed: 'signed', issued: 'sent', draft: 'draft', closed: 'signed' }[cm.status] || 'draft');
@@ -4278,6 +4371,7 @@ class Component extends DCLogic {
 
     const navPortfolio = { bg: S.view === 'portfolio' ? 'rgba(43,89,195,.22)' : 'transparent', fg: S.view === 'portfolio' ? '#fff' : '#8493a3' };
     const navVendors = { bg: S.view === 'vendors' ? 'rgba(43,89,195,.22)' : 'transparent', fg: S.view === 'vendors' ? '#fff' : '#8493a3' };
+    const navUsers = { show: this.can('admin', 'view'), bg: S.view === 'users' ? 'rgba(43,89,195,.22)' : 'transparent', fg: S.view === 'users' ? '#fff' : '#8493a3' };
     const mkMod = (key, label, icon, ready) => { const on = inProject && S.module === key; return { key, label, icon, badgeShow: !ready, onClick: () => this.setModule(key), bg: on ? 'rgba(43,89,195,.22)' : 'transparent', fg: on ? '#fff' : '#8493a3' }; };
     // Reorganised project sections (built ones = ready:true; the rest are placeholders we build step by step)
     const moduleNav = [
@@ -4303,6 +4397,7 @@ class Component extends DCLogic {
     // view flags
     const showPortfolio = S.view === 'portfolio';
     const showVendors = S.view === 'vendors';
+    const showUsers = S.view === 'users' && this.can('admin', 'view');
     const showDashboard = inProject && S.module === 'dashboard';
     const showContract = showDashboard;
     const showDetails = inProject && S.module === 'details';
@@ -4324,6 +4419,7 @@ class Component extends DCLogic {
     // header / title
     let pageTitle = '', pageSub = '', crumb1 = '', crumb2 = '', pageStatus = { show: false }, primaryAction = { show: false };
     if (showPortfolio) { pageTitle = 'Portfolio overview'; crumb1 = 'Portfolio'; }
+    else if (showUsers) { pageTitle = 'Users & access'; crumb1 = 'Company'; crumb2 = 'Users & access'; pageSub = 'Create and manage user accounts, roles and project assignments'; primaryAction = { show: true, label: '＋ Create user', onClick: () => this.openUserCreate() }; }
     else if (showVendors) { pageTitle = 'Vendor directory'; crumb1 = 'Vendors'; pageSub = 'Contractors, suppliers & service providers across all projects'; primaryAction = { show: true, label: '＋ Add vendor', onClick: () => this.openVendorModal() }; }
     else {
       crumb1 = p.name;
@@ -5766,6 +5862,35 @@ class Component extends DCLogic {
       };
     }
 
+    // ===== users & access (admin) =====
+    let usersV = { show: false, modal: { open: false } };
+    if (showUsers) {
+      const projMap = {}; (S.projects || []).forEach(pp => projMap[pp.id] = pp.name);
+      const me = this.currentUser();
+      const rows = (S.users || []).map(u => ({
+        id: u.id, name: u.name, email: u.email, roleLabel: this.roleLabel(u.role), external: !!u.external,
+        active: u.status === 'active', statusLabel: u.status === 'active' ? 'Active' : 'Deactivated',
+        statusColor: u.status === 'active' ? '#15803d' : '#b91c1c', statusBg: u.status === 'active' ? '#e6f4ea' : '#fbeef0',
+        projectNames: (u.projectIds || []).length ? (u.projectIds || []).map(id => projMap[id] || id).join(', ') : '—',
+        lastLogin: u.lastLogin ? this.fmtDate(u.lastLogin) : 'Never',
+        isSelf: !!(me && me.id === u.id), notSelf: !(me && me.id === u.id), statusBtn: u.status === 'active' ? 'Deactivate' : 'Reactivate',
+        onEdit: () => this.openUserEdit(u.id), onToggle: () => this.toggleUserStatus(u.id), onDelete: () => this.deleteUser(u.id),
+      }));
+      let modal = { open: false };
+      if (S.userAdminModal) { const f = S.userForm || {}; const mode = S.userAdminModal.mode;
+        modal = { open: true, isCreate: mode === 'create', title: mode === 'create' ? 'Create user' : 'Edit user',
+          name: f.name || '', email: f.email || '', password: f.password || '', role: f.role || 'Field', status: f.status || 'active',
+          roleOptions: this.roleList(), pwPlaceholder: mode === 'create' ? 'Set a password (min 6 characters)' : 'Leave blank to keep current password',
+          projects: (S.projects || []).map(pp => { const on = (f.projectIds || []).indexOf(pp.id) >= 0; return { id: pp.id, name: pp.name, checked: on, check: on ? '✓' : '', checkBg: on ? '#2b59c3' : '#fff', checkBorder: on ? '#2b59c3' : '#cfd8e2', onToggle: () => this.toggleUserFormProject(pp.id) }; }),
+          error: S.userFormError || '', hasError: !!S.userFormError,
+          onName: e => this.setUserFormField('name', e.target.value), onEmail: e => this.setUserFormField('email', e.target.value),
+          onPassword: e => this.setUserFormField('password', e.target.value), onRole: e => this.setUserFormField('role', e.target.value),
+          onStatus: e => this.setUserFormField('status', e.target.value),
+          onClose: () => this.closeUserAdmin(), onSave: () => this.saveUser() };
+      }
+      usersV = { show: true, rows, count: String(rows.length), activeCount: String(rows.filter(r => r.active).length), modal, onCreate: () => this.openUserCreate() };
+    }
+
     // ===== auth view =====
     const cu = this.currentUser(); const A = S.auth || { view: 'login' };
     const initialsOfName = nm => (nm || '?').trim().split(/\s+/).map(x => x[0] || '').slice(0, 2).join('').toUpperCase() || '?';
@@ -5788,6 +5913,7 @@ class Component extends DCLogic {
       emailComposeV,
       switcherProjects, navPortfolio, moduleNav, showPlaceholder, placeholder, placeholderBullets, inProject, currentProjectName: p ? p.name : '',
       onGoPortfolio: () => this.goPortfolio(), onGoVendors: () => this.goVendors(), navVendors,
+      navUsers, showUsers, usersV, onGoUsers: () => this.goUsers(),
       showPortfolio, showVendors, vendorRows,
       showDashboard, showContract, showDetails, showCommitments, showCost, showInvoices, showVariations, showBills, showClaims, showDefects,
       defectRows, defectSummary, defectAnalytics, defectSearch: S.defectSearch || '',
