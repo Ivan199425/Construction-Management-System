@@ -3018,7 +3018,7 @@ class Component extends DCLogic {
       vendorModal: null,
       vendorForm: { type: 'supplier', company: '', rep: '', phone: '', email: '', address: '' },
       role: 'PM',
-      perms: this._buildPerms(),
+      perms: this._loadPerms(),
       users: this.seedUsers(),
       session: (typeof localStorage !== 'undefined' && localStorage.getItem('cubicSession')) ? { userId: localStorage.getItem('cubicSession') } : null,
       auth: { view: 'login', email: '', password: '', error: '', notice: '', resetEmail: '', resetToken: '', newPassword: '' },
@@ -3433,9 +3433,11 @@ class Component extends DCLogic {
     P.claims = { _default: 1, PM: 2, Finance: 3, Admin: 2 };
     P.admin = { _default: 0, Admin: 2 };
     return P; }
+  _loadPerms() { const def = this._buildPerms(); try { if (typeof localStorage === 'undefined') return def; const raw = localStorage.getItem('cubicPerms'); if (!raw) return def; const saved = JSON.parse(raw); if (!saved || typeof saved !== 'object') return def; const out = {}; Object.keys(def).forEach(k => { out[k] = Object.assign({}, def[k], saved[k] || {}); }); Object.keys(saved).forEach(k => { if (!out[k]) out[k] = saved[k]; }); return out; } catch (e) { return def; } }
+  _savePerms(p) { try { if (typeof localStorage !== 'undefined') localStorage.setItem('cubicPerms', JSON.stringify(p)); } catch (e) {} }
   permLevel(role, resource) { if (resource === 'meetings') resource = 'documents'; const P = this.state.perms || this._buildPerms(); const r = P[resource]; if (!r) return 0; const v = (role in r) ? r[role] : r._default; return v == null ? 0 : v; }
-  setPerm(resource, role, level) { if (!this.can('admin', 'edit')) return; const lv = Number(level) || 0; this.setState(s => ({ perms: { ...s.perms, [resource]: { ...(s.perms[resource] || {}), [role]: lv } } })); }
-  resetPerms() { if (!this.can('admin', 'edit')) return; this.setState({ perms: this._buildPerms() }); }
+  setPerm(resource, role, level) { if (!this.can('admin', 'edit')) return; const lv = Number(level) || 0; const cur = this.state.perms || this._buildPerms(); const next = { ...cur, [resource]: { ...(cur[resource] || {}), [role]: lv } }; this._savePerms(next); this.setState({ perms: next }); }
+  resetPerms() { if (!this.can('admin', 'edit')) return; try { if (typeof localStorage !== 'undefined') localStorage.removeItem('cubicPerms'); } catch (e) {} this.setState({ perms: this._buildPerms() }); }
   resourceLabels() { return [
     { key: 'dashboard', label: 'Dashboard' }, { key: 'directory', label: 'Directory' }, { key: 'projectSetup', label: 'Project Setup' },
     { key: 'financial', label: 'Financial / Estimates' }, { key: 'agreements', label: 'Subcontractor & Vendor Agreements' }, { key: 'variations', label: 'SoV / Variations' },
