@@ -677,7 +677,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                       <button onClick="{{ r.onPay }}" style="border:1px solid #cdddf8;background:#f2f6fd;color:#2b59c3;border-radius:5px;padding:3px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">Mark paid</button>
                     </sc-if>
                   </div>
-                  <label title="Attach the subcontractor invoice (PDF/image)" style="display:flex;align-items:center;gap:4px;border:1px dashed #cfd8e2;background:#fff;color:#6b7787;border-radius:6px;padding:6px 7px;font-size:10.5px;font-weight:600;cursor:pointer;overflow:hidden;margin-top:1px" style-hover="border-color:#2b59c3;color:#2b59c3"><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.invoiceLabel }}</span><input type="file" accept="application/pdf,image/*" onChange="{{ r.onAttachInvoice }}" style="display:none"></label>
+                  <div style="display:flex;align-items:center;gap:3px;margin-top:1px"><sc-if value="{{ r.hasInvoiceFile }}" hint-placeholder-val="{{ false }}"><button onClick="{{ r.onViewInvoice }}" title="View invoice" style="border:1px solid #cfd8e2;background:#fff;color:#2b59c3;border-radius:6px;padding:6px 7px;font-size:10.5px;font-weight:700;cursor:pointer;flex:0 0 auto" style-hover="border-color:#2b59c3">👁</button></sc-if><label title="Attach the subcontractor invoice (PDF/image)" style="display:flex;align-items:center;gap:4px;border:1px dashed #cfd8e2;background:#fff;color:#6b7787;border-radius:6px;padding:6px 7px;font-size:10.5px;font-weight:600;cursor:pointer;overflow:hidden" style-hover="border-color:#2b59c3;color:#2b59c3"><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.invoiceLabel }}</span><input type="file" accept="application/pdf,image/*" onChange="{{ r.onAttachInvoice }}" style="display:none"></label></div>
                   <div style="display:flex;flex-direction:column;gap:3px;margin-top:1px">
                     <button onClick="{{ r.onSend }}" title="Email this claim to the subcontractor" style="border:1px solid #cdddf8;background:#f2f6fd;color:#2b59c3;border-radius:5px;padding:5px 6px;font-size:10.5px;font-weight:600;cursor:pointer;font-family:inherit">✉ Send</button>
                     <sc-if value="{{ r.sent }}" hint-placeholder-val="{{ false }}"><span title="{{ r.sentAt }}" style="font-size:8.5px;color:#15803d;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">✓ sent</span></sc-if>
@@ -1034,7 +1034,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                   <input value="{{ r.amount }}" onInput="{{ r.onAmount }}" class="mono" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 8px;font-size:12.5px;text-align:right;font-family:'IBM Plex Mono',monospace;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none">
                   <input value="{{ r.taxRate }}" onInput="{{ r.onTax }}" class="mono" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 6px;font-size:12.5px;text-align:right;font-family:'IBM Plex Mono',monospace;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none">
                   <div class="mono" style="text-align:right;font-weight:600;font-size:12.5px;color:#0f1720">{{ r.total }}</div>
-                  <label title="Attach the vendor invoice (PDF/image)" style="display:flex;align-items:center;gap:4px;border:1px dashed #cfd8e2;background:#fff;color:#6b7787;border-radius:6px;padding:6px 7px;font-size:10.5px;font-weight:600;cursor:pointer;overflow:hidden;margin-top:1px" style-hover="border-color:#2b59c3;color:#2b59c3"><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.invoiceLabel }}</span><input type="file" accept="application/pdf,image/*" onChange="{{ r.onAttachInvoice }}" style="display:none"></label>
+                  <div style="display:flex;align-items:center;gap:3px;margin-top:1px"><sc-if value="{{ r.hasInvoiceFile }}" hint-placeholder-val="{{ false }}"><button onClick="{{ r.onViewInvoice }}" title="View invoice" style="border:1px solid #cfd8e2;background:#fff;color:#2b59c3;border-radius:6px;padding:6px 7px;font-size:10.5px;font-weight:700;cursor:pointer;flex:0 0 auto" style-hover="border-color:#2b59c3">👁</button></sc-if><label title="Attach the vendor invoice (PDF/image)" style="display:flex;align-items:center;gap:4px;border:1px dashed #cfd8e2;background:#fff;color:#6b7787;border-radius:6px;padding:6px 7px;font-size:10.5px;font-weight:600;cursor:pointer;overflow:hidden" style-hover="border-color:#2b59c3;color:#2b59c3"><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.invoiceLabel }}</span><input type="file" accept="application/pdf,image/*" onChange="{{ r.onAttachInvoice }}" style="display:none"></label></div>
                   <div style="display:flex;flex-direction:column;gap:3px">
                     <span style="align-self:flex-start;font-size:10px;font-weight:600;padding:1px 8px;border-radius:12px;background:{{ r.statusBg }};color:{{ r.statusColor }}">{{ r.statusLabel }}</span>
                     <div style="display:flex;gap:4px;align-items:center">
@@ -3548,6 +3548,20 @@ class Component extends DCLogic {
       body: JSON.stringify([{ key, data, updated_at: new Date().toISOString() }])
     }).then(r => r.ok).catch(() => false);
   }
+  // ===== Supabase Storage (Phase 3b): upload a file, return its public URL (base64 fallback) =====
+  _sbUploadFile(file, folder) {
+    const readB64 = () => new Promise(res => { try { const r = new FileReader(); r.onload = ev => res(ev.target.result); r.onerror = () => res(null); r.readAsDataURL(file); } catch (e) { res(null); } });
+    const c = this._SB;
+    if (!c || !c.url || !c.key || !file || typeof fetch === 'undefined') return readB64();
+    const clean = (file.name || 'file').replace(/[^a-zA-Z0-9._-]/g, '_').slice(-64);
+    const path = (folder || 'files') + '/' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8) + '_' + clean;
+    const s = this.state.session; const auth = (s && s.access_token) ? s.access_token : c.key;
+    return fetch(c.url + '/storage/v1/object/attachments/' + path, {
+      method: 'POST',
+      headers: { apikey: c.key, Authorization: 'Bearer ' + auth, 'Content-Type': file.type || 'application/octet-stream', 'x-upsert': 'true' },
+      body: file
+    }).then(r => r.ok ? (c.url + '/storage/v1/object/public/attachments/' + path) : readB64()).catch(() => readB64());
+  }
   // ===== Supabase Auth + profiles (Phase 2) =====
   _sbAuthSignIn(email, password) {
     const c = this._SB; if (!c) return Promise.resolve({ ok: false, body: {} });
@@ -3761,13 +3775,11 @@ class Component extends DCLogic {
     const files = Array.from((e.target && e.target.files) || []);
     if (!files.length) return;
     files.forEach(file => {
-      const reader = new FileReader();
-      reader.onload = ev => {
-        const url = ev.target.result;
-        const photo = { id: 'ph' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), name: file.name || 'photo', url, at: this.todayLocal(), desc: '' };
+      this._sbUploadFile(file, 'photos').then(url => {
+        if (!url) return;
+        const photo = { id: 'ph' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), name: file.name || 'photo', url, type: file.type || '', at: this.todayLocal(), desc: '' };
         this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, defects: (p.defects || []).map(x => x.id === id ? { ...x, photos: [...(x.photos || []), photo] } : x) }) }));
-      };
-      reader.readAsDataURL(file);
+      });
     });
     if (e.target) e.target.value = '';
   }
@@ -3935,10 +3947,10 @@ class Component extends DCLogic {
   setBillSort(v) { this.setState({ billSort: v }); }
   setBillStatus(v) { this.setState({ billStatus: v }); }
   setPhotoDesc(id, val) { this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, photos: (p.photos || []).map(ph => ph.id === id ? { ...ph, desc: val } : ph), defects: (p.defects || []).map(d => ({ ...d, photos: (d.photos || []).map(ph => ph.id === id ? { ...ph, desc: val } : ph) })), docs: (p.docs || []).map(d => ({ ...d, attachments: (d.attachments || []).map(a => a.id === id ? { ...a, desc: val } : a) })) }) })); }
-  addProjectPhoto(e) { if (!this.can('documents', 'edit')) return; const files = Array.from((e.target && e.target.files) || []); if (!files.length) return; files.forEach(file => { const reader = new FileReader(); reader.onload = ev => { const ph = { id: 'ph' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), name: file.name || 'photo', url: ev.target.result, at: this.todayLocal(), desc: '' }; this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, photos: [...(p.photos || []), ph] }) })); }; reader.readAsDataURL(file); }); if (e.target) e.target.value = ''; }
+  addProjectPhoto(e) { if (!this.can('documents', 'edit')) return; const files = Array.from((e.target && e.target.files) || []); if (!files.length) return; files.forEach(file => { this._sbUploadFile(file, 'photos').then(url => { if (!url) return; const ph = { id: 'ph' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), name: file.name || 'photo', url, type: file.type || '', at: this.todayLocal(), desc: '' }; this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, photos: [...(p.photos || []), ph] }) })); }); }); if (e.target) e.target.value = ''; }
   removeProjectPhoto(id) { this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, photos: (p.photos || []).filter(ph => ph.id !== id) }) })); }
   // ---- Schedule ----
-  uploadSchedule(e) { if (!this.can('schedule', 'edit')) return; const file = e.target && e.target.files && e.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = ev => { this.setState(s => ({ projects: s.projects.map(p => { if (p.id !== s.pid) return p; const sc = p.schedule || { activities: [], versions: [], version: 0 }; const versions = sc.fileName ? [{ name: sc.fileName, version: sc.version || 0, at: sc.uploadedAt || '' }, ...(sc.versions || [])] : (sc.versions || []); return { ...p, schedule: { ...sc, fileName: file.name, fileType: file.type || '', fileUrl: ev.target.result, uploadedAt: this.todayLocal(), version: (Number(sc.version) || 0) + 1, versions } }; }) })); }; reader.readAsDataURL(file); if (e.target) e.target.value = ''; }
+  uploadSchedule(e) { if (!this.can('schedule', 'edit')) return; const file = e.target && e.target.files && e.target.files[0]; if (!file) return; if (e.target) e.target.value = ''; this._sbUploadFile(file, 'schedule').then(url => { if (!url) return; this.setState(s => ({ projects: s.projects.map(p => { if (p.id !== s.pid) return p; const sc = p.schedule || { activities: [], versions: [], version: 0 }; const versions = sc.fileName ? [{ name: sc.fileName, version: sc.version || 0, at: sc.uploadedAt || '' }, ...(sc.versions || [])] : (sc.versions || []); return { ...p, schedule: { ...sc, fileName: file.name, fileType: file.type || '', fileUrl: url, uploadedAt: this.todayLocal(), version: (Number(sc.version) || 0) + 1, versions } }; }) })); }); }
   previewScheduleFile() { const p = this.proj(this.state.pid); if (!p || !p.schedule || !p.schedule.fileUrl) return; this.openAttachment({ name: p.schedule.fileName, url: p.schedule.fileUrl, type: p.schedule.fileType }); }
   setScheduleActivity(id, field, val) { if (!this.can('schedule', 'edit')) return; this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, schedule: { ...(p.schedule || {}), activities: ((p.schedule || {}).activities || []).map(a => a.id === id ? { ...a, [field]: val } : a) } }) })); }
   toggleActivityCritical(id) { this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, schedule: { ...(p.schedule || {}), activities: ((p.schedule || {}).activities || []).map(a => a.id === id ? { ...a, critical: !a.critical } : a) } }) })); }
@@ -4026,9 +4038,17 @@ class Component extends DCLogic {
   postRfiOurNote(id) { const t = ((this.state.rfiDraft || {})[id] || '').trim(); if (!t) return; this.postRfiMessage(id, 'out', 'Cubic (PM)', t); this.setState(s => ({ rfiDraft: { ...(s.rfiDraft || {}), [id]: '' } })); }
   // demo-only: stands in for the inbound-email webhook that would post the client's real reply
   simulateRfiInbound(id) { const p = this.proj(this.state.pid); if (!p) return; const who = (p.customers && p.customers[0] && (p.customers[0].name || p.customers[0].company)) || 'Client'; const samples = ['Thanks — please see our marked-up sketch attached. Proceed as noted.', 'Reviewed. Use the revised detail on the attached SK; no change to the interface line.', 'Confirmed. Response attached — proceed to fabrication.', 'Noted. We will issue a formal response by end of week; interim guidance attached.']; const txt = '[Inbound email] ' + samples[Math.floor(Math.random() * samples.length)]; this.postRfiMessage(id, 'in', who, txt); }
-  addDocAttachment(id, e) { const files = Array.from((e.target && e.target.files) || []); if (!files.length) return; files.forEach(file => { const reader = new FileReader(); reader.onload = ev => { const att = { id: 'att' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), name: file.name || 'file', type: file.type || '', size: file.size || 0, url: ev.target.result, at: this.todayLocal() }; this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, docs: (p.docs || []).map(d => d.id === id ? { ...d, attachments: [...(d.attachments || []), att] } : d) }) })); }; reader.readAsDataURL(file); }); if (e.target) e.target.value = ''; }
+  addDocAttachment(id, e) { const files = Array.from((e.target && e.target.files) || []); if (!files.length) return; files.forEach(file => { this._sbUploadFile(file, 'docs').then(url => { if (!url) return; const att = { id: 'att' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), name: file.name || 'file', type: file.type || '', size: file.size || 0, url, at: this.todayLocal() }; this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, docs: (p.docs || []).map(d => d.id === id ? { ...d, attachments: [...(d.attachments || []), att] } : d) }) })); }); }); if (e.target) e.target.value = ''; }
   removeDocAttachment(id, aid) { this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, docs: (p.docs || []).map(d => d.id === id ? { ...d, attachments: (d.attachments || []).filter(a => a.id !== aid) } : d) }) })); }
-  _decodeBlob(rawUrl, type) { try { const parts = String(rawUrl).split(','); const mime = (parts[0].match(/data:([^;]+)/) || [])[1] || type || 'application/octet-stream'; const bin = atob(parts[1] || ''); const arr = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i); return { url: URL.createObjectURL(new Blob([arr], { type: mime })), mime }; } catch (err) { return { url: rawUrl, mime: type || '' }; } }
+  _decodeBlob(rawUrl, type) {
+    const raw = String(rawUrl || '');
+    if (!/^data:/i.test(raw)) { // remote (Supabase Storage) or blob URL — use directly
+      let mime = type || '';
+      if (!mime) { if (/\.pdf($|\?)/i.test(raw)) mime = 'application/pdf'; else if (/\.(png|jpe?g|gif|webp|bmp|heic)($|\?)/i.test(raw)) mime = 'image/*'; }
+      return { url: raw, mime };
+    }
+    try { const parts = raw.split(','); const mime = (parts[0].match(/data:([^;]+)/) || [])[1] || type || 'application/octet-stream'; const bin = atob(parts[1] || ''); const arr = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i); return { url: URL.createObjectURL(new Blob([arr], { type: mime })), mime }; } catch (err) { return { url: raw, mime: type || '' }; }
+  }
   _showGalleryItem(items, index) { const dv = this.state.docViewer; if (dv && dv.curUrl && String(dv.curUrl).indexOf('blob:') === 0) { try { URL.revokeObjectURL(dv.curUrl); } catch (e) {} } const n = items.length; if (!n) return; const i = ((index % n) + n) % n; const it = items[i]; const dec = this._decodeBlob(it.url, it.type); const kind = /pdf/i.test(dec.mime) ? 'pdf' : (/^image\//i.test(dec.mime) ? 'image' : 'other'); this.setState({ docViewer: { items, index: i, curUrl: dec.url, curKind: kind, curName: it.name || 'document' } }); }
   openGallery(items, index) { if (!items || !items.length) return; this._showGalleryItem(items, index || 0); }
   openAttachment(att) { if (!att || !att.url) return; this.openGallery([{ name: att.name, url: att.url, type: att.type }], 0); }
@@ -4072,7 +4092,7 @@ class Component extends DCLogic {
   addEot() { const p = this.proj(this.state.pid); if (!p) return; const ref = this.nextSeqRef(p.eots || [], 'ref', 'EOT-', 3); const e = { id: 'eot' + Date.now(), ref, title: '', cause: 'Variation / change order', eventDate: this.todayLocal(), startDate: this.todayLocal(), daysClaimed: 0, daysGranted: 0, status: 'draft', notes: '', attachments: [], sentForApprovalAt: '', clientResponse: '' }; this.setState(s => ({ projects: s.projects.map(x => x.id !== s.pid ? x : { ...x, eots: [...(x.eots || []), e] }) })); }
   setEotField(id, field, val) { this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, eots: (p.eots || []).map(e => e.id !== id ? e : { ...e, [field]: val, ...(field === 'status' && val === 'approved' && (!e.daysGranted || Number(e.daysGranted) === 0) ? { daysGranted: e.daysClaimed } : {}) }) }) })); }
   deleteEot(id) { this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, eots: (p.eots || []).filter(e => e.id !== id) }) })); }
-  addEotAttachment(id, e) { const files = Array.from((e.target && e.target.files) || []); if (!files.length) return; files.forEach(file => { const reader = new FileReader(); reader.onload = ev => { const att = { id: 'att' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), name: file.name || 'file', type: file.type || '', size: file.size || 0, url: ev.target.result }; this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, eots: (p.eots || []).map(x => x.id === id ? { ...x, attachments: [...(x.attachments || []), att] } : x) }) })); }; reader.readAsDataURL(file); }); if (e.target) e.target.value = ''; }
+  addEotAttachment(id, e) { const files = Array.from((e.target && e.target.files) || []); if (!files.length) return; files.forEach(file => { this._sbUploadFile(file, 'eot').then(url => { if (!url) return; const att = { id: 'att' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), name: file.name || 'file', type: file.type || '', size: file.size || 0, url }; this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, eots: (p.eots || []).map(x => x.id === id ? { ...x, attachments: [...(x.attachments || []), att] } : x) }) })); }); }); if (e.target) e.target.value = ''; }
   removeEotAttachment(id, aid) { this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, eots: (p.eots || []).map(x => x.id === id ? { ...x, attachments: (x.attachments || []).filter(a => a.id !== aid) } : x) }) })); }
   clientRespondEot(id, decision) { const status = decision === 'approved' ? 'approved' : decision === 'rejected' ? 'rejected' : 'info'; const label = decision === 'approved' ? 'Client granted' : decision === 'rejected' ? 'Client rejected' : 'Client requested more information'; const note = label + ' on ' + this.fmtDate(this.todayLocal()); this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, eots: (p.eots || []).map(e => e.id !== id ? e : { ...e, status, clientResponse: note, ...(decision === 'approved' && (!e.daysGranted || Number(e.daysGranted) === 0) ? { daysGranted: e.daysClaimed } : {}) }) }) })); }
   // EOT review & send for approval
@@ -4114,7 +4134,7 @@ class Component extends DCLogic {
     w.document.open(); w.document.write(html); w.document.close();
   }
   clientRespondVariation(vid, decision) { if (!this.can('variations', 'approve')) return; const u = this.currentUser(); const pj = this.proj(this.state.pid); const vv = pj && pj.contract && (pj.contract.variations || []).find(x => x.id === vid); if (u && u.role === 'Superintendent' && decision === 'approved' && vv && (Number(vv.value) || 0) !== 0) return; const status = decision === 'approved' ? 'approved' : decision === 'rejected' ? 'rejected' : 'info'; const label = decision === 'approved' ? 'Client approved' : decision === 'rejected' ? 'Client rejected' : 'Client requested more information'; const note = label + ' on ' + this.fmtDate(this.todayLocal()); this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, contract: { ...p.contract, variations: p.contract.variations.map(v => v.id !== vid ? v : { ...v, status, clientResponse: note }) } }) })); }
-  addVariationAttachment(vid, e) { const files = Array.from((e.target && e.target.files) || []); if (!files.length) return; files.forEach(file => { const reader = new FileReader(); reader.onload = ev => { const att = { id: 'att' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), name: file.name || 'file', type: file.type || '', size: file.size || 0, url: ev.target.result }; this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, contract: { ...p.contract, variations: p.contract.variations.map(v => v.id === vid ? { ...v, attachments: [...(v.attachments || []), att] } : v) } }) })); }; reader.readAsDataURL(file); }); if (e.target) e.target.value = ''; }
+  addVariationAttachment(vid, e) { const files = Array.from((e.target && e.target.files) || []); if (!files.length) return; files.forEach(file => { this._sbUploadFile(file, 'variations').then(url => { if (!url) return; const att = { id: 'att' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), name: file.name || 'file', type: file.type || '', size: file.size || 0, url }; this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, contract: { ...p.contract, variations: p.contract.variations.map(v => v.id === vid ? { ...v, attachments: [...(v.attachments || []), att] } : v) } }) })); }); }); if (e.target) e.target.value = ''; }
   removeVariationAttachment(vid, aid) { this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, contract: { ...p.contract, variations: p.contract.variations.map(v => v.id === vid ? { ...v, attachments: (v.attachments || []).filter(a => a.id !== aid) } : v) } }) })); }
   // variation review & send for approval
   openVariationSend(vid) { const p = this.proj(this.state.pid); if (!p) return; const v = (p.contract.variations || []).find(x => x.id === vid); if (!v) return; const emails = (p.customers || []).map(c => c.email).filter(Boolean); this.setState({ variationSend: { vid, recipients: emails, newEmail: '', message: '', from: p.senderEmail || 'ivan@cubiccm.com', subject: 'Variation ' + v.ref + ' for approval — ' + p.name } }); }
@@ -4492,13 +4512,15 @@ class Component extends DCLogic {
       return { ...x, paid, status };
     }) }) }));
   }
-  attachBillInvoice(id, e) { const f = (e.target && e.target.files && e.target.files[0]); if (!f) return; this.setBillField(id, 'invoice', f.name); if (e.target) e.target.value = ''; }
+  attachBillInvoice(id, e) { const f = (e.target && e.target.files && e.target.files[0]); if (!f) return; if (e.target) e.target.value = ''; this.setBillField(id, 'invoice', f.name); this._sbUploadFile(f, 'bills').then(url => { if (url) { this.setBillField(id, 'invoiceUrl', url); this.setBillField(id, 'invoiceType', f.type || ''); } }); }
+  viewBillInvoice(id) { const p = this.proj(this.state.pid); const b = p && (p.bills || []).find(x => x.id === id); if (b && b.invoiceUrl) this.openAttachment({ name: b.invoice || 'invoice', url: b.invoiceUrl, type: b.invoiceType || '' }); }
   sendBill(id) {
     const p = this.proj(this.state.pid); const bill = (p.bills || []).find(b => b.id === id); if (!bill) return;
     const v = this.state.vendors.find(x => x.id === bill.vendorId); const to = v ? v.email : (bill.vendor || 'vendor');
     this.setBillField(id, 'sentAt', 'Sent ' + this.now() + ' → ' + to);
   }
-  attachClaimInvoice(id, e) { const f = (e.target && e.target.files && e.target.files[0]); if (!f) return; this.setClaimField(id, 'invoice', f.name); if (e.target) e.target.value = ''; }
+  attachClaimInvoice(id, e) { const f = (e.target && e.target.files && e.target.files[0]); if (!f) return; if (e.target) e.target.value = ''; this.setClaimField(id, 'invoice', f.name); this._sbUploadFile(f, 'claims').then(url => { if (url) { this.setClaimField(id, 'invoiceUrl', url); this.setClaimField(id, 'invoiceType', f.type || ''); } }); }
+  viewClaimInvoice(id) { const p = this.proj(this.state.pid); const c = p && (p.claims || []).find(x => x.id === id); if (c && c.invoiceUrl) this.openAttachment({ name: c.invoice || 'invoice', url: c.invoiceUrl, type: c.invoiceType || '' }); }
   sendClaim(id) {
     const p = this.proj(this.state.pid); const c = (p.claims || []).find(x => x.id === id); if (!c) return;
     const cm = (p.commitments || []).find(k => k.id === c.commitmentId);
@@ -6039,7 +6061,7 @@ class Component extends DCLogic {
           thisClaim: x.thisClaim, toDate: x.toDate, subValue: this.moneyM(cur), pctToDate,
           taxRate: x.taxRate == null ? 10 : x.taxRate, taxAmt: this.money(net * taxR / 100), total: this.money(net * (1 + taxR / 100)),
           agreed: this.moneyM(cur), outstanding: this.moneyM(outstanding), outstandingColor: outstanding < 0 ? '#b91c1c' : '#4a5765',
-          invoice: x.invoice || '', hasInvoice: !!x.invoice, invoiceLabel: x.invoice ? x.invoice : '＋ Invoice',
+          invoice: x.invoice || '', hasInvoice: !!x.invoice, invoiceLabel: x.invoice ? x.invoice : '＋ Invoice', hasInvoiceFile: !!x.invoiceUrl, onViewInvoice: () => this.viewClaimInvoice(x.id),
           sentAt: x.sentAt || '', sent: !!x.sentAt,
           statusLabel: sm.label, statusColor: sm.color, statusBg: sm.bg,
           submitted: x.submitted, paymentDue: x.paymentDue || '—', payDueColor: (x.status === 'approved' && x.paymentDue && x.paymentDue < today) ? '#b91c1c' : '#6b7787',
@@ -6079,7 +6101,7 @@ class Component extends DCLogic {
           codeBorder: x.code ? '#e4e8ee' : '#e6c9a3', codeBg: x.code ? '#fff' : '#fdf6ec',
           status, statusLabel: psm.label, statusColor: psm.color, statusBg: psm.bg, overdue, fromClaim: !!x.fromClaim,
           paid: x.paid == null ? 0 : x.paid, paidLabel: this.money(paid), outstanding: this.money(outstanding), outstandingColor: outstanding > 0.005 ? '#b45309' : '#15803d', fullyPaid: outstanding <= 0.005,
-          invoice: x.invoice || '', hasInvoice: !!x.invoice, invoiceLabel: x.invoice ? x.invoice : '＋ Invoice', sent: !!x.sentAt, sentAt: x.sentAt || '',
+          invoice: x.invoice || '', hasInvoice: !!x.invoice, invoiceLabel: x.invoice ? x.invoice : '＋ Invoice', hasInvoiceFile: !!x.invoiceUrl, onViewInvoice: () => this.viewBillInvoice(x.id), sent: !!x.sentAt, sentAt: x.sentAt || '',
           commitmentId: x.commitmentId || '', commitmentOptions,
           onPaid: e => this.setBillPaid(x.id, e.target.value), onPayFull: () => this.recordBillPayment(x.id, null),
           onAttachInvoice: e => this.attachBillInvoice(x.id, e), onSend: () => this.sendBill(x.id),
