@@ -3026,7 +3026,7 @@ class Component extends DCLogic {
       expanded: {},
       modal: null,
       form: { desc: '', value: '', time: '', status: 'submitted' },
-      customCodes: [],
+      customCodes: this._loadCodes(),
       codeUpload: null,
       codeModal: null,
       codeForm: { parentCode: '', parentDesc: '', childCode: '', childDesc: '' },
@@ -3451,6 +3451,17 @@ class Component extends DCLogic {
     return P; }
   _loadPerms() { const def = this._buildPerms(); try { if (typeof localStorage === 'undefined') return def; const raw = localStorage.getItem('cubicPerms'); if (!raw) return def; const saved = JSON.parse(raw); if (!saved || typeof saved !== 'object') return def; const out = {}; Object.keys(def).forEach(k => { out[k] = Object.assign({}, def[k], saved[k] || {}); }); Object.keys(saved).forEach(k => { if (!out[k]) out[k] = saved[k]; }); return out; } catch (e) { return def; } }
   _savePerms(p) { try { if (typeof localStorage !== 'undefined') localStorage.setItem('cubicPerms', JSON.stringify(p)); } catch (e) {} }
+  _loadCodes() {
+    try {
+      if (typeof localStorage === 'undefined') return [];
+      const raw = localStorage.getItem('cubicCostCodes');
+      if (!raw) return [];
+      const arr = JSON.parse(raw);
+      if (!Array.isArray(arr)) return [];
+      return arr.map(p => ({ id: p.id || this._cid(), parentCode: p.parentCode || '', parentDesc: p.parentDesc || '', children: Array.isArray(p.children) ? p.children.map(c => ({ id: c.id || this._cid(), childCode: c.childCode || '', childDesc: c.childDesc || '' })) : [] }));
+    } catch (e) { return []; }
+  }
+  _saveCodes(arr) { try { if (typeof localStorage !== 'undefined') localStorage.setItem('cubicCostCodes', JSON.stringify(arr || [])); } catch (e) {} }
   permLevel(role, resource) { if (resource === 'meetings') resource = 'documents'; const P = this.state.perms || this._buildPerms(); const r = P[resource]; if (!r) return 0; const v = (role in r) ? r[role] : r._default; return v == null ? 0 : v; }
   setPerm(resource, role, level) { if (!this.can('admin', 'edit')) return; const lv = Number(level) || 0; const cur = this.state.perms || this._buildPerms(); const next = { ...cur, [resource]: { ...(cur[resource] || {}), [role]: lv } }; this._savePerms(next); this.setState({ perms: next }); }
   resetPerms() { if (!this.can('admin', 'edit')) return; try { if (typeof localStorage !== 'undefined') localStorage.removeItem('cubicPerms'); } catch (e) {} this.setState({ perms: this._buildPerms() }); }
@@ -4401,6 +4412,7 @@ class Component extends DCLogic {
       else if (pDesc) par.parentDesc = pDesc;
       const ex = par.children.find(c => (c.childCode || '') === childCode);
       if (ex) ex.childDesc = cDesc; else par.children.push({ id: this._cid(), childCode, childDesc: cDesc });
+      this._saveCodes(parents);
       return {
         customCodes: parents,
         codeModal: null,
@@ -4412,12 +4424,13 @@ class Component extends DCLogic {
   goSettings() { this.setState({ view: 'settings', anim: this.state.anim + 1 }); }
   setSettingsTab(t) { this.setState({ settingsTab: t }); }
   _cid() { return 'cc' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
-  addParentGroup() { this.setState(s => ({ customCodes: [...(s.customCodes || []), { id: this._cid(), parentCode: '', parentDesc: '', children: [{ id: this._cid(), childCode: '', childDesc: '' }] }] })); }
-  addChildCode(parentId) { this.setState(s => ({ customCodes: (s.customCodes || []).map(p => p.id !== parentId ? p : { ...p, children: [...(p.children || []), { id: this._cid(), childCode: '', childDesc: '' }] }) })); }
-  setParentField(parentId, k, v) { this.setState(s => ({ customCodes: (s.customCodes || []).map(p => p.id !== parentId ? p : { ...p, [k]: v }) })); }
-  setChildField(parentId, childId, k, v) { this.setState(s => ({ customCodes: (s.customCodes || []).map(p => p.id !== parentId ? p : { ...p, children: (p.children || []).map(c => c.id !== childId ? c : { ...c, [k]: v }) }) })); }
-  deleteChildCode(parentId, childId) { this.setState(s => ({ customCodes: (s.customCodes || []).map(p => p.id !== parentId ? p : { ...p, children: (p.children || []).filter(c => c.id !== childId) }) })); }
-  deleteParent(parentId) { this.setState(s => ({ customCodes: (s.customCodes || []).filter(p => p.id !== parentId) })); }
+  _commitCodes(next) { this._saveCodes(next); this.setState({ customCodes: next }); }
+  addParentGroup() { this._commitCodes([...(this.state.customCodes || []), { id: this._cid(), parentCode: '', parentDesc: '', children: [{ id: this._cid(), childCode: '', childDesc: '' }] }]); }
+  addChildCode(parentId) { this._commitCodes((this.state.customCodes || []).map(p => p.id !== parentId ? p : { ...p, children: [...(p.children || []), { id: this._cid(), childCode: '', childDesc: '' }] })); }
+  setParentField(parentId, k, v) { this._commitCodes((this.state.customCodes || []).map(p => p.id !== parentId ? p : { ...p, [k]: v })); }
+  setChildField(parentId, childId, k, v) { this._commitCodes((this.state.customCodes || []).map(p => p.id !== parentId ? p : { ...p, children: (p.children || []).map(c => c.id !== childId ? c : { ...c, [k]: v }) })); }
+  deleteChildCode(parentId, childId) { this._commitCodes((this.state.customCodes || []).map(p => p.id !== parentId ? p : { ...p, children: (p.children || []).filter(c => c.id !== childId) })); }
+  deleteParent(parentId) { this._commitCodes((this.state.customCodes || []).filter(p => p.id !== parentId)); }
   uploadCostCodes(e) {
     const file = e.target && e.target.files && e.target.files[0];
     if (e.target) e.target.value = '';
@@ -4460,6 +4473,7 @@ class Component extends DCLogic {
           if (ex) { ex.childDesc = row.childDesc; updated++; }
           else { par.children.push({ id: this._cid(), childCode: row.childCode, childDesc: row.childDesc }); added++; }
         });
+        this._saveCodes(parents);
         return { customCodes: parents, codeUpload: { ok: true, msg: 'Imported ' + (added + updated) + ' cost code' + ((added + updated) === 1 ? '' : 's') + ' (' + added + ' new, ' + updated + ' updated) across ' + parents.length + ' parent code' + (parents.length === 1 ? '' : 's') + '.' } };
       });
     };
