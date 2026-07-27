@@ -3092,6 +3092,28 @@ class Component extends DCLogic {
         else { const ns = Object.assign({}, this.state.session, { profile: prof }); this._saveAuth(ns); this.setState({ session: ns, role: prof.role }); this._loadProfilesIntoState(); }
       });
     }
+    // Phase 3: pull the SHARED project data (financial, bills, subcontracts, variations, claims, invoices, etc.).
+    this._projLoaded = false;
+    this._lastSavedProjects = this.state.projects;
+    this._sbLoadCatalog('projects').then(serverProjects => {
+      if (Array.isArray(serverProjects) && serverProjects.length) {
+        this._lastSavedProjects = serverProjects;
+        this.setState({ projects: serverProjects });
+      }
+      this._projLoaded = true;
+    }).catch(() => { this._projLoaded = true; });
+  }
+  componentDidUpdate() {
+    // Auto-sync any project change to Supabase so every user sees the same data (debounced, logged-in only).
+    if (!this._projLoaded) return; // don't save until the initial shared load has settled (avoids clobbering it)
+    if (this.state.projects !== this._lastSavedProjects) {
+      this._lastSavedProjects = this.state.projects;
+      if (this.currentUser()) {
+        const snapshot = this.state.projects;
+        if (this._projTimer) clearTimeout(this._projTimer);
+        this._projTimer = setTimeout(() => this._sbSaveCatalog('projects', snapshot), 800);
+      }
+    }
   }
 
   defaultSubcontractTerms() {
