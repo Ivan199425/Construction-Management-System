@@ -47,8 +47,11 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
             <div style="font-size:11px;font-weight:600;letter-spacing:.3px;color:#6b7787;text-transform:uppercase;margin-bottom:5px">Password</div>
             <input value="{{ authV.password }}" onInput="{{ authV.onPassword }}" type="password" placeholder="••••••••" style="width:100%;border:1px solid #cfd8e2;border-radius:9px;padding:10px 12px;font-size:13px;font-family:inherit;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none;box-shadow:0 0 0 3px rgba(43,89,195,.12)">
             <sc-if value="{{ authV.hasError }}" hint-placeholder-val="{{ false }}"><div style="background:#fbeef0;border:1px solid #efd0d0;border-radius:9px;padding:8px 11px;font-size:12px;color:#b91c1c;margin-top:12px">{{ authV.error }}</div></sc-if>
-            <button onClick="{{ authV.onLogin }}" style="width:100%;margin-top:16px;border:0;background:#2b59c3;color:#fff;border-radius:9px;padding:11px;font-size:13.5px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="background:#244dab">Sign in</button>
-            <div style="text-align:center;margin-top:14px"><button onClick="{{ authV.onForgot }}" style="border:0;background:transparent;color:#2b59c3;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit">Forgot password?</button></div>
+            <button onClick="{{ authV.onLogin }}" style="width:100%;margin-top:16px;border:0;background:#2b59c3;color:#fff;border-radius:9px;padding:11px;font-size:13.5px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="background:#244dab">{{ authV.loginLabel }}</button>
+            <div style="text-align:center;margin-top:14px;display:flex;flex-direction:column;gap:9px">
+              <button onClick="{{ authV.onGoActivate }}" style="border:0;background:transparent;color:#2b59c3;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit">First time here? Activate your account</button>
+              <button onClick="{{ authV.onForgot }}" style="border:0;background:transparent;color:#8894a2;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">Forgot password?</button>
+            </div>
           </sc-if>
 
           <sc-if value="{{ authV.isForgot }}" hint-placeholder-val="{{ false }}">
@@ -68,6 +71,18 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
             <input value="{{ authV.newPassword }}" onInput="{{ authV.onNewPassword }}" type="password" placeholder="••••••••" style="width:100%;border:1px solid #cfd8e2;border-radius:9px;padding:10px 12px;font-size:13px;font-family:inherit;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none;box-shadow:0 0 0 3px rgba(43,89,195,.12)">
             <sc-if value="{{ authV.hasError }}" hint-placeholder-val="{{ false }}"><div style="background:#fbeef0;border:1px solid #efd0d0;border-radius:9px;padding:8px 11px;font-size:12px;color:#b91c1c;margin-top:12px">{{ authV.error }}</div></sc-if>
             <button onClick="{{ authV.onReset }}" style="width:100%;margin-top:16px;border:0;background:#2b59c3;color:#fff;border-radius:9px;padding:11px;font-size:13.5px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="background:#244dab">Update password</button>
+            <div style="text-align:center;margin-top:14px"><button onClick="{{ authV.onBackLogin }}" style="border:0;background:transparent;color:#8894a2;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit">← Back to sign in</button></div>
+          </sc-if>
+
+          <sc-if value="{{ authV.isActivate }}" hint-placeholder-val="{{ false }}">
+            <div style="font-size:16px;font-weight:700;color:#0f1720;margin-bottom:2px">Activate your account</div>
+            <div style="font-size:12px;color:#8894a2;margin-bottom:16px">First time in? Enter the email your administrator invited, and choose your password.</div>
+            <div style="font-size:11px;font-weight:600;letter-spacing:.3px;color:#6b7787;text-transform:uppercase;margin-bottom:5px">Email</div>
+            <input value="{{ authV.email }}" onInput="{{ authV.onEmail }}" type="email" placeholder="you@company.com" style="width:100%;border:1px solid #cfd8e2;border-radius:9px;padding:10px 12px;font-size:13px;font-family:inherit;color:#0f1720;background:#fff;margin-bottom:13px" style-focus="border-color:#2b59c3;outline:none;box-shadow:0 0 0 3px rgba(43,89,195,.12)">
+            <div style="font-size:11px;font-weight:600;letter-spacing:.3px;color:#6b7787;text-transform:uppercase;margin-bottom:5px">Choose a password</div>
+            <input value="{{ authV.newPassword }}" onInput="{{ authV.onNewPassword }}" type="password" placeholder="At least 6 characters" style="width:100%;border:1px solid #cfd8e2;border-radius:9px;padding:10px 12px;font-size:13px;font-family:inherit;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none;box-shadow:0 0 0 3px rgba(43,89,195,.12)">
+            <sc-if value="{{ authV.hasError }}" hint-placeholder-val="{{ false }}"><div style="background:#fbeef0;border:1px solid #efd0d0;border-radius:9px;padding:8px 11px;font-size:12px;color:#b91c1c;margin-top:12px">{{ authV.error }}</div></sc-if>
+            <button onClick="{{ authV.onActivate }}" style="width:100%;margin-top:16px;border:0;background:#15803d;color:#fff;border-radius:9px;padding:11px;font-size:13.5px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="background:#12692f">{{ authV.activateLabel }}</button>
             <div style="text-align:center;margin-top:14px"><button onClick="{{ authV.onBackLogin }}" style="border:0;background:transparent;color:#8894a2;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit">← Back to sign in</button></div>
           </sc-if>
         </div>
@@ -91,8 +106,8 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
           <div style="font-size:11px;font-weight:600;letter-spacing:.3px;color:#6b7787;text-transform:uppercase;margin:13px 0 5px">Email</div>
           <input value="{{ usersV.modal.email }}" onInput="{{ usersV.modal.onEmail }}" type="email" placeholder="jane@company.com" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:inherit;color:#0f1720" style-focus="border-color:#2b59c3;outline:none">
           <div style="font-size:11px;font-weight:600;letter-spacing:.3px;color:#6b7787;text-transform:uppercase;margin:13px 0 5px">Password</div>
-          <input value="{{ usersV.modal.password }}" onInput="{{ usersV.modal.onPassword }}" type="password" placeholder="{{ usersV.modal.pwPlaceholder }}" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:inherit;color:#0f1720" style-focus="border-color:#2b59c3;outline:none">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin:15px 0 7px"><div style="font-size:11px;font-weight:600;letter-spacing:.3px;color:#6b7787;text-transform:uppercase">Assigned projects</div><select value="{{ usersV.modal.status }}" onChange="{{ usersV.modal.onStatus }}" title="Account status" style="border:1px solid #cfd8e2;border-radius:7px;padding:5px 8px;font-size:11.5px;font-family:inherit;color:#0f1720;background:#fff;cursor:pointer"><option value="active">Active</option><option value="deactivated">Deactivated</option></select></div>
+          <div style="background:#f0f6ff;border:1px solid #d3e0f7;border-radius:8px;padding:9px 12px;font-size:12px;color:#2b4a86;line-height:1.5">{{ usersV.modal.pwNote }}</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin:15px 0 7px"><div style="font-size:11px;font-weight:600;letter-spacing:.3px;color:#6b7787;text-transform:uppercase">Assigned projects</div><select value="{{ usersV.modal.status }}" onChange="{{ usersV.modal.onStatus }}" title="Account status" style="border:1px solid #cfd8e2;border-radius:7px;padding:5px 8px;font-size:11.5px;font-family:inherit;color:#0f1720;background:#fff;cursor:pointer"><option value="invited">Invited</option><option value="active">Active</option><option value="deactivated">Deactivated</option></select></div>
           <div style="border:1px solid #eef1f4;border-radius:10px;overflow:hidden">
             <sc-for list="{{ usersV.modal.projects }}" as="pr" hint-placeholder-count="3">
               <div onClick="{{ pr.onToggle }}" style="display:flex;align-items:center;gap:10px;padding:8px 12px;border-bottom:1px solid #f4f6f9;cursor:pointer" style-hover="background:#f7f9fc">
@@ -114,7 +129,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
         </div>
         <div style="padding:14px 22px;border-top:1px solid #eef1f4;display:flex;align-items:center;justify-content:flex-end;gap:10px">
           <button onClick="{{ usersV.modal.onClose }}" style="border:1px solid #cfd8e2;background:#fff;color:#4a5765;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Cancel</button>
-          <button onClick="{{ usersV.modal.onSave }}" style="border:0;background:#2b59c3;color:#fff;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="background:#244dab">Save user</button>
+          <button onClick="{{ usersV.modal.onSave }}" style="border:0;background:#2b59c3;color:#fff;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="background:#244dab">{{ usersV.modal.saveLabel }}</button>
         </div>
       </div>
     </div>
@@ -3035,9 +3050,9 @@ class Component extends DCLogic {
       vendorForm: { type: 'supplier', company: '', rep: '', phone: '', email: '', address: '' },
       role: 'PM',
       perms: this._loadPerms(),
-      users: this.seedUsers(),
-      session: (typeof localStorage !== 'undefined' && localStorage.getItem('cubicSession')) ? { userId: localStorage.getItem('cubicSession') } : null,
-      auth: { view: 'login', email: '', password: '', error: '', notice: '', resetEmail: '', resetToken: '', newPassword: '' },
+      users: [],
+      session: this._loadAuth(),
+      auth: { view: 'login', email: '', password: '', error: '', notice: '', resetEmail: '', resetToken: '', newPassword: '', busy: false },
       companyRetainagePct: 5,
       contractModal: null,
       contractForm: null,
@@ -3050,6 +3065,7 @@ class Component extends DCLogic {
       anim: 0,
     };
     this._SB = { url: 'https://vzxenkijxzzrgnmopnxh.supabase.co', key: 'sb_publishable_dqhiUAGqlZ6gSt-INv1KNA_kJeRNimR' };
+    if (this.state.session && this.state.session.profile) this.state.role = this.state.session.profile.role;
   }
 
   componentDidMount() {
@@ -3065,6 +3081,17 @@ class Component extends DCLogic {
         if (local.length) this._sbSaveCatalog('cost_codes', local);
       }
     }).catch(() => {});
+    // Phase 2: restore/validate the logged-in session against Supabase.
+    const sess = this.state.session;
+    if (sess && sess.profile) {
+      if (sess.refresh_token) this._sbAuthRefresh(sess.refresh_token).then(res => {
+        if (res.ok && res.body && res.body.access_token) { const ns = Object.assign({}, this.state.session, { access_token: res.body.access_token, refresh_token: res.body.refresh_token }); this._saveAuth(ns); this.setState({ session: ns }); }
+      });
+      this._sbFetchProfileByEmail(sess.profile.email).then(prof => {
+        if (!prof || prof.status !== 'active') { this._saveAuth(null); this.setState({ session: null, users: [], auth: { view: 'login', email: '', password: '', newPassword: '', error: '', notice: prof ? 'Your account is ' + prof.status + '.' : '', busy: false } }); }
+        else { const ns = Object.assign({}, this.state.session, { profile: prof }); this._saveAuth(ns); this.setState({ session: ns, role: prof.role }); this._loadProfilesIntoState(); }
+      });
+    }
   }
 
   defaultSubcontractTerms() {
@@ -3499,6 +3526,61 @@ class Component extends DCLogic {
       body: JSON.stringify([{ key, data, updated_at: new Date().toISOString() }])
     }).then(r => r.ok).catch(() => false);
   }
+  // ===== Supabase Auth + profiles (Phase 2) =====
+  _sbAuthSignIn(email, password) {
+    const c = this._SB; if (!c) return Promise.resolve({ ok: false, body: {} });
+    return fetch(c.url + '/auth/v1/token?grant_type=password', { method: 'POST', headers: this._sbHeaders({ 'Content-Type': 'application/json' }), body: JSON.stringify({ email, password }) })
+      .then(r => r.json().then(b => ({ ok: r.ok, status: r.status, body: b }))).catch(() => ({ ok: false, body: { error_description: 'Network error — check your connection.' } }));
+  }
+  _sbAuthSignUp(email, password) {
+    const c = this._SB; if (!c) return Promise.resolve({ ok: false, body: {} });
+    return fetch(c.url + '/auth/v1/signup', { method: 'POST', headers: this._sbHeaders({ 'Content-Type': 'application/json' }), body: JSON.stringify({ email, password }) })
+      .then(r => r.json().then(b => ({ ok: r.ok, status: r.status, body: b }))).catch(() => ({ ok: false, body: { msg: 'Network error — check your connection.' } }));
+  }
+  _sbAuthRefresh(refresh_token) {
+    const c = this._SB; if (!c) return Promise.resolve({ ok: false, body: {} });
+    return fetch(c.url + '/auth/v1/token?grant_type=refresh_token', { method: 'POST', headers: this._sbHeaders({ 'Content-Type': 'application/json' }), body: JSON.stringify({ refresh_token }) })
+      .then(r => r.json().then(b => ({ ok: r.ok, body: b }))).catch(() => ({ ok: false, body: {} }));
+  }
+  _sbAuthLogout(token) {
+    const c = this._SB; if (!c || !token) return Promise.resolve();
+    return fetch(c.url + '/auth/v1/logout', { method: 'POST', headers: this._sbHeaders({ Authorization: 'Bearer ' + token }) }).catch(() => {});
+  }
+  _mapProfile(row) {
+    if (!row) return null;
+    return { id: row.id, auth_id: row.auth_id || null, email: row.email || '', name: row.name || '', role: row.role || 'Field', status: row.status || 'invited', external: !!row.external, projectIds: Array.isArray(row.project_ids) ? row.project_ids : [] };
+  }
+  _sbFetchProfileByEmail(email) {
+    const c = this._SB; if (!c || !email) return Promise.resolve(null);
+    return fetch(c.url + '/rest/v1/profiles?select=*&email=eq.' + encodeURIComponent((email || '').toLowerCase()), { headers: this._sbHeaders() })
+      .then(r => r.ok ? r.json() : null).then(rows => (rows && rows[0]) ? this._mapProfile(rows[0]) : null).catch(() => null);
+  }
+  _sbListProfiles() {
+    const c = this._SB; if (!c) return Promise.resolve([]);
+    return fetch(c.url + '/rest/v1/profiles?select=*&order=created_at.asc', { headers: this._sbHeaders() })
+      .then(r => r.ok ? r.json() : []).then(rows => (rows || []).map(x => this._mapProfile(x))).catch(() => []);
+  }
+  _sbInsertProfile(p) {
+    const c = this._SB; if (!c) return Promise.resolve(null);
+    return fetch(c.url + '/rest/v1/profiles', { method: 'POST', headers: this._sbHeaders({ 'Content-Type': 'application/json', Prefer: 'return=representation' }), body: JSON.stringify([{ email: (p.email || '').toLowerCase(), name: p.name || '', role: p.role || 'Field', status: p.status || 'invited', external: !!p.external, project_ids: p.projectIds || [] }]) })
+      .then(r => r.ok ? r.json() : null).then(rows => (rows && rows[0]) ? this._mapProfile(rows[0]) : null).catch(() => null);
+  }
+  _sbUpdateProfile(id, patch) {
+    const c = this._SB; if (!c) return Promise.resolve(false);
+    const body = {}; if ('name' in patch) body.name = patch.name; if ('role' in patch) body.role = patch.role; if ('status' in patch) body.status = patch.status; if ('external' in patch) body.external = !!patch.external; if ('projectIds' in patch) body.project_ids = patch.projectIds;
+    return fetch(c.url + '/rest/v1/profiles?id=eq.' + encodeURIComponent(id), { method: 'PATCH', headers: this._sbHeaders({ 'Content-Type': 'application/json', Prefer: 'return=minimal' }), body: JSON.stringify(body) }).then(r => r.ok).catch(() => false);
+  }
+  _sbDeleteProfile(id) {
+    const c = this._SB; if (!c) return Promise.resolve(false);
+    return fetch(c.url + '/rest/v1/profiles?id=eq.' + encodeURIComponent(id), { method: 'DELETE', headers: this._sbHeaders() }).then(r => r.ok).catch(() => false);
+  }
+  _loadAuth() {
+    try { if (typeof localStorage === 'undefined') return null; const raw = localStorage.getItem('cubicAuth'); if (!raw) return null; const s = JSON.parse(raw); return (s && s.profile) ? s : null; } catch (e) { return null; }
+  }
+  _saveAuth(sess) {
+    try { if (typeof localStorage === 'undefined') return; if (sess) localStorage.setItem('cubicAuth', JSON.stringify({ access_token: sess.access_token, refresh_token: sess.refresh_token, profile: sess.profile })); else localStorage.removeItem('cubicAuth'); } catch (e) {}
+  }
+  _loadProfilesIntoState() { if (!this.can('admin', 'view')) return; this._sbListProfiles().then(list => this.setState({ users: list })); }
   permLevel(role, resource) { if (resource === 'meetings') resource = 'documents'; const P = this.state.perms || this._buildPerms(); const r = P[resource]; if (!r) return 0; const v = (role in r) ? r[role] : r._default; return v == null ? 0 : v; }
   setPerm(resource, role, level) { if (!this.can('admin', 'edit')) return; const lv = Number(level) || 0; const cur = this.state.perms || this._buildPerms(); const next = { ...cur, [resource]: { ...(cur[resource] || {}), [role]: lv } }; this._savePerms(next); this.setState({ perms: next }); }
   resetPerms() { if (!this.can('admin', 'edit')) return; try { if (typeof localStorage !== 'undefined') localStorage.removeItem('cubicPerms'); } catch (e) {} this.setState({ perms: this._buildPerms() }); }
@@ -3509,46 +3591,82 @@ class Component extends DCLogic {
     { key: 'schedule', label: 'Schedule' }, { key: 'eot', label: 'EOT' }, { key: 'invoices', label: 'Invoices' }, { key: 'bills', label: 'Bills' }, { key: 'claims', label: 'Progress Claims' }, { key: 'admin', label: 'User Administration' },
   ]; }
   permBadge(lv) { return lv >= 3 ? { t: 'Approve', s: 'A', c: '#15803d', bg: '#e6f4ea' } : lv === 2 ? { t: 'Edit', s: 'E', c: '#1d4ed8', bg: '#e7eefc' } : lv === 1 ? { t: 'View', s: 'V', c: '#6b7787', bg: '#eef1f5' } : { t: 'No access', s: '—', c: '#c0c8d1', bg: 'transparent' }; }
-  currentUser() { const s = this.state.session; if (!s || !s.userId) return null; const u = (this.state.users || []).find(x => x.id === s.userId); return (u && u.status === 'active') ? u : null; }
+  currentUser() { const s = this.state.session; return (s && s.profile && s.profile.status === 'active') ? s.profile : null; }
   can(resource, action) { const u = this.currentUser(); if (!u) return false; const need = action === 'approve' ? 3 : action === 'edit' ? 2 : 1; return this.permLevel(u.role, resource) >= need; }
   accessibleProjects() { const u = this.currentUser(); const all = this.state.projects || []; if (!u) return []; if (u.role === 'Admin' || u.role === 'Finance') return all; return all.filter(p => (u.projectIds || []).indexOf(p.id) >= 0); }
   projectAccessible(pid) { return this.accessibleProjects().some(p => p.id === pid); }
   moduleResource(key) { const map = { dashboard: 'dashboard', details: 'projectSetup', documents: 'documents', eot: 'eot', files: 'documents', contacts: 'directory', schedule: 'schedule', defects: 'punchList', report: 'reporting' }; return map[key] || key; }
   moduleVisible(key) { if (key === 'commitments') return ['financial', 'agreements', 'variations', 'invoices', 'bills', 'claims'].some(r => this.can(r, 'view')); return this.can(this.moduleResource(key), 'view'); }
   setAuthField(k, v) { this.setState(s => ({ auth: { ...s.auth, [k]: v, error: '' } })); }
-  authGoto(view) { this.setState(s => ({ auth: { ...s.auth, view, error: '', notice: '' } })); }
-  doLogin() { const a = this.state.auth || {}; const email = (a.email || '').trim().toLowerCase(); const u = (this.state.users || []).find(x => (x.email || '').toLowerCase() === email);
-    if (!u || u.password !== a.password) { this.setState(s => ({ auth: { ...s.auth, error: 'Incorrect email or password.' } })); return; }
-    if (u.status !== 'active') { this.setState(s => ({ auth: { ...s.auth, error: 'This account has been deactivated. Contact your administrator.' } })); return; }
-    try { localStorage.setItem('cubicSession', u.id); } catch (e) {}
-    const today = this.todayLocal();
-    this.setState(s => ({ session: { userId: u.id, loginAt: today }, role: u.role, users: s.users.map(x => x.id === u.id ? { ...x, lastLogin: today } : x), view: 'portfolio', auth: { view: 'login', email: '', password: '', error: '', notice: '', resetEmail: '', resetToken: '', newPassword: '' } })); }
-  doLogout() { try { localStorage.removeItem('cubicSession'); } catch (e) {} this.setState({ session: null, auth: { view: 'login', email: '', password: '', error: '', notice: 'You have been logged out.', resetEmail: '', resetToken: '', newPassword: '' } }); }
-  doPasswordRecover() { const a = this.state.auth || {}; const email = (a.resetEmail || '').trim().toLowerCase(); const u = (this.state.users || []).find(x => (x.email || '').toLowerCase() === email && x.status === 'active');
-    if (!u) { this.setState(s => ({ auth: { ...s.auth, view: 'reset', resetToken: '', notice: 'If that email is registered, a reset link has been sent.', error: '' } })); return; }
-    const token = Math.random().toString(36).slice(2, 8).toUpperCase();
-    this.setState(s => ({ auth: { ...s.auth, view: 'reset', resetToken: token, notice: 'Reset link generated (demo). In production this is emailed to ' + u.email + '.', error: '' } })); }
-  doPasswordReset() { const a = this.state.auth || {}; const email = (a.resetEmail || '').trim().toLowerCase(); const np = a.newPassword || '';
-    if (np.length < 6) { this.setState(s => ({ auth: { ...s.auth, error: 'Password must be at least 6 characters.' } })); return; }
-    this.setState(s => ({ users: s.users.map(x => (x.email || '').toLowerCase() === email ? { ...x, password: np, mustReset: false } : x), auth: { view: 'login', email: a.resetEmail, password: '', error: '', notice: 'Password updated — please log in.', resetEmail: '', resetToken: '', newPassword: '' } })); }
+  authGoto(view) { this.setState(s => ({ auth: { ...s.auth, view, error: '', notice: '', password: '', newPassword: '' } })); }
+  async doLogin() {
+    const a = this.state.auth || {}; const email = (a.email || '').trim().toLowerCase(); const pw = a.password || '';
+    if (!email || !pw) { this.setState(s => ({ auth: { ...s.auth, error: 'Enter your email and password.' } })); return; }
+    this.setState(s => ({ auth: { ...s.auth, busy: true, error: '', notice: '' } }));
+    const res = await this._sbAuthSignIn(email, pw);
+    if (!res.ok) {
+      const msg = (res.body && (res.body.error_description || res.body.msg)) || '';
+      const err = /invalid login credentials/i.test(msg) ? 'Incorrect email or password. First time here? Use “Activate account” to set your password.' : (msg || 'Could not sign in. Please try again.');
+      this.setState(s => ({ auth: { ...s.auth, busy: false, error: err } })); return;
+    }
+    const tok = res.body;
+    const prof = await this._sbFetchProfileByEmail(email);
+    if (!prof) { this.setState(s => ({ auth: { ...s.auth, busy: false, error: 'No access profile found for this account. Contact your administrator.' } })); return; }
+    if (prof.status !== 'active') { this.setState(s => ({ auth: { ...s.auth, busy: false, error: 'This account is ' + prof.status + '. Contact your administrator.' } })); return; }
+    const sess = { access_token: tok.access_token, refresh_token: tok.refresh_token, profile: prof };
+    this._saveAuth(sess);
+    this.setState({ session: sess, role: prof.role, view: 'portfolio', auth: { view: 'login', email: '', password: '', newPassword: '', error: '', notice: '', busy: false } });
+    this._loadProfilesIntoState();
+  }
+  async doActivate() {
+    const a = this.state.auth || {}; const email = (a.email || '').trim().toLowerCase(); const pw = a.newPassword || '';
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { this.setState(s => ({ auth: { ...s.auth, error: 'Enter a valid email address.' } })); return; }
+    if (pw.length < 6) { this.setState(s => ({ auth: { ...s.auth, error: 'Choose a password of at least 6 characters.' } })); return; }
+    this.setState(s => ({ auth: { ...s.auth, busy: true, error: '', notice: '' } }));
+    const res = await this._sbAuthSignUp(email, pw);
+    if (!res.ok) {
+      const msg = (res.body && (res.body.msg || res.body.error_description || res.body.error)) || '';
+      const err = /already registered|already exists|user already/i.test(msg) ? 'You already have an account — use Log in instead (or ask your admin to reset it).' : (msg || 'Could not activate. Please try again.');
+      this.setState(s => ({ auth: { ...s.auth, busy: false, error: err } })); return;
+    }
+    const tok = res.body;
+    await new Promise(r => setTimeout(r, 500));
+    let prof = await this._sbFetchProfileByEmail(email);
+    if (!prof) { await new Promise(r => setTimeout(r, 700)); prof = await this._sbFetchProfileByEmail(email); }
+    if (prof && prof.status === 'deactivated') { this.setState(s => ({ auth: { ...s.auth, busy: false, error: 'This account has been deactivated. Contact your administrator.' } })); return; }
+    if (!tok || !tok.access_token) { this.setState(s => ({ auth: { view: 'login', email: email, password: '', newPassword: '', error: '', notice: 'Account activated — please log in.', busy: false } })); return; }
+    const sess = { access_token: tok.access_token, refresh_token: tok.refresh_token, profile: prof || { email, name: '', role: 'Field', status: 'active', external: false, projectIds: [] } };
+    this._saveAuth(sess);
+    this.setState({ session: sess, role: sess.profile.role, view: 'portfolio', auth: { view: 'login', email: '', password: '', newPassword: '', error: '', notice: '', busy: false } });
+    this._loadProfilesIntoState();
+  }
+  doLogout() {
+    const s = this.state.session; this._sbAuthLogout(s && s.access_token); this._saveAuth(null);
+    this.setState({ session: null, users: [], auth: { view: 'login', email: '', password: '', newPassword: '', error: '', notice: 'You have been logged out.', busy: false } });
+  }
+  doPasswordRecover() { this.setState(s => ({ auth: { ...s.auth, notice: 'Password reset by email isn’t enabled yet. Ask your administrator to re-invite you, then use “Activate account” to set a new password.', error: '' } })); }
+  doPasswordReset() { this.doPasswordRecover(); }
   // ===== Admin → Users =====
-  goUsers() { this.setState({ view: 'users', anim: this.state.anim + 1 }); }
-  openUserCreate() { this.setState({ userAdminModal: { mode: 'create' }, userForm: { id: '', name: '', email: '', password: '', role: 'Field', projectIds: [], status: 'active', external: false }, userFormError: '' }); }
-  openUserEdit(id) { const u = (this.state.users || []).find(x => x.id === id); if (!u) return; this.setState({ userAdminModal: { mode: 'edit', id }, userForm: { id: u.id, name: u.name, email: u.email, password: '', role: u.role, projectIds: [...(u.projectIds || [])], status: u.status, external: !!u.external }, userFormError: '' }); }
+  goUsers() { this.setState({ view: 'users', anim: this.state.anim + 1 }); this._loadProfilesIntoState(); }
+  openUserCreate() { this.setState({ userAdminModal: { mode: 'create' }, userForm: { id: '', name: '', email: '', role: 'Field', projectIds: [], status: 'invited', external: false }, userFormError: '' }); }
+  openUserEdit(id) { const u = (this.state.users || []).find(x => x.id === id); if (!u) return; this.setState({ userAdminModal: { mode: 'edit', id }, userForm: { id: u.id, name: u.name, email: u.email, role: u.role, projectIds: [...(u.projectIds || [])], status: u.status, external: !!u.external }, userFormError: '' }); }
   closeUserAdmin() { this.setState({ userAdminModal: null, userFormError: '' }); }
   setUserFormField(k, v) { this.setState(s => ({ userForm: { ...s.userForm, [k]: v }, userFormError: '' })); }
   toggleUserFormProject(pid) { this.setState(s => { const cur = (s.userForm.projectIds) || []; const has = cur.indexOf(pid) >= 0; return { userForm: { ...s.userForm, projectIds: has ? cur.filter(x => x !== pid) : [...cur, pid] } }; }); }
-  saveUser() { const f = this.state.userForm || {}; const mode = this.state.userAdminModal && this.state.userAdminModal.mode; const name = (f.name || '').trim(); const email = (f.email || '').trim().toLowerCase();
+  async saveUser() {
+    if (!this.can('admin', 'edit')) return;
+    const f = this.state.userForm || {}; const mode = this.state.userAdminModal && this.state.userAdminModal.mode; const name = (f.name || '').trim(); const email = (f.email || '').trim().toLowerCase();
     if (!name) { this.setState({ userFormError: 'Name is required.' }); return; }
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { this.setState({ userFormError: 'A valid email address is required.' }); return; }
-    if ((this.state.users || []).some(u => (u.email || '').toLowerCase() === email && u.id !== f.id)) { this.setState({ userFormError: 'That email is already in use.' }); return; }
-    if (mode === 'create' && (f.password || '').length < 6) { this.setState({ userFormError: 'Password must be at least 6 characters.' }); return; }
-    this.setState(s => { let users = s.users || [];
-      if (mode === 'create') { const id = 'u_' + Date.now().toString(36); users = [...users, { id, name, email, password: f.password, role: f.role, status: f.status || 'active', external: !!f.external, projectIds: f.projectIds || [], lastLogin: '', createdAt: this.todayLocal(), mustReset: false }]; }
-      else { users = users.map(u => u.id !== f.id ? u : { ...u, name, email, role: f.role, status: f.status, external: !!f.external, projectIds: f.projectIds || [], password: (f.password && f.password.length >= 6) ? f.password : u.password }); }
-      return { users, userAdminModal: null, userFormError: '' }; }); }
-  toggleUserStatus(id) { const cu = this.currentUser(); if (cu && cu.id === id) return; this.setState(s => ({ users: s.users.map(u => u.id === id ? { ...u, status: u.status === 'active' ? 'deactivated' : 'active' } : u) })); }
-  deleteUser(id) { const cu = this.currentUser(); if (cu && cu.id === id) return; this.setState(s => ({ users: s.users.filter(u => u.id !== id) })); }
+    if (mode === 'create' && (this.state.users || []).some(u => (u.email || '').toLowerCase() === email)) { this.setState({ userFormError: 'That email is already invited.' }); return; }
+    this.setState({ userFormError: '' });
+    if (mode === 'create') { const created = await this._sbInsertProfile({ email, name, role: f.role, projectIds: f.projectIds || [], status: 'invited', external: !!f.external }); if (!created) { this.setState({ userFormError: 'Could not save — server error. Try again.' }); return; } }
+    else { const ok = await this._sbUpdateProfile(f.id, { name, role: f.role, projectIds: f.projectIds || [], status: f.status, external: !!f.external }); if (!ok) { this.setState({ userFormError: 'Could not save — server error. Try again.' }); return; } }
+    const list = await this._sbListProfiles();
+    this.setState({ users: list, userAdminModal: null, userFormError: '' });
+  }
+  async toggleUserStatus(id) { if (!this.can('admin', 'edit')) return; const cu = this.currentUser(); if (cu && cu.id === id) return; const u = (this.state.users || []).find(x => x.id === id); if (!u) return; await this._sbUpdateProfile(id, { status: u.status === 'deactivated' ? 'active' : 'deactivated' }); const list = await this._sbListProfiles(); this.setState({ users: list }); }
+  async deleteUser(id) { if (!this.can('admin', 'edit')) return; const cu = this.currentUser(); if (cu && cu.id === id) return; await this._sbDeleteProfile(id); const list = await this._sbListProfiles(); this.setState({ users: list }); }
   getAgr(cm) {
     const a = cm.agr || {};
     const status = a.status || ({ signed: 'signed', issued: 'sent', draft: 'draft', closed: 'signed' }[cm.status] || 'draft');
@@ -6158,26 +6276,28 @@ class Component extends DCLogic {
     if (showUsers) {
       const projMap = {}; (S.projects || []).forEach(pp => projMap[pp.id] = pp.name);
       const me = this.currentUser();
-      const rows = (S.users || []).map(u => ({
-        id: u.id, name: u.name, email: u.email, roleLabel: this.roleLabel(u.role), external: !!u.external,
-        active: u.status === 'active', statusLabel: u.status === 'active' ? 'Active' : 'Deactivated',
-        statusColor: u.status === 'active' ? '#15803d' : '#b91c1c', statusBg: u.status === 'active' ? '#e6f4ea' : '#fbeef0',
+      const rows = (S.users || []).map(u => { const st = u.status || 'invited'; const isActive = st === 'active'; const isInvited = st === 'invited'; return {
+        id: u.id, name: u.name || '(pending)', email: u.email, roleLabel: this.roleLabel(u.role), external: !!u.external,
+        active: isActive, statusLabel: isActive ? 'Active' : (isInvited ? 'Invited' : 'Deactivated'),
+        statusColor: isActive ? '#15803d' : (isInvited ? '#b45309' : '#b91c1c'), statusBg: isActive ? '#e6f4ea' : (isInvited ? '#fbf1e3' : '#fbeef0'),
         projectNames: (u.projectIds || []).length ? (u.projectIds || []).map(id => projMap[id] || id).join(', ') : '—',
-        lastLogin: u.lastLogin ? this.fmtDate(u.lastLogin) : 'Never',
-        isSelf: !!(me && me.id === u.id), notSelf: !(me && me.id === u.id), statusBtn: u.status === 'active' ? 'Deactivate' : 'Reactivate',
+        lastLogin: isInvited ? 'Not activated' : 'Active session',
+        isSelf: !!(me && me.id === u.id), notSelf: !(me && me.id === u.id), statusBtn: isActive ? 'Deactivate' : (st === 'deactivated' ? 'Reactivate' : 'Revoke'),
         onEdit: () => this.openUserEdit(u.id), onToggle: () => this.toggleUserStatus(u.id), onDelete: () => this.deleteUser(u.id),
-      }));
+      }; });
       let modal = { open: false };
       if (S.userAdminModal) { const f = S.userForm || {}; const mode = S.userAdminModal.mode;
         const rolePerms = this.resourceLabels().map(res => { const lv = this.permLevel(f.role || 'Field', res.key); const b = this.permBadge(lv); return { label: res.label, s: b.s, c: b.c, bg: b.bg, has: lv > 0 }; }).filter(x => x.has);
-        modal = { open: true, isCreate: mode === 'create', title: mode === 'create' ? 'Create user' : 'Edit user',
-          name: f.name || '', email: f.email || '', password: f.password || '', role: f.role || 'Field', status: f.status || 'active',
+        modal = { open: true, isCreate: mode === 'create', title: mode === 'create' ? 'Invite user' : 'Edit user',
+          name: f.name || '', email: f.email || '', role: f.role || 'Field', status: f.status || 'invited',
           roleLabel: this.roleLabel(f.role || 'Field'), rolePerms,
-          roleOptions: this.roleList(), pwPlaceholder: mode === 'create' ? 'Set a password (min 6 characters)' : 'Leave blank to keep current password',
+          roleOptions: this.roleList(),
+          pwNote: mode === 'create' ? 'No password here — the person sets their own when they activate their account (they’ll open the site and choose “Activate account”).' : 'The user manages their own password. To reset it, ask them to re-activate, or contact support.',
+          saveLabel: mode === 'create' ? 'Send invite' : 'Save changes',
           projects: (S.projects || []).map(pp => { const on = (f.projectIds || []).indexOf(pp.id) >= 0; return { id: pp.id, name: pp.name, checked: on, check: on ? '✓' : '', checkBg: on ? '#2b59c3' : '#fff', checkBorder: on ? '#2b59c3' : '#cfd8e2', onToggle: () => this.toggleUserFormProject(pp.id) }; }),
           error: S.userFormError || '', hasError: !!S.userFormError,
           onName: e => this.setUserFormField('name', e.target.value), onEmail: e => this.setUserFormField('email', e.target.value),
-          onPassword: e => this.setUserFormField('password', e.target.value), onRole: e => this.setUserFormField('role', e.target.value),
+          onRole: e => this.setUserFormField('role', e.target.value),
           onStatus: e => this.setUserFormField('status', e.target.value),
           onClose: () => this.closeUserAdmin(), onSave: () => this.saveUser() };
       }
@@ -6221,14 +6341,16 @@ class Component extends DCLogic {
     const initialsOfName = nm => (nm || '?').trim().split(/\s+/).map(x => x[0] || '').slice(0, 2).join('').toUpperCase() || '?';
     const authV = {
       loggedIn: !!cu, showLogin: !cu,
-      isLogin: A.view === 'login', isForgot: A.view === 'forgot', isReset: A.view === 'reset',
+      isLogin: A.view === 'login', isForgot: A.view === 'forgot', isReset: A.view === 'reset', isActivate: A.view === 'activate',
       email: A.email || '', password: A.password || '', resetEmail: A.resetEmail || '', newPassword: A.newPassword || '',
       error: A.error || '', hasError: !!A.error, notice: A.notice || '', hasNotice: !!A.notice,
       resetToken: A.resetToken || '', hasToken: !!A.resetToken,
-      userName: cu ? cu.name : '', roleLabel: cu ? this.roleLabel(cu.role) : '', initials: cu ? initialsOfName(cu.name) : '',
+      busy: !!A.busy, loginLabel: A.busy ? 'Signing in…' : 'Sign in', activateLabel: A.busy ? 'Activating…' : 'Activate account',
+      userName: cu ? (cu.name || cu.email) : '', roleLabel: cu ? this.roleLabel(cu.role) : '', initials: cu ? initialsOfName(cu.name || cu.email) : '',
       onEmail: e => this.setAuthField('email', e.target.value), onPassword: e => this.setAuthField('password', e.target.value),
       onResetEmail: e => this.setAuthField('resetEmail', e.target.value), onNewPassword: e => this.setAuthField('newPassword', e.target.value),
       onLogin: () => this.doLogin(), onLogout: () => this.doLogout(), onForgot: () => this.authGoto('forgot'), onBackLogin: () => this.authGoto('login'),
+      onGoActivate: () => this.authGoto('activate'), onActivate: () => this.doActivate(),
       onRecover: () => this.doPasswordRecover(), onReset: () => this.doPasswordReset(),
     };
 
