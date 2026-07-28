@@ -2324,7 +2324,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                     <input value="{{ r.durInput }}" onInput="{{ r.onDur }}" type="number" min="0" title="Duration in working days (Mon–Fri, per Settings → Defaults). Finish auto-calculates from Start + Duration." class="mono" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 3px;font-size:11px;text-align:center;font-family:'IBM Plex Mono',monospace;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none">
                     <div style="display:flex;align-items:center;gap:6px"><input value="{{ r.pct }}" onInput="{{ r.onPct }}" type="range" min="0" max="100" step="5" style="flex:1;min-width:0;cursor:pointer"><span class="mono" style="font-size:11px;color:#0f1720;width:28px;text-align:right">{{ r.pct }}%</span></div>
                     <div style="text-align:center"><span style="display:inline-block;font-size:10px;font-weight:700;color:{{ r.statusColor }};background:{{ r.statusBg }};border-radius:12px;padding:2px 8px">{{ r.statusLabel }}</span></div>
-                    <input value="{{ r.predText }}" onInput="{{ r.onPreds }}" placeholder="e.g. 3FS, 5SS+10" title="Predecessors: task # + type (FS/SS/FF/SF) + lag (e.g. 3FS, 5SS+10)" class="mono" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 6px;font-size:10px;font-family:'IBM Plex Mono',monospace;color:#4a5765;background:#fff" style-focus="border-color:#2b59c3;outline:none">
+                    <input value="{{ r.predValue }}" onFocus="{{ r.onPredFocus }}" onInput="{{ r.onPredInput }}" onBlur="{{ r.onPredBlur }}" placeholder="e.g. 3, 5SS+10" title="Predecessors: task # + optional type (FS/SS/FF/SF) + lag, comma-separated (e.g. 3, 5SS+10). Applied when you click away." class="mono" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 6px;font-size:10px;font-family:'IBM Plex Mono',monospace;color:#4a5765;background:#fff" style-focus="border-color:#2b59c3;outline:none">
                     <div style="text-align:center"><button onClick="{{ r.onCritical }}" title="Toggle critical path" style="border:0;background:transparent;cursor:pointer;font-size:15px;padding:2px;line-height:1;color:{{ r.barColor }}"><sc-if value="{{ r.critical }}" hint-placeholder-val="{{ true }}">◆</sc-if><sc-if value="{{ r.critical }}" hint-placeholder-val="{{ false }}"><span style="color:#c7d0db">◇</span></sc-if></button></div>
                     <button onClick="{{ r.onDelete }}" title="Delete" style="border:0;background:transparent;color:#c0c8d1;cursor:pointer;font-size:13px;padding:2px;line-height:1" style-hover="color:#b91c1c">✕</button>
                   </div>
@@ -3403,6 +3403,8 @@ class Component extends DCLogic {
       financial: this._loadFinancial(),
       myPw: { new: '', confirm: '', msg: '', ok: false, busy: false },
       editCell: '',
+      predEditId: '',
+      predEditText: '',
       projectModal: null,
       projectForm: { name: '', code: '', client: '', projectType: 'Residential', address: '', gstRate: '10' },
       projectFormError: '',
@@ -5799,14 +5801,16 @@ class Component extends DCLogic {
         return { id: a.id, num: String(idToNum[a.id] || ''), name: a.name || '(unnamed activity)', start: a.start, finish: a.finish, startFmt: a.start ? this.fmtDate(a.start) : '—', finishFmt: a.finish ? this.fmtDate(a.finish) : '—',
           left: s != null ? pctPos(s) : 0, width: (s != null && f != null) ? Math.max(1.2, pctPos(f) - pctPos(s)) : 1.2,
           pct: String(pct), durLabel: dur + ' d', durInput: String(dur), statusLabel: st, statusColor: col, statusBg: bg,
-          predText: predToStr(a),
+          predText: predToStr(a), predValue: (S.predEditId === a.id) ? (S.predEditText || '') : predToStr(a),
           variance: (variance > 0 ? '+' : '') + variance + '%', varColor: variance < -4 ? '#b91c1c' : (variance > 4 ? '#15803d' : '#8894a2'), showVar: pct < 100 && s != null && s <= todayN,
           critical: a.critical, barColor: a.critical ? '#dc2626' : '#2b59c3', barFill: a.critical ? '#b91c1c' : '#1d4ed8',
           barColor2: (a.critical && vCrit) ? '#dc2626' : '#2b59c3', barFill2: (a.critical && vCrit) ? '#b91c1c' : '#1d4ed8',
           labelLeft: (s != null && f != null) ? Math.min(pctPos(f) + 0.7, 99.5) : ((s != null ? pctPos(s) : 0) + 0.7),
           onName: e => this.setScheduleActivity(a.id, 'name', e.target.value), onStart: e => this.setActivityStart(a.id, e.target.value), onFinish: e => this.setScheduleActivity(a.id, 'finish', e.target.value),
           onDur: e => this.setActivityDuration(a.id, e.target.value),
-          onPreds: e => this.setActivityPreds(a.id, e.target.value),
+          onPredFocus: () => this.setState({ predEditId: a.id, predEditText: predToStr(a) }),
+          onPredInput: e => this.setState({ predEditText: e.target.value }),
+          onPredBlur: () => { const t = this.state.predEditText; this.setActivityPreds(a.id, t); this.setState({ predEditId: '', predEditText: '' }); },
           onPct: e => this.setScheduleActivity(a.id, 'pct', Number(e.target.value) || 0), onCritical: () => this.toggleActivityCritical(a.id), onDelete: () => this.deleteActivity(a.id) };
       };
       const rows = shown.map(rowOf);
