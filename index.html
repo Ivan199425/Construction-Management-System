@@ -305,7 +305,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
             <div style="background:#fff;border:1px solid #e4e8ee;border-radius:12px;overflow:hidden;margin-bottom:16px">
               <div style="padding:13px 16px;border-bottom:1px solid #eef1f4;background:#fafbfc;font-size:13px;font-weight:600;color:#0f1720">Company details</div>
               <div style="padding:18px 16px;display:grid;grid-template-columns:1fr 1fr;gap:14px">
-                <div><div style="font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#6b7787;text-transform:uppercase;margin-bottom:5px">Company type</div><select value="{{ settingsV.company.companyType }}" onChange="{{ settingsV.company.onType }}" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 10px;font-size:13px;font-family:inherit;color:#0f1720;background:#fff;cursor:pointer" style-focus="border-color:#2b59c3;outline:none"><option value="">Select…</option><sc-for list="{{ settingsV.company.companyTypeOptions }}" as="o" hint-placeholder-count="5"><option value="{{ o.v }}">{{ o.l }}</option></sc-for></select></div>
+                <div><div style="font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#6b7787;text-transform:uppercase;margin-bottom:5px">Company type</div><input value="{{ settingsV.company.companyType }}" onInput="{{ settingsV.company.onType }}" list="cpmCompanyTypes" placeholder="e.g. General Contractor" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:inherit;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none"><datalist id="cpmCompanyTypes"><sc-for list="{{ settingsV.company.companyTypeOptions }}" as="o" hint-placeholder-count="9"><option value="{{ o.v }}"></option></sc-for></datalist></div>
                 <div><div style="font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#6b7787;text-transform:uppercase;margin-bottom:5px">Business ABN</div><input value="{{ settingsV.company.abn }}" onInput="{{ settingsV.company.onAbn }}" placeholder="e.g. 12 345 678 901" class="mono" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:'IBM Plex Mono',monospace;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none"></div>
                 <div style="grid-column:1 / -1"><div style="font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#6b7787;text-transform:uppercase;margin-bottom:8px">Primary industry <span style="font-weight:400;color:#a4afba;text-transform:none;letter-spacing:0">· select all that apply</span></div><div style="display:flex;flex-wrap:wrap;gap:7px"><sc-for list="{{ settingsV.company.industryChips }}" as="c" hint-placeholder-count="16"><button onClick="{{ c.onToggle }}" style="border:1px solid {{ c.border }};background:{{ c.bg }};color:{{ c.fg }};border-radius:16px;padding:6px 13px;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit" style-hover="border-color:#2b59c3">{{ c.name }}</button></sc-for></div></div>
                 <div style="grid-column:1 / -1"><div style="font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#6b7787;text-transform:uppercase;margin-bottom:5px">Slogan</div><input value="{{ settingsV.company.slogan }}" onInput="{{ settingsV.company.onSlogan }}" placeholder="e.g. Building with precision" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:inherit;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none"></div>
@@ -347,6 +347,29 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                     <sc-if value="{{ settingsV.company.noPdfHeader }}" hint-placeholder-val="{{ true }}"><span style="font-size:11px;color:#a4afba">900 × 100 header banner</span></sc-if>
                   </div>
                   <label style="display:inline-flex;align-items:center;gap:6px;border:1px solid #cfd8e2;background:#fff;color:#0f1720;border-radius:8px;padding:8px 14px;font-size:12.5px;font-weight:600;cursor:pointer" style-hover="border-color:#2b59c3;color:#2b59c3">⬆ Upload header<input type="file" accept="image/*" onChange="{{ settingsV.company.onPdfHeader }}" style="display:none"></label>
+                </div>
+              </div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ settingsV.isDefaults }}" hint-placeholder-val="{{ false }}">
+            <div style="background:#fff;border:1px solid #e4e8ee;border-radius:12px;overflow:hidden">
+              <div style="padding:13px 16px;border-bottom:1px solid #eef1f4;background:#fafbfc;font-size:13px;font-weight:600;color:#0f1720">Company defaults <span style="font-weight:400;color:#a4afba;font-size:11.5px">· applied across the system</span></div>
+              <div style="padding:18px 16px;display:grid;grid-template-columns:1fr 1fr;gap:16px">
+                <div>
+                  <div style="font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#6b7787;text-transform:uppercase;margin-bottom:5px">Normal weekly hours</div>
+                  <input value="{{ settingsV.defaults.weeklyHours }}" onInput="{{ settingsV.defaults.onWeeklyHours }}" placeholder="e.g. 38" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:inherit;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none">
+                  <div style="font-size:11px;color:#8894a2;margin-top:6px">Standard scheduled hours in a working week.</div>
+                </div>
+                <div>
+                  <div style="font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#6b7787;text-transform:uppercase;margin-bottom:5px">Start of the week</div>
+                  <input value="{{ settingsV.defaults.weekStart }}" onInput="{{ settingsV.defaults.onWeekStart }}" placeholder="e.g. Monday" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:inherit;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none">
+                  <div style="font-size:11px;color:#8894a2;margin-top:6px">The day schedules and calendars begin on.</div>
+                </div>
+                <div>
+                  <div style="font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#6b7787;text-transform:uppercase;margin-bottom:5px">Date format</div>
+                  <select value="{{ settingsV.defaults.dateFormat }}" onChange="{{ settingsV.defaults.onDateFormat }}" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 10px;font-size:13px;font-family:inherit;color:#0f1720;background:#fff;cursor:pointer" style-focus="border-color:#2b59c3;outline:none"><sc-for list="{{ settingsV.defaults.dateFormatOptions }}" as="o" hint-placeholder-count="3"><option value="{{ o.v }}">{{ o.l }}</option></sc-for></select>
+                  <div style="font-size:11px;color:#8894a2;margin-top:6px">How dates display across the system.</div>
                 </div>
               </div>
             </div>
@@ -3109,6 +3132,7 @@ class Component extends DCLogic {
       form: { desc: '', value: '', time: '', status: 'submitted' },
       customCodes: this._loadCodes(),
       company: this._loadCompany(),
+      defaults: this._loadDefaults(),
       codeUpload: null,
       codeModal: null,
       codeForm: { parentCode: '', parentDesc: '', childCode: '', childDesc: '' },
@@ -3154,6 +3178,13 @@ class Component extends DCLogic {
         const merged = this._normCompany(c);
         try { if (typeof localStorage !== 'undefined') localStorage.setItem('cubicCompany', JSON.stringify(merged)); } catch (e) {}
         this.setState({ company: merged });
+      }
+    }).catch(() => {});
+    this._sbLoadCatalog('defaults').then(d => {
+      if (d && typeof d === 'object' && !Array.isArray(d)) {
+        const merged = Object.assign(this._defaultsSeed(), d);
+        try { if (typeof localStorage !== 'undefined') localStorage.setItem('cubicDefaults', JSON.stringify(merged)); } catch (e) {}
+        this.setState({ defaults: merged });
       }
     }).catch(() => {});
     // Phase 2: restore/validate the logged-in session against Supabase.
@@ -4707,6 +4738,11 @@ class Component extends DCLogic {
   openCompanyWebsite() { let w = ((this.state.company && this.state.company.website) || '').trim(); if (!w) return; if (!/^https?:\/\//i.test(w)) w = 'https://' + w; try { window.open(w, '_blank', 'noopener'); } catch (e) {} }
   uploadCompanyLogo(e) { if (!this.can('admin', 'edit')) return; const f = e.target && e.target.files && e.target.files[0]; if (e.target) e.target.value = ''; if (!f) return; this._sbUploadFile(f, 'company').then(url => { if (url) this.setCompanyField('logoUrl', url); }); }
   uploadPdfHeader(e) { if (!this.can('admin', 'edit')) return; const f = e.target && e.target.files && e.target.files[0]; if (e.target) e.target.value = ''; if (!f) return; this._sbUploadFile(f, 'company').then(url => { if (url) this.setCompanyField('pdfHeaderUrl', url); }); }
+  // ===== Defaults (shared) =====
+  _defaultsSeed() { return { weeklyHours: '', weekStart: '', dateFormat: 'DD/MM/YYYY' }; }
+  _loadDefaults() { try { if (typeof localStorage === 'undefined') return this._defaultsSeed(); const raw = localStorage.getItem('cubicDefaults'); if (!raw) return this._defaultsSeed(); const o = JSON.parse(raw); return Object.assign(this._defaultsSeed(), (o && typeof o === 'object') ? o : {}); } catch (e) { return this._defaultsSeed(); } }
+  _saveDefaults(obj) { try { if (typeof localStorage !== 'undefined') localStorage.setItem('cubicDefaults', JSON.stringify(obj || {})); } catch (e) {} if (this._defTimer) clearTimeout(this._defTimer); this._defTimer = setTimeout(() => this._sbSaveCatalog('defaults', obj || {}), 500); }
+  setDefaultField(field, val) { if (!this.can('admin', 'edit')) return; const next = Object.assign({}, this.state.defaults || this._defaultsSeed(), { [field]: val }); this._saveDefaults(next); this.setState({ defaults: next }); }
   _cid() { return 'cc' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
   _commitCodes(next) { this._saveCodes(next); this.setState({ customCodes: next }); }
   addParentGroup() { this._commitCodes([...(this.state.customCodes || []), { id: this._cid(), parentCode: '', parentDesc: '', children: [{ id: this._cid(), childCode: '', childDesc: '' }] }]); }
@@ -6436,7 +6472,7 @@ class Component extends DCLogic {
     // ===== settings (roles reference + cost codes) =====
     let settingsV = { show: false };
     if (showSettings) {
-      const tab = ['company', 'roles', 'codes'].indexOf(S.settingsTab) >= 0 ? S.settingsTab : 'company';
+      const tab = ['company', 'defaults', 'roles', 'codes'].indexOf(S.settingsTab) >= 0 ? S.settingsTab : 'company';
       const roles = this.roleList(); const roleShort = { Admin: 'Admin', PM: 'PM', Superintendent: 'Super', Finance: 'Fin', HR: 'HR', ContractAdmin: 'CA', Field: 'Field', Employee: 'Emp', Architect: 'A/E', ClientSuper: 'Client', Student: 'Std' };
       const matrixHead = roles.map(r => ({ short: roleShort[r.key] || r.key }));
       const matrixRows = this.resourceLabels().map(res => ({ label: res.label, cells: roles.map(r => { const lv = this.permLevel(r.key, res.key); const b = this.permBadge(lv); return { level: String(lv), c: b.c, bg: b.bg, onChange: e => this.setPerm(res.key, r.key, e.target.value) }; }) }));
@@ -6454,7 +6490,7 @@ class Component extends DCLogic {
       const up = S.codeUpload || null;
       const co = S.company || this._companyDefaults();
       const industryList = ['General Construction', 'Residential Building', 'Commercial Construction', 'Civil / Infrastructure', 'Electrical', 'Plumbing / Hydraulic', 'HVAC / Mechanical', 'Concrete / Formwork', 'Structural Steel', 'Carpentry / Joinery', 'Roofing', 'Landscaping', 'Demolition', 'Fit-out', 'Painting', 'Other'];
-      const companyTypeOptions = ['Sole Trader', 'Partnership', 'Company (Pty Ltd)', 'Trust', 'Other'].map(x => ({ v: x, l: x }));
+      const companyTypeOptions = ['General Contractor', 'Builder', 'Sole Trader', 'Partnership', 'Company (Pty Ltd)', 'Trust', 'Developer', 'Subcontractor', 'Other'].map(x => ({ v: x, l: x }));
       const selInd = co.industries || [];
       const industryChips = industryList.map(x => { const on = selInd.indexOf(x) >= 0; return { name: x, active: on, bg: on ? '#2b59c3' : '#fff', fg: on ? '#fff' : '#4a5765', border: on ? '#2b59c3' : '#cfd8e2', onToggle: () => this.toggleCompanyIndustry(x) }; });
       const companyV = {
@@ -6469,8 +6505,14 @@ class Component extends DCLogic {
         onOpenWebsite: () => this.openCompanyWebsite(),
         onLogo: e => this.uploadCompanyLogo(e), onPdfHeader: e => this.uploadPdfHeader(e),
       };
-      settingsV = { show: true, tab, isCompany: tab === 'company', isRoles: tab === 'roles', isCodes: tab === 'codes', company: companyV,
-        tabs: [{ k: 'company', l: 'Company profile', active: tab === 'company', onClick: () => this.setSettingsTab('company') }, { k: 'roles', l: 'Roles & permissions', active: tab === 'roles', onClick: () => this.setSettingsTab('roles') }, { k: 'codes', l: 'Cost codes', active: tab === 'codes', onClick: () => this.setSettingsTab('codes') }].map(t => ({ ...t, bg: t.active ? '#2b59c3' : '#fff', fg: t.active ? '#fff' : '#4a5765', border: t.active ? '#2b59c3' : '#cfd8e2' })),
+      const df = S.defaults || this._defaultsSeed();
+      const dateFormatOptions = ['MM/DD/YYYY', 'DD/MM/YYYY', 'YYYY/MM/DD'].map(x => ({ v: x, l: x }));
+      const defaultsV = {
+        weeklyHours: df.weeklyHours || '', weekStart: df.weekStart || '', dateFormat: df.dateFormat || 'DD/MM/YYYY', dateFormatOptions,
+        onWeeklyHours: e => this.setDefaultField('weeklyHours', e.target.value), onWeekStart: e => this.setDefaultField('weekStart', e.target.value), onDateFormat: e => this.setDefaultField('dateFormat', e.target.value),
+      };
+      settingsV = { show: true, tab, isCompany: tab === 'company', isDefaults: tab === 'defaults', isRoles: tab === 'roles', isCodes: tab === 'codes', company: companyV, defaults: defaultsV,
+        tabs: [{ k: 'company', l: 'Company profile', active: tab === 'company', onClick: () => this.setSettingsTab('company') }, { k: 'defaults', l: 'Defaults', active: tab === 'defaults', onClick: () => this.setSettingsTab('defaults') }, { k: 'roles', l: 'Roles & permissions', active: tab === 'roles', onClick: () => this.setSettingsTab('roles') }, { k: 'codes', l: 'Cost codes', active: tab === 'codes', onClick: () => this.setSettingsTab('codes') }].map(t => ({ ...t, bg: t.active ? '#2b59c3' : '#fff', fg: t.active ? '#fff' : '#4a5765', border: t.active ? '#2b59c3' : '#cfd8e2' })),
         matrixHead, matrixRows,
         parentGroups, codeCount: String(childTotal), parentCount: String(parentGroups.length), hasCodes: parentGroups.length > 0, noCodes: parentGroups.length === 0, catalogCount: String(inUseCount),
         hasUploadMsg: !!up, uploadMsg: up ? up.msg : '', uploadBg: up ? (up.ok ? '#eaf6ee' : '#fdecec') : '#fff', uploadFg: up ? (up.ok ? '#15803d' : '#b91c1c') : '#4a5765', uploadBorder: up ? (up.ok ? '#bfe3ca' : '#f4c9c9') : '#eef1f4',
