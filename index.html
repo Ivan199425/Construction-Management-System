@@ -1069,6 +1069,16 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                   <div>Total contract value</div><div class="mono" style="text-align:right;color:#9fb0c4;font-size:11px">{{ markupSummary.margin }}</div><div class="mono" style="text-align:right">{{ markupSummary.totalCost }}</div><div class="mono" style="text-align:right;color:#5fd68a">{{ markupSummary.totalMarkup }}</div><div class="mono" style="text-align:right">{{ markupSummary.totalSell }}</div>
                 </div>
               </div></div>
+              <div style="padding:16px;border-top:1px solid #eef1f4">
+                <div style="max-width:440px;margin-left:auto;font-size:13px">
+                  <div style="display:flex;justify-content:space-between;padding:6px 0;color:#4a5765"><span>Estimated cost</span><span class="mono" style="font-weight:600;color:#0f1720">{{ markupSummary.estCost }}</span></div>
+                  <div style="display:flex;justify-content:space-between;padding:6px 0;color:#4a5765"><span>Markup ({{ markupSummary.markupPct }})</span><span class="mono" style="font-weight:600;color:#15803d">{{ markupSummary.markupAmt }}</span></div>
+                  <div style="display:flex;justify-content:space-between;padding:9px 0;border-top:1px solid #e4e8ee;font-weight:700;color:#0f1720"><span>Sub total</span><span class="mono">{{ markupSummary.subTotal }}</span></div>
+                  <div style="display:flex;justify-content:space-between;padding:6px 0;color:#4a5765"><span>GST ({{ markupSummary.gstRate }}%)</span><span class="mono" style="font-weight:600;color:#0f1720">{{ markupSummary.gst }}</span></div>
+                  <div style="display:flex;justify-content:space-between;align-items:center;padding:11px 14px;margin-top:8px;background:#0f1a24;color:#fff;border-radius:9px;font-weight:700;font-size:14px"><span>Grand total (incl. GST)</span><span class="mono">{{ markupSummary.grandTotal }}</span></div>
+                  <div style="display:flex;justify-content:space-between;padding:10px 0 2px;color:#4a5765"><span>Profit margin</span><span class="mono" style="font-weight:600;color:#15803d">{{ markupSummary.profit }} ({{ markupSummary.profitPct }})</span></div>
+                </div>
+              </div>
             </div>
           </sc-if>
         </sc-if>
@@ -6228,8 +6238,11 @@ class Component extends DCLogic {
         return { key: c.k, label: c.l, pctValue: (eff === '' || eff == null) ? '' : String(eff), fromDefault: !hasProj, cost: this.moneyM(base), markup: this.moneyM(markupAmt), sell: this.moneyM(sell), onMarkup: e => this.setProjectMarkup(c.k, e.target.value) };
       });
       const mkMarkupTot = mkTotSell - mkTotCost; const mkMargin = mkTotSell > 0 ? (mkMarkupTot / mkTotSell * 100) : 0;
+      const mkMarkupPct = mkTotCost > 0 ? (mkMarkupTot / mkTotCost * 100) : 0;
+      const gstR = Number(p.gstRate) || 0; const mkGst = mkTotSell * gstR / 100; const mkGrand = mkTotSell + mkGst;
       const mkCanEdit = this.can('financial', 'edit');
-      markupSummary = { show: mkTotCost > 0, rows: mkRows, canEdit: mkCanEdit, readOnly: !mkCanEdit, totalCost: this.moneyM(mkTotCost), totalMarkup: this.moneyM(mkMarkupTot), totalSell: this.moneyM(mkTotSell), margin: mkMargin.toFixed(1) + '% margin' };
+      markupSummary = { show: mkTotCost > 0, rows: mkRows, canEdit: mkCanEdit, readOnly: !mkCanEdit, totalCost: this.moneyM(mkTotCost), totalMarkup: this.moneyM(mkMarkupTot), totalSell: this.moneyM(mkTotSell), margin: mkMargin.toFixed(1) + '% margin',
+        estCost: this.money(mkTotCost), markupAmt: this.money(mkMarkupTot), markupPct: mkMarkupPct.toFixed(1) + '%', subTotal: this.money(mkTotSell), gstRate: String(gstR), gst: this.money(mkGst), grandTotal: this.money(mkGrand), profit: this.money(mkMarkupTot), profitPct: mkMargin.toFixed(1) + '%' };
       const bcDefs = this._budgetColDefs();
       budgetColTemplate = bcDefs.map(c => this._colW(c.id) + 'px').join(' ');
       budgetMinWidth = (bcDefs.reduce((a, c) => a + this._colW(c.id), 0) + (bcDefs.length - 1) * 8 + 32) + 'px';
