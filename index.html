@@ -28,6 +28,10 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
   ::-webkit-scrollbar-thumb:hover{background:#b6bfca}
   @keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
   .mono{font-family:'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums}
+  #sigEditor:empty:before{content:attr(data-placeholder);color:#a4afba}
+  #sigEditor:focus{outline:none}
+  #sigEditor a{color:#2b59c3}
+  #sigEditor ul,#sigEditor ol{padding-left:22px;margin:4px 0}
 </style>
 </helmet>
 <div style="display:flex;height:100vh;overflow:hidden">
@@ -439,11 +443,37 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
             </div>
             <div style="background:#fff;border:1px solid #e4e8ee;border-radius:12px;overflow:hidden">
               <div style="padding:13px 16px;border-bottom:1px solid #eef1f4;background:#fafbfc;font-size:13px;font-weight:600;color:#0f1720">Email signature</div>
-              <div style="padding:18px 16px">
-                <textarea value="{{ settingsV.myDetails.signature }}" onInput="{{ settingsV.myDetails.onSignature }}" placeholder="Jane Smith&#10;Project Manager · CUBIC Construction Management&#10;+61 400 000 000 · jane@cubiccm.com" style="width:100%;min-height:110px;border:1px solid #cfd8e2;border-radius:8px;padding:10px 12px;font-size:13px;font-family:inherit;color:#0f1720;background:#fff;line-height:1.6;resize:vertical" style-focus="border-color:#2b59c3;outline:none"></textarea>
-                <div style="font-size:11px;color:#8894a2;margin-top:6px">Added when you send emails from the app.</div>
-                <div style="font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#6b7787;text-transform:uppercase;margin:14px 0 6px">Preview</div>
-                <div style="border:1px solid #eef1f4;border-radius:8px;background:#fafbfc;padding:12px 14px;font-size:12.5px;color:#4a5765;white-space:pre-wrap;min-height:56px">{{ settingsV.myDetails.sigPreview }}</div>
+              <div style="padding:16px">
+                <div style="border:1px solid #cfd8e2;border-radius:8px;overflow:hidden;background:#fff">
+                  <div style="display:flex;flex-wrap:wrap;align-items:center;gap:1px;padding:6px 8px;border-bottom:1px solid #eef1f4;background:#fafbfc">
+                    <button onMouseDown="{{ settingsV.myDetails.onSigBtnDown }}" onClick="{{ settingsV.myDetails.onSigUndo }}" title="Undo" style="border:0;background:transparent;min-width:28px;height:28px;padding:0 6px;border-radius:6px;cursor:pointer;color:#4a5765;display:inline-flex;align-items:center;justify-content:center;font-family:inherit;font-size:15px" style-hover="background:#eaeef3">↺</button>
+                    <button onMouseDown="{{ settingsV.myDetails.onSigBtnDown }}" onClick="{{ settingsV.myDetails.onSigRedo }}" title="Redo" style="border:0;background:transparent;min-width:28px;height:28px;padding:0 6px;border-radius:6px;cursor:pointer;color:#4a5765;display:inline-flex;align-items:center;justify-content:center;font-family:inherit;font-size:15px" style-hover="background:#eaeef3">↻</button>
+                    <span style="width:1px;height:18px;background:#e0e5ea;margin:0 3px;flex:0 0 auto"></span>
+                    <button onMouseDown="{{ settingsV.myDetails.onSigBtnDown }}" onClick="{{ settingsV.myDetails.onSigBold }}" title="Bold" style="border:0;background:transparent;min-width:28px;height:28px;padding:0 6px;border-radius:6px;cursor:pointer;color:#0f1720;display:inline-flex;align-items:center;justify-content:center;font-family:inherit;font-size:14px;font-weight:800" style-hover="background:#eaeef3">B</button>
+                    <button onMouseDown="{{ settingsV.myDetails.onSigBtnDown }}" onClick="{{ settingsV.myDetails.onSigItalic }}" title="Italic" style="border:0;background:transparent;min-width:28px;height:28px;padding:0 6px;border-radius:6px;cursor:pointer;color:#0f1720;display:inline-flex;align-items:center;justify-content:center;font-family:Georgia,serif;font-size:14px;font-style:italic" style-hover="background:#eaeef3">I</button>
+                    <button onMouseDown="{{ settingsV.myDetails.onSigBtnDown }}" onClick="{{ settingsV.myDetails.onSigUnderline }}" title="Underline" style="border:0;background:transparent;min-width:28px;height:28px;padding:0 6px;border-radius:6px;cursor:pointer;color:#0f1720;display:inline-flex;align-items:center;justify-content:center;font-family:inherit;font-size:14px;text-decoration:underline" style-hover="background:#eaeef3">U</button>
+                    <button onMouseDown="{{ settingsV.myDetails.onSigBtnDown }}" onClick="{{ settingsV.myDetails.onSigStrike }}" title="Strikethrough" style="border:0;background:transparent;min-width:28px;height:28px;padding:0 6px;border-radius:6px;cursor:pointer;color:#0f1720;display:inline-flex;align-items:center;justify-content:center;font-family:inherit;font-size:14px;text-decoration:line-through" style-hover="background:#eaeef3">S</button>
+                    <span style="width:1px;height:18px;background:#e0e5ea;margin:0 3px;flex:0 0 auto"></span>
+                    <button onMouseDown="{{ settingsV.myDetails.onSigBtnDown }}" onClick="{{ settingsV.myDetails.onSigSizeS }}" title="Small text" style="border:0;background:transparent;min-width:26px;height:28px;padding:0 5px;border-radius:6px;cursor:pointer;color:#4a5765;display:inline-flex;align-items:baseline;justify-content:center;font-family:inherit;font-size:11px;font-weight:700" style-hover="background:#eaeef3">A</button>
+                    <button onMouseDown="{{ settingsV.myDetails.onSigBtnDown }}" onClick="{{ settingsV.myDetails.onSigSizeM }}" title="Normal text" style="border:0;background:transparent;min-width:26px;height:28px;padding:0 5px;border-radius:6px;cursor:pointer;color:#4a5765;display:inline-flex;align-items:baseline;justify-content:center;font-family:inherit;font-size:14px;font-weight:700" style-hover="background:#eaeef3">A</button>
+                    <button onMouseDown="{{ settingsV.myDetails.onSigBtnDown }}" onClick="{{ settingsV.myDetails.onSigSizeL }}" title="Large text" style="border:0;background:transparent;min-width:26px;height:28px;padding:0 5px;border-radius:6px;cursor:pointer;color:#4a5765;display:inline-flex;align-items:baseline;justify-content:center;font-family:inherit;font-size:17px;font-weight:700" style-hover="background:#eaeef3">A</button>
+                    <span style="width:1px;height:18px;background:#e0e5ea;margin:0 3px;flex:0 0 auto"></span>
+                    <sc-for list="{{ settingsV.myDetails.sigColors }}" as="c" hint-placeholder-count="6"><button onMouseDown="{{ c.onDown }}" onClick="{{ c.onClick }}" title="Text colour" style="width:18px;height:18px;border-radius:50%;border:1px solid rgba(0,0,0,.14);background:{{ c.c }};cursor:pointer;padding:0;margin:0 2px;flex:0 0 auto"></button></sc-for>
+                    <span style="width:1px;height:18px;background:#e0e5ea;margin:0 3px;flex:0 0 auto"></span>
+                    <button onMouseDown="{{ settingsV.myDetails.onSigBtnDown }}" onClick="{{ settingsV.myDetails.onSigUl }}" title="Bullet list" style="border:0;background:transparent;min-width:28px;height:28px;padding:0 6px;border-radius:6px;cursor:pointer;color:#4a5765;display:inline-flex;align-items:center;justify-content:center" style-hover="background:#eaeef3"><svg width="15" height="15" viewBox="0 0 16 16"><circle cx="3" cy="4" r="1.3" fill="currentColor"></circle><circle cx="3" cy="8" r="1.3" fill="currentColor"></circle><circle cx="3" cy="12" r="1.3" fill="currentColor"></circle><rect x="6" y="3.3" width="8" height="1.4" rx="0.7" fill="currentColor"></rect><rect x="6" y="7.3" width="8" height="1.4" rx="0.7" fill="currentColor"></rect><rect x="6" y="11.3" width="8" height="1.4" rx="0.7" fill="currentColor"></rect></svg></button>
+                    <button onMouseDown="{{ settingsV.myDetails.onSigBtnDown }}" onClick="{{ settingsV.myDetails.onSigOl }}" title="Numbered list" style="border:0;background:transparent;min-width:28px;height:28px;padding:0 6px;border-radius:6px;cursor:pointer;color:#4a5765;display:inline-flex;align-items:center;justify-content:center" style-hover="background:#eaeef3"><svg width="15" height="15" viewBox="0 0 16 16"><text x="0.5" y="5.6" font-size="5" font-weight="700" fill="currentColor">1</text><text x="0.5" y="9.9" font-size="5" font-weight="700" fill="currentColor">2</text><text x="0.5" y="14.2" font-size="5" font-weight="700" fill="currentColor">3</text><rect x="6" y="3.3" width="8" height="1.4" rx="0.7" fill="currentColor"></rect><rect x="6" y="7.3" width="8" height="1.4" rx="0.7" fill="currentColor"></rect><rect x="6" y="11.3" width="8" height="1.4" rx="0.7" fill="currentColor"></rect></svg></button>
+                    <span style="width:1px;height:18px;background:#e0e5ea;margin:0 3px;flex:0 0 auto"></span>
+                    <button onMouseDown="{{ settingsV.myDetails.onSigBtnDown }}" onClick="{{ settingsV.myDetails.onSigLeft }}" title="Align left" style="border:0;background:transparent;min-width:28px;height:28px;padding:0 6px;border-radius:6px;cursor:pointer;color:#4a5765;display:inline-flex;align-items:center;justify-content:center" style-hover="background:#eaeef3"><svg width="15" height="15" viewBox="0 0 16 16"><rect x="2" y="3" width="12" height="1.4" rx="0.7" fill="currentColor"></rect><rect x="2" y="7" width="8" height="1.4" rx="0.7" fill="currentColor"></rect><rect x="2" y="11" width="10" height="1.4" rx="0.7" fill="currentColor"></rect></svg></button>
+                    <button onMouseDown="{{ settingsV.myDetails.onSigBtnDown }}" onClick="{{ settingsV.myDetails.onSigCenter }}" title="Align centre" style="border:0;background:transparent;min-width:28px;height:28px;padding:0 6px;border-radius:6px;cursor:pointer;color:#4a5765;display:inline-flex;align-items:center;justify-content:center" style-hover="background:#eaeef3"><svg width="15" height="15" viewBox="0 0 16 16"><rect x="2" y="3" width="12" height="1.4" rx="0.7" fill="currentColor"></rect><rect x="4" y="7" width="8" height="1.4" rx="0.7" fill="currentColor"></rect><rect x="3" y="11" width="10" height="1.4" rx="0.7" fill="currentColor"></rect></svg></button>
+                    <button onMouseDown="{{ settingsV.myDetails.onSigBtnDown }}" onClick="{{ settingsV.myDetails.onSigRight }}" title="Align right" style="border:0;background:transparent;min-width:28px;height:28px;padding:0 6px;border-radius:6px;cursor:pointer;color:#4a5765;display:inline-flex;align-items:center;justify-content:center" style-hover="background:#eaeef3"><svg width="15" height="15" viewBox="0 0 16 16"><rect x="2" y="3" width="12" height="1.4" rx="0.7" fill="currentColor"></rect><rect x="6" y="7" width="8" height="1.4" rx="0.7" fill="currentColor"></rect><rect x="4" y="11" width="10" height="1.4" rx="0.7" fill="currentColor"></rect></svg></button>
+                    <span style="width:1px;height:18px;background:#e0e5ea;margin:0 3px;flex:0 0 auto"></span>
+                    <button onMouseDown="{{ settingsV.myDetails.onSigBtnDown }}" onClick="{{ settingsV.myDetails.onSigLink }}" title="Insert link" style="border:0;background:transparent;min-width:28px;height:28px;padding:0 6px;border-radius:6px;cursor:pointer;color:#4a5765;display:inline-flex;align-items:center;justify-content:center;font-size:14px" style-hover="background:#eaeef3">🔗</button>
+                    <button onMouseDown="{{ settingsV.myDetails.onSigBtnDown }}" onClick="{{ settingsV.myDetails.onSigClear }}" title="Clear formatting" style="border:0;background:transparent;min-width:28px;height:28px;padding:0 6px;border-radius:6px;cursor:pointer;color:#4a5765;display:inline-flex;align-items:center;justify-content:center;font-family:inherit;font-size:13px;text-decoration:line-through" style-hover="background:#eaeef3">T</button>
+                  </div>
+                  <div id="sigEditor" contenteditable="true" onInput="{{ settingsV.myDetails.onSigInput }}" data-placeholder="Type your email signature…" style="min-height:150px;padding:12px 14px;font-size:13px;line-height:1.6;color:#0f1720;font-family:inherit"></div>
+                  <div style="display:flex;justify-content:flex-end;gap:18px;padding:6px 12px;border-top:1px solid #eef1f4;background:#fafbfc;font-size:11px;color:#8894a2"><span>Words: {{ settingsV.myDetails.sigWords }}</span><span>Characters: {{ settingsV.myDetails.sigChars }}</span></div>
+                </div>
+                <div style="font-size:11px;color:#8894a2;margin-top:8px">This signature will appear in emails sent from your account.</div>
               </div>
             </div>
           </sc-if>
@@ -3269,6 +3299,7 @@ class Component extends DCLogic {
         this.setState({ financial: merged });
       }
     }).catch(() => {});
+    this._initSigEditor();
     // Phase 2: restore/validate the logged-in session against Supabase.
     const sess = this.state.session;
     if (sess && sess.profile) {
@@ -3292,6 +3323,7 @@ class Component extends DCLogic {
     }).catch(() => { this._projLoaded = true; });
   }
   componentDidUpdate() {
+    this._initSigEditor(); // populate the signature editor once when it appears
     // Auto-sync any project change to Supabase so every user sees the same data (debounced, logged-in only).
     if (!this._projLoaded) return; // don't save until the initial shared load has settled (avoids clobbering it)
     if (this.state.projects !== this._lastSavedProjects) {
@@ -4857,6 +4889,24 @@ class Component extends DCLogic {
       else { const b = await r.json().catch(() => ({})); this.setState({ myPw: Object.assign({}, this.state.myPw, { busy: false, ok: false, msg: (b.msg || b.error_description || 'Could not update password.') }) }); }
     } catch (e) { this.setState({ myPw: Object.assign({}, this.state.myPw, { busy: false, ok: false, msg: 'Network error — try again.' }) }); }
   }
+  // ----- Email-signature rich editor (uncontrolled contenteditable) -----
+  _initSigEditor() {
+    if (typeof document === 'undefined') return;
+    const el = document.getElementById('sigEditor');
+    if (!el || el.dataset.sigInit) return;
+    const cu = this.currentUser();
+    el.innerHTML = (cu && cu.signature) || '';
+    el.dataset.sigInit = '1';
+  }
+  onSigInput(e) { const el = e && e.target; if (!el) return; this.setMyProfileField('signature', el.innerHTML); }
+  sigExec(cmd, val) {
+    if (typeof document === 'undefined') return;
+    const el = document.getElementById('sigEditor'); if (el) el.focus();
+    try { document.execCommand('styleWithCSS', false, false); } catch (e) {}
+    try { document.execCommand(cmd, false, (val == null ? undefined : val)); } catch (e2) {}
+    if (el) this.setMyProfileField('signature', el.innerHTML);
+  }
+  sigLink() { let url = ''; try { url = window.prompt('Link URL', 'https://'); } catch (e) {} if (url) this.sigExec('createLink', url); }
   _cid() { return 'cc' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
   _commitCodes(next) { this._saveCodes(next); this.setState({ customCodes: next }); }
   addParentGroup() { this._commitCodes([...(this.state.customCodes || []), { id: this._cid(), parentCode: '', parentDesc: '', children: [{ id: this._cid(), childCode: '', childDesc: '' }] }]); }
@@ -6637,11 +6687,21 @@ class Component extends DCLogic {
       };
       const initOf = nm => (nm || '?').trim().split(/\s+/).map(x => x[0] || '').slice(0, 2).join('').toUpperCase() || '?';
       const meP = this.currentUser() || {}; const mp = S.myPw || {};
+      const sigText = (meP.signature || '').replace(/<br\s*\/?>/gi, '\n').replace(/<\/(div|p|li|h[1-6])>/gi, '\n').replace(/<[^>]+>/g, '').replace(/&nbsp;/gi, ' ').replace(/&amp;/gi, '&').replace(/&lt;/gi, '<').replace(/&gt;/gi, '>');
+      const sigColorList = ['#0f1720', '#5B6672', '#2b59c3', '#b91c1c', '#15803d', '#FF6A13'];
       const myDetailsV = {
-        name: meP.name || '', email: meP.email || '', phone: meP.phone || '', title: meP.title || '', signature: meP.signature || '',
+        name: meP.name || '', email: meP.email || '', phone: meP.phone || '', title: meP.title || '',
         roleLabel: this.roleLabel(meP.role || ''), photoUrl: meP.photoUrl || '', hasPhoto: !!meP.photoUrl, noPhoto: !meP.photoUrl, initials: initOf(meP.name || meP.email),
-        sigPreview: meP.signature || 'Your signature preview appears here.', hasSig: !!(meP.signature || '').trim(),
-        onName: e => this.setMyProfileField('name', e.target.value), onPhone: e => this.setMyProfileField('phone', e.target.value), onTitle: e => this.setMyProfileField('title', e.target.value), onSignature: e => this.setMyProfileField('signature', e.target.value), onPhoto: e => this.uploadMyPhoto(e),
+        sigWords: String((sigText.trim().match(/\S+/g) || []).length), sigChars: String(sigText.replace(/\n/g, '').length),
+        sigColors: sigColorList.map(c => ({ c, onDown: e => e.preventDefault(), onClick: () => this.sigExec('foreColor', c) })),
+        onSigInput: e => this.onSigInput(e), onSigBtnDown: e => e.preventDefault(),
+        onSigUndo: () => this.sigExec('undo'), onSigRedo: () => this.sigExec('redo'),
+        onSigBold: () => this.sigExec('bold'), onSigItalic: () => this.sigExec('italic'), onSigUnderline: () => this.sigExec('underline'), onSigStrike: () => this.sigExec('strikeThrough'),
+        onSigUl: () => this.sigExec('insertUnorderedList'), onSigOl: () => this.sigExec('insertOrderedList'),
+        onSigLeft: () => this.sigExec('justifyLeft'), onSigCenter: () => this.sigExec('justifyCenter'), onSigRight: () => this.sigExec('justifyRight'),
+        onSigLink: () => this.sigLink(), onSigClear: () => this.sigExec('removeFormat'),
+        onSigSizeS: () => this.sigExec('fontSize', '2'), onSigSizeM: () => this.sigExec('fontSize', '3'), onSigSizeL: () => this.sigExec('fontSize', '5'),
+        onName: e => this.setMyProfileField('name', e.target.value), onPhone: e => this.setMyProfileField('phone', e.target.value), onTitle: e => this.setMyProfileField('title', e.target.value), onPhoto: e => this.uploadMyPhoto(e),
         pwNew: mp.new || '', pwConfirm: mp.confirm || '', pwMsg: mp.msg || '', pwHasMsg: !!mp.msg, pwLabel: mp.busy ? 'Updating…' : 'Update password',
         pwMsgColor: mp.ok ? '#15803d' : '#b91c1c', pwMsgBg: mp.ok ? '#eaf6ee' : '#fdecec', pwMsgBorder: mp.ok ? '#bfe3ca' : '#f4c9c9',
         onPwNew: e => this.setMyPwField('new', e.target.value), onPwConfirm: e => this.setMyPwField('confirm', e.target.value), onChangePw: () => this.changeMyPassword(),
