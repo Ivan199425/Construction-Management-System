@@ -327,6 +327,17 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
             <sc-for list="{{ settingsV.tabs }}" as="t" hint-placeholder-count="6"><button onClick="{{ t.onClick }}" style="border:1px solid {{ t.border }};background:{{ t.bg }};color:{{ t.fg }};border-radius:9px;padding:8px 16px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="border-color:#2b59c3">{{ t.l }}</button></sc-for>
           </div>
 
+          <sc-if value="{{ settingsV.save.show }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;background:#fff;border:1px solid #e4e8ee;border-radius:12px;padding:11px 16px;margin-bottom:16px">
+              <div style="display:flex;align-items:center;gap:9px">
+                <span style="width:8px;height:8px;border-radius:50%;background:{{ settingsV.save.dotColor }}"></span>
+                <span style="font-size:12.5px;font-weight:600;color:{{ settingsV.save.statusColor }}">{{ settingsV.save.statusText }}</span>
+                <span style="font-size:12px;color:#a4afba">· {{ settingsV.save.section }}</span>
+              </div>
+              <button onClick="{{ settingsV.save.onSave }}" title="Save this section now" style="border:0;background:#2b59c3;color:#fff;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="background:#244fb0">{{ settingsV.save.saveLabel }}</button>
+            </div>
+          </sc-if>
+
           <sc-if value="{{ settingsV.isCompany }}" hint-placeholder-val="{{ true }}">
             <div style="background:#fff;border:1px solid #e4e8ee;border-radius:12px;overflow:hidden;margin-bottom:16px">
               <div style="padding:13px 16px;border-bottom:1px solid #eef1f4;background:#fafbfc;font-size:13px;font-weight:600;color:#0f1720">Company details</div>
@@ -1090,7 +1101,13 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                 </div>
               </sc-if>
             </div>
-            <div style="font-size:12px;color:#8894a2;line-height:1.5;text-align:right">Drag a column edge to resize; use <strong style="color:#6b7787">⚙ Columns</strong> to show, hide &amp; reorder. <strong style="color:#6b7787">Committed</strong> auto-populates from invoices (🧾) or a linked commitment (🔗).</div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px">
+              <div style="display:flex;align-items:center;gap:9px">
+                <span style="display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:{{ projectsSaveV.statusColor }};background:{{ projectsSaveV.statusBg }};border-radius:20px;padding:4px 11px"><span style="width:7px;height:7px;border-radius:50%;background:{{ projectsSaveV.dotColor }}"></span>{{ projectsSaveV.statusText }}</span>
+                <button onClick="{{ projectsSaveV.onSave }}" title="Save budget changes now" style="border:0;background:#2b59c3;color:#fff;border-radius:8px;padding:8px 16px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="background:#244fb0">{{ projectsSaveV.saveLabel }}</button>
+              </div>
+              <div style="font-size:12px;color:#8894a2;line-height:1.5;text-align:right">Drag a column edge to resize; use <strong style="color:#6b7787">⚙ Columns</strong> to show, hide &amp; reorder. <strong style="color:#6b7787">Committed</strong> auto-populates from invoices (🧾) or a linked commitment (🔗).</div>
+            </div>
           </div>
           <sc-if value="{{ markupSummary.show }}" hint-placeholder-val="{{ false }}">
             <div style="background:#fff;border:1px solid #e4e8ee;border-radius:12px;overflow:hidden;margin-top:16px">
@@ -1879,6 +1896,15 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
         <sc-if value="{{ detailsV.show }}" hint-placeholder-val="{{ false }}">
           <div style="display:flex;flex-direction:column;gap:18px;max-width:940px">
 
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;background:#fff;border:1px solid #e4e8ee;border-radius:12px;padding:11px 16px">
+              <div style="display:flex;align-items:center;gap:9px">
+                <span style="width:8px;height:8px;border-radius:50%;background:{{ projectsSaveV.dotColor }}"></span>
+                <span style="font-size:12.5px;font-weight:600;color:{{ projectsSaveV.statusColor }}">{{ projectsSaveV.statusText }}</span>
+                <span style="font-size:12px;color:#a4afba">· Project details</span>
+              </div>
+              <button onClick="{{ projectsSaveV.onSave }}" title="Save changes now" style="border:0;background:#2b59c3;color:#fff;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="background:#244fb0">{{ projectsSaveV.saveLabel }}</button>
+            </div>
+
             <!-- Project identity -->
             <div style="background:#fff;border:1px solid #e4e8ee;border-radius:12px;overflow:hidden">
               <div style="padding:15px 20px;border-bottom:1px solid #eef1f4;display:flex;align-items:center;gap:10px">
@@ -2379,6 +2405,14 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
 
         <!-- ============ CONTACTS DIRECTORY ============ -->
         <sc-if value="{{ contactsV.show }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;background:#fff;border:1px solid #e4e8ee;border-radius:12px;padding:11px 16px;margin-bottom:16px">
+            <div style="display:flex;align-items:center;gap:9px">
+              <span style="width:8px;height:8px;border-radius:50%;background:{{ projectsSaveV.dotColor }}"></span>
+              <span style="font-size:12.5px;font-weight:600;color:{{ projectsSaveV.statusColor }}">{{ projectsSaveV.statusText }}</span>
+              <span style="font-size:12px;color:#a4afba">· Contacts</span>
+            </div>
+            <button onClick="{{ projectsSaveV.onSave }}" title="Save changes now" style="border:0;background:#2b59c3;color:#fff;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="background:#244fb0">{{ projectsSaveV.saveLabel }}</button>
+          </div>
           <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px">
             <div style="background:#0f1a24;border:1px solid #0f1a24;border-radius:11px;padding:14px 15px"><div style="font-size:10.5px;font-weight:600;letter-spacing:.4px;color:#9fb0c4;text-transform:uppercase">Total contacts</div><div class="mono" style="font-size:22px;font-weight:700;color:#fff;margin-top:4px">{{ contactsV.total }}</div></div>
             <div style="background:#fff;border:1px solid #e4e8ee;border-radius:11px;padding:14px 15px"><div style="font-size:10.5px;font-weight:600;letter-spacing:.4px;color:#8894a2;text-transform:uppercase">Client side</div><div class="mono" style="font-size:22px;font-weight:600;color:#0f1720;margin-top:4px">{{ contactsV.customerCount }} · {{ contactsV.repCount }}</div><div style="font-size:10.5px;color:#8894a2;margin-top:1px">customers · representatives</div></div>
@@ -3326,6 +3360,7 @@ class Component extends DCLogic {
       budgetColOrder: this._loadBudgetColOrder(),
       budgetColHidden: this._loadBudgetColHidden(),
       budgetColMenu: false,
+      saveStatus: { company: 'saved', defaults: 'saved', financial: 'saved', profile: 'saved', projects: 'saved' },
       codeUpload: null,
       codeModal: null,
       codeForm: { parentCode: '', parentDesc: '', childCode: '', childDesc: '' },
@@ -3418,8 +3453,9 @@ class Component extends DCLogic {
       this._lastSavedProjects = this.state.projects;
       if (this.currentUser()) {
         const snapshot = this.state.projects;
+        this._setSave('projects', 'saving');
         if (this._projTimer) clearTimeout(this._projTimer);
-        this._projTimer = setTimeout(() => this._sbSaveCatalog('projects', snapshot), 800);
+        this._projTimer = setTimeout(() => this._sbSaveCatalog('projects', snapshot).then(() => this._setSave('projects', 'saved')), 800);
       }
     }
   }
@@ -5008,11 +5044,22 @@ class Component extends DCLogic {
   // ===== Settings (roles reference + cost-code catalog) =====
   goSettings() { this.setState({ view: 'settings', anim: this.state.anim + 1 }); }
   setSettingsTab(t) { this.setState({ settingsTab: t }); }
+  // ===== Save status (per channel: company/defaults/financial/profile/projects) — auto-save stays; these drive the visible "Saving…/Saved" + Save changes button =====
+  _setSave(ch, st) { const cur = this.state.saveStatus || {}; if (cur[ch] === st) return; this.setState({ saveStatus: Object.assign({}, cur, { [ch]: st }) }); }
+  _saveCatalogDebounced(key, lsKey, obj) {
+    try { if (typeof localStorage !== 'undefined') localStorage.setItem(lsKey, JSON.stringify(obj || {})); } catch (e) {}
+    this._setSave(key, 'saving');
+    const tk = '_' + key + 'Timer'; if (this[tk]) clearTimeout(this[tk]);
+    this[tk] = setTimeout(() => this._sbSaveCatalog(key, obj || {}).then(() => this._setSave(key, 'saved')), 500);
+  }
+  _flushCatalog(key) { const tk = '_' + key + 'Timer'; if (this[tk]) { clearTimeout(this[tk]); this[tk] = null; } this._setSave(key, 'saving'); this._sbSaveCatalog(key, this.state[key] || {}).then(() => this._setSave(key, 'saved')); }
+  flushProjects() { if (this._projTimer) { clearTimeout(this._projTimer); this._projTimer = null; } if (!this.currentUser()) { this._setSave('projects', 'saved'); return; } this._lastSavedProjects = this.state.projects; this._setSave('projects', 'saving'); this._sbSaveCatalog('projects', this.state.projects).then(() => this._setSave('projects', 'saved')); }
+  flushProfile() { if (this._myTimer) { clearTimeout(this._myTimer); this._myTimer = null; } const p = this.state.session && this.state.session.profile; if (!p) { this._setSave('profile', 'saved'); return; } this._setSave('profile', 'saving'); this._sbUpdateProfile(p.id, { name: p.name, phone: p.phone, title: p.title, signature: p.signature, photoUrl: p.photoUrl }).then(() => this._setSave('profile', 'saved')); }
   // ===== Company profile (shared) =====
   _companyDefaults() { return { companyType: '', industries: [], slogan: '', license: '', abn: '', name: '', street: '', city: '', state: '', zip: '', phone: '', website: '', logoUrl: '', pdfHeaderUrl: '' }; }
   _normCompany(o) { const c = Object.assign(this._companyDefaults(), (o && typeof o === 'object') ? o : {}); if (!Array.isArray(c.industries)) c.industries = c.industry ? [c.industry] : []; delete c.industry; return c; }
   _loadCompany() { try { if (typeof localStorage === 'undefined') return this._companyDefaults(); const raw = localStorage.getItem('cubicCompany'); return raw ? this._normCompany(JSON.parse(raw)) : this._companyDefaults(); } catch (e) { return this._companyDefaults(); } }
-  _saveCompany(obj) { try { if (typeof localStorage !== 'undefined') localStorage.setItem('cubicCompany', JSON.stringify(obj || {})); } catch (e) {} if (this._compTimer) clearTimeout(this._compTimer); this._compTimer = setTimeout(() => this._sbSaveCatalog('company', obj || {}), 500); }
+  _saveCompany(obj) { this._saveCatalogDebounced('company', 'cubicCompany', obj); }
   setCompanyField(field, val) { if (!this.can('admin', 'edit')) return; const next = Object.assign({}, this.state.company || this._companyDefaults(), { [field]: val }); this._saveCompany(next); this.setState({ company: next }); }
   toggleCompanyIndustry(name) { if (!this.can('admin', 'edit')) return; const cur = (this.state.company && this.state.company.industries) || []; const industries = cur.indexOf(name) >= 0 ? cur.filter(x => x !== name) : [...cur, name]; const next = Object.assign({}, this.state.company || this._companyDefaults(), { industries }); this._saveCompany(next); this.setState({ company: next }); }
   openCompanyWebsite() { let w = ((this.state.company && this.state.company.website) || '').trim(); if (!w) return; if (!/^https?:\/\//i.test(w)) w = 'https://' + w; try { window.open(w, '_blank', 'noopener'); } catch (e) {} }
@@ -5021,13 +5068,13 @@ class Component extends DCLogic {
   // ===== Defaults (shared) =====
   _defaultsSeed() { return { weeklyHours: '', weekStart: '', dateFormat: 'DD/MM/YYYY' }; }
   _loadDefaults() { try { if (typeof localStorage === 'undefined') return this._defaultsSeed(); const raw = localStorage.getItem('cubicDefaults'); if (!raw) return this._defaultsSeed(); const o = JSON.parse(raw); return Object.assign(this._defaultsSeed(), (o && typeof o === 'object') ? o : {}); } catch (e) { return this._defaultsSeed(); } }
-  _saveDefaults(obj) { try { if (typeof localStorage !== 'undefined') localStorage.setItem('cubicDefaults', JSON.stringify(obj || {})); } catch (e) {} if (this._defTimer) clearTimeout(this._defTimer); this._defTimer = setTimeout(() => this._sbSaveCatalog('defaults', obj || {}), 500); }
+  _saveDefaults(obj) { this._saveCatalogDebounced('defaults', 'cubicDefaults', obj); }
   setDefaultField(field, val) { if (!this.can('admin', 'edit')) return; const next = Object.assign({}, this.state.defaults || this._defaultsSeed(), { [field]: val }); this._saveDefaults(next); this.setState({ defaults: next }); }
   // ===== Financial settings (shared) =====
   _financialSeed() { return { markups: { material: '', labour: '', equipment: '', subcontract: '', other: '' }, currencySymbol: '$', defaultTerm: 'Net 30' }; }
   _normFinancial(o) { const s = this._financialSeed(); if (!o || typeof o !== 'object') return s; return { markups: Object.assign({}, s.markups, (o.markups && typeof o.markups === 'object') ? o.markups : {}), currencySymbol: o.currencySymbol || s.currencySymbol, defaultTerm: o.defaultTerm || s.defaultTerm }; }
   _loadFinancial() { try { if (typeof localStorage === 'undefined') return this._financialSeed(); const raw = localStorage.getItem('cubicFinancial'); return raw ? this._normFinancial(JSON.parse(raw)) : this._financialSeed(); } catch (e) { return this._financialSeed(); } }
-  _saveFinancial(obj) { try { if (typeof localStorage !== 'undefined') localStorage.setItem('cubicFinancial', JSON.stringify(obj || {})); } catch (e) {} if (this._finTimer) clearTimeout(this._finTimer); this._finTimer = setTimeout(() => this._sbSaveCatalog('financial', obj || {}), 500); }
+  _saveFinancial(obj) { this._saveCatalogDebounced('financial', 'cubicFinancial', obj); }
   setFinancialField(field, val) { if (!this.can('admin', 'edit')) return; const next = Object.assign({}, this.state.financial || this._financialSeed(), { [field]: val }); this._saveFinancial(next); this.setState({ financial: next }); }
   setMarkup(cat, val) { if (!this.can('admin', 'edit')) return; const cur = this.state.financial || this._financialSeed(); const next = Object.assign({}, cur, { markups: Object.assign({}, cur.markups || {}, { [cat]: val }) }); this._saveFinancial(next); this.setState({ financial: next }); }
   // ===== My details (per-user, saved on the profile) =====
@@ -5037,8 +5084,9 @@ class Component extends DCLogic {
     const ns = Object.assign({}, s, { profile });
     this._saveAuth(ns); this.setState({ session: ns });
     if (['name', 'phone', 'title', 'signature', 'photoUrl'].indexOf(field) < 0) return;
+    this._setSave('profile', 'saving');
     if (this._myTimer) clearTimeout(this._myTimer);
-    this._myTimer = setTimeout(() => { const p = this.state.session && this.state.session.profile; if (p) this._sbUpdateProfile(p.id, { name: p.name, phone: p.phone, title: p.title, signature: p.signature, photoUrl: p.photoUrl }); }, 500);
+    this._myTimer = setTimeout(() => { const p = this.state.session && this.state.session.profile; if (p) this._sbUpdateProfile(p.id, { name: p.name, phone: p.phone, title: p.title, signature: p.signature, photoUrl: p.photoUrl }).then(() => this._setSave('profile', 'saved')); else this._setSave('profile', 'saved'); }, 500);
   }
   uploadMyPhoto(e) { const f = e.target && e.target.files && e.target.files[0]; if (e.target) e.target.value = ''; if (!f) return; this._sbUploadFile(f, 'avatars').then(url => { if (url) this.setMyProfileField('photoUrl', url); }); }
   setMyPwField(k, v) { this.setState(s => ({ myPw: Object.assign({}, s.myPw || {}, { [k]: v, msg: '', ok: false }) })); }
@@ -5255,6 +5303,9 @@ class Component extends DCLogic {
     const projects = S.projects;
     const p = this.proj(S.pid);
     const inProject = S.view === 'project';
+    // save-status pill + "Save changes" button model (auto-save stays; this is the visible affordance)
+    const _saveMeta = (ch, onSave) => { const st = (S.saveStatus && S.saveStatus[ch]) || 'saved'; const saving = st === 'saving'; return { saving, statusText: saving ? 'Saving…' : 'All changes saved', statusColor: saving ? '#8a6d00' : '#15803d', statusBg: saving ? '#fdf6e3' : '#eef8f1', dotColor: saving ? '#e0a800' : '#22a35a', saveLabel: saving ? 'Saving…' : 'Save changes', onSave }; };
+    const projectsSaveV = _saveMeta('projects', () => this.flushProjects());
     const orgName = this.props.orgName ?? 'Cubic';
 
     const accessible = this.accessibleProjects();
@@ -6925,7 +6976,12 @@ class Component extends DCLogic {
         onPwNew: e => this.setMyPwField('new', e.target.value), onPwConfirm: e => this.setMyPwField('confirm', e.target.value), onChangePw: () => this.changeMyPassword(),
       };
       const tabLabels = { company: 'Company profile', defaults: 'Defaults', financial: 'Financial', roles: 'Roles & permissions', codes: 'Cost codes', mydetails: 'My details' };
-      settingsV = { show: true, tab, isCompany: tab === 'company', isDefaults: tab === 'defaults', isFinancial: tab === 'financial', isRoles: tab === 'roles', isCodes: tab === 'codes', isMyDetails: tab === 'mydetails', company: companyV, defaults: defaultsV, financial: financialV, myDetails: myDetailsV,
+      let settingsSave = { show: false };
+      if (tab === 'company') settingsSave = Object.assign({ show: true, section: 'Company profile' }, _saveMeta('company', () => this._flushCatalog('company')));
+      else if (tab === 'defaults') settingsSave = Object.assign({ show: true, section: 'Defaults' }, _saveMeta('defaults', () => this._flushCatalog('defaults')));
+      else if (tab === 'financial') settingsSave = Object.assign({ show: true, section: 'Financial' }, _saveMeta('financial', () => this._flushCatalog('financial')));
+      else if (tab === 'mydetails') settingsSave = Object.assign({ show: true, section: 'My details' }, _saveMeta('profile', () => this.flushProfile()));
+      settingsV = { show: true, tab, save: settingsSave, isCompany: tab === 'company', isDefaults: tab === 'defaults', isFinancial: tab === 'financial', isRoles: tab === 'roles', isCodes: tab === 'codes', isMyDetails: tab === 'mydetails', company: companyV, defaults: defaultsV, financial: financialV, myDetails: myDetailsV,
         tabs: validTabs.map(k => ({ k, l: tabLabels[k], active: tab === k, onClick: () => this.setSettingsTab(k) })).map(t => ({ ...t, bg: t.active ? '#2b59c3' : '#fff', fg: t.active ? '#fff' : '#4a5765', border: t.active ? '#2b59c3' : '#cfd8e2' })),
         matrixHead, matrixRows,
         parentGroups, codeCount: String(childTotal), parentCount: String(parentGroups.length), hasCodes: parentGroups.length > 0, noCodes: parentGroups.length === 0, catalogCount: String(inUseCount),
@@ -7009,7 +7065,7 @@ class Component extends DCLogic {
       onCloseVendorModal: () => this.closeVendorModal(), onSaveVendor: () => this.saveVendor(),
       pageTitle, pageSub, crumb1, crumb2, pageStatus, primaryAction, kpis, hasKpis: kpis.length > 0,
       statusFilters, portfolioRows, totals, dashModules,
-      contractFields, contractVarRows, contractCalc, hasContractFile, contractFileName, onViewContract: () => this.viewProjectContract(),
+      contractFields, contractVarRows, contractCalc, hasContractFile, contractFileName, onViewContract: () => this.viewProjectContract(), projectsSaveV,
       commitmentRows, costLineRows, costTotals, chart, costInsight, markupSummary, budgetColTemplate, budgetMinWidth, budgetHeaderCols, budgetTotalCols, colMenuItems, budgetColMenu: S.budgetColMenu, onToggleColMenu: () => this.toggleBudgetColMenu(), onCloseColMenu: () => this.closeBudgetColMenu(), onResetBudgetCols: () => this.resetBudgetCols(), budgetVarRows, budgetVarApproved, budgetVarHas, budgetVarEmpty, onAddVariation: () => this.addVariation(), onAddCostLine: () => this.addCostLine(),
       onExportCsv: () => this.exportCsv(), onExportPdf: () => this.exportPdf(),
       codeModal: S.codeModal ? { open: true, parentCode: S.codeForm.parentCode, parentDesc: S.codeForm.parentDesc, childCode: S.codeForm.childCode, childDesc: S.codeForm.childDesc } : { open: false },
