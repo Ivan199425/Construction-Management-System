@@ -1047,6 +1047,28 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
             <button onClick="{{ onAddCostLine }}" style="border:1px dashed #2b59c3;background:#f2f6fd;color:#2b59c3;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="background:#e8eefc">＋ Add cost line</button>
             <div style="font-size:12px;color:#8894a2;line-height:1.5;text-align:right"><strong style="color:#6b7787">Committed</strong> auto-populates from invoices assigned to the cost code (🧾), or link a line to a commitment (🔗) to track its current value incl. approved variations. Codes with neither stay manually editable.</div>
           </div>
+          <sc-if value="{{ markupSummary.show }}" hint-placeholder-val="{{ false }}">
+            <div style="background:#fff;border:1px solid #e4e8ee;border-radius:12px;overflow:hidden;margin-top:16px">
+              <div style="padding:13px 16px;border-bottom:1px solid #eef1f4;background:#fafbfc;font-size:13px;font-weight:600;color:#0f1720">Pricing — cost + markup <span style="font-weight:400;color:#a4afba;font-size:11.5px">· default markups from Settings → Financial, applied to the budgeted cost by category</span></div>
+              <div style="overflow-x:auto"><div style="min-width:600px">
+                <div style="display:grid;grid-template-columns:1.3fr 90px 1fr 1fr 1fr;gap:10px;padding:9px 16px;background:#fafbfc;border-bottom:1px solid #e4e8ee;font-size:10px;font-weight:600;letter-spacing:.3px;color:#8894a2;text-transform:uppercase">
+                  <div>Category</div><div style="text-align:right">Markup</div><div style="text-align:right">Cost</div><div style="text-align:right">Markup $</div><div style="text-align:right">Contract</div>
+                </div>
+                <sc-for list="{{ markupSummary.rows }}" as="r" hint-placeholder-count="5">
+                  <div style="display:grid;grid-template-columns:1.3fr 90px 1fr 1fr 1fr;gap:10px;padding:8px 16px;border-bottom:1px solid #f4f6f9;align-items:center">
+                    <div style="font-size:12.5px;color:#0f1720">{{ r.label }}</div>
+                    <div class="mono" style="text-align:right;font-size:12px;color:#4a5765">{{ r.pctLabel }}</div>
+                    <div class="mono" style="text-align:right;font-size:12.5px;color:#4a5765">{{ r.cost }}</div>
+                    <div class="mono" style="text-align:right;font-size:12.5px;color:#15803d">{{ r.markup }}</div>
+                    <div class="mono" style="text-align:right;font-size:12.5px;font-weight:600;color:#0f1720">{{ r.sell }}</div>
+                  </div>
+                </sc-for>
+                <div style="display:grid;grid-template-columns:1.3fr 90px 1fr 1fr 1fr;gap:10px;padding:12px 16px;background:#0f1a24;color:#fff;font-size:12.5px;font-weight:600;align-items:center">
+                  <div>Total contract value</div><div class="mono" style="text-align:right;color:#9fb0c4;font-size:11px">{{ markupSummary.margin }}</div><div class="mono" style="text-align:right">{{ markupSummary.totalCost }}</div><div class="mono" style="text-align:right;color:#5fd68a">{{ markupSummary.totalMarkup }}</div><div class="mono" style="text-align:right">{{ markupSummary.totalSell }}</div>
+                </div>
+              </div></div>
+            </div>
+          </sc-if>
         </sc-if>
 
         <!-- ============ VARIATIONS (own tab, between Progress claims & Invoices) ============ -->
@@ -4511,7 +4533,8 @@ class Component extends DCLogic {
   addClaim() {
     if (!this.can('claims', 'edit')) return;
     const today = new Date().toISOString().slice(0, 10);
-    this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, claims: [...(p.claims || []), { id: 'pc' + Date.now(), claimNo: this.nextSeqRef(p.claims, 'claimNo', 'PC-', 3), commitmentId: '', period: today.slice(0, 7), thisClaim: 0, toDate: 0, varsClaimed: 0, taxRate: 10, status: 'submitted', submitted: today, assessed: '', certified: 0, paymentDue: '', invoice: '', sentAt: '' }] }) }));
+    const due = this.addCalendarDays(today, this._termDays());
+    this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, claims: [...(p.claims || []), { id: 'pc' + Date.now(), claimNo: this.nextSeqRef(p.claims, 'claimNo', 'PC-', 3), commitmentId: '', period: today.slice(0, 7), thisClaim: 0, toDate: 0, varsClaimed: 0, taxRate: 10, status: 'submitted', submitted: today, assessed: '', certified: 0, paymentDue: due, invoice: '', sentAt: '' }] }) }));
   }
   deleteClaim(id) { this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, claims: (p.claims || []).filter(x => x.id !== id), bills: (p.bills || []).filter(b => b.claimId !== id) }) })); }
   setClaimField(id, field, val) { this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, claims: (p.claims || []).map(x => x.id === id ? { ...x, [field]: val } : x) }) })); }
@@ -4619,7 +4642,8 @@ class Component extends DCLogic {
   isWorkingDay(d, p) { const dow = d.getDay(); if (dow === 0 || dow === 6) return false; const iso = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); if (p && p.holidays && p.holidays.indexOf(iso) >= 0) return false; return true; }
   addWorkingDays(startIso, duration, p) { const n = Number(duration) || 0; if (!startIso || n <= 0) return ''; const parts = startIso.split('-').map(Number); const d = new Date(parts[0], parts[1] - 1, parts[2]); let counted = 0, guard = 0; while (guard < 100000) { if (this.isWorkingDay(d, p)) { counted++; if (counted >= n) break; } d.setDate(d.getDate() + 1); guard++; } return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
   addDays(iso, n) { const parts = (iso || this.todayLocal()).split('-').map(Number); const d = new Date(parts[0], parts[1] - 1, parts[2]); d.setDate(d.getDate() + n); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
-  fmtDate(iso) { if (!iso) return ''; const d = new Date(iso + 'T00:00:00'); if (isNaN(d.getTime())) return iso; return String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0') + '/' + d.getFullYear(); }
+  fmtDate(iso) { if (!iso) return ''; const d = new Date(iso + 'T00:00:00'); if (isNaN(d.getTime())) return iso; const dd = String(d.getDate()).padStart(2, '0'); const mm = String(d.getMonth() + 1).padStart(2, '0'); const yyyy = d.getFullYear(); const f = (this.state && this.state.defaults && this.state.defaults.dateFormat) || 'DD/MM/YYYY'; if (f === 'MM/DD/YYYY') return mm + '/' + dd + '/' + yyyy; if (f === 'YYYY/MM/DD') return yyyy + '/' + mm + '/' + dd; return dd + '/' + mm + '/' + yyyy; }
+  _termDays() { const t = (this.state.financial && this.state.financial.defaultTerm) || 'Net 30'; const m = /(\d+)/.exec(t); if (/receipt/i.test(t)) return 0; return m ? Number(m[1]) : 30; }
   openInvoiceSend() { const p = this.proj(this.state.pid); if (!p) return; const emails = (p.customers || []).map(c => c.email).filter(Boolean); const no = 'INV-' + String((Number(p.clientInvoiceNo) || 0) + 1).padStart(3, '0'); this.setState({ invoiceSend: { recipients: emails, newEmail: '', message: '', from: p.senderEmail || 'ivan@cubiccm.com', subject: 'Progress Payment Claim ' + no + ' — ' + p.name } }); }
   closeInvoiceSend() { this.setState({ invoiceSend: null }); }
   setInvoiceMessage(v) { this.setState(s => s.invoiceSend ? { invoiceSend: { ...s.invoiceSend, message: v } } : {}); }
@@ -4705,7 +4729,7 @@ class Component extends DCLogic {
   addBill() {
     if (!this.can('bills', 'edit')) return;
     const today = new Date().toISOString().slice(0, 10);
-    const due = new Date(Date.now() + 30 * 864e5).toISOString().slice(0, 10);
+    const due = this.addCalendarDays(today, this._termDays());
     this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, bills: [...(p.bills || []), { id: 'bill' + Date.now(), billNo: this.nextSeqRef(p.bills, 'billNo', 'BILL-', 4), vendorId: '', code: '', desc: '', amount: 0, taxRate: 10, billDate: today, dueDate: due, status: 'unpaid', paid: 0, invoice: '', sentAt: '', commitmentId: '' }] }) }));
   }
   deleteBill(id) {
@@ -5726,7 +5750,7 @@ class Component extends DCLogic {
         newEmail: S.invoiceSend.newEmail || '',
         message: S.invoiceSend.message || '', hasMessage: !!(S.invoiceSend.message || '').trim(),
         from: S.invoiceSend.from || '', subject: S.invoiceSend.subject || '',
-        dueDatePreview: this.fmtDate(this.addDays(this.todayLocal(), 15)),
+        dueDatePreview: this.fmtDate(this.addDays(this.todayLocal(), this._termDays())),
         onNewEmail: e => this.setInvoiceNewEmail(e.target.value), onAddEmail: () => this.addInvoiceEmail(),
         onMessage: e => this.setInvoiceMessage(e.target.value),
         onFrom: e => this.setInvoiceFrom(e.target.value), onSubject: e => this.setInvoiceSubject(e.target.value),
@@ -6131,7 +6155,7 @@ class Component extends DCLogic {
     }
 
     // cost (flat, inline-editable)
-    let costLineRows = [], costTotals = {}, chart = { has: false }, costInsight = { show: false }, budgetVarRows = [], budgetVarApproved = '', budgetVarHas = false, budgetVarEmpty = false;
+    let costLineRows = [], costTotals = {}, chart = { has: false }, costInsight = { show: false }, budgetVarRows = [], budgetVarApproved = '', budgetVarHas = false, budgetVarEmpty = false, markupSummary = { show: false };
     if (showCost) {
       const commitmentOptions = p.commitments.map(cm => ({ id: cm.id, label: cm.ref + ' — ' + cm.vendor }));
       const codeCatalog = this.costCodeOptions();
@@ -6165,6 +6189,19 @@ class Component extends DCLogic {
       });
       const T = p.costLines.reduce((a, l) => { a.orig += Number(l.orig) || 0; a.adj += this.lineVarAdj(l, p); a.current += this.lineCurrent(l, p); a.committed += this.lineCommitted(l, p); a.actual += this.lineActual(l); a.ftc += Number(l.ftc) || 0; a.variance += this.lineVariance(l); return a; }, { orig: 0, adj: 0, current: 0, committed: 0, actual: 0, ftc: 0, variance: 0 });
       costTotals = { orig: this.money(T.orig), adj: this.signed(T.adj), current: this.money(T.current), committed: this.money(T.committed), actual: this.money(T.actual), ftc: this.money(T.ftc), eac: this.money(T.actual + T.ftc), variance: this.signed(T.variance), varColor: this.varColor(T.variance), pct: (T.actual + T.ftc) > 0 ? Math.round(T.actual / (T.actual + T.ftc) * 100) + '%' : '—' };
+      // Pricing: apply the default category markups (Settings → Financial) to the budgeted cost.
+      const mkD = (this.state.financial && this.state.financial.markups) || {};
+      const mkCats = [{ k: 'material', l: 'Material', cats: ['materials'] }, { k: 'labour', l: 'Labour', cats: ['labor'] }, { k: 'equipment', l: 'Equipment', cats: ['equipment'] }, { k: 'subcontract', l: 'Subcontract', cats: ['subcontractor'] }, { k: 'other', l: 'Other', cats: ['other', 'preliminaries'] }];
+      let mkTotCost = 0, mkTotSell = 0;
+      const mkRows = mkCats.map(c => {
+        const base = p.costLines.filter(l => c.cats.indexOf(l.cat) >= 0).reduce((a, l) => a + (Number(l.orig) || 0) + (Number(l.adj) || 0), 0);
+        const set = mkD[c.k] != null && mkD[c.k] !== ''; const pct = Number(mkD[c.k]) || 0;
+        const markupAmt = base * pct / 100; const sell = base + markupAmt;
+        mkTotCost += base; mkTotSell += sell;
+        return { label: c.l, pctLabel: set ? (pct + '%') : '—', cost: this.moneyM(base), markup: this.moneyM(markupAmt), sell: this.moneyM(sell) };
+      });
+      const mkMarkupTot = mkTotSell - mkTotCost; const mkMargin = mkTotSell > 0 ? (mkMarkupTot / mkTotSell * 100) : 0;
+      markupSummary = { show: mkTotCost > 0, rows: mkRows, totalCost: this.moneyM(mkTotCost), totalMarkup: this.moneyM(mkMarkupTot), totalSell: this.moneyM(mkTotSell), margin: mkMargin.toFixed(1) + '% margin' };
 
       // reporting date & programme position (analysis is anchored to this)
       const reportIso = this.todayLocal(), reportingDate = this.fmtDate(reportIso);
@@ -6781,7 +6818,7 @@ class Component extends DCLogic {
       pageTitle, pageSub, crumb1, crumb2, pageStatus, primaryAction, kpis, hasKpis: kpis.length > 0,
       statusFilters, portfolioRows, totals, dashModules,
       contractFields, contractVarRows, contractCalc,
-      commitmentRows, costLineRows, costTotals, chart, costInsight, budgetVarRows, budgetVarApproved, budgetVarHas, budgetVarEmpty, onAddVariation: () => this.addVariation(), onAddCostLine: () => this.addCostLine(),
+      commitmentRows, costLineRows, costTotals, chart, costInsight, markupSummary, budgetVarRows, budgetVarApproved, budgetVarHas, budgetVarEmpty, onAddVariation: () => this.addVariation(), onAddCostLine: () => this.addCostLine(),
       onExportCsv: () => this.exportCsv(), onExportPdf: () => this.exportPdf(),
       codeModal: S.codeModal ? { open: true, parentCode: S.codeForm.parentCode, parentDesc: S.codeForm.parentDesc, childCode: S.codeForm.childCode, childDesc: S.codeForm.childDesc } : { open: false },
       onCodeModalParentCode: (e) => this.setCodeForm('parentCode', e.target.value), onCodeModalParentDesc: (e) => this.setCodeForm('parentDesc', e.target.value),
