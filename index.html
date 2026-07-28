@@ -150,6 +150,28 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
     </div>
   </sc-if>
 
+  <!-- NEW PROJECT MODAL -->
+  <sc-if value="{{ projectModal.open }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ projectModal.onClose }}" style="position:fixed;inset:0;background:rgba(15,23,32,.42);display:flex;align-items:center;justify-content:center;z-index:200;padding:24px;animation:fadeUp .15s ease">
+      <div onClick="{{ stop }}" style="background:#fff;border-radius:14px;width:520px;max-width:96vw;box-shadow:0 24px 60px rgba(15,23,32,.28);overflow:hidden">
+        <div style="padding:18px 22px;border-bottom:1px solid #eef1f4"><div style="font-size:16px;font-weight:600;color:#0f1720">New project</div><div style="font-size:12.5px;color:#8894a2;margin-top:2px">Create the project, then fill in its details, team and budget.</div></div>
+        <div style="padding:20px 22px;display:grid;grid-template-columns:1fr 1fr;gap:14px">
+          <div style="grid-column:1 / -1"><div style="font-size:11px;font-weight:600;letter-spacing:.3px;color:#6b7787;text-transform:uppercase;margin-bottom:5px">Project name</div><input value="{{ projectModal.name }}" onInput="{{ projectModal.onName }}" placeholder="e.g. Parkside Apartments" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:inherit;color:#0f1720" style-focus="border-color:#2b59c3;outline:none"></div>
+          <div><div style="font-size:11px;font-weight:600;letter-spacing:.3px;color:#6b7787;text-transform:uppercase;margin-bottom:5px">Project code</div><input value="{{ projectModal.code }}" onInput="{{ projectModal.onCode }}" placeholder="auto if blank" class="mono" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:'IBM Plex Mono',monospace;color:#0f1720" style-focus="border-color:#2b59c3;outline:none"></div>
+          <div><div style="font-size:11px;font-weight:600;letter-spacing:.3px;color:#6b7787;text-transform:uppercase;margin-bottom:5px">GST rate %</div><input value="{{ projectModal.gstRate }}" onInput="{{ projectModal.onGst }}" placeholder="10" class="mono" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:'IBM Plex Mono',monospace;color:#0f1720" style-focus="border-color:#2b59c3;outline:none"></div>
+          <div style="grid-column:1 / -1"><div style="font-size:11px;font-weight:600;letter-spacing:.3px;color:#6b7787;text-transform:uppercase;margin-bottom:5px">Client</div><input value="{{ projectModal.client }}" onInput="{{ projectModal.onClient }}" placeholder="e.g. Greenfield Homes" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:inherit;color:#0f1720" style-focus="border-color:#2b59c3;outline:none"></div>
+          <div><div style="font-size:11px;font-weight:600;letter-spacing:.3px;color:#6b7787;text-transform:uppercase;margin-bottom:5px">Project type</div><select value="{{ projectModal.projectType }}" onChange="{{ projectModal.onType }}" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 10px;font-size:13px;font-family:inherit;color:#0f1720;background:#fff;cursor:pointer" style-focus="border-color:#2b59c3;outline:none"><sc-for list="{{ projectModal.typeOptions }}" as="o" hint-placeholder-count="8"><option value="{{ o.v }}">{{ o.l }}</option></sc-for></select></div>
+          <div><div style="font-size:11px;font-weight:600;letter-spacing:.3px;color:#6b7787;text-transform:uppercase;margin-bottom:5px">Address</div><input value="{{ projectModal.address }}" onInput="{{ projectModal.onAddress }}" placeholder="Site address" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:inherit;color:#0f1720" style-focus="border-color:#2b59c3;outline:none"></div>
+          <sc-if value="{{ projectModal.hasError }}" hint-placeholder-val="{{ false }}"><div style="grid-column:1 / -1;background:#fbeef0;border:1px solid #efd0d0;border-radius:8px;padding:8px 11px;font-size:12px;color:#b91c1c">{{ projectModal.error }}</div></sc-if>
+        </div>
+        <div style="padding:14px 22px;border-top:1px solid #eef1f4;display:flex;justify-content:flex-end;gap:10px">
+          <button onClick="{{ projectModal.onClose }}" style="border:1px solid #cfd8e2;background:#fff;color:#4a5765;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Cancel</button>
+          <button onClick="{{ projectModal.onSave }}" style="border:0;background:#2b59c3;color:#fff;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="background:#244dab">Create project</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
   <!-- SIDEBAR -->
   <aside style="width:248px;flex:0 0 248px;background:#0f1a24;color:#8493a3;display:flex;flex-direction:column;height:100vh">
     <div style="padding:20px 16px 18px;border-bottom:1px solid rgba(255,255,255,.07)">
@@ -172,7 +194,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
           </span>
         </button>
       </sc-for>
-      <button style="width:100%;display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px dashed rgba(255,255,255,.12);background:transparent;color:#5f7080;border-radius:7px;cursor:pointer;margin-top:6px;font-family:inherit;font-size:12.5px" style-hover="color:#8493a3;border-color:rgba(255,255,255,.2)">＋ New project</button>
+      <sc-if value="{{ canCreateProject }}" hint-placeholder-val="{{ true }}"><button onClick="{{ onNewProject }}" style="width:100%;display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px dashed rgba(255,255,255,.12);background:transparent;color:#5f7080;border-radius:7px;cursor:pointer;margin-top:6px;font-family:inherit;font-size:12.5px" style-hover="color:#8493a3;border-color:rgba(255,255,255,.2)">＋ New project</button></sc-if>
 
       <div style="height:1px;background:rgba(255,255,255,.07);margin:16px 6px"></div>
       <button onClick="{{ onGoPortfolio }}" style="width:100%;display:flex;align-items:center;gap:10px;padding:9px 10px;border:0;background:{{ navPortfolio.bg }};color:{{ navPortfolio.fg }};border-radius:7px;cursor:pointer;text-align:left;font-family:inherit;font-size:13px;font-weight:500;margin-bottom:2px" style-hover="background:rgba(255,255,255,.06)">
@@ -3273,6 +3295,9 @@ class Component extends DCLogic {
       financial: this._loadFinancial(),
       myPw: { new: '', confirm: '', msg: '', ok: false, busy: false },
       editCell: '',
+      projectModal: null,
+      projectForm: { name: '', code: '', client: '', projectType: 'Residential', address: '', gstRate: '10' },
+      projectFormError: '',
       budgetColW: this._loadBudgetColW(),
       codeUpload: null,
       codeModal: null,
@@ -4456,6 +4481,38 @@ class Component extends DCLogic {
 
   // ---------- actions ----------
   openProject(id) { this.setState({ view: 'project', pid: id, module: 'dashboard', anim: this.state.anim + 1 }); }
+  // ----- Create a new project -----
+  _blankProject(f) {
+    const name = (f.name || '').trim();
+    const id = 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+    const client = (f.client || '').trim();
+    const code = (f.code || '').trim() || (name.replace(/[^a-zA-Z0-9]/g, '').slice(0, 6).toUpperCase() || 'PROJ');
+    return {
+      id, name, code, client, status: 'active', projectType: f.projectType || 'Residential', address: (f.address || '').trim(), gstRate: Number(f.gstRate) || 10,
+      customers: [], clientProgress: {}, clientInvoiced: {}, clientInvoiceNo: 0, clientSelected: {},
+      eots: [], docs: [], description: '',
+      schedule: { fileName: '', fileType: '', fileUrl: '', uploadedAt: '', version: 0, versions: [], activities: [] },
+      clientReps: [], team: [],
+      contract: { client, type: 'lump_sum', original: 0, retentionPct: 5, paymentTermsDays: this._termDays(), start: '', end: '', status: 'draft', variations: [] },
+      commitments: [], costLines: [], costTrend: [], claims: [], bills: [], defects: [], invoices: [], photos: [], markups: {},
+    };
+  }
+  openNewProject() { if (!this.can('projectSetup', 'edit')) return; this.setState({ projectModal: { open: true }, projectForm: { name: '', code: '', client: '', projectType: 'Residential', address: '', gstRate: '10' }, projectFormError: '' }); }
+  closeProjectModal() { this.setState({ projectModal: null, projectFormError: '' }); }
+  setProjectFormField(k, v) { this.setState(s => ({ projectForm: { ...s.projectForm, [k]: v }, projectFormError: '' })); }
+  saveNewProject() {
+    if (!this.can('projectSetup', 'edit')) return;
+    const f = this.state.projectForm || {}; const name = (f.name || '').trim();
+    if (!name) { this.setState({ projectFormError: 'Project name is required.' }); return; }
+    const np = this._blankProject(f);
+    this.setState(s => ({ projects: [...s.projects, np], pid: np.id, view: 'project', module: 'details', projectModal: null, projectFormError: '', anim: s.anim + 1 }));
+    const cu = this.currentUser();
+    if (cu && cu.role !== 'Admin' && cu.role !== 'Finance') {
+      const pids = [...(cu.projectIds || []), np.id];
+      const sess = Object.assign({}, this.state.session, { profile: Object.assign({}, cu, { projectIds: pids }) });
+      this._saveAuth(sess); this.setState({ session: sess }); this._sbUpdateProfile(cu.id, { projectIds: pids });
+    }
+  }
   goPortfolio() { this.setState({ view: 'portfolio', anim: this.state.anim + 1 }); }
   setModule(m) { this.setState({ module: m, anim: this.state.anim + 1 }); }
   setStatusFilter(f) { this.setState({ statusFilter: f }); }
@@ -6821,8 +6878,19 @@ class Component extends DCLogic {
       onRecover: () => this.doPasswordRecover(), onReset: () => this.doPasswordReset(),
     };
 
+    const pf = S.projectForm || {};
+    const projectModalV = S.projectModal ? {
+      open: true, name: pf.name || '', code: pf.code || '', client: pf.client || '', projectType: pf.projectType || 'Residential', address: pf.address || '', gstRate: pf.gstRate == null ? '10' : String(pf.gstRate),
+      error: S.projectFormError || '', hasError: !!S.projectFormError,
+      typeOptions: ['Residential', 'Commercial', 'Infrastructure', 'Industrial', 'Fit-out', 'Mixed-use', 'Civil', 'Other'].map(x => ({ v: x, l: x })),
+      onName: e => this.setProjectFormField('name', e.target.value), onCode: e => this.setProjectFormField('code', e.target.value), onClient: e => this.setProjectFormField('client', e.target.value),
+      onType: e => this.setProjectFormField('projectType', e.target.value), onAddress: e => this.setProjectFormField('address', e.target.value), onGst: e => this.setProjectFormField('gstRate', e.target.value),
+      onClose: () => this.closeProjectModal(), onSave: () => this.saveNewProject(),
+    } : { open: false };
+
     return {
       orgName, currencySymbol: this.cur, animKey: 'v' + S.anim, authV, roBanner,
+      projectModal: projectModalV, canCreateProject: this.can('projectSetup', 'edit'), onNewProject: () => this.openNewProject(),
       logo: (typeof window !== 'undefined' && window.CUBIC_LOGO) ? window.CUBIC_LOGO : '',
       emailComposeV,
       switcherProjects, navPortfolio, moduleNav, showPlaceholder, placeholder, placeholderBullets, inProject, currentProjectName: p ? p.name : '',
