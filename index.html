@@ -298,10 +298,61 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
         <!-- ============ VENDOR DIRECTORY ============ -->
         <sc-if value="{{ showSettings }}" hint-placeholder-val="{{ false }}">
           <div style="display:flex;gap:8px;margin-bottom:16px">
-            <sc-for list="{{ settingsV.tabs }}" as="t" hint-placeholder-count="2"><button onClick="{{ t.onClick }}" style="border:1px solid {{ t.border }};background:{{ t.bg }};color:{{ t.fg }};border-radius:9px;padding:8px 16px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="border-color:#2b59c3">{{ t.l }}</button></sc-for>
+            <sc-for list="{{ settingsV.tabs }}" as="t" hint-placeholder-count="3"><button onClick="{{ t.onClick }}" style="border:1px solid {{ t.border }};background:{{ t.bg }};color:{{ t.fg }};border-radius:9px;padding:8px 16px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="border-color:#2b59c3">{{ t.l }}</button></sc-for>
           </div>
 
-          <sc-if value="{{ settingsV.isRoles }}" hint-placeholder-val="{{ true }}">
+          <sc-if value="{{ settingsV.isCompany }}" hint-placeholder-val="{{ true }}">
+            <div style="background:#fff;border:1px solid #e4e8ee;border-radius:12px;overflow:hidden;margin-bottom:16px">
+              <div style="padding:13px 16px;border-bottom:1px solid #eef1f4;background:#fafbfc;font-size:13px;font-weight:600;color:#0f1720">Company details</div>
+              <div style="padding:18px 16px;display:grid;grid-template-columns:1fr 1fr;gap:14px">
+                <div><div style="font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#6b7787;text-transform:uppercase;margin-bottom:5px">Company type</div><select value="{{ settingsV.company.companyType }}" onChange="{{ settingsV.company.onType }}" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 10px;font-size:13px;font-family:inherit;color:#0f1720;background:#fff;cursor:pointer" style-focus="border-color:#2b59c3;outline:none"><option value="">Select…</option><sc-for list="{{ settingsV.company.companyTypeOptions }}" as="o" hint-placeholder-count="5"><option value="{{ o.v }}">{{ o.l }}</option></sc-for></select></div>
+                <div><div style="font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#6b7787;text-transform:uppercase;margin-bottom:5px">Primary industry</div><select value="{{ settingsV.company.industry }}" onChange="{{ settingsV.company.onIndustry }}" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 10px;font-size:13px;font-family:inherit;color:#0f1720;background:#fff;cursor:pointer" style-focus="border-color:#2b59c3;outline:none"><option value="">Select…</option><sc-for list="{{ settingsV.company.industryOptions }}" as="o" hint-placeholder-count="16"><option value="{{ o.v }}">{{ o.l }}</option></sc-for></select></div>
+                <div style="grid-column:1 / -1"><div style="font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#6b7787;text-transform:uppercase;margin-bottom:5px">Slogan</div><input value="{{ settingsV.company.slogan }}" onInput="{{ settingsV.company.onSlogan }}" placeholder="e.g. Building with precision" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:inherit;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none"></div>
+                <div><div style="font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#6b7787;text-transform:uppercase;margin-bottom:5px">License number</div><input value="{{ settingsV.company.license }}" onInput="{{ settingsV.company.onLicense }}" placeholder="e.g. BLD-123456" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:inherit;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none"></div>
+                <div><div style="font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#6b7787;text-transform:uppercase;margin-bottom:5px">Business ABN</div><input value="{{ settingsV.company.abn }}" onInput="{{ settingsV.company.onAbn }}" placeholder="e.g. 12 345 678 901" class="mono" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:'IBM Plex Mono',monospace;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none"></div>
+              </div>
+            </div>
+            <div style="background:#fff;border:1px solid #e4e8ee;border-radius:12px;overflow:hidden;margin-bottom:16px">
+              <div style="padding:13px 16px;border-bottom:1px solid #eef1f4;background:#fafbfc;font-size:13px;font-weight:600;color:#0f1720">Contact information</div>
+              <div style="padding:18px 16px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px">
+                <div style="grid-column:1 / -1"><div style="font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#6b7787;text-transform:uppercase;margin-bottom:5px">Company name</div><input value="{{ settingsV.company.name }}" onInput="{{ settingsV.company.onName }}" placeholder="e.g. Cobra Construction Pty Ltd" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:inherit;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none"></div>
+                <div style="grid-column:1 / -1"><div style="font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#6b7787;text-transform:uppercase;margin-bottom:5px">Street address</div><input value="{{ settingsV.company.street }}" onInput="{{ settingsV.company.onStreet }}" placeholder="e.g. 12 Industry Drive" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:inherit;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none"></div>
+                <div><div style="font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#6b7787;text-transform:uppercase;margin-bottom:5px">City</div><input value="{{ settingsV.company.city }}" onInput="{{ settingsV.company.onCity }}" placeholder="e.g. Sydney" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:inherit;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none"></div>
+                <div><div style="font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#6b7787;text-transform:uppercase;margin-bottom:5px">State</div><input value="{{ settingsV.company.state }}" onInput="{{ settingsV.company.onState }}" placeholder="e.g. NSW" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:inherit;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none"></div>
+                <div><div style="font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#6b7787;text-transform:uppercase;margin-bottom:5px">ZIP / Postcode</div><input value="{{ settingsV.company.zip }}" onInput="{{ settingsV.company.onZip }}" placeholder="e.g. 2000" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:inherit;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none"></div>
+                <div><div style="font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#6b7787;text-transform:uppercase;margin-bottom:5px">Phone</div><input value="{{ settingsV.company.phone }}" onInput="{{ settingsV.company.onPhone }}" placeholder="e.g. +61 2 5555 0100" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:inherit;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none"></div>
+                <div style="grid-column:1 / -1"><div style="font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#6b7787;text-transform:uppercase;margin-bottom:5px">Website</div><input value="{{ settingsV.company.website }}" onInput="{{ settingsV.company.onWebsite }}" placeholder="e.g. www.cobracm.com" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:inherit;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none"></div>
+              </div>
+            </div>
+            <div style="background:#fff;border:1px solid #e4e8ee;border-radius:12px;overflow:hidden">
+              <div style="padding:13px 16px;border-bottom:1px solid #eef1f4;background:#fafbfc;font-size:13px;font-weight:600;color:#0f1720">Branding</div>
+              <div style="padding:18px 16px;display:flex;flex-direction:column;gap:22px">
+                <div>
+                  <div style="font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#6b7787;text-transform:uppercase;margin-bottom:8px">Company logo</div>
+                  <div style="display:flex;align-items:center;gap:16px">
+                    <div style="width:120px;height:120px;flex:0 0 auto;border:1px solid #e4e8ee;border-radius:10px;background:#fafbfc;display:flex;align-items:center;justify-content:center;overflow:hidden">
+                      <sc-if value="{{ settingsV.company.hasLogo }}" hint-placeholder-val="{{ false }}"><img src="{{ settingsV.company.logoUrl }}" alt="Company logo" style="max-width:100%;max-height:100%;display:block"></sc-if>
+                      <sc-if value="{{ settingsV.company.noLogo }}" hint-placeholder-val="{{ true }}"><span style="font-size:11px;color:#a4afba">No logo</span></sc-if>
+                    </div>
+                    <div>
+                      <label style="display:inline-flex;align-items:center;gap:6px;border:1px solid #cfd8e2;background:#fff;color:#0f1720;border-radius:8px;padding:8px 14px;font-size:12.5px;font-weight:600;cursor:pointer" style-hover="border-color:#2b59c3;color:#2b59c3">⬆ Upload logo<input type="file" accept="image/*" onChange="{{ settingsV.company.onLogo }}" style="display:none"></label>
+                      <div style="font-size:11px;color:#8894a2;margin-top:8px;max-width:280px;line-height:1.5">PNG or SVG with transparent background works best. Used on the app and documents.</div>
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <div style="font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#6b7787;text-transform:uppercase;margin-bottom:8px">PDF header <span style="font-weight:400;color:#a4afba;text-transform:none;letter-spacing:0">· 900 × 100 px banner shown at the top of exported documents</span></div>
+                  <div style="width:100%;max-width:540px;aspect-ratio:9 / 1;border:1px dashed #cfd8e2;border-radius:8px;background:#fafbfc;display:flex;align-items:center;justify-content:center;overflow:hidden;margin-bottom:10px">
+                    <sc-if value="{{ settingsV.company.hasPdfHeader }}" hint-placeholder-val="{{ false }}"><img src="{{ settingsV.company.pdfHeaderUrl }}" alt="PDF header" style="width:100%;height:100%;object-fit:contain;display:block"></sc-if>
+                    <sc-if value="{{ settingsV.company.noPdfHeader }}" hint-placeholder-val="{{ true }}"><span style="font-size:11px;color:#a4afba">900 × 100 header banner</span></sc-if>
+                  </div>
+                  <label style="display:inline-flex;align-items:center;gap:6px;border:1px solid #cfd8e2;background:#fff;color:#0f1720;border-radius:8px;padding:8px 14px;font-size:12.5px;font-weight:600;cursor:pointer" style-hover="border-color:#2b59c3;color:#2b59c3">⬆ Upload header<input type="file" accept="image/*" onChange="{{ settingsV.company.onPdfHeader }}" style="display:none"></label>
+                </div>
+              </div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ settingsV.isRoles }}" hint-placeholder-val="{{ false }}">
             <div style="background:#fff;border:1px solid #e4e8ee;border-radius:12px;overflow:hidden">
               <div style="padding:11px 16px;border-bottom:1px solid #eef1f4;background:#fafbfc;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
                 <div style="font-size:13px;font-weight:600;color:#0f1720">Role permission matrix <span style="font-weight:400;color:#a4afba;font-size:11.5px">· editable · — No access · V View · E Edit/Create · A Approve</span></div>
@@ -3057,6 +3108,7 @@ class Component extends DCLogic {
       modal: null,
       form: { desc: '', value: '', time: '', status: 'submitted' },
       customCodes: this._loadCodes(),
+      company: this._loadCompany(),
       codeUpload: null,
       codeModal: null,
       codeForm: { parentCode: '', parentDesc: '', childCode: '', childDesc: '' },
@@ -3094,6 +3146,14 @@ class Component extends DCLogic {
       } else {
         const local = this.state.customCodes || [];
         if (local.length) this._sbSaveCatalog('cost_codes', local);
+      }
+    }).catch(() => {});
+    // Phase 3+: pull the SHARED company profile (Settings → Company profile).
+    this._sbLoadCatalog('company').then(c => {
+      if (c && typeof c === 'object' && !Array.isArray(c)) {
+        const merged = Object.assign(this._companyDefaults(), c);
+        try { if (typeof localStorage !== 'undefined') localStorage.setItem('cubicCompany', JSON.stringify(merged)); } catch (e) {}
+        this.setState({ company: merged });
       }
     }).catch(() => {});
     // Phase 2: restore/validate the logged-in session against Supabase.
@@ -4637,6 +4697,13 @@ class Component extends DCLogic {
   // ===== Settings (roles reference + cost-code catalog) =====
   goSettings() { this.setState({ view: 'settings', anim: this.state.anim + 1 }); }
   setSettingsTab(t) { this.setState({ settingsTab: t }); }
+  // ===== Company profile (shared) =====
+  _companyDefaults() { return { companyType: '', industry: '', slogan: '', license: '', abn: '', name: '', street: '', city: '', state: '', zip: '', phone: '', website: '', logoUrl: '', pdfHeaderUrl: '' }; }
+  _loadCompany() { try { if (typeof localStorage === 'undefined') return this._companyDefaults(); const raw = localStorage.getItem('cubicCompany'); if (!raw) return this._companyDefaults(); const o = JSON.parse(raw); return Object.assign(this._companyDefaults(), (o && typeof o === 'object') ? o : {}); } catch (e) { return this._companyDefaults(); } }
+  _saveCompany(obj) { try { if (typeof localStorage !== 'undefined') localStorage.setItem('cubicCompany', JSON.stringify(obj || {})); } catch (e) {} if (this._compTimer) clearTimeout(this._compTimer); this._compTimer = setTimeout(() => this._sbSaveCatalog('company', obj || {}), 500); }
+  setCompanyField(field, val) { if (!this.can('admin', 'edit')) return; const next = Object.assign({}, this.state.company || this._companyDefaults(), { [field]: val }); this._saveCompany(next); this.setState({ company: next }); }
+  uploadCompanyLogo(e) { if (!this.can('admin', 'edit')) return; const f = e.target && e.target.files && e.target.files[0]; if (e.target) e.target.value = ''; if (!f) return; this._sbUploadFile(f, 'company').then(url => { if (url) this.setCompanyField('logoUrl', url); }); }
+  uploadPdfHeader(e) { if (!this.can('admin', 'edit')) return; const f = e.target && e.target.files && e.target.files[0]; if (e.target) e.target.value = ''; if (!f) return; this._sbUploadFile(f, 'company').then(url => { if (url) this.setCompanyField('pdfHeaderUrl', url); }); }
   _cid() { return 'cc' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
   _commitCodes(next) { this._saveCodes(next); this.setState({ customCodes: next }); }
   addParentGroup() { this._commitCodes([...(this.state.customCodes || []), { id: this._cid(), parentCode: '', parentDesc: '', children: [{ id: this._cid(), childCode: '', childDesc: '' }] }]); }
@@ -6366,7 +6433,7 @@ class Component extends DCLogic {
     // ===== settings (roles reference + cost codes) =====
     let settingsV = { show: false };
     if (showSettings) {
-      const tab = ['roles', 'codes'].indexOf(S.settingsTab) >= 0 ? S.settingsTab : 'roles';
+      const tab = ['company', 'roles', 'codes'].indexOf(S.settingsTab) >= 0 ? S.settingsTab : 'company';
       const roles = this.roleList(); const roleShort = { Admin: 'Admin', PM: 'PM', Superintendent: 'Super', Finance: 'Fin', HR: 'HR', ContractAdmin: 'CA', Field: 'Field', Employee: 'Emp', Architect: 'A/E', ClientSuper: 'Client', Student: 'Std' };
       const matrixHead = roles.map(r => ({ short: roleShort[r.key] || r.key }));
       const matrixRows = this.resourceLabels().map(res => ({ label: res.label, cells: roles.map(r => { const lv = this.permLevel(r.key, res.key); const b = this.permBadge(lv); return { level: String(lv), c: b.c, bg: b.bg, onChange: e => this.setPerm(res.key, r.key, e.target.value) }; }) }));
@@ -6382,8 +6449,22 @@ class Component extends DCLogic {
       const childTotal = parentGroups.reduce((a, g) => a + g.children.length, 0);
       const inUseCount = this.costCodeCatalog().length;
       const up = S.codeUpload || null;
-      settingsV = { show: true, tab, isRoles: tab === 'roles', isCodes: tab === 'codes',
-        tabs: [{ k: 'roles', l: 'Roles & permissions', active: tab === 'roles', onClick: () => this.setSettingsTab('roles') }, { k: 'codes', l: 'Cost codes', active: tab === 'codes', onClick: () => this.setSettingsTab('codes') }].map(t => ({ ...t, bg: t.active ? '#2b59c3' : '#fff', fg: t.active ? '#fff' : '#4a5765', border: t.active ? '#2b59c3' : '#cfd8e2' })),
+      const co = S.company || this._companyDefaults();
+      const industryOptions = ['General Construction', 'Residential Building', 'Commercial Construction', 'Civil / Infrastructure', 'Electrical', 'Plumbing / Hydraulic', 'HVAC / Mechanical', 'Concrete / Formwork', 'Structural Steel', 'Carpentry / Joinery', 'Roofing', 'Landscaping', 'Demolition', 'Fit-out', 'Painting', 'Other'].map(x => ({ v: x, l: x }));
+      const companyTypeOptions = ['Sole Trader', 'Partnership', 'Company (Pty Ltd)', 'Trust', 'Other'].map(x => ({ v: x, l: x }));
+      const companyV = {
+        companyType: co.companyType || '', industry: co.industry || '', slogan: co.slogan || '', license: co.license || '', abn: co.abn || '',
+        name: co.name || '', street: co.street || '', city: co.city || '', state: co.state || '', zip: co.zip || '', phone: co.phone || '', website: co.website || '',
+        logoUrl: co.logoUrl || '', hasLogo: !!co.logoUrl, noLogo: !co.logoUrl, pdfHeaderUrl: co.pdfHeaderUrl || '', hasPdfHeader: !!co.pdfHeaderUrl, noPdfHeader: !co.pdfHeaderUrl,
+        industryOptions, companyTypeOptions,
+        onType: e => this.setCompanyField('companyType', e.target.value), onIndustry: e => this.setCompanyField('industry', e.target.value),
+        onSlogan: e => this.setCompanyField('slogan', e.target.value), onLicense: e => this.setCompanyField('license', e.target.value), onAbn: e => this.setCompanyField('abn', e.target.value),
+        onName: e => this.setCompanyField('name', e.target.value), onStreet: e => this.setCompanyField('street', e.target.value), onCity: e => this.setCompanyField('city', e.target.value),
+        onState: e => this.setCompanyField('state', e.target.value), onZip: e => this.setCompanyField('zip', e.target.value), onPhone: e => this.setCompanyField('phone', e.target.value), onWebsite: e => this.setCompanyField('website', e.target.value),
+        onLogo: e => this.uploadCompanyLogo(e), onPdfHeader: e => this.uploadPdfHeader(e),
+      };
+      settingsV = { show: true, tab, isCompany: tab === 'company', isRoles: tab === 'roles', isCodes: tab === 'codes', company: companyV,
+        tabs: [{ k: 'company', l: 'Company profile', active: tab === 'company', onClick: () => this.setSettingsTab('company') }, { k: 'roles', l: 'Roles & permissions', active: tab === 'roles', onClick: () => this.setSettingsTab('roles') }, { k: 'codes', l: 'Cost codes', active: tab === 'codes', onClick: () => this.setSettingsTab('codes') }].map(t => ({ ...t, bg: t.active ? '#2b59c3' : '#fff', fg: t.active ? '#fff' : '#4a5765', border: t.active ? '#2b59c3' : '#cfd8e2' })),
         matrixHead, matrixRows,
         parentGroups, codeCount: String(childTotal), parentCount: String(parentGroups.length), hasCodes: parentGroups.length > 0, noCodes: parentGroups.length === 0, catalogCount: String(inUseCount),
         hasUploadMsg: !!up, uploadMsg: up ? up.msg : '', uploadBg: up ? (up.ok ? '#eaf6ee' : '#fdecec') : '#fff', uploadFg: up ? (up.ok ? '#15803d' : '#b91c1c') : '#4a5765', uploadBorder: up ? (up.ok ? '#bfe3ca' : '#f4c9c9') : '#eef1f4',
