@@ -201,7 +201,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
       </sc-if>
     </div>
     <div style="padding:12px 16px;border-top:1px solid rgba(255,255,255,.07);display:flex;align-items:center;gap:10px">
-      <div style="width:28px;height:28px;border-radius:50%;background:#2b3a48;color:#c3ccd6;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600">{{ authV.initials }}</div>
+      <div style="width:28px;height:28px;flex:0 0 auto;border-radius:50%;background:#2b3a48;color:#c3ccd6;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;overflow:hidden"><sc-if value="{{ authV.hasPhoto }}" hint-placeholder-val="{{ false }}"><img src="{{ authV.photoUrl }}" alt="" style="width:100%;height:100%;object-fit:cover;display:block"></sc-if><sc-if value="{{ authV.noPhoto }}" hint-placeholder-val="{{ true }}">{{ authV.initials }}</sc-if></div>
       <div style="flex:1;min-width:0;font-size:12px"><div style="color:#c3ccd6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ authV.userName }}</div><div style="color:#5f7080;font-size:10.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ authV.roleLabel }}</div></div>
       <button onClick="{{ authV.onLogout }}" title="Log out" style="border:1px solid rgba(255,255,255,.14);background:transparent;color:#8493a3;border-radius:7px;padding:5px 9px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap" style-hover="border-color:#e57373;color:#e57373">Log out</button>
     </div>
@@ -298,7 +298,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
         <!-- ============ VENDOR DIRECTORY ============ -->
         <sc-if value="{{ showSettings }}" hint-placeholder-val="{{ false }}">
           <div style="display:flex;gap:8px;margin-bottom:16px">
-            <sc-for list="{{ settingsV.tabs }}" as="t" hint-placeholder-count="3"><button onClick="{{ t.onClick }}" style="border:1px solid {{ t.border }};background:{{ t.bg }};color:{{ t.fg }};border-radius:9px;padding:8px 16px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="border-color:#2b59c3">{{ t.l }}</button></sc-for>
+            <sc-for list="{{ settingsV.tabs }}" as="t" hint-placeholder-count="6"><button onClick="{{ t.onClick }}" style="border:1px solid {{ t.border }};background:{{ t.bg }};color:{{ t.fg }};border-radius:9px;padding:8px 16px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="border-color:#2b59c3">{{ t.l }}</button></sc-for>
           </div>
 
           <sc-if value="{{ settingsV.isCompany }}" hint-placeholder-val="{{ true }}">
@@ -400,6 +400,50 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                   <select value="{{ settingsV.financial.defaultTerm }}" onChange="{{ settingsV.financial.onTerm }}" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 10px;font-size:13px;font-family:inherit;color:#0f1720;background:#fff;cursor:pointer" style-focus="border-color:#2b59c3;outline:none"><sc-for list="{{ settingsV.financial.termOptions }}" as="o" hint-placeholder-count="5"><option value="{{ o.v }}">{{ o.l }}</option></sc-for></select>
                   <div style="font-size:11px;color:#8894a2;margin-top:6px">Default due date for new bills and invoices.</div>
                 </div>
+              </div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ settingsV.isMyDetails }}" hint-placeholder-val="{{ false }}">
+            <div style="background:#fff;border:1px solid #e4e8ee;border-radius:12px;overflow:hidden;margin-bottom:16px">
+              <div style="padding:13px 16px;border-bottom:1px solid #eef1f4;background:#fafbfc;font-size:13px;font-weight:600;color:#0f1720">Your profile <span style="font-weight:400;color:#a4afba;font-size:11.5px">· {{ settingsV.myDetails.roleLabel }}</span></div>
+              <div style="padding:18px 16px">
+                <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px">
+                  <div style="width:74px;height:74px;flex:0 0 auto;border-radius:50%;overflow:hidden;border:1px solid #e4e8ee;background:#eef1f5;display:flex;align-items:center;justify-content:center">
+                    <sc-if value="{{ settingsV.myDetails.hasPhoto }}" hint-placeholder-val="{{ false }}"><img src="{{ settingsV.myDetails.photoUrl }}" alt="Profile photo" style="width:100%;height:100%;object-fit:cover;display:block"></sc-if>
+                    <sc-if value="{{ settingsV.myDetails.noPhoto }}" hint-placeholder-val="{{ true }}"><span style="font-size:24px;font-weight:700;color:#8894a2">{{ settingsV.myDetails.initials }}</span></sc-if>
+                  </div>
+                  <div>
+                    <label style="display:inline-flex;align-items:center;gap:6px;border:1px solid #cfd8e2;background:#fff;color:#0f1720;border-radius:8px;padding:8px 14px;font-size:12.5px;font-weight:600;cursor:pointer" style-hover="border-color:#2b59c3;color:#2b59c3">⬆ Upload photo<input type="file" accept="image/*" onChange="{{ settingsV.myDetails.onPhoto }}" style="display:none"></label>
+                    <div style="font-size:11px;color:#8894a2;margin-top:8px;max-width:280px;line-height:1.5">A square image works best.</div>
+                  </div>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+                  <div><div style="font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#6b7787;text-transform:uppercase;margin-bottom:5px">Full name</div><input value="{{ settingsV.myDetails.name }}" onInput="{{ settingsV.myDetails.onName }}" placeholder="Your name" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:inherit;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none"></div>
+                  <div><div style="font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#6b7787;text-transform:uppercase;margin-bottom:5px">Title</div><input value="{{ settingsV.myDetails.title }}" onInput="{{ settingsV.myDetails.onTitle }}" placeholder="e.g. Project Manager" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:inherit;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none"></div>
+                  <div><div style="font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#6b7787;text-transform:uppercase;margin-bottom:5px">Phone</div><input value="{{ settingsV.myDetails.phone }}" onInput="{{ settingsV.myDetails.onPhone }}" placeholder="e.g. +61 400 000 000" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:inherit;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none"></div>
+                  <div><div style="font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#6b7787;text-transform:uppercase;margin-bottom:5px">Email address</div><input value="{{ settingsV.myDetails.email }}" disabled style="width:100%;border:1px solid #e4e8ee;border-radius:8px;padding:9px 11px;font-size:13px;font-family:inherit;color:#8894a2;background:#f5f6f8"><div style="font-size:11px;color:#8894a2;margin-top:6px">Your login email — ask an admin to change it.</div></div>
+                </div>
+              </div>
+            </div>
+            <div style="background:#fff;border:1px solid #e4e8ee;border-radius:12px;overflow:hidden;margin-bottom:16px">
+              <div style="padding:13px 16px;border-bottom:1px solid #eef1f4;background:#fafbfc;font-size:13px;font-weight:600;color:#0f1720">Change password</div>
+              <div style="padding:18px 16px">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+                  <div><div style="font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#6b7787;text-transform:uppercase;margin-bottom:5px">New password</div><input value="{{ settingsV.myDetails.pwNew }}" onInput="{{ settingsV.myDetails.onPwNew }}" type="password" placeholder="At least 6 characters" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:inherit;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none"></div>
+                  <div><div style="font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#6b7787;text-transform:uppercase;margin-bottom:5px">Confirm new password</div><input value="{{ settingsV.myDetails.pwConfirm }}" onInput="{{ settingsV.myDetails.onPwConfirm }}" type="password" placeholder="Re-enter password" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:inherit;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none"></div>
+                </div>
+                <sc-if value="{{ settingsV.myDetails.pwHasMsg }}" hint-placeholder-val="{{ false }}"><div style="margin-top:12px;border:1px solid {{ settingsV.myDetails.pwMsgBorder }};background:{{ settingsV.myDetails.pwMsgBg }};color:{{ settingsV.myDetails.pwMsgColor }};border-radius:8px;padding:8px 12px;font-size:12px">{{ settingsV.myDetails.pwMsg }}</div></sc-if>
+                <button onClick="{{ settingsV.myDetails.onChangePw }}" style="margin-top:14px;border:0;background:#2b59c3;color:#fff;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="background:#244dab">{{ settingsV.myDetails.pwLabel }}</button>
+              </div>
+            </div>
+            <div style="background:#fff;border:1px solid #e4e8ee;border-radius:12px;overflow:hidden">
+              <div style="padding:13px 16px;border-bottom:1px solid #eef1f4;background:#fafbfc;font-size:13px;font-weight:600;color:#0f1720">Email signature</div>
+              <div style="padding:18px 16px">
+                <textarea value="{{ settingsV.myDetails.signature }}" onInput="{{ settingsV.myDetails.onSignature }}" placeholder="Jane Smith&#10;Project Manager · CUBIC Construction Management&#10;+61 400 000 000 · jane@cubiccm.com" style="width:100%;min-height:110px;border:1px solid #cfd8e2;border-radius:8px;padding:10px 12px;font-size:13px;font-family:inherit;color:#0f1720;background:#fff;line-height:1.6;resize:vertical" style-focus="border-color:#2b59c3;outline:none"></textarea>
+                <div style="font-size:11px;color:#8894a2;margin-top:6px">Added when you send emails from the app.</div>
+                <div style="font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#6b7787;text-transform:uppercase;margin:14px 0 6px">Preview</div>
+                <div style="border:1px solid #eef1f4;border-radius:8px;background:#fafbfc;padding:12px 14px;font-size:12.5px;color:#4a5765;white-space:pre-wrap;min-height:56px">{{ settingsV.myDetails.sigPreview }}</div>
               </div>
             </div>
           </sc-if>
@@ -3163,6 +3207,7 @@ class Component extends DCLogic {
       company: this._loadCompany(),
       defaults: this._loadDefaults(),
       financial: this._loadFinancial(),
+      myPw: { new: '', confirm: '', msg: '', ok: false, busy: false },
       codeUpload: null,
       codeModal: null,
       codeForm: { parentCode: '', parentDesc: '', childCode: '', childDesc: '' },
@@ -3727,7 +3772,7 @@ class Component extends DCLogic {
   }
   _mapProfile(row) {
     if (!row) return null;
-    return { id: row.id, auth_id: row.auth_id || null, email: row.email || '', name: row.name || '', role: row.role || 'Field', status: row.status || 'invited', external: !!row.external, projectIds: Array.isArray(row.project_ids) ? row.project_ids : [] };
+    return { id: row.id, auth_id: row.auth_id || null, email: row.email || '', name: row.name || '', role: row.role || 'Field', status: row.status || 'invited', external: !!row.external, projectIds: Array.isArray(row.project_ids) ? row.project_ids : [], phone: row.phone || '', title: row.title || '', signature: row.signature || '', photoUrl: row.photo_url || '' };
   }
   _sbFetchProfileByEmail(email) {
     const c = this._SB; if (!c || !email) return Promise.resolve(null);
@@ -3746,7 +3791,7 @@ class Component extends DCLogic {
   }
   _sbUpdateProfile(id, patch) {
     const c = this._SB; if (!c) return Promise.resolve(false);
-    const body = {}; if ('name' in patch) body.name = patch.name; if ('role' in patch) body.role = patch.role; if ('status' in patch) body.status = patch.status; if ('external' in patch) body.external = !!patch.external; if ('projectIds' in patch) body.project_ids = patch.projectIds;
+    const body = {}; if ('name' in patch) body.name = patch.name; if ('role' in patch) body.role = patch.role; if ('status' in patch) body.status = patch.status; if ('external' in patch) body.external = !!patch.external; if ('projectIds' in patch) body.project_ids = patch.projectIds; if ('phone' in patch) body.phone = patch.phone; if ('title' in patch) body.title = patch.title; if ('signature' in patch) body.signature = patch.signature; if ('photoUrl' in patch) body.photo_url = patch.photoUrl;
     return fetch(c.url + '/rest/v1/profiles?id=eq.' + encodeURIComponent(id), { method: 'PATCH', headers: this._sbHeaders({ 'Content-Type': 'application/json', Prefer: 'return=minimal' }), body: JSON.stringify(body) }).then(r => r.ok).catch(() => false);
   }
   _sbDeleteProfile(id) {
@@ -4787,6 +4832,31 @@ class Component extends DCLogic {
   _saveFinancial(obj) { try { if (typeof localStorage !== 'undefined') localStorage.setItem('cubicFinancial', JSON.stringify(obj || {})); } catch (e) {} if (this._finTimer) clearTimeout(this._finTimer); this._finTimer = setTimeout(() => this._sbSaveCatalog('financial', obj || {}), 500); }
   setFinancialField(field, val) { if (!this.can('admin', 'edit')) return; const next = Object.assign({}, this.state.financial || this._financialSeed(), { [field]: val }); this._saveFinancial(next); this.setState({ financial: next }); }
   setMarkup(cat, val) { if (!this.can('admin', 'edit')) return; const cur = this.state.financial || this._financialSeed(); const next = Object.assign({}, cur, { markups: Object.assign({}, cur.markups || {}, { [cat]: val }) }); this._saveFinancial(next); this.setState({ financial: next }); }
+  // ===== My details (per-user, saved on the profile) =====
+  setMyProfileField(field, value) {
+    const s = this.state.session; if (!s || !s.profile) return;
+    const profile = Object.assign({}, s.profile, { [field]: value });
+    const ns = Object.assign({}, s, { profile });
+    this._saveAuth(ns); this.setState({ session: ns });
+    if (['name', 'phone', 'title', 'signature', 'photoUrl'].indexOf(field) < 0) return;
+    if (this._myTimer) clearTimeout(this._myTimer);
+    this._myTimer = setTimeout(() => { const p = this.state.session && this.state.session.profile; if (p) this._sbUpdateProfile(p.id, { name: p.name, phone: p.phone, title: p.title, signature: p.signature, photoUrl: p.photoUrl }); }, 500);
+  }
+  uploadMyPhoto(e) { const f = e.target && e.target.files && e.target.files[0]; if (e.target) e.target.value = ''; if (!f) return; this._sbUploadFile(f, 'avatars').then(url => { if (url) this.setMyProfileField('photoUrl', url); }); }
+  setMyPwField(k, v) { this.setState(s => ({ myPw: Object.assign({}, s.myPw || {}, { [k]: v, msg: '', ok: false }) })); }
+  async changeMyPassword() {
+    const f = this.state.myPw || {}; const np = f.new || '', cf = f.confirm || '';
+    if (np.length < 6) { this.setState({ myPw: Object.assign({}, f, { msg: 'Password must be at least 6 characters.', ok: false }) }); return; }
+    if (np !== cf) { this.setState({ myPw: Object.assign({}, f, { msg: 'The two passwords do not match.', ok: false }) }); return; }
+    const s = this.state.session; const token = s && s.access_token; const c = this._SB;
+    if (!token || !c) { this.setState({ myPw: Object.assign({}, f, { msg: 'Please log out and back in, then try again.', ok: false }) }); return; }
+    this.setState({ myPw: Object.assign({}, f, { busy: true, msg: '' }) });
+    try {
+      const r = await fetch(c.url + '/auth/v1/user', { method: 'PUT', headers: { apikey: c.key, Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ password: np }) });
+      if (r.ok) { this.setState({ myPw: { new: '', confirm: '', msg: 'Password updated.', ok: true, busy: false } }); }
+      else { const b = await r.json().catch(() => ({})); this.setState({ myPw: Object.assign({}, this.state.myPw, { busy: false, ok: false, msg: (b.msg || b.error_description || 'Could not update password.') }) }); }
+    } catch (e) { this.setState({ myPw: Object.assign({}, this.state.myPw, { busy: false, ok: false, msg: 'Network error — try again.' }) }); }
+  }
   _cid() { return 'cc' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
   _commitCodes(next) { this._saveCodes(next); this.setState({ customCodes: next }); }
   addParentGroup() { this._commitCodes([...(this.state.customCodes || []), { id: this._cid(), parentCode: '', parentDesc: '', children: [{ id: this._cid(), childCode: '', childDesc: '' }] }]); }
@@ -4982,7 +5052,7 @@ class Component extends DCLogic {
     const navPortfolio = { bg: S.view === 'portfolio' ? 'rgba(43,89,195,.22)' : 'transparent', fg: S.view === 'portfolio' ? '#fff' : '#8493a3' };
     const navVendors = { show: this.can('directory', 'view'), bg: S.view === 'vendors' ? 'rgba(43,89,195,.22)' : 'transparent', fg: S.view === 'vendors' ? '#fff' : '#8493a3' };
     const navUsers = { show: this.can('admin', 'view'), bg: S.view === 'users' ? 'rgba(43,89,195,.22)' : 'transparent', fg: S.view === 'users' ? '#fff' : '#8493a3' };
-    const navSettings = { show: this.can('admin', 'view'), bg: S.view === 'settings' ? 'rgba(43,89,195,.22)' : 'transparent', fg: S.view === 'settings' ? '#fff' : '#8493a3' };
+    const navSettings = { show: !!this.currentUser(), bg: S.view === 'settings' ? 'rgba(43,89,195,.22)' : 'transparent', fg: S.view === 'settings' ? '#fff' : '#8493a3' };
     const mkMod = (key, label, icon, ready) => { const on = inProject && S.module === key; return { key, label, icon, badgeShow: !ready, onClick: () => this.setModule(key), bg: on ? 'rgba(43,89,195,.22)' : 'transparent', fg: on ? '#fff' : '#8493a3' }; };
     // Reorganised project sections (built ones = ready:true; the rest are placeholders we build step by step)
     const moduleNav = [
@@ -5009,7 +5079,7 @@ class Component extends DCLogic {
     const showPortfolio = S.view === 'portfolio';
     const showVendors = S.view === 'vendors';
     const showUsers = S.view === 'users' && this.can('admin', 'view');
-    const showSettings = S.view === 'settings' && this.can('admin', 'view');
+    const showSettings = S.view === 'settings' && !!this.currentUser();
     const showDashboard = inProject && S.module === 'dashboard';
     const showContract = showDashboard;
     const showDetails = inProject && S.module === 'details';
@@ -5032,7 +5102,7 @@ class Component extends DCLogic {
     let pageTitle = '', pageSub = '', crumb1 = '', crumb2 = '', pageStatus = { show: false }, primaryAction = { show: false };
     if (showPortfolio) { pageTitle = 'Portfolio overview'; crumb1 = 'Portfolio'; }
     else if (showUsers) { pageTitle = 'Users & access'; crumb1 = 'Company'; crumb2 = 'Users & access'; pageSub = 'Create and manage user accounts, roles and project assignments'; primaryAction = { show: true, label: '＋ Create user', onClick: () => this.openUserCreate() }; }
-    else if (showSettings) { pageTitle = 'Settings'; crumb1 = 'Company'; crumb2 = 'Settings'; pageSub = 'Roles & permissions and the cost-code catalogue used to build budgets'; }
+    else if (showSettings) { pageTitle = 'Settings'; crumb1 = 'Company'; crumb2 = 'Settings'; pageSub = 'Your account details, plus company-wide settings for administrators'; }
     else if (showVendors) { pageTitle = 'Vendor directory'; crumb1 = 'Vendors'; pageSub = 'Contractors, suppliers & service providers across all projects'; primaryAction = { show: true, label: '＋ Add vendor', onClick: () => this.openVendorModal() }; }
     else {
       crumb1 = p.name;
@@ -6516,7 +6586,9 @@ class Component extends DCLogic {
     // ===== settings (roles reference + cost codes) =====
     let settingsV = { show: false };
     if (showSettings) {
-      const tab = ['company', 'defaults', 'financial', 'roles', 'codes'].indexOf(S.settingsTab) >= 0 ? S.settingsTab : 'company';
+      const isAdmin = this.can('admin', 'view');
+      const validTabs = isAdmin ? ['company', 'defaults', 'financial', 'roles', 'codes', 'mydetails'] : ['mydetails'];
+      const tab = validTabs.indexOf(S.settingsTab) >= 0 ? S.settingsTab : (isAdmin ? 'company' : 'mydetails');
       const roles = this.roleList(); const roleShort = { Admin: 'Admin', PM: 'PM', Superintendent: 'Super', Finance: 'Fin', HR: 'HR', ContractAdmin: 'CA', Field: 'Field', Employee: 'Emp', Architect: 'A/E', ClientSuper: 'Client', Student: 'Std' };
       const matrixHead = roles.map(r => ({ short: roleShort[r.key] || r.key }));
       const matrixRows = this.resourceLabels().map(res => ({ label: res.label, cells: roles.map(r => { const lv = this.permLevel(r.key, res.key); const b = this.permBadge(lv); return { level: String(lv), c: b.c, bg: b.bg, onChange: e => this.setPerm(res.key, r.key, e.target.value) }; }) }));
@@ -6563,8 +6635,20 @@ class Component extends DCLogic {
         markupRows, currencySymbol: fin.currencySymbol || '$', defaultTerm: fin.defaultTerm || 'Net 30', currencyOptions, termOptions,
         onCurrency: e => this.setFinancialField('currencySymbol', e.target.value), onTerm: e => this.setFinancialField('defaultTerm', e.target.value),
       };
-      settingsV = { show: true, tab, isCompany: tab === 'company', isDefaults: tab === 'defaults', isFinancial: tab === 'financial', isRoles: tab === 'roles', isCodes: tab === 'codes', company: companyV, defaults: defaultsV, financial: financialV,
-        tabs: [{ k: 'company', l: 'Company profile', active: tab === 'company', onClick: () => this.setSettingsTab('company') }, { k: 'defaults', l: 'Defaults', active: tab === 'defaults', onClick: () => this.setSettingsTab('defaults') }, { k: 'financial', l: 'Financial', active: tab === 'financial', onClick: () => this.setSettingsTab('financial') }, { k: 'roles', l: 'Roles & permissions', active: tab === 'roles', onClick: () => this.setSettingsTab('roles') }, { k: 'codes', l: 'Cost codes', active: tab === 'codes', onClick: () => this.setSettingsTab('codes') }].map(t => ({ ...t, bg: t.active ? '#2b59c3' : '#fff', fg: t.active ? '#fff' : '#4a5765', border: t.active ? '#2b59c3' : '#cfd8e2' })),
+      const initOf = nm => (nm || '?').trim().split(/\s+/).map(x => x[0] || '').slice(0, 2).join('').toUpperCase() || '?';
+      const meP = this.currentUser() || {}; const mp = S.myPw || {};
+      const myDetailsV = {
+        name: meP.name || '', email: meP.email || '', phone: meP.phone || '', title: meP.title || '', signature: meP.signature || '',
+        roleLabel: this.roleLabel(meP.role || ''), photoUrl: meP.photoUrl || '', hasPhoto: !!meP.photoUrl, noPhoto: !meP.photoUrl, initials: initOf(meP.name || meP.email),
+        sigPreview: meP.signature || 'Your signature preview appears here.', hasSig: !!(meP.signature || '').trim(),
+        onName: e => this.setMyProfileField('name', e.target.value), onPhone: e => this.setMyProfileField('phone', e.target.value), onTitle: e => this.setMyProfileField('title', e.target.value), onSignature: e => this.setMyProfileField('signature', e.target.value), onPhoto: e => this.uploadMyPhoto(e),
+        pwNew: mp.new || '', pwConfirm: mp.confirm || '', pwMsg: mp.msg || '', pwHasMsg: !!mp.msg, pwLabel: mp.busy ? 'Updating…' : 'Update password',
+        pwMsgColor: mp.ok ? '#15803d' : '#b91c1c', pwMsgBg: mp.ok ? '#eaf6ee' : '#fdecec', pwMsgBorder: mp.ok ? '#bfe3ca' : '#f4c9c9',
+        onPwNew: e => this.setMyPwField('new', e.target.value), onPwConfirm: e => this.setMyPwField('confirm', e.target.value), onChangePw: () => this.changeMyPassword(),
+      };
+      const tabLabels = { company: 'Company profile', defaults: 'Defaults', financial: 'Financial', roles: 'Roles & permissions', codes: 'Cost codes', mydetails: 'My details' };
+      settingsV = { show: true, tab, isCompany: tab === 'company', isDefaults: tab === 'defaults', isFinancial: tab === 'financial', isRoles: tab === 'roles', isCodes: tab === 'codes', isMyDetails: tab === 'mydetails', company: companyV, defaults: defaultsV, financial: financialV, myDetails: myDetailsV,
+        tabs: validTabs.map(k => ({ k, l: tabLabels[k], active: tab === k, onClick: () => this.setSettingsTab(k) })).map(t => ({ ...t, bg: t.active ? '#2b59c3' : '#fff', fg: t.active ? '#fff' : '#4a5765', border: t.active ? '#2b59c3' : '#cfd8e2' })),
         matrixHead, matrixRows,
         parentGroups, codeCount: String(childTotal), parentCount: String(parentGroups.length), hasCodes: parentGroups.length > 0, noCodes: parentGroups.length === 0, catalogCount: String(inUseCount),
         hasUploadMsg: !!up, uploadMsg: up ? up.msg : '', uploadBg: up ? (up.ok ? '#eaf6ee' : '#fdecec') : '#fff', uploadFg: up ? (up.ok ? '#15803d' : '#b91c1c') : '#4a5765', uploadBorder: up ? (up.ok ? '#bfe3ca' : '#f4c9c9') : '#eef1f4',
@@ -6587,6 +6671,7 @@ class Component extends DCLogic {
       resetToken: A.resetToken || '', hasToken: !!A.resetToken,
       busy: !!A.busy, loginLabel: A.busy ? 'Signing in…' : 'Sign in', activateLabel: A.busy ? 'Activating…' : 'Activate account',
       userName: cu ? (cu.name || cu.email) : '', roleLabel: cu ? this.roleLabel(cu.role) : '', initials: cu ? initialsOfName(cu.name || cu.email) : '',
+      photoUrl: (cu && cu.photoUrl) ? cu.photoUrl : '', hasPhoto: !!(cu && cu.photoUrl), noPhoto: !(cu && cu.photoUrl),
       onEmail: e => this.setAuthField('email', e.target.value), onPassword: e => this.setAuthField('password', e.target.value),
       onResetEmail: e => this.setAuthField('resetEmail', e.target.value), onNewPassword: e => this.setAuthField('newPassword', e.target.value),
       onLogin: () => this.doLogin(), onLogout: () => this.doLogout(), onForgot: () => this.authGoto('forgot'), onBackLogin: () => this.authGoto('login'),
