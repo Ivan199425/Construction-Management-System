@@ -375,6 +375,35 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
             </div>
           </sc-if>
 
+          <sc-if value="{{ settingsV.isFinancial }}" hint-placeholder-val="{{ false }}">
+            <div style="background:#fff;border:1px solid #e4e8ee;border-radius:12px;overflow:hidden;margin-bottom:16px">
+              <div style="padding:13px 16px;border-bottom:1px solid #eef1f4;background:#fafbfc;font-size:13px;font-weight:600;color:#0f1720">Markup defaults <span style="font-weight:400;color:#a4afba;font-size:11.5px">· default % markup applied by cost category</span></div>
+              <div style="padding:18px 16px;display:grid;grid-template-columns:1fr 1fr;gap:14px">
+                <sc-for list="{{ settingsV.financial.markupRows }}" as="r" hint-placeholder-count="5">
+                  <div>
+                    <div style="font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#6b7787;text-transform:uppercase;margin-bottom:5px">{{ r.label }}</div>
+                    <div style="display:flex;align-items:center;gap:8px"><input value="{{ r.value }}" onInput="{{ r.onInput }}" placeholder="0" class="mono" style="flex:1;min-width:0;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:'IBM Plex Mono',monospace;color:#0f1720;background:#fff;text-align:right" style-focus="border-color:#2b59c3;outline:none"><span style="font-size:13px;font-weight:600;color:#8894a2">%</span></div>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+            <div style="background:#fff;border:1px solid #e4e8ee;border-radius:12px;overflow:hidden">
+              <div style="padding:13px 16px;border-bottom:1px solid #eef1f4;background:#fafbfc;font-size:13px;font-weight:600;color:#0f1720">Currency &amp; payment terms</div>
+              <div style="padding:18px 16px;display:grid;grid-template-columns:1fr 1fr;gap:16px">
+                <div>
+                  <div style="font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#6b7787;text-transform:uppercase;margin-bottom:5px">Currency symbol</div>
+                  <select value="{{ settingsV.financial.currencySymbol }}" onChange="{{ settingsV.financial.onCurrency }}" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 10px;font-size:13px;font-family:inherit;color:#0f1720;background:#fff;cursor:pointer" style-focus="border-color:#2b59c3;outline:none"><sc-for list="{{ settingsV.financial.currencyOptions }}" as="o" hint-placeholder-count="6"><option value="{{ o.v }}">{{ o.l }}</option></sc-for></select>
+                  <div style="font-size:11px;color:#8894a2;margin-top:6px">Shown on every amount across the system.</div>
+                </div>
+                <div>
+                  <div style="font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#6b7787;text-transform:uppercase;margin-bottom:5px">Default payment term</div>
+                  <select value="{{ settingsV.financial.defaultTerm }}" onChange="{{ settingsV.financial.onTerm }}" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 10px;font-size:13px;font-family:inherit;color:#0f1720;background:#fff;cursor:pointer" style-focus="border-color:#2b59c3;outline:none"><sc-for list="{{ settingsV.financial.termOptions }}" as="o" hint-placeholder-count="5"><option value="{{ o.v }}">{{ o.l }}</option></sc-for></select>
+                  <div style="font-size:11px;color:#8894a2;margin-top:6px">Default due date for new bills and invoices.</div>
+                </div>
+              </div>
+            </div>
+          </sc-if>
+
           <sc-if value="{{ settingsV.isRoles }}" hint-placeholder-val="{{ false }}">
             <div style="background:#fff;border:1px solid #e4e8ee;border-radius:12px;overflow:hidden">
               <div style="padding:11px 16px;border-bottom:1px solid #eef1f4;background:#fafbfc;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
@@ -3133,6 +3162,7 @@ class Component extends DCLogic {
       customCodes: this._loadCodes(),
       company: this._loadCompany(),
       defaults: this._loadDefaults(),
+      financial: this._loadFinancial(),
       codeUpload: null,
       codeModal: null,
       codeForm: { parentCode: '', parentDesc: '', childCode: '', childDesc: '' },
@@ -3185,6 +3215,13 @@ class Component extends DCLogic {
         const merged = Object.assign(this._defaultsSeed(), d);
         try { if (typeof localStorage !== 'undefined') localStorage.setItem('cubicDefaults', JSON.stringify(merged)); } catch (e) {}
         this.setState({ defaults: merged });
+      }
+    }).catch(() => {});
+    this._sbLoadCatalog('financial').then(f => {
+      if (f && typeof f === 'object' && !Array.isArray(f)) {
+        const merged = this._normFinancial(f);
+        try { if (typeof localStorage !== 'undefined') localStorage.setItem('cubicFinancial', JSON.stringify(merged)); } catch (e) {}
+        this.setState({ financial: merged });
       }
     }).catch(() => {});
     // Phase 2: restore/validate the logged-in session against Supabase.
@@ -3542,7 +3579,7 @@ class Component extends DCLogic {
   }
 
   // ---------- format ----------
-  get cur() { return this.props.currencySymbol ?? '$'; }
+  get cur() { const f = this.state && this.state.financial; if (f && f.currencySymbol) return f.currencySymbol; return this.props.currencySymbol ?? '$'; }
   money(n) { const neg = n < 0; return (neg ? '−' : '') + this.cur + Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
   moneyM(n) {
     const neg = n < 0, a = Math.abs(n);
@@ -4743,6 +4780,13 @@ class Component extends DCLogic {
   _loadDefaults() { try { if (typeof localStorage === 'undefined') return this._defaultsSeed(); const raw = localStorage.getItem('cubicDefaults'); if (!raw) return this._defaultsSeed(); const o = JSON.parse(raw); return Object.assign(this._defaultsSeed(), (o && typeof o === 'object') ? o : {}); } catch (e) { return this._defaultsSeed(); } }
   _saveDefaults(obj) { try { if (typeof localStorage !== 'undefined') localStorage.setItem('cubicDefaults', JSON.stringify(obj || {})); } catch (e) {} if (this._defTimer) clearTimeout(this._defTimer); this._defTimer = setTimeout(() => this._sbSaveCatalog('defaults', obj || {}), 500); }
   setDefaultField(field, val) { if (!this.can('admin', 'edit')) return; const next = Object.assign({}, this.state.defaults || this._defaultsSeed(), { [field]: val }); this._saveDefaults(next); this.setState({ defaults: next }); }
+  // ===== Financial settings (shared) =====
+  _financialSeed() { return { markups: { material: '', labour: '', equipment: '', subcontract: '', other: '' }, currencySymbol: '$', defaultTerm: 'Net 30' }; }
+  _normFinancial(o) { const s = this._financialSeed(); if (!o || typeof o !== 'object') return s; return { markups: Object.assign({}, s.markups, (o.markups && typeof o.markups === 'object') ? o.markups : {}), currencySymbol: o.currencySymbol || s.currencySymbol, defaultTerm: o.defaultTerm || s.defaultTerm }; }
+  _loadFinancial() { try { if (typeof localStorage === 'undefined') return this._financialSeed(); const raw = localStorage.getItem('cubicFinancial'); return raw ? this._normFinancial(JSON.parse(raw)) : this._financialSeed(); } catch (e) { return this._financialSeed(); } }
+  _saveFinancial(obj) { try { if (typeof localStorage !== 'undefined') localStorage.setItem('cubicFinancial', JSON.stringify(obj || {})); } catch (e) {} if (this._finTimer) clearTimeout(this._finTimer); this._finTimer = setTimeout(() => this._sbSaveCatalog('financial', obj || {}), 500); }
+  setFinancialField(field, val) { if (!this.can('admin', 'edit')) return; const next = Object.assign({}, this.state.financial || this._financialSeed(), { [field]: val }); this._saveFinancial(next); this.setState({ financial: next }); }
+  setMarkup(cat, val) { if (!this.can('admin', 'edit')) return; const cur = this.state.financial || this._financialSeed(); const next = Object.assign({}, cur, { markups: Object.assign({}, cur.markups || {}, { [cat]: val }) }); this._saveFinancial(next); this.setState({ financial: next }); }
   _cid() { return 'cc' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
   _commitCodes(next) { this._saveCodes(next); this.setState({ customCodes: next }); }
   addParentGroup() { this._commitCodes([...(this.state.customCodes || []), { id: this._cid(), parentCode: '', parentDesc: '', children: [{ id: this._cid(), childCode: '', childDesc: '' }] }]); }
@@ -6472,7 +6516,7 @@ class Component extends DCLogic {
     // ===== settings (roles reference + cost codes) =====
     let settingsV = { show: false };
     if (showSettings) {
-      const tab = ['company', 'defaults', 'roles', 'codes'].indexOf(S.settingsTab) >= 0 ? S.settingsTab : 'company';
+      const tab = ['company', 'defaults', 'financial', 'roles', 'codes'].indexOf(S.settingsTab) >= 0 ? S.settingsTab : 'company';
       const roles = this.roleList(); const roleShort = { Admin: 'Admin', PM: 'PM', Superintendent: 'Super', Finance: 'Fin', HR: 'HR', ContractAdmin: 'CA', Field: 'Field', Employee: 'Emp', Architect: 'A/E', ClientSuper: 'Client', Student: 'Std' };
       const matrixHead = roles.map(r => ({ short: roleShort[r.key] || r.key }));
       const matrixRows = this.resourceLabels().map(res => ({ label: res.label, cells: roles.map(r => { const lv = this.permLevel(r.key, res.key); const b = this.permBadge(lv); return { level: String(lv), c: b.c, bg: b.bg, onChange: e => this.setPerm(res.key, r.key, e.target.value) }; }) }));
@@ -6511,8 +6555,16 @@ class Component extends DCLogic {
         weeklyHours: df.weeklyHours || '', weekStart: df.weekStart || '', dateFormat: df.dateFormat || 'DD/MM/YYYY', dateFormatOptions,
         onWeeklyHours: e => this.setDefaultField('weeklyHours', e.target.value), onWeekStart: e => this.setDefaultField('weekStart', e.target.value), onDateFormat: e => this.setDefaultField('dateFormat', e.target.value),
       };
-      settingsV = { show: true, tab, isCompany: tab === 'company', isDefaults: tab === 'defaults', isRoles: tab === 'roles', isCodes: tab === 'codes', company: companyV, defaults: defaultsV,
-        tabs: [{ k: 'company', l: 'Company profile', active: tab === 'company', onClick: () => this.setSettingsTab('company') }, { k: 'defaults', l: 'Defaults', active: tab === 'defaults', onClick: () => this.setSettingsTab('defaults') }, { k: 'roles', l: 'Roles & permissions', active: tab === 'roles', onClick: () => this.setSettingsTab('roles') }, { k: 'codes', l: 'Cost codes', active: tab === 'codes', onClick: () => this.setSettingsTab('codes') }].map(t => ({ ...t, bg: t.active ? '#2b59c3' : '#fff', fg: t.active ? '#fff' : '#4a5765', border: t.active ? '#2b59c3' : '#cfd8e2' })),
+      const fin = this.state.financial || this._financialSeed(); const fm = fin.markups || {};
+      const markupRows = [{ k: 'material', l: 'Material' }, { k: 'labour', l: 'Labour' }, { k: 'equipment', l: 'Equipment' }, { k: 'subcontract', l: 'Subcontract' }, { k: 'other', l: 'Other' }].map(m => ({ key: m.k, label: m.l, value: fm[m.k] == null ? '' : String(fm[m.k]), onInput: e => this.setMarkup(m.k, e.target.value) }));
+      const currencyOptions = [{ v: '$', l: '$ — Australian Dollar (AUD)' }, { v: 'A$', l: 'A$ — Australian Dollar' }, { v: 'US$', l: 'US$ — US Dollar' }, { v: 'NZ$', l: 'NZ$ — New Zealand Dollar' }, { v: '£', l: '£ — Pound Sterling (GBP)' }, { v: '€', l: '€ — Euro (EUR)' }];
+      const termOptions = ['Due on receipt', 'Net 10', 'Net 15', 'Net 30', 'Net 45'].map(x => ({ v: x, l: x }));
+      const financialV = {
+        markupRows, currencySymbol: fin.currencySymbol || '$', defaultTerm: fin.defaultTerm || 'Net 30', currencyOptions, termOptions,
+        onCurrency: e => this.setFinancialField('currencySymbol', e.target.value), onTerm: e => this.setFinancialField('defaultTerm', e.target.value),
+      };
+      settingsV = { show: true, tab, isCompany: tab === 'company', isDefaults: tab === 'defaults', isFinancial: tab === 'financial', isRoles: tab === 'roles', isCodes: tab === 'codes', company: companyV, defaults: defaultsV, financial: financialV,
+        tabs: [{ k: 'company', l: 'Company profile', active: tab === 'company', onClick: () => this.setSettingsTab('company') }, { k: 'defaults', l: 'Defaults', active: tab === 'defaults', onClick: () => this.setSettingsTab('defaults') }, { k: 'financial', l: 'Financial', active: tab === 'financial', onClick: () => this.setSettingsTab('financial') }, { k: 'roles', l: 'Roles & permissions', active: tab === 'roles', onClick: () => this.setSettingsTab('roles') }, { k: 'codes', l: 'Cost codes', active: tab === 'codes', onClick: () => this.setSettingsTab('codes') }].map(t => ({ ...t, bg: t.active ? '#2b59c3' : '#fff', fg: t.active ? '#fff' : '#4a5765', border: t.active ? '#2b59c3' : '#cfd8e2' })),
         matrixHead, matrixRows,
         parentGroups, codeCount: String(childTotal), parentCount: String(parentGroups.length), hasCodes: parentGroups.length > 0, noCodes: parentGroups.length === 0, catalogCount: String(inUseCount),
         hasUploadMsg: !!up, uploadMsg: up ? up.msg : '', uploadBg: up ? (up.ok ? '#eaf6ee' : '#fdecec') : '#fff', uploadFg: up ? (up.ok ? '#15803d' : '#b91c1c') : '#4a5765', uploadBorder: up ? (up.ok ? '#bfe3ca' : '#f4c9c9') : '#eef1f4',
