@@ -543,7 +543,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                 </div>
               </div>
               <div style="padding:10px 16px;border-bottom:1px solid #eef1f4;display:flex;align-items:center;justify-content:space-between;gap:12px">
-                <input value="{{ settingsV.codeSearch.value }}" onInput="{{ settingsV.codeSearch.onInput }}" placeholder="🔍  Search cost codes — code or description" style="width:360px;max-width:100%;height:36px;border:1px solid #e4e8ee;border-radius:8px;padding:0 12px;font-size:13px;font-family:inherit;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none">
+                <div style="display:flex;align-items:center;gap:9px;width:100%;max-width:440px;border:1.5px solid #b9c3d0;border-radius:10px;background:#fff;padding:9px 13px"><span style="font-size:15px;line-height:1;flex:0 0 auto">🔍</span><input value="{{ settingsV.codeSearch.value }}" onInput="{{ settingsV.codeSearch.onInput }}" placeholder="Search cost codes — code or description" style="flex:1;min-width:0;border:0;outline:none;background:transparent;font-size:14px;color:#0f1720;font-family:inherit"></div>
                 <sc-if value="{{ settingsV.codeSearch.has }}" hint-placeholder-val="{{ false }}"><span style="font-size:12px;color:#8894a2;white-space:nowrap">{{ settingsV.codeSearch.shown }} of {{ settingsV.codeSearch.total }} parent codes</span></sc-if>
               </div>
               <sc-if value="{{ settingsV.hasUploadMsg }}" hint-placeholder-val="{{ false }}">
@@ -619,7 +619,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
 
         <sc-if value="{{ showVendors }}" hint-placeholder-val="{{ true }}">
           <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px">
-            <input value="{{ vendorSearchV.value }}" onInput="{{ vendorSearchV.onInput }}" placeholder="🔍  Search vendors — company, contact, email, type" style="width:380px;max-width:100%;height:38px;border:1px solid #e4e8ee;border-radius:9px;padding:0 13px;font-size:13px;font-family:inherit;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none">
+            <div style="display:flex;align-items:center;gap:9px;width:100%;max-width:460px;border:1.5px solid #b9c3d0;border-radius:10px;background:#fff;padding:10px 14px"><span style="font-size:15px;line-height:1;flex:0 0 auto">🔍</span><input value="{{ vendorSearchV.value }}" onInput="{{ vendorSearchV.onInput }}" placeholder="Search vendors — company, contact, email, type" style="flex:1;min-width:0;border:0;outline:none;background:transparent;font-size:14px;color:#0f1720;font-family:inherit"></div>
             <sc-if value="{{ vendorSearchV.has }}" hint-placeholder-val="{{ false }}"><span style="font-size:12px;color:#8894a2;white-space:nowrap">{{ vendorSearchV.shown }} of {{ vendorSearchV.total }} vendors</span></sc-if>
           </div>
           <div style="background:#fff;border:1px solid #e4e8ee;border-radius:12px;overflow:hidden">
@@ -813,7 +813,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
         <sc-if value="{{ showCommitments }}" hint-placeholder-val="{{ true }}">
           <div style="display:flex;flex-direction:column;gap:12px">
             <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
-              <input value="{{ commitSearchV.value }}" onInput="{{ commitSearchV.onInput }}" placeholder="🔍  Search sub-contracts — vendor, ref, scope, status" style="width:380px;max-width:100%;height:38px;border:1px solid #e4e8ee;border-radius:9px;padding:0 13px;font-size:13px;font-family:inherit;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none">
+              <div style="display:flex;align-items:center;gap:9px;width:100%;max-width:460px;border:1.5px solid #b9c3d0;border-radius:10px;background:#fff;padding:10px 14px"><span style="font-size:15px;line-height:1;flex:0 0 auto">🔍</span><input value="{{ commitSearchV.value }}" onInput="{{ commitSearchV.onInput }}" placeholder="Search sub-contracts — vendor, ref, scope, status" style="flex:1;min-width:0;border:0;outline:none;background:transparent;font-size:14px;color:#0f1720;font-family:inherit"></div>
               <sc-if value="{{ commitSearchV.has }}" hint-placeholder-val="{{ false }}"><span style="font-size:12px;color:#8894a2;white-space:nowrap">{{ commitSearchV.shown }} of {{ commitSearchV.total }} sub-contracts</span></sc-if>
             </div>
             <sc-for list="{{ commitmentRows }}" as="c" hint-placeholder-count="4">
@@ -883,7 +883,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
         <!-- ============ PROGRESS CLAIMS ============ -->
         <sc-if value="{{ showClaims }}" hint-placeholder-val="{{ true }}">
           <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px">
-            <input value="{{ claimSearchV.value }}" onInput="{{ claimSearchV.onInput }}" placeholder="🔍  Search claims — claim #, subcontract, status" style="width:380px;max-width:100%;height:38px;border:1px solid #e4e8ee;border-radius:9px;padding:0 13px;font-size:13px;font-family:inherit;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none">
+            <div style="display:flex;align-items:center;gap:9px;width:100%;max-width:460px;border:1.5px solid #b9c3d0;border-radius:10px;background:#fff;padding:10px 14px"><span style="font-size:15px;line-height:1;flex:0 0 auto">🔍</span><input value="{{ claimSearchV.value }}" onInput="{{ claimSearchV.onInput }}" placeholder="Search claims — claim #, subcontract, status" style="flex:1;min-width:0;border:0;outline:none;background:transparent;font-size:14px;color:#0f1720;font-family:inherit"></div>
             <sc-if value="{{ claimSearchV.has }}" hint-placeholder-val="{{ false }}"><span style="font-size:12px;color:#8894a2;white-space:nowrap">{{ claimSearchV.shown }} of {{ claimSearchV.total }} claims</span></sc-if>
           </div>
           <div style="background:#fff;border:1px solid #e4e8ee;border-radius:12px;overflow:hidden">
@@ -1096,7 +1096,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
           <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;margin-top:14px">
             <div style="display:flex;align-items:center;gap:10px;position:relative">
               <button onClick="{{ onAddCostLine }}" style="border:1px dashed #2b59c3;background:#f2f6fd;color:#2b59c3;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="background:#e8eefc">＋ Add cost line</button>
-              <select value="{{ budgetCatValue }}" onChange="{{ onBudgetCatFilter }}" title="Filter rows by category" style="border:1px solid #cfd8e2;background:#fff;color:#4a5765;border-radius:8px;padding:9px 10px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit" style-focus="border-color:#2b59c3;outline:none"><sc-for list="{{ budgetCatOptions }}" as="o" hint-placeholder-count="7"><option value="{{ o.v }}">{{ o.l }}</option></sc-for></select>
+              <div style="display:flex;align-items:center;gap:7px;border:1.5px solid #b9c3d0;border-radius:8px;background:#fff;padding:0 10px 0 12px;height:40px" title="Filter cost lines by category"><span style="font-size:14px;line-height:1">⛃</span><span style="font-size:11px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:#8894a2">Filter</span><select value="{{ budgetCatValue }}" onChange="{{ onBudgetCatFilter }}" style="border:0;background:transparent;color:#0f1720;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;height:100%;outline:none"><sc-for list="{{ budgetCatOptions }}" as="o" hint-placeholder-count="7"><option value="{{ o.v }}">{{ o.l }}</option></sc-for></select></div>
               <sc-if value="{{ budgetFiltered }}" hint-placeholder-val="{{ false }}"><span style="font-size:11.5px;color:#8894a2;white-space:nowrap">{{ budgetRowCount }} of {{ budgetTotalLineCount }} lines</span></sc-if>
               <button onClick="{{ onToggleColMenu }}" title="Show, hide and reorder columns" style="border:1px solid #cfd8e2;background:#fff;color:#6b7787;border-radius:8px;padding:9px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="border-color:#2b59c3;color:#2b59c3">⚙ Columns</button>
               <button onClick="{{ onResetBudgetCols }}" title="Reset columns to default order, width and visibility" style="border:1px solid #cfd8e2;background:#fff;color:#6b7787;border-radius:8px;padding:9px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="border-color:#2b59c3;color:#2b59c3">↔ Reset</button>
@@ -1169,6 +1169,10 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
               <div style="font-size:12px;color:#8894a2">Approved &amp; applied: <strong style="color:#15803d">{{ budgetVarApproved }}</strong></div>
               <button onClick="{{ onAddVariation }}" style="border:1px solid #2b59c3;background:#2b59c3;color:#fff;border-radius:8px;padding:8px 14px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="background:#244dab">＋ Variation</button>
             </div>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px">
+            <div style="display:flex;align-items:center;gap:9px;width:100%;max-width:460px;border:1.5px solid #b9c3d0;border-radius:10px;background:#fff;padding:10px 14px"><span style="font-size:15px;line-height:1;flex:0 0 auto">🔍</span><input value="{{ varSearchV.value }}" onInput="{{ varSearchV.onInput }}" placeholder="Search variations — ref, description, status, cost code" style="flex:1;min-width:0;border:0;outline:none;background:transparent;font-size:14px;color:#0f1720;font-family:inherit"></div>
+            <sc-if value="{{ varSearchV.has }}" hint-placeholder-val="{{ false }}"><span style="font-size:12px;color:#8894a2;white-space:nowrap">{{ varSearchV.shown }} of {{ varSearchV.total }} variations</span></sc-if>
           </div>
           <sc-if value="{{ budgetVarHas }}" hint-placeholder-val="{{ true }}">
             <div style="background:#fff;border:1px solid #e4e8ee;border-radius:12px;overflow:hidden">
@@ -1309,7 +1313,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
         <!-- ============ BILLS ============ -->
         <sc-if value="{{ showBills }}" hint-placeholder-val="{{ true }}">
           <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px">
-            <input value="{{ billSearchV.value }}" onInput="{{ billSearchV.onInput }}" placeholder="🔍  Search bills — vendor, bill #, cost code, description" style="width:380px;max-width:100%;height:38px;border:1px solid #e4e8ee;border-radius:9px;padding:0 13px;font-size:13px;font-family:inherit;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none">
+            <div style="display:flex;align-items:center;gap:9px;width:100%;max-width:460px;border:1.5px solid #b9c3d0;border-radius:10px;background:#fff;padding:10px 14px"><span style="font-size:15px;line-height:1;flex:0 0 auto">🔍</span><input value="{{ billSearchV.value }}" onInput="{{ billSearchV.onInput }}" placeholder="Search bills — vendor, bill #, cost code, description" style="flex:1;min-width:0;border:0;outline:none;background:transparent;font-size:14px;color:#0f1720;font-family:inherit"></div>
             <sc-if value="{{ billSearchV.has }}" hint-placeholder-val="{{ false }}"><span style="font-size:12px;color:#8894a2;white-space:nowrap">{{ billSearchV.shown }} of {{ billSearchV.total }} bills</span></sc-if>
           </div>
           <div style="background:#fff;border:1px solid #e4e8ee;border-radius:12px;overflow:hidden">
@@ -6389,7 +6393,7 @@ class Component extends DCLogic {
     }
 
     // cost (flat, inline-editable)
-    let costLineRows = [], costTotals = {}, chart = { has: false }, costInsight = { show: false }, budgetVarRows = [], budgetVarApproved = '', budgetVarHas = false, budgetVarEmpty = false, markupSummary = { show: false }, budgetColTemplate = '', budgetMinWidth = '1420px', budgetHeaderCols = [], budgetTotalCols = [], colMenuItems = [], budgetCatOptions = [], budgetCatValue = '', budgetFiltered = false, budgetRowCount = 0, budgetTotalLineCount = 0;
+    let costLineRows = [], costTotals = {}, chart = { has: false }, costInsight = { show: false }, budgetVarRows = [], varSearchV = { has: false }, budgetVarApproved = '', budgetVarHas = false, budgetVarEmpty = false, markupSummary = { show: false }, budgetColTemplate = '', budgetMinWidth = '1420px', budgetHeaderCols = [], budgetTotalCols = [], colMenuItems = [], budgetCatOptions = [], budgetCatValue = '', budgetFiltered = false, budgetRowCount = 0, budgetTotalLineCount = 0;
     if (showCost) {
       const commitmentOptions = p.commitments.map(cm => ({ id: cm.id, label: cm.ref + ' — ' + cm.vendor }));
       const codeCatalog = this.costCodeOptions();
@@ -6623,7 +6627,10 @@ class Component extends DCLogic {
     // variations (own tab, between Progress claims and Invoices)
     if (showVariations) {
       const codeOpts = p.costLines.map(l => ({ code: l.code, label: l.code + ' — ' + l.desc }));
-      const vlist2 = (p.contract && p.contract.variations) || [];
+      let vlist2 = (p.contract && p.contract.variations) || [];
+      const _varAll = vlist2.length; const _vq2 = this._q('variations');
+      if (_vq2) vlist2 = vlist2.filter(v => [v.ref, v.desc, v.status, v.costCode].join(' ').toLowerCase().indexOf(_vq2) >= 0);
+      varSearchV = { value: S.search.variations || '', has: !!_vq2, shown: vlist2.length, total: _varAll, onInput: e => this.setSearch('variations', e.target.value) };
       budgetVarRows = vlist2.map(v => {
         const sm = this.statusMeta(v.status); const approved = v.status === 'approved'; const linkedCode = v.costCode || '';
         const applied = approved && !!linkedCode; const atts = (v.attachments || []).length;
@@ -7166,7 +7173,7 @@ class Component extends DCLogic {
       pageTitle, pageSub, crumb1, crumb2, pageStatus, primaryAction, kpis, hasKpis: kpis.length > 0,
       statusFilters, portfolioRows, totals, dashModules,
       contractFields, contractVarRows, contractCalc, hasContractFile, contractFileName, onViewContract: () => this.viewProjectContract(), projectsSaveV,
-      commitmentRows, commitSearchV, costLineRows, costTotals, chart, costInsight, markupSummary, budgetColTemplate, budgetMinWidth, budgetHeaderCols, budgetTotalCols, colMenuItems, budgetColMenu: S.budgetColMenu, onToggleColMenu: () => this.toggleBudgetColMenu(), onCloseColMenu: () => this.closeBudgetColMenu(), onResetBudgetCols: () => this.resetBudgetCols(), budgetCatOptions, budgetCatValue, budgetFiltered, budgetRowCount, budgetTotalLineCount, onBudgetCatFilter: e => this.setBudgetCatFilter(e.target.value), budgetVarRows, budgetVarApproved, budgetVarHas, budgetVarEmpty, onAddVariation: () => this.addVariation(), onAddCostLine: () => this.addCostLine(),
+      commitmentRows, commitSearchV, costLineRows, costTotals, chart, costInsight, markupSummary, budgetColTemplate, budgetMinWidth, budgetHeaderCols, budgetTotalCols, colMenuItems, budgetColMenu: S.budgetColMenu, onToggleColMenu: () => this.toggleBudgetColMenu(), onCloseColMenu: () => this.closeBudgetColMenu(), onResetBudgetCols: () => this.resetBudgetCols(), budgetCatOptions, budgetCatValue, budgetFiltered, budgetRowCount, budgetTotalLineCount, onBudgetCatFilter: e => this.setBudgetCatFilter(e.target.value), budgetVarRows, varSearchV, budgetVarApproved, budgetVarHas, budgetVarEmpty, onAddVariation: () => this.addVariation(), onAddCostLine: () => this.addCostLine(),
       onExportCsv: () => this.exportCsv(), onExportPdf: () => this.exportPdf(),
       codeModal: S.codeModal ? { open: true, parentCode: S.codeForm.parentCode, parentDesc: S.codeForm.parentDesc, childCode: S.codeForm.childCode, childDesc: S.codeForm.childDesc } : { open: false },
       onCodeModalParentCode: (e) => this.setCodeForm('parentCode', e.target.value), onCodeModalParentDesc: (e) => this.setCodeForm('parentDesc', e.target.value),
