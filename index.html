@@ -3269,6 +3269,92 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
   </sc-if>
 
   <!-- SEND FOR SIGNATURE MODAL -->
+  <!-- BILL → ACCOUNTS EMAIL (compose + preview) -->
+  <sc-if value="{{ billSendV.open }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ billSendV.onClose }}" style="position:fixed;inset:0;background:rgba(15,23,32,.5);display:flex;align-items:center;justify-content:center;z-index:60;padding:24px;animation:fadeUp .15s ease">
+      <div onClick="{{ stop }}" style="background:#fff;border-radius:14px;width:660px;max-width:96vw;max-height:92vh;box-shadow:0 24px 60px rgba(15,23,32,.3);overflow:hidden;display:flex;flex-direction:column">
+        <div style="padding:18px 22px;border-bottom:1px solid #eef1f4;flex:0 0 auto"><div style="font-size:16px;font-weight:600;color:#0f1720">Send invoice to accounts</div><div style="font-size:12.5px;color:#8894a2;margin-top:2px">{{ billSendV.billNo }} · {{ billSendV.vendorName }} — review below, then send for payment.</div></div>
+        <div style="padding:18px 22px;display:flex;flex-direction:column;gap:14px;overflow-y:auto;flex:1 1 auto">
+
+          <div>
+            <div style="font-size:11px;font-weight:700;letter-spacing:.5px;color:#8894a2;text-transform:uppercase;margin-bottom:6px">Preview</div>
+            <div style="border:1px solid #e4e8ee;border-radius:10px;overflow:hidden">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:0">
+                <div style="padding:9px 12px;border-bottom:1px solid #eef1f4;border-right:1px solid #eef1f4;font-size:12px"><span style="color:#8894a2">Vendor</span><div style="color:#0f1720;font-weight:600">{{ billSendV.vendorName }}</div></div>
+                <div style="padding:9px 12px;border-bottom:1px solid #eef1f4;font-size:12px"><span style="color:#8894a2">Bill no.</span><div class="mono" style="color:#0f1720;font-weight:600">{{ billSendV.billNo }}</div></div>
+                <div style="padding:9px 12px;border-bottom:1px solid #eef1f4;border-right:1px solid #eef1f4;font-size:12px"><span style="color:#8894a2">Description</span><div style="color:#0f1720">{{ billSendV.desc }}</div></div>
+                <div style="padding:9px 12px;border-bottom:1px solid #eef1f4;font-size:12px"><span style="color:#8894a2">Cost code</span><div class="mono" style="color:#0f1720">{{ billSendV.costCode }}</div></div>
+                <div style="padding:9px 12px;border-bottom:1px solid #eef1f4;border-right:1px solid #eef1f4;font-size:12px"><span style="color:#8894a2">Bill date</span><div class="mono" style="color:#0f1720">{{ billSendV.billDate }}</div></div>
+                <div style="padding:9px 12px;border-bottom:1px solid #eef1f4;font-size:12px"><span style="color:#8894a2">Due date</span><div class="mono" style="color:#0f1720">{{ billSendV.dueDate }}</div></div>
+              </div>
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:14px;padding:11px 14px;background:#0f1a24;color:#fff">
+                <div style="display:flex;gap:20px;font-size:12px"><span><span style="color:#9aa8b6">Net</span> <span class="mono">{{ billSendV.net }}</span></span><span><span style="color:#9aa8b6">GST ({{ billSendV.taxRate }}%)</span> <span class="mono">{{ billSendV.tax }}</span></span></div>
+                <div style="text-align:right"><div style="font-size:10px;color:#9aa8b6;letter-spacing:.4px;text-transform:uppercase">Total payable</div><div class="mono" style="font-size:17px;font-weight:700">{{ billSendV.total }}</div></div>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div style="font-size:11px;font-weight:700;letter-spacing:.5px;color:#8894a2;text-transform:uppercase;margin-bottom:6px">From (reply-to)</div>
+            <input value="{{ billSendV.from }}" onInput="{{ billSendV.onFrom }}" type="email" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:12.5px;font-family:inherit;color:#0f1720" style-focus="border-color:#2b59c3;outline:none">
+          </div>
+
+          <div>
+            <div style="font-size:11px;font-weight:700;letter-spacing:.5px;color:#8894a2;text-transform:uppercase;margin-bottom:6px">Subject</div>
+            <input value="{{ billSendV.subject }}" onInput="{{ billSendV.onSubject }}" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:12.5px;font-family:inherit;color:#0f1720" style-focus="border-color:#2b59c3;outline:none">
+          </div>
+
+          <div>
+            <div style="font-size:11px;font-weight:700;letter-spacing:.5px;color:#8894a2;text-transform:uppercase;margin-bottom:6px">Recipients <span style="font-weight:400;text-transform:none;letter-spacing:0;color:#a4afba">· accounts &amp; Gordon are added automatically</span></div>
+            <sc-if value="{{ billSendV.hasRecipients }}" hint-placeholder-val="{{ true }}">
+              <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px">
+                <sc-for list="{{ billSendV.recipients }}" as="r" hint-placeholder-count="2"><span style="display:inline-flex;align-items:center;gap:7px;background:#f2f6fd;border:1px solid #cdddf8;color:#2b59c3;border-radius:16px;padding:4px 8px 4px 12px;font-size:12px;font-weight:600">{{ r.email }}<button onClick="{{ r.onRemove }}" title="Remove recipient" style="border:0;background:transparent;color:#8aa4d8;cursor:pointer;font-size:13px;line-height:1;padding:0 2px" style-hover="color:#b91c1c">✕</button></span></sc-for>
+              </div>
+            </sc-if>
+            <sc-if value="{{ billSendV.noRecipients }}" hint-placeholder-val="{{ false }}">
+              <div style="font-size:12px;color:#b45309;background:#fbf1e3;border:1px solid #eddcc0;border-radius:8px;padding:8px 11px;margin-bottom:8px">Add at least one email address to send.</div>
+            </sc-if>
+            <sc-if value="{{ billSendV.hasContactPicks }}" hint-placeholder-val="{{ true }}">
+              <select value="" onChange="{{ billSendV.onPickContact }}" style="width:100%;margin-bottom:8px;border:1px solid #cfd8e2;border-radius:8px;padding:8px 10px;font-size:12.5px;font-family:inherit;color:#4a5765;background:#fff;cursor:pointer" style-focus="border-color:#2b59c3;outline:none">
+                <option value="">＋ Add from project contacts…</option>
+                <sc-for list="{{ billSendV.contactPicks }}" as="c" hint-placeholder-count="4"><option value="{{ c.email }}">{{ c.label }}</option></sc-for>
+              </select>
+            </sc-if>
+            <div style="display:flex;gap:8px">
+              <input value="{{ billSendV.newEmail }}" onInput="{{ billSendV.onNewEmail }}" type="email" placeholder="…or type any other email" style="flex:1;min-width:0;border:1px solid #cfd8e2;border-radius:8px;padding:8px 10px;font-size:12.5px;font-family:inherit" style-focus="border-color:#2b59c3;outline:none">
+              <button onClick="{{ billSendV.onAddEmail }}" style="border:1px solid #cfd8e2;background:#fff;color:#2b59c3;border-radius:8px;padding:8px 13px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap" style-hover="border-color:#2b59c3">＋ Add</button>
+            </div>
+          </div>
+
+          <div>
+            <div style="font-size:11px;font-weight:700;letter-spacing:.5px;color:#8894a2;text-transform:uppercase;margin-bottom:6px">Message</div>
+            <textarea value="{{ billSendV.message }}" onInput="{{ billSendV.onMessage }}" rows="8" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:10px 11px;font-size:12.5px;font-family:inherit;line-height:1.6;color:#0f1720;resize:vertical" style-focus="border-color:#2b59c3;outline:none"></textarea>
+          </div>
+
+          <div>
+            <div style="font-size:11px;font-weight:700;letter-spacing:.5px;color:#8894a2;text-transform:uppercase;margin-bottom:6px">Invoice attachment</div>
+            <div style="border:1px solid #e4e8ee;border-radius:9px;padding:10px 12px;display:flex;align-items:center;gap:9px;font-size:12.5px;color:#0f1720">
+              <span onClick="{{ billSendV.onToggleInvoice }}" style="{{ billSendV.invoiceChk }};cursor:pointer">{{ billSendV.invoiceTick }}</span>
+              <span onClick="{{ billSendV.onToggleInvoice }}" style="cursor:pointer;flex:1">🧾 {{ billSendV.invoiceName }}</span>
+              <sc-if value="{{ billSendV.hasInvoiceFile }}" hint-placeholder-val="{{ false }}"><button onClick="{{ billSendV.onViewInvoice }}" style="border:1px solid #cfd8e2;background:#fff;color:#2b59c3;border-radius:6px;padding:3px 9px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="border-color:#2b59c3">👁 View</button></sc-if>
+            </div>
+            <sc-if value="{{ billSendV.missingInvoice }}" hint-placeholder-val="{{ false }}">
+              <div style="font-size:11.5px;color:#b45309;margin-top:6px">No invoice file is attached to this bill — attach one on the bill row (＋ Invoice) so it travels with the email.</div>
+            </sc-if>
+          </div>
+
+        </div>
+        <div style="padding:14px 22px;border-top:1px solid #eef1f4;display:flex;justify-content:space-between;align-items:center;gap:10px;flex:0 0 auto">
+          <div style="font-size:12px;color:#8894a2">{{ billSendV.recipientCount }} recipient(s) · {{ billSendV.attachSummary }}</div>
+          <div style="display:flex;gap:10px">
+            <button onClick="{{ billSendV.onClose }}" style="border:1px solid #cfd8e2;background:#fff;color:#4a5765;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Cancel</button>
+            <button onClick="{{ billSendV.onSend }}" disabled="{{ billSendV.cannotSend }}" style="border:0;background:{{ billSendV.sendBg }};color:#fff;border-radius:8px;padding:9px 20px;font-size:13px;font-weight:600;cursor:{{ billSendV.sendCursor }};font-family:inherit">Send to accounts</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
   <sc-if value="{{ shareModalV.open }}" hint-placeholder-val="{{ false }}">
     <div onClick="{{ shareModalV.onClose }}" style="position:fixed;inset:0;background:rgba(15,23,32,.5);display:flex;align-items:center;justify-content:center;z-index:60;padding:24px;animation:fadeUp .15s ease">
       <div onClick="{{ stop }}" style="background:#fff;border-radius:14px;width:620px;max-width:96vw;max-height:92vh;box-shadow:0 24px 60px rgba(15,23,32,.3);overflow:hidden;display:flex;flex-direction:column">
@@ -3509,6 +3595,7 @@ class Component extends DCLogic {
       codeForm: { parentCode: '', parentDesc: '', childCode: '', childDesc: '' },
       vendors: this._loadVendors(),
       vendorModal: null,
+      billSend: null,
       vendorForm: { type: 'supplier', company: '', rep: '', abn: '', phone: '', email: '', address: '' },
       role: 'PM',
       perms: this._loadPerms(),
@@ -3969,7 +4056,14 @@ class Component extends DCLogic {
   contractValue(c) { return c.original + c.variations.filter(v => v.status === 'approved').reduce((s, v) => s + v.value, 0); }
   contractApproved(c) { return c.variations.filter(v => v.status === 'approved').reduce((s, v) => s + v.value, 0); }
   commitValue(cm) { return cm.original + cm.variations.filter(v => v.status === 'approved').reduce((s, v) => s + v.value, 0); }
-  billTotal(b) { const amt = Number(b.amount) || 0; return amt + amt * (Number(b.taxRate) || 0) / 100; }
+  // Tolerant money parse: users type "4,360.00" or "$4,360" — Number() returns NaN for those,
+  // which silently zeroed bill totals. Strip anything that isn't a digit/dot/minus first.
+  _num(v) {
+    if (typeof v === 'number') return isFinite(v) ? v : 0;
+    const n = parseFloat(String(v == null ? '' : v).replace(/[^0-9.\-]/g, ''));
+    return isFinite(n) ? n : 0;
+  }
+  billTotal(b) { const amt = this._num(b.amount); return amt + amt * this._num(b.taxRate) / 100; }
   commitmentBilled(cmId, p) { const proj = p || this.proj(this.state.pid) || {}; return (proj.bills || []).filter(b => b.commitmentId === cmId).reduce((s, b) => s + this.billTotal(b), 0); }
   canIssue() { return this.state.role === 'PM' || this.state.role === 'Admin'; }
   // ===== Authentication & RBAC (Phase 1) =====
@@ -5259,11 +5353,11 @@ class Component extends DCLogic {
   setBillField(id, field, raw) {
     this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, bills: (p.bills || []).map(x => x.id === id ? { ...x, [field]: raw } : x) }) }));
   }
-  billStatusFromPaid(bill) { const tot = this.billTotal(bill); const paid = Number(bill.paid) || 0; if (paid <= 0) return 'unpaid'; if (paid + 0.005 >= tot) return 'paid'; return 'partial'; }
+  billStatusFromPaid(bill) { const tot = this.billTotal(bill); const paid = this._num(bill.paid); if (paid <= 0) return 'unpaid'; if (paid + 0.005 >= tot) return 'paid'; return 'partial'; }
   setBillPaid(id, val) {
     this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, bills: (p.bills || []).map(x => {
       if (x.id !== id) return x;
-      const tot = this.billTotal(x); let paid = Number(val); if (isNaN(paid)) paid = 0; paid = Math.max(0, Math.min(tot, paid));
+      const tot = this.billTotal(x); let paid = this._num(val); paid = Math.max(0, Math.min(tot, paid));
       const status = paid <= 0 ? 'unpaid' : (paid + 0.005 >= tot ? 'paid' : 'partial');
       return { ...x, paid, status };
     }) }) }));
@@ -5271,18 +5365,61 @@ class Component extends DCLogic {
   recordBillPayment(id, amount) {
     this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, bills: (p.bills || []).map(x => {
       if (x.id !== id) return x;
-      const tot = this.billTotal(x); const add = amount == null ? (tot - (Number(x.paid) || 0)) : (Number(amount) || 0);
-      const paid = Math.max(0, Math.min(tot, (Number(x.paid) || 0) + add));
+      const tot = this.billTotal(x); const add = amount == null ? (tot - this._num(x.paid)) : this._num(amount);
+      const paid = Math.max(0, Math.min(tot, this._num(x.paid) + add));
       const status = paid <= 0 ? 'unpaid' : (paid + 0.005 >= tot ? 'paid' : 'partial');
       return { ...x, paid, status };
     }) }) }));
   }
   attachBillInvoice(id, e) { const f = (e.target && e.target.files && e.target.files[0]); if (!f) return; if (e.target) e.target.value = ''; this.setBillField(id, 'invoice', f.name); this._sbUploadFile(f, 'bills').then(url => { if (url) { this.setBillField(id, 'invoiceUrl', url); this.setBillField(id, 'invoiceType', f.type || ''); } }); }
   viewBillInvoice(id) { const p = this.proj(this.state.pid); const b = p && (p.bills || []).find(x => x.id === id); if (b && b.invoiceUrl) this.openAttachment({ name: b.invoice || 'invoice', url: b.invoiceUrl, type: b.invoiceType || '' }); }
-  sendBill(id) {
+  // Bills are forwarded to accounts for payment — the accountant always gets it, Gordon is always copied.
+  _accountsEmail() { const co = this.state.company || {}; return (co.accountsEmail || '').trim() || 'accounts@cubiccm.com'; }
+  _billStandardRecipients() { const seen = {}, out = []; [this._accountsEmail(), 'gordon@cubiccm.com'].forEach(e => { if (e && !seen[e]) { seen[e] = 1; out.push(e); } }); return out; }
+  openBillSend(id) {
     const p = this.proj(this.state.pid); const bill = (p.bills || []).find(b => b.id === id); if (!bill) return;
-    const v = this.state.vendors.find(x => x.id === bill.vendorId); const to = v ? v.email : (bill.vendor || 'vendor');
-    this.setBillField(id, 'sentAt', 'Sent ' + this.now() + ' → ' + to);
+    const v = this.state.vendors.find(x => x.id === bill.vendorId);
+    const me = this.currentUser() || {};
+    const tot = this.billTotal(bill);
+    const vendorName = (v && v.company) || bill.vendor || 'the vendor';
+    const body = 'Hi,\n\n'
+      + 'Please process the attached invoice for payment.\n\n'
+      + 'Project: ' + p.name + (p.code ? ' (' + p.code + ')' : '') + '\n'
+      + 'Vendor: ' + vendorName + '\n'
+      + 'Bill no: ' + (bill.billNo || '—') + '\n'
+      + (bill.desc ? 'Description: ' + bill.desc + '\n' : '')
+      + (bill.code ? 'Cost code: ' + bill.code + '\n' : '')
+      + 'Amount: ' + this.money(this._num(bill.amount)) + ' + GST ' + this.money(tot - this._num(bill.amount)) + ' = ' + this.money(tot) + '\n'
+      + (bill.dueDate ? 'Due: ' + this.fmtDate(bill.dueDate) + '\n' : '')
+      + '\nRegards,\n' + (me.name || '') + (me.title ? '\n' + me.title : '');
+    this.setState({ billSend: { id, recipients: this._billStandardRecipients(), newEmail: '',
+      from: p.senderEmail || me.email || this._accountsEmail(),
+      subject: 'Invoice for payment — ' + (bill.billNo || '') + ' · ' + vendorName + ' — ' + p.name,
+      message: body, attachInvoice: true } });
+  }
+  closeBillSend() { this.setState({ billSend: null }); }
+  setBillSend(k, v) { this.setState(s => (s.billSend ? { billSend: { ...s.billSend, [k]: v } } : {})); }
+  addBillSendRecipient(email) {
+    if (!email) return;
+    this.setState(s => { if (!s.billSend) return {}; const cur = s.billSend.recipients || []; if (cur.indexOf(email) >= 0) return {}; return { billSend: { ...s.billSend, recipients: [...cur, email] } }; });
+  }
+  addBillSendEmail() {
+    this.setState(s => { if (!s.billSend) return {}; const e = String(s.billSend.newEmail || '').trim(); if (!e) return {};
+      const cur = s.billSend.recipients || []; if (cur.indexOf(e) >= 0) return { billSend: { ...s.billSend, newEmail: '' } };
+      return { billSend: { ...s.billSend, recipients: [...cur, e], newEmail: '' } }; });
+  }
+  removeBillSendEmail(email) { this.setState(s => (s.billSend ? { billSend: { ...s.billSend, recipients: (s.billSend.recipients || []).filter(x => x !== email) } } : {})); }
+  confirmSendBill() {
+    const st = this.state.billSend; if (!st) return;
+    const recips = (st.recipients || []).filter(Boolean); if (!recips.length) return;
+    const p = this.proj(this.state.pid); const bill = (p.bills || []).find(b => b.id === st.id); if (!bill) return;
+    const atts = (st.attachInvoice && bill.invoiceUrl) ? [{ name: bill.invoice || 'invoice', url: bill.invoiceUrl }] : [];
+    this._sendEmailNow({ to: recips, subject: st.subject || '', text: st.message || '', attachments: atts });
+    const attLabel = (st.attachInvoice && bill.invoice) ? bill.invoice : 'no invoice file';
+    this.setState(s => ({ projects: s.projects.map(pr => pr.id !== s.pid ? pr : { ...pr, senderEmail: st.from || pr.senderEmail,
+      bills: (pr.bills || []).map(b => b.id !== st.id ? b : { ...b,
+        sentAt: 'Sent ' + this.now() + ' → ' + recips.join(', '),
+        sentSubject: st.subject || '', sentMessage: st.message || '', sentRecipients: recips, sentAttachment: attLabel }) }), billSend: null }));
   }
   attachClaimInvoice(id, e) { const f = (e.target && e.target.files && e.target.files[0]); if (!f) return; if (e.target) e.target.value = ''; this.setClaimField(id, 'invoice', f.name); this._sbUploadFile(f, 'claims').then(url => { if (url) { this.setClaimField(id, 'invoiceUrl', url); this.setClaimField(id, 'invoiceType', f.type || ''); } }); }
   viewClaimInvoice(id) { const p = this.proj(this.state.pid); const c = p && (p.claims || []).find(x => x.id === id); if (c && c.invoiceUrl) this.openAttachment({ name: c.invoice || 'invoice', url: c.invoiceUrl, type: c.invoiceType || '' }); }
@@ -5292,7 +5429,7 @@ class Component extends DCLogic {
     const v = cm ? this.state.vendors.find(x => x.company === cm.vendor) : null; const to = v ? v.email : (cm ? cm.vendor : 'subcontractor');
     this.setClaimField(id, 'sentAt', 'Sent ' + this.now() + ' → ' + to);
   }
-  lineActualPaid(l, p) { const proj = p || this.proj(this.state.pid) || {}; return (proj.bills || []).filter(b => b.code && b.code === l.code).reduce((s, b) => s + (Number(b.paid) || 0), 0); }
+  lineActualPaid(l, p) { const proj = p || this.proj(this.state.pid) || {}; return (proj.bills || []).filter(b => b.code && b.code === l.code).reduce((s, b) => s + this._num(b.paid), 0); }
   onBillVendor(id, val) {
     if (val === '__new__') { this.setState({ vendorModal: { billId: id }, vendorForm: { type: 'supplier', company: '', rep: '', abn: '', phone: '', email: '', address: '' } }); return; }
     this.setBillField(id, 'vendorId', val);
@@ -7159,8 +7296,8 @@ class Component extends DCLogic {
       const today = new Date().toISOString().slice(0, 10);
       billSearchV = { value: S.search.bills || '', has: !!_bq, shown: bills.length, total: _billAll, onInput: e => this.setSearch('bills', e.target.value) };
       billRows = bills.map(x => {
-        const amt = Number(x.amount) || 0, tax = amt * (Number(x.taxRate) || 0) / 100, tot = amt + tax;
-        const paid = Math.max(0, Math.min(tot, Number(x.paid) || 0)), outstanding = tot - paid;
+        const amt = this._num(x.amount), tax = amt * this._num(x.taxRate) / 100, tot = amt + tax;
+        const paid = Math.max(0, Math.min(tot, this._num(x.paid))), outstanding = tot - paid;
         const status = paid <= 0 ? 'unpaid' : (paid + 0.005 >= tot ? 'paid' : 'partial');
         const psm = this.statusMeta(status);
         const overdue = status !== 'paid' && x.dueDate && x.dueDate < today;
@@ -7173,7 +7310,7 @@ class Component extends DCLogic {
           invoice: x.invoice || '', hasInvoice: !!x.invoice, invoiceLabel: x.invoice ? x.invoice : '＋ Invoice', hasInvoiceFile: !!x.invoiceUrl, onViewInvoice: () => this.viewBillInvoice(x.id), sent: !!x.sentAt, sentAt: x.sentAt || '',
           commitmentId: x.commitmentId || '', commitmentOptions,
           onPaid: e => this.setBillPaid(x.id, e.target.value), onPayFull: () => this.recordBillPayment(x.id, null),
-          onAttachInvoice: e => this.attachBillInvoice(x.id, e), onSend: () => this.sendBill(x.id),
+          onAttachInvoice: e => this.attachBillInvoice(x.id, e), onSend: () => this.openBillSend(x.id),
           onCommitment: e => this.setBillField(x.id, 'commitmentId', e.target.value),
           onBillNo: e => this.setBillField(x.id, 'billNo', e.target.value),
           onVendor: e => this.onBillVendor(x.id, e.target.value),
@@ -7186,7 +7323,7 @@ class Component extends DCLogic {
           onDelete: () => this.deleteBill(x.id) };
       });
       const all = p.bills || [];
-      const net = all.reduce((s, x) => s + (Number(x.amount) || 0), 0);
+      const net = all.reduce((s, x) => s + this._num(x.amount), 0);
       const gross = all.reduce((s, x) => s + this.billTotal(x), 0);
       billTotals = { net: this.money(net), tax: this.money(gross - net), gross: this.money(gross) };
     }
@@ -7330,6 +7467,46 @@ class Component extends DCLogic {
           canSign: !!(S.signName && S.signName.trim()), cannotSign: !(S.signName && S.signName.trim()),
           signBg: (S.signName && S.signName.trim()) ? '#15803d' : '#c7d0db', signCursor: (S.signName && S.signName.trim()) ? 'pointer' : 'not-allowed',
           onClose: () => this.closeSign(),
+        };
+      }
+    }
+
+    // bill → accounts email (compose + preview before sending)
+    let billSendV = { open: false };
+    if (S.billSend) {
+      const bs = S.billSend;
+      const bill = (p.bills || []).find(b => b.id === bs.id);
+      if (bill) {
+        const recips = bs.recipients || [];
+        const ven = (S.vendors || []).find(v => v.id === bill.vendorId);
+        const amt = this._num(bill.amount), tot = this.billTotal(bill);
+        const seenB = {}; recips.forEach(e => { seenB[e] = 1; });
+        const picks = [];
+        this.projectContacts(p).forEach(c => { if (c.email && !seenB[c.email]) { seenB[c.email] = 1; picks.push({ email: c.email, label: (c.name || c.email) + ' — ' + c.email + (c.sub ? ' · ' + c.sub : '') }); } });
+        (S.vendors || []).forEach(v => { if (v.email && !seenB[v.email]) { seenB[v.email] = 1; picks.push({ email: v.email, label: (v.rep || v.company) + ' — ' + v.email + ' · ' + v.company }); } });
+        const chkB = on => on ? 'width:17px;height:17px;border-radius:5px;background:#2b59c3;border:1px solid #2b59c3;color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:11px;flex:0 0 auto'
+                             : 'width:17px;height:17px;border-radius:5px;background:#fff;border:1.5px solid #c3ccd8;color:transparent;display:inline-flex;align-items:center;justify-content:center;font-size:11px;flex:0 0 auto';
+        billSendV = {
+          open: true, from: bs.from || '', subject: bs.subject || '', message: bs.message || '', newEmail: bs.newEmail || '',
+          recipients: recips.map(e => ({ email: e, onRemove: () => this.removeBillSendEmail(e) })),
+          recipientCount: String(recips.length), hasRecipients: recips.length > 0, noRecipients: recips.length === 0,
+          contactPicks: picks, hasContactPicks: picks.length > 0,
+          onPickContact: e => { const v = e.target.value; e.target.value = ''; this.addBillSendRecipient(v); },
+          // preview of the bill being forwarded
+          billNo: bill.billNo || '—', vendorName: (ven && ven.company) || bill.vendor || '—', desc: bill.desc || '—',
+          costCode: bill.code || '—', billDate: bill.billDate ? this.fmtDate(bill.billDate) : '—', dueDate: bill.dueDate ? this.fmtDate(bill.dueDate) : '—',
+          net: this.money(amt), tax: this.money(tot - amt), total: this.money(tot), taxRate: String(this._num(bill.taxRate)),
+          hasInvoice: !!bill.invoice, invoiceName: bill.invoice || 'No invoice file attached',
+          hasInvoiceFile: !!bill.invoiceUrl, onViewInvoice: () => this.viewBillInvoice(bill.id),
+          invoiceChk: chkB(!!bs.attachInvoice), invoiceTick: bs.attachInvoice ? '✓' : '', onToggleInvoice: () => this.setBillSend('attachInvoice', !bs.attachInvoice),
+          missingInvoice: !bill.invoiceUrl,
+          attachSummary: (bs.attachInvoice && bill.invoice) ? bill.invoice : 'no invoice file',
+          canSend: recips.length > 0, cannotSend: recips.length === 0,
+          sendBg: recips.length ? '#2b59c3' : '#c7d0db', sendCursor: recips.length ? 'pointer' : 'not-allowed',
+          onFrom: e => this.setBillSend('from', e.target.value), onSubject: e => this.setBillSend('subject', e.target.value),
+          onMessage: e => this.setBillSend('message', e.target.value),
+          onNewEmail: e => this.setBillSend('newEmail', e.target.value), onAddEmail: () => this.addBillSendEmail(),
+          onSend: () => this.confirmSendBill(), onClose: () => this.closeBillSend(),
         };
       }
     }
@@ -7594,7 +7771,7 @@ class Component extends DCLogic {
       onAddDefect: () => this.addDefect(), onExportDefectsPdf: () => this.exportDefectsPdf(),
       onDefectSearch: e => this.setDefectSearch(e.target.value),
       claimRows, claimTotals, claimSearchV, onAddClaim: () => this.addClaim(),
-      moduleCommitments, subModalV, signModalV, shareModalV,
+      moduleCommitments, subModalV, signModalV, shareModalV, billSendV,
       onAddContractVar: () => this.openModal('contract'),
       projDescription, clientRepRows, teamRows, clientNameV, scheduleSummary, detailsV, contactsV, filesV, scheduleV, reportV, invoiceV, invoiceSendV, variationSendV, eotV, eotSendV, documentsV, rfiSendV, meetingSendV,
       docViewerV: S.docViewer ? { open: true, name: S.docViewer.curName, url: S.docViewer.curUrl, isPdf: S.docViewer.curKind === 'pdf', isImage: S.docViewer.curKind === 'image', isOther: S.docViewer.curKind === 'other', hasNav: (S.docViewer.items || []).length > 1, position: (S.docViewer.index + 1) + ' / ' + (S.docViewer.items || []).length, onPrev: () => this.docViewerNav(-1), onNext: () => this.docViewerNav(1), onClose: () => this.closeDocViewer(), onNewTab: () => this.docViewerNewTab() } : { open: false },
