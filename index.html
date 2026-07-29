@@ -389,6 +389,16 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                 </div>
               </div>
             </div>
+
+            <div style="background:#fff;border:1px solid #e4e8ee;border-radius:12px;overflow:hidden;margin-bottom:16px">
+              <div style="padding:13px 16px;border-bottom:1px solid #eef1f4;background:#fafbfc;font-size:13px;font-weight:600;color:#0f1720">Payment details <span style="font-weight:400;color:#a4afba;font-size:11.5px">&middot; printed on tax invoices so clients know where to pay</span></div>
+              <div style="padding:18px 16px;display:grid;grid-template-columns:1fr 1fr;gap:14px">
+                <div style="grid-column:1 / -1"><div style="font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#6b7787;text-transform:uppercase;margin-bottom:5px">Account name</div><input value="{{ settingsV.company.accountName }}" onInput="{{ settingsV.company.onAccountName }}" placeholder="e.g. Cubic Construction Management" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:inherit;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none"></div>
+                <div><div style="font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#6b7787;text-transform:uppercase;margin-bottom:5px">BSB</div><input value="{{ settingsV.company.bsb }}" onInput="{{ settingsV.company.onBsb }}" placeholder="000-000" class="mono" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:'IBM Plex Mono',monospace;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none"></div>
+                <div><div style="font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#6b7787;text-transform:uppercase;margin-bottom:5px">Account number</div><input value="{{ settingsV.company.bankAccount }}" onInput="{{ settingsV.company.onBankAccount }}" placeholder="00 000 0000" class="mono" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:'IBM Plex Mono',monospace;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none"></div>
+                <div style="grid-column:1 / -1"><div style="font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#6b7787;text-transform:uppercase;margin-bottom:5px">Accounts email <span style="font-weight:400;text-transform:none;letter-spacing:0;color:#a4afba">&middot; bills &amp; claims are sent here for payment</span></div><input value="{{ settingsV.company.accountsEmail }}" onInput="{{ settingsV.company.onAccountsEmail }}" placeholder="accounts@cubiccm.com" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:inherit;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none"></div>
+              </div>
+            </div>
           </sc-if>
 
           <sc-if value="{{ settingsV.isDefaults }}" hint-placeholder-val="{{ false }}">
@@ -1301,11 +1311,11 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
             <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:8px"><div style="font-size:13px;font-weight:600;color:#0f1720">Invoice register <span style="font-weight:500;color:#8894a2;font-size:12px">· {{ invoiceV.ledgerCount }} issued</span></div><div style="font-size:12px;color:#8894a2">Next to be issued: <strong class="mono" style="color:#2b59c3">{{ invoiceV.invoiceNo }}</strong></div></div>
             <div style="background:#fff;border:1px solid #e4e8ee;border-radius:12px;overflow:hidden">
               <div style="overflow-x:auto"><div style="min-width:820px">
-                <div style="display:grid;grid-template-columns:110px 120px 120px 150px 110px 1fr 96px;padding:11px 16px;background:#fafbfc;border-bottom:1px solid #e4e8ee;font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#8894a2;text-transform:uppercase;gap:10px">
+                <div style="display:grid;grid-template-columns:110px 120px 120px 150px 110px 1fr 120px;padding:11px 16px;background:#fafbfc;border-bottom:1px solid #e4e8ee;font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#8894a2;text-transform:uppercase;gap:10px">
                   <div>Invoice</div><div>Date</div><div>Due date</div><div style="text-align:right">Amount</div><div style="text-align:center">Status</div><div style="text-align:right">Payment</div><div></div>
                 </div>
                 <sc-for list="{{ invoiceV.ledger }}" as="iv" hint-placeholder-count="1">
-                  <div style="display:grid;grid-template-columns:110px 120px 120px 150px 110px 1fr 96px;padding:10px 16px;border-bottom:1px solid #eef1f4;align-items:center;gap:10px">
+                  <div style="display:grid;grid-template-columns:110px 120px 120px 150px 110px 1fr 120px;padding:10px 16px;border-bottom:1px solid #eef1f4;align-items:center;gap:10px">
                     <div class="mono" style="font-size:12px;font-weight:600;color:#0f1720">{{ iv.no }}</div>
                     <div class="mono" style="font-size:11.5px;color:#4a5765">{{ iv.date }}</div>
                     <div class="mono" style="font-size:11.5px;color:#4a5765">{{ iv.due }}</div>
@@ -1315,13 +1325,13 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                       <sc-if value="{{ iv.paid }}" hint-placeholder-val="{{ true }}"><span class="mono" style="font-size:11px;color:#15803d">✓ {{ iv.payRef }} · {{ iv.paidAt }}</span></sc-if>
                       <sc-if value="{{ iv.unpaid }}" hint-placeholder-val="{{ false }}"><button onClick="{{ iv.onPay }}" style="border:0;background:#15803d;color:#fff;border-radius:7px;padding:6px 13px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="background:#0f6b31">💳 Pay online</button></sc-if>
                     </div>
-                    <div style="display:flex;align-items:center;justify-content:flex-end;gap:4px"><button onClick="{{ iv.onViewPdf }}" title="Open the Tax Invoice PDF" style="border:0;background:transparent;color:#8894a2;cursor:pointer;font-size:13px;padding:2px;line-height:1" style-hover="color:#2b59c3">📄</button><sc-if value="{{ iv.canEdit }}" hint-placeholder-val="{{ true }}"><button onClick="{{ iv.onEdit }}" title="Edit &amp; re-send this invoice" style="border:0;background:transparent;color:#8894a2;cursor:pointer;font-size:13px;padding:2px;line-height:1" style-hover="color:#2b59c3">✎</button></sc-if><sc-if value="{{ iv.canDelete }}" hint-placeholder-val="{{ true }}"><button onClick="{{ iv.onDelete }}" title="Delete this invoice" style="border:0;background:transparent;color:#c0c8d1;cursor:pointer;font-size:14px;padding:2px;line-height:1" style-hover="color:#b91c1c">✕</button></sc-if></div>
+                    <div style="display:flex;align-items:center;justify-content:flex-end;gap:4px"><button onClick="{{ iv.onViewPdf }}" title="Open the Tax Invoice PDF" style="border:0;background:transparent;color:#8894a2;cursor:pointer;font-size:13px;padding:2px;line-height:1" style-hover="color:#2b59c3">📄</button><button onClick="{{ iv.onViewExcel }}" title="Export this invoice to Excel (CSV)" style="border:0;background:transparent;color:#8894a2;cursor:pointer;font-size:13px;padding:2px;line-height:1" style-hover="color:#15803d">📊</button><sc-if value="{{ iv.canEdit }}" hint-placeholder-val="{{ true }}"><button onClick="{{ iv.onEdit }}" title="Edit &amp; re-send this invoice" style="border:0;background:transparent;color:#8894a2;cursor:pointer;font-size:13px;padding:2px;line-height:1" style-hover="color:#2b59c3">✎</button></sc-if><sc-if value="{{ iv.canDelete }}" hint-placeholder-val="{{ true }}"><button onClick="{{ iv.onDelete }}" title="Delete this invoice" style="border:0;background:transparent;color:#c0c8d1;cursor:pointer;font-size:14px;padding:2px;line-height:1" style-hover="color:#b91c1c">✕</button></sc-if></div>
                   </div>
                 </sc-for>
                 <sc-if value="{{ invoiceV.noLedger }}" hint-placeholder-val="{{ false }}">
                   <div style="padding:20px 16px;text-align:center;font-size:12.5px;color:#8894a2">No invoices issued yet — the first one will be <strong class="mono" style="color:#4a5765">{{ invoiceV.invoiceNo }}</strong>.</div>
                 </sc-if>
-                <div style="display:grid;grid-template-columns:110px 120px 120px 150px 110px 1fr 96px;padding:10px 16px;border-top:1px dashed #cfd8e2;background:#f7f9fc;align-items:center;gap:10px">
+                <div style="display:grid;grid-template-columns:110px 120px 120px 150px 110px 1fr 120px;padding:10px 16px;border-top:1px dashed #cfd8e2;background:#f7f9fc;align-items:center;gap:10px">
                   <div class="mono" style="font-size:12px;font-weight:600;color:#2b59c3">{{ invoiceV.invoiceNo }}</div>
                   <div style="font-size:11.5px;color:#8894a2">—</div>
                   <div style="font-size:11.5px;color:#8894a2">—</div>
@@ -5660,6 +5670,74 @@ class Component extends DCLogic {
       }) }) , invoiceEdit: null }));
     if (alsoSend) setTimeout(() => this.openInvoiceSend(e.id), 60);
   }
+  // Excel (CSV) export of the same Tax Invoice template — identical sections and figures.
+  exportInvoiceExcel(invoiceId) {
+    const p = this.proj(this.state.pid); if (!p) return;
+    const m = this._invoiceModel(p, invoiceId);
+    const co = this.state.company || {};
+    const coName = (co.name || '').trim() || 'Cubic Construction Management';
+    const cust = (p.customers && p.customers[0]) || null;
+    const sup = ((p.clientReps || []).find(r => /superintend/i.test(r.role || '')) || (p.clientReps || [])[0] || null);
+    const q = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+    const n = v => this._num(v).toFixed(2);
+    const d = iso => iso ? this.fmtDate(iso) : '';
+    const L = [];
+    L.push([q('TAX INVOICE — PROGRESS PAYMENT CLAIM')].join(','));
+    L.push([q(coName), q('ABN ' + ((co.abn || '').trim() || '32 161 357 142'))].join(','));
+    L.push('');
+    L.push([q('Invoice No.'), q(m.no), q('Rev'), q(m.rev)].join(','));
+    L.push([q('Claim No.'), q(m.claimNo + (m.claimOf ? ' of ' + m.claimOf : ''))].join(','));
+    L.push([q('Invoice date'), q(d(m.date)), q('Reference date'), q(d(m.refDate))].join(','));
+    L.push([q('Due date'), q(d(m.due)), q('Payment terms'), q(m.termDays + ' days from reference date')].join(','));
+    L.push([q('Project'), q(p.name), q('Contract No.'), q(p.code || '')].join(','));
+    L.push([q('Purchase order'), q(m.po), q('Claim period'), q((m.periodFrom ? d(m.periodFrom) : '') + ' to ' + d(m.periodTo))].join(','));
+    L.push('');
+    L.push([q('INVOICE TO'), q(''), q('DELIVER / SITE ADDRESS')].join(','));
+    L.push([q('Company'), q(cust && (cust.company || cust.name) || p.client || ''), q('Project'), q(p.name)].join(','));
+    L.push([q('ABN'), q((cust && cust.abn) || ''), q('Site'), q(p.address || '')].join(','));
+    L.push([q('Attention'), q((cust && cust.name) || ''), q('Superintendent'), q((sup && sup.name) || '')].join(','));
+    L.push([q('Email'), q((cust && cust.email) || ''), q('Email'), q((sup && sup.email) || '')].join(','));
+    L.push('');
+    L.push([q('WORK COMPLETED THIS CLAIM')].join(','));
+    L.push(['Item', 'Cost code', 'Description', 'Contract value', '% complete', 'Value to date', 'Previously claimed', 'This claim'].map(q).join(','));
+    m.rows.forEach((r, i) => {
+      L.push([q(i + 1), q(r.code || ''), q(r.desc || ''), n(r.budget), q(r.pct + '%'), n(r.budget * r.pct / 100), n(r.prior), n(r.amount)].join(','));
+    });
+    L.push([q(''), q(''), q('Subtotal — work claimed this period (excl. GST)'), q(''), q(''), q(''), q(''), n(m.claim)].join(','));
+    L.push('');
+    L.push([q('APPROVED VARIATIONS INCLUDED')].join(','));
+    L.push(['VO No.', 'Description', 'Value'].map(q).join(','));
+    m.vars.forEach(v => L.push([q(v.ref), q(v.desc || ''), n(v.value)].join(',')));
+    L.push([q(''), q('Total variations'), n(m.varTotal)].join(','));
+    L.push('');
+    L.push([q('SUMMARY')].join(','));
+    L.push([q('Work claimed this period'), n(m.claim)].join(','));
+    L.push([q('Less retention ' + m.retPct + '%'), n(-m.retAmt)].join(','));
+    L.push([q('Less back charges / deductions'), n(-m.back)].join(','));
+    L.push([q('Net amount (excl. GST)'), n(m.net)].join(','));
+    L.push([q('GST ' + m.gst + '%'), n(m.gstAmt)].join(','));
+    L.push([q('Total payable (incl. GST)'), n(m.total)].join(','));
+    L.push('');
+    L.push([q('PAYMENT DETAILS')].join(','));
+    L.push([q('Account name'), q((co.accountName || '').trim() || coName)].join(','));
+    L.push([q('BSB'), q(co.bsb || ''), q('Account'), q(co.bankAccount || '')].join(','));
+    L.push([q('Reference'), q(m.no)].join(','));
+    L.push([q('Payment terms'), q(m.termDays + ' days from reference date')].join(','));
+    if (m.notes) { L.push(''); L.push([q('NOTES'), q(m.notes)].join(',')); }
+    L.push('');
+    L.push([q('This is a payment claim made under the Building and Construction Industry Security of Payment Act applicable in the State or Territory in which the works are carried out. A payment schedule must be provided within the statutory period.')].join(','));
+    this._downloadCsv(L.join('\n'), (m.no || 'invoice') + '_' + (p.code || p.name || 'project') + '.csv');
+  }
+  _downloadCsv(text, filename) {
+    try {
+      const blob = new Blob(['\ufeff' + text], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = filename; a.style.display = 'none';
+      document.body.appendChild(a); a.click();
+      setTimeout(() => { try { a.remove(); URL.revokeObjectURL(url); } catch (e) {} }, 100);
+    } catch (e) { alert('Could not generate the CSV.'); }
+  }
   previewInvoicePdf(invoiceId) {
     const p = this.proj(this.state.pid); if (!p) return;
     const m = this._invoiceModel(p, invoiceId);
@@ -5744,7 +5822,7 @@ class Component extends DCLogic {
       + '</table>'
       + (m.notes ? '<h2>Notes</h2><div style="border:1px solid #C9CDD6;border-radius:6px;padding:10px 12px;font-size:9.5pt;line-height:1.6;white-space:pre-wrap">' + esc(m.notes) + '</div>' : '')
       + '<table style="margin-top:6px"><thead><tr><th>Payment details</th><th>Statutory notice</th></tr></thead><tbody><tr>'
-      + '<td style="width:50%;font-size:9pt;line-height:1.7">Account name: ' + esc(coName) + '<br>BSB: ' + val(co.bsb) + ' &nbsp; Account: ' + val(co.bankAccount)
+      + '<td style="width:50%;font-size:9pt;line-height:1.7">Account name: ' + esc((co.accountName || '').trim() || coName) + '<br>BSB: ' + val(co.bsb) + ' &nbsp; Account: ' + val(co.bankAccount)
       + '<br>Reference: <strong>' + esc(m.no) + '</strong><br>Payment terms: ' + m.termDays + ' days from reference date</td>'
       + '<td style="font-size:8.5pt;line-height:1.6;color:#3A4152">This is a payment claim made under the Building and Construction Industry Security of Payment Act applicable in the State or Territory in which the works are carried out. A payment schedule must be provided within the statutory period.</td>'
       + '</tr></tbody></table>'
@@ -6139,7 +6217,7 @@ class Component extends DCLogic {
     }, 30000);
   }
   // ===== Company profile (shared) =====
-  _companyDefaults() { return { companyType: '', industries: [], slogan: '', license: '', abn: '', name: '', street: '', city: '', state: '', zip: '', phone: '', website: '', logoUrl: '', pdfHeaderUrl: '' }; }
+  _companyDefaults() { return { companyType: '', industries: [], slogan: '', license: '', abn: '', name: '', street: '', city: '', state: '', zip: '', phone: '', website: '', logoUrl: '', pdfHeaderUrl: '', accountName: '', bsb: '', bankAccount: '', accountsEmail: '' }; }
   _normCompany(o) { const c = Object.assign(this._companyDefaults(), (o && typeof o === 'object') ? o : {}); if (!Array.isArray(c.industries)) c.industries = c.industry ? [c.industry] : []; delete c.industry; return c; }
   _loadCompany() { try { if (typeof localStorage === 'undefined') return this._companyDefaults(); const raw = localStorage.getItem('cubicCompany'); return raw ? this._normCompany(JSON.parse(raw)) : this._companyDefaults(); } catch (e) { return this._companyDefaults(); } }
   _saveCompany(obj) { this._saveCatalogDebounced('company', 'cubicCompany', obj); }
@@ -7018,6 +7096,7 @@ class Component extends DCLogic {
           onPay: () => this.payInvoiceOnline(iv.id),
           canDelete: this.can('invoices', 'edit'), canEdit: this.can('invoices', 'edit'),
           onEdit: () => this.openInvoiceEdit(iv.id), onViewPdf: () => this.previewInvoicePdf(iv.id),
+          onViewExcel: () => this.exportInvoiceExcel(iv.id),
           onDelete: () => this.openDeleteConfirm('invoice', iv.id, iv.no, 'The amounts this invoice claimed will be released so they can be invoiced again.'),
         };
       });
@@ -8313,6 +8392,9 @@ class Component extends DCLogic {
         onSlogan: e => this.setCompanyField('slogan', e.target.value), onLicense: e => this.setCompanyField('license', e.target.value), onAbn: e => this.setCompanyField('abn', e.target.value),
         onName: e => this.setCompanyField('name', e.target.value), onStreet: e => this.setCompanyField('street', e.target.value), onCity: e => this.setCompanyField('city', e.target.value),
         onState: e => this.setCompanyField('state', e.target.value), onZip: e => this.setCompanyField('zip', e.target.value), onPhone: e => this.setCompanyField('phone', e.target.value), onWebsite: e => this.setCompanyField('website', e.target.value),
+        accountName: co.accountName || '', bsb: co.bsb || '', bankAccount: co.bankAccount || '', accountsEmail: co.accountsEmail || '',
+        onAccountName: e => this.setCompanyField('accountName', e.target.value), onBsb: e => this.setCompanyField('bsb', e.target.value),
+        onBankAccount: e => this.setCompanyField('bankAccount', e.target.value), onAccountsEmail: e => this.setCompanyField('accountsEmail', e.target.value),
         onOpenWebsite: () => this.openCompanyWebsite(),
         onLogo: e => this.uploadCompanyLogo(e), onPdfHeader: e => this.uploadPdfHeader(e),
       };
