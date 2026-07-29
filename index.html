@@ -2090,39 +2090,39 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
 
         <!-- ============ REPORT DESIGN ============ -->
         <sc-if value="{{ reportV.show }}" hint-placeholder-val="{{ false }}">
-          <div style="display:grid;grid-template-columns:320px 1fr;gap:16px;align-items:start">
-            <!-- Config panel -->
-            <div style="display:flex;flex-direction:column;gap:14px">
-              <div style="background:#fff;border:1px solid #e4e8ee;border-radius:12px;padding:15px 16px">
-                <div style="font-size:11px;font-weight:700;letter-spacing:.4px;color:#8894a2;text-transform:uppercase;margin-bottom:7px">Report title</div>
-                <input value="{{ reportV.title }}" onInput="{{ reportV.onTitle }}" placeholder="Report title" style="width:100%;border:1px solid #e4e8ee;border-radius:8px;padding:8px 10px;font-size:13px;font-family:inherit;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none">
-              </div>
-              <div style="background:#fff;border:1px solid #e4e8ee;border-radius:12px;padding:15px 16px">
-                <div style="font-size:11px;font-weight:700;letter-spacing:.4px;color:#8894a2;text-transform:uppercase;margin-bottom:9px">Auto-generate</div>
-                <div style="display:flex;gap:6px;margin-bottom:9px">
-                  <sc-for list="{{ reportV.freqOpts }}" as="o" hint-placeholder-count="3"><button onClick="{{ o.onClick }}" style="flex:1;border:1px solid {{ o.border }};background:{{ o.bg }};color:{{ o.fg }};border-radius:8px;padding:7px 4px;font-size:11.5px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="border-color:#2b59c3">{{ o.l }}</button></sc-for>
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <!-- Toolbar: title, frequency, exports, and the columns icon on the right -->
+            <div style="background:#fff;border:1px solid #e4e8ee;border-radius:12px;padding:12px 14px">
+              <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+                <input value="{{ reportV.title }}" onInput="{{ reportV.onTitle }}" placeholder="Report title" style="flex:1 1 240px;min-width:200px;border:1px solid #e4e8ee;border-radius:8px;padding:9px 11px;font-size:14px;font-weight:600;font-family:inherit;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none">
+                <div style="display:flex;gap:6px;flex:0 0 auto">
+                  <sc-for list="{{ reportV.freqOpts }}" as="o" hint-placeholder-count="3"><button onClick="{{ o.onClick }}" style="border:1px solid {{ o.border }};background:{{ o.bg }};color:{{ o.fg }};border-radius:8px;padding:8px 14px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="border-color:#2b59c3">{{ o.l }}</button></sc-for>
                 </div>
-                <div style="font-size:11.5px;color:#6b7787;line-height:1.5;background:#f7f9fc;border-radius:8px;padding:8px 10px">📅 Next <strong style="color:#0f1720">{{ reportV.freqLabel }}</strong> report scheduled for <strong style="color:#0f1720">{{ reportV.nextDate }}</strong> — auto-sent to recipients.</div>
-              </div>
-              <div style="background:#fff;border:1px solid #e4e8ee;border-radius:12px;padding:15px 16px">
-                <div style="font-size:11px;font-weight:700;letter-spacing:.4px;color:#8894a2;text-transform:uppercase;margin-bottom:9px">Columns <span style="color:#a4afba;font-weight:500">· {{ reportV.selCount }} selected</span></div>
-                <div style="display:flex;flex-direction:column;gap:3px">
-                  <sc-for list="{{ reportV.columns }}" as="c" hint-placeholder-count="11">
-                    <div onClick="{{ c.onToggle }}" style="display:flex;align-items:center;gap:9px;padding:6px 7px;border-radius:7px;cursor:pointer" style-hover="background:#f7f9fc">
-                      <span style="width:17px;height:17px;flex-shrink:0;border:1.5px solid {{ c.checkBorder }};background:{{ c.checkBg }};border-radius:5px;color:#fff;font-size:11px;display:flex;align-items:center;justify-content:center;font-weight:700">{{ c.check }}</span>
-                      <span style="font-size:12.5px;color:#0f1720">{{ c.label }}</span>
-                    </div>
-                  </sc-for>
+                <div style="flex:1 1 auto"></div>
+                <div style="display:flex;gap:7px;flex:0 0 auto;align-items:center">
+                  <button onClick="{{ reportV.onExportPdf }}" title="Export the report as a PDF" style="border:1px solid #cfd8e2;background:#fff;color:#0f1720;border-radius:8px;padding:8px 13px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap" style-hover="border-color:#2b59c3;color:#2b59c3">📄 PDF</button>
+                  <button onClick="{{ reportV.onExportExcel }}" title="Export the report as Excel (CSV)" style="border:1px solid #cfd8e2;background:#fff;color:#0f1720;border-radius:8px;padding:8px 13px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap" style-hover="border-color:#15803d;color:#15803d">📊 Excel</button>
+                  <button onClick="{{ reportV.onSendEmail }}" style="border:0;background:#2b59c3;color:#fff;border-radius:8px;padding:9px 15px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap" style-hover="background:#244dab">✉ Send</button>
+                  <div style="position:relative;flex:0 0 auto">
+                    <button onClick="{{ reportV.onToggleColMenu }}" title="Choose which columns appear in the report and its exports" style="border:1px solid #cfd8e2;background:#fff;color:#4a5765;border-radius:8px;width:38px;height:36px;font-size:15px;cursor:pointer;font-family:inherit;line-height:1" style-hover="border-color:#2b59c3;color:#2b59c3">▦</button>
+                    <span style="position:absolute;top:-5px;right:-5px;background:#2b59c3;color:#fff;border-radius:10px;font-size:9.5px;font-weight:700;padding:1px 5px;pointer-events:none">{{ reportV.selCount }}</span>
+                    <sc-if value="{{ reportV.colMenuOpen }}" hint-placeholder-val="{{ false }}">
+                      <div onClick="{{ reportV.onCloseColMenu }}" style="position:fixed;inset:0;z-index:39"></div>
+                      <div style="position:absolute;top:calc(100% + 8px);right:0;z-index:40;background:#fff;border:1px solid #dde3ea;border-radius:12px;box-shadow:0 14px 38px rgba(15,23,32,.18);padding:8px;width:250px">
+                        <div style="font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:#8894a2;padding:6px 8px 8px">Columns · {{ reportV.selCount }} selected</div>
+                        <sc-for list="{{ reportV.columns }}" as="c" hint-placeholder-count="11">
+                          <div onClick="{{ c.onToggle }}" style="display:flex;align-items:center;gap:9px;padding:6px 8px;border-radius:7px;cursor:pointer" style-hover="background:#f5f7fa">
+                            <span style="width:17px;height:17px;flex-shrink:0;border:1.5px solid {{ c.checkBorder }};background:{{ c.checkBg }};border-radius:5px;color:#fff;font-size:11px;display:flex;align-items:center;justify-content:center;font-weight:700">{{ c.check }}</span>
+                            <span style="font-size:12.5px;color:#0f1720">{{ c.label }}</span>
+                          </div>
+                        </sc-for>
+                        <div style="border-top:1px solid #eef1f4;margin-top:6px;padding:8px 8px 4px;font-size:11px;color:#8894a2;line-height:1.5">These columns are used in the preview <strong style="color:#6b7787">and</strong> in the PDF / Excel exports.</div>
+                      </div>
+                    </sc-if>
+                  </div>
                 </div>
               </div>
-              <div style="background:#fff;border:1px solid #e4e8ee;border-radius:12px;padding:13px 14px">
-                <div style="font-size:11px;font-weight:700;letter-spacing:.4px;color:#8894a2;text-transform:uppercase;margin-bottom:9px">Generate &amp; send</div>
-                <div style="display:flex;flex-direction:column;gap:7px">
-                  <button onClick="{{ reportV.onExportPdf }}" style="border:1px solid #cfd8e2;background:#fff;color:#0f1720;border-radius:8px;padding:8px 12px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;text-align:left" style-hover="border-color:#2b59c3;color:#2b59c3">📄 Export PDF report</button>
-                  <button onClick="{{ reportV.onExportExcel }}" style="border:1px solid #cfd8e2;background:#fff;color:#0f1720;border-radius:8px;padding:8px 12px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;text-align:left" style-hover="border-color:#15803d;color:#15803d">📊 Export Excel (CSV)</button>
-                  <button onClick="{{ reportV.onSendEmail }}" style="border:0;background:#2b59c3;color:#fff;border-radius:8px;padding:9px 12px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;text-align:left" style-hover="background:#244dab">✉ Send to client &amp; parties</button>
-                </div>
-              </div>
+              <div style="font-size:11.5px;color:#6b7787;line-height:1.5;background:#f7f9fc;border-radius:8px;padding:8px 11px;margin-top:11px">📅 Next <strong style="color:#0f1720">{{ reportV.freqLabel }}</strong> report scheduled for <strong style="color:#0f1720">{{ reportV.nextDate }}</strong> — auto-sent to recipients.</div>
             </div>
 
             <!-- Live preview -->
@@ -3698,6 +3698,7 @@ class Component extends DCLogic {
       vendors: this._loadVendors(),
       vendorModal: null,
       billSend: null,
+      reportColMenu: false,
       claimSend: null,
       paymentModal: null,
       paymentForm: null,
@@ -4840,12 +4841,27 @@ class Component extends DCLogic {
   openScheduleEmail() { const p = this.proj(this.state.pid); if (!p) return; const r = this._scheduleReport(p); const emails = (p.customers || []).map(c => c.email).filter(Boolean).concat((p.clientReps || []).map(c => c.email).filter(Boolean)); const seen = {}; const to = emails.filter(e => e && !seen[e] && (seen[e] = 1)); const from = p.senderEmail || 'ivan@cubiccm.com'; const subject = p.name + ' — Programme update (' + r.status.charAt(0) + r.status.slice(1).toLowerCase() + ')'; const msg = 'Please find the current programme status for ' + p.name + '.\n\nOverall progress: ' + r.overall + '% (planned ' + r.planned + '% as at ' + this.fmtDate(this.todayLocal()) + ' — ' + r.status.toLowerCase() + ').\nRevised completion: ' + r.revisedFmt + (r.grantedEot ? ' (incl. +' + r.grantedEot + ' days approved EOT)' : '') + '.\n\nThe full schedule report (PDF / Excel) is attached.'; this.setState({ emailCompose: { to, from, subject, message: msg, newEmail: '', sent: false, sentCount: 0 } }); }
   // ---- Report Design ----
   _reportDefaultCols() { return { code: true, desc: true, orig: true, varAdj: false, current: true, committed: true, actual: true, eac: true, variance: true, cat: false, pct: false }; }
-  toggleReportCol(key) { this.setState(s => { const cur = s.reportCols || this._reportDefaultCols(); return { reportCols: { ...cur, [key]: !cur[key] } }; }); }
-  setReportFreq(v) { this.setState({ reportFreq: v }); }
-  setReportTitle(v) { this.setState({ reportTitle: v }); }
+  // Report settings persist on the project (they used to be transient state and reset on reload).
+  _reportSettings(p) {
+    const r = (p && p.report) || {};
+    const freq = ['weekly', 'fortnightly', 'monthly'].indexOf(r.freq || this.state.reportFreq) >= 0 ? (r.freq || this.state.reportFreq) : 'monthly';
+    return {
+      freq,
+      cols: (r.cols && typeof r.cols === 'object') ? Object.assign(this._reportDefaultCols(), r.cols) : (this.state.reportCols || this._reportDefaultCols()),
+      title: (r.title != null && String(r.title).length) ? r.title : (freq.charAt(0).toUpperCase() + freq.slice(1) + ' cost report'),
+    };
+  }
+  setReportSetting(k, v) {
+    this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, report: Object.assign({}, this._reportSettings(p), { [k]: v }) }) }));
+  }
+  toggleReportCol(key) { const cur = this._reportSettings(this.proj(this.state.pid)).cols; this.setReportSetting('cols', Object.assign({}, cur, { [key]: !cur[key] })); }
+  setReportFreq(v) { this.setReportSetting('freq', v); }
+  setReportTitle(v) { this.setReportSetting('title', v); }
+  toggleReportColMenu() { this.setState(s => ({ reportColMenu: !s.reportColMenu })); }
+  closeReportColMenu() { this.setState({ reportColMenu: false }); }
   _reportModel(p) {
-    const cols = this.state.reportCols || this._reportDefaultCols();
-    const freq = ['weekly', 'fortnightly', 'monthly'].indexOf(this.state.reportFreq) >= 0 ? this.state.reportFreq : 'monthly';
+    const _rs = this._reportSettings(p);
+    const cols = _rs.cols, freq = _rs.freq;
     const catalog = [
       { key: 'code', label: 'Cost code', align: 'left', text: l => l.code },
       { key: 'cat', label: 'Category', align: 'left', text: l => this.catLabel(l.cat) },
@@ -4863,7 +4879,7 @@ class Component extends DCLogic {
     const lines = p.costLines || [];
     return { cols, freq, catalog, sel, lines };
   }
-  exportReportPdf() { const p = this.proj(this.state.pid); if (!p) return; const m = this._reportModel(p); const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); const logo = (typeof window !== 'undefined' && window.CUBIC_LOGO) ? window.CUBIC_LOGO : ''; const title = (this.state.reportTitle || (m.freq.charAt(0).toUpperCase() + m.freq.slice(1) + ' cost report'));
+  exportReportPdf() { const p = this.proj(this.state.pid); if (!p) return; const m = this._reportModel(p); const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); const logo = (typeof window !== 'undefined' && window.CUBIC_LOGO) ? window.CUBIC_LOGO : ''; const title = (this._reportSettings(p).title);
     const th = m.sel.map(c => '<th style="text-align:' + c.align + '">' + esc(c.label) + '</th>').join('');
     const body = m.lines.map(l => '<tr>' + m.sel.map(c => { let v, col = ''; if (c.num) { const n = c.num(l); v = c.signed ? this.signed(n) : this.money(n); if (c.varc) col = 'color:' + this.varColor(n); } else v = c.text(l); return '<td class="' + (c.num ? 'm' : '') + '" style="text-align:' + c.align + ';' + col + '">' + esc(v) + '</td>'; }).join('') + '</tr>').join('');
     let placed = false; const tot = '<tr class="tot">' + m.sel.map(c => { if (c.num) { const s = m.lines.reduce((a, l) => a + c.num(l), 0); const v = c.signed ? this.signed(s) : this.money(s); const col = c.varc ? 'color:' + this.varColor(s) : ''; return '<td class="m" style="text-align:' + c.align + ';font-weight:700;' + col + '">' + esc(v) + '</td>'; } const lbl = !placed ? 'TOTAL' : ''; placed = true; return '<td style="font-weight:700;text-align:' + c.align + '">' + lbl + '</td>'; }).join('') + '</tr>';
@@ -4873,13 +4889,13 @@ class Component extends DCLogic {
       '<div style="margin-top:14px;color:#8894a2;font-size:10px">Generated by Cubic Construction Management. Figures are current budget vs committed / actual / forecast.</div>' +
       '<div class="noprint" style="margin-top:18px"><button onclick="window.print()" style="background:#2b59c3;color:#fff;border:0;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer">Print / Save as PDF</button></div></body></html>';
     this._openPrintDoc(html, 'report'); }
-  exportReportExcel() { const p = this.proj(this.state.pid); if (!p) return; const m = this._reportModel(p); const q = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"'; const title = (this.state.reportTitle || (m.freq + ' cost report'));
+  exportReportExcel() { const p = this.proj(this.state.pid); if (!p) return; const m = this._reportModel(p); const q = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"'; const title = (this._reportSettings(p).title);
     const lines = []; lines.push([q(p.name + ' — ' + title), q(m.freq + ' · as at ' + this.fmtDate(this.todayLocal()))].join(','));
     lines.push(m.sel.map(c => q(c.label)).join(','));
     p.costLines.forEach(l => lines.push(m.sel.map(c => { if (c.num) { const n = c.num(l); return q(c.signed ? this.signed(n) : this.money(n)); } return q(c.text(l)); }).join(',')));
     let placed = false; lines.push(m.sel.map(c => { if (c.num) { const s = (p.costLines || []).reduce((a, l) => a + c.num(l), 0); return q(c.signed ? this.signed(s) : this.money(s)); } const lbl = !placed ? 'TOTAL' : ''; placed = true; return q(lbl); }).join(','));
     const csv = '﻿' + lines.join('\r\n'); const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = (p.code || 'report') + '-cost-report.csv'; a.click(); setTimeout(() => URL.revokeObjectURL(url), 5000); }
-  openReportEmail() { const p = this.proj(this.state.pid); if (!p) return; const freq = ['weekly', 'fortnightly', 'monthly'].indexOf(this.state.reportFreq) >= 0 ? this.state.reportFreq : 'monthly'; const title = (this.state.reportTitle || (freq.charAt(0).toUpperCase() + freq.slice(1) + ' cost report')); const r = this.rollup(p); const emails = (p.customers || []).map(c => c.email).filter(Boolean).concat((p.clientReps || []).map(c => c.email).filter(Boolean)); const seen = {}; const to = emails.filter(e => e && !seen[e] && (seen[e] = 1)); const from = p.senderEmail || 'ivan@cubiccm.com'; const subject = p.name + ' — ' + title; const msg = 'Please find the ' + freq + ' cost report for ' + p.name + ' (as at ' + this.fmtDate(this.todayLocal()) + ').\n\nContract value: ' + this.money(r.contract) + '\nForecast final cost: ' + this.money(r.forecast) + '\nVariance: ' + this.signed(r.variance) + '.\n\nThe full report (PDF / Excel) is attached.'; this.setState({ emailCompose: { to, from, subject, message: msg, newEmail: '', sent: false, sentCount: 0 } }); }
+  openReportEmail() { const p = this.proj(this.state.pid); if (!p) return; const freq = ['weekly', 'fortnightly', 'monthly'].indexOf(this.state.reportFreq) >= 0 ? this.state.reportFreq : 'monthly'; const title = (this._reportSettings(p).title); const r = this.rollup(p); const emails = (p.customers || []).map(c => c.email).filter(Boolean).concat((p.clientReps || []).map(c => c.email).filter(Boolean)); const seen = {}; const to = emails.filter(e => e && !seen[e] && (seen[e] = 1)); const from = p.senderEmail || 'ivan@cubiccm.com'; const subject = p.name + ' — ' + title; const msg = 'Please find the ' + freq + ' cost report for ' + p.name + ' (as at ' + this.fmtDate(this.todayLocal()) + ').\n\nContract value: ' + this.money(r.contract) + '\nForecast final cost: ' + this.money(r.forecast) + '\nVariance: ' + this.signed(r.variance) + '.\n\nThe full report (PDF / Excel) is attached.'; this.setState({ emailCompose: { to, from, subject, message: msg, newEmail: '', sent: false, sentCount: 0 } }); }
   postRfiMessage(id, dir, author, text) { if (!text || !text.trim()) return; const msg = { id: 'm' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), dir, author, text: text.trim(), at: this.todayLocal() }; this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, docs: (p.docs || []).map(d => d.id === id ? { ...d, thread: [...(d.thread || []), msg] } : d) }) })); }
   setRfiDraft(id, v) { this.setState(s => ({ rfiDraft: { ...(s.rfiDraft || {}), [id]: v } })); }
   postRfiOurNote(id) { const t = ((this.state.rfiDraft || {})[id] || '').trim(); if (!t) return; this.postRfiMessage(id, 'out', 'Cubic (PM)', t); this.setState(s => ({ rfiDraft: { ...(s.rfiDraft || {}), [id]: '' } })); }
@@ -6645,6 +6661,7 @@ class Component extends DCLogic {
         previewCols, rows, totalCells, rowCount: String(m.lines.length),
         freqLabel, freqOpts, nextDate: this.fmtDate(nextIso), generatedFmt: this.fmtDate(today), projName: p.name, projCode: p.code || '',
         contract: this.money(r.contract), forecast: this.money(r.forecast), variance: this.signed(r.variance), varColor: this.varColor(r.variance),
+        colMenuOpen: !!S.reportColMenu, onToggleColMenu: () => this.toggleReportColMenu(), onCloseColMenu: () => this.closeReportColMenu(),
         onTitle: e => this.setReportTitle(e.target.value),
         onExportPdf: () => this.exportReportPdf(), onExportExcel: () => this.exportReportExcel(), onSendEmail: () => this.openReportEmail(),
       };
