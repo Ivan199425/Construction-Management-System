@@ -1291,14 +1291,14 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
           </div>
           <div style="font-size:12px;color:#8894a2;line-height:1.5;margin-top:12px">Each selected line claims <strong style="color:#6b7787">(approved budget × progress %) − previously invoiced</strong>. <strong style="color:#6b7787">Outstanding %</strong> is the budget not yet invoiced. On <strong style="color:#6b7787">Send</strong>, this claim is locked in as previously-invoiced so the next invoice bills only new progress. GST uses the rate in <strong style="color:#6b7787">Details</strong>.</div>
 
-          <!-- Sent invoices ledger & payment tracking -->
-          <sc-if value="{{ invoiceV.hasLedger }}" hint-placeholder-val="{{ false }}">
+          <!-- Invoice register & payment tracking -->
+          <sc-if value="{{ invoiceV.show }}" hint-placeholder-val="{{ false }}">
             <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:26px;margin-bottom:14px">
               <div style="background:#fff;border:1px solid #e4e8ee;border-radius:11px;padding:13px 15px"><div style="font-size:10.5px;font-weight:600;letter-spacing:.4px;color:#8894a2;text-transform:uppercase">Invoiced</div><div class="mono" style="font-size:19px;font-weight:600;color:#0f1720;margin-top:5px">{{ invoiceV.invoicedTotal }}</div></div>
               <div style="background:#fff;border:1px solid #e4e8ee;border-radius:11px;padding:13px 15px"><div style="font-size:10.5px;font-weight:600;letter-spacing:.4px;color:#8894a2;text-transform:uppercase">Paid</div><div class="mono" style="font-size:19px;font-weight:600;color:#15803d;margin-top:5px">{{ invoiceV.paidTotal }}</div></div>
               <div style="background:#fff;border:1px solid #e4e8ee;border-radius:11px;padding:13px 15px"><div style="font-size:10.5px;font-weight:600;letter-spacing:.4px;color:#8894a2;text-transform:uppercase">Outstanding</div><div class="mono" style="font-size:19px;font-weight:600;color:#b45309;margin-top:5px">{{ invoiceV.outstandingTotal }}</div></div>
             </div>
-            <div style="font-size:13px;font-weight:600;color:#0f1720;margin-bottom:8px">Sent invoices</div>
+            <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:8px"><div style="font-size:13px;font-weight:600;color:#0f1720">Invoice register <span style="font-weight:500;color:#8894a2;font-size:12px">· {{ invoiceV.ledgerCount }} issued</span></div><div style="font-size:12px;color:#8894a2">Next to be issued: <strong class="mono" style="color:#2b59c3">{{ invoiceV.invoiceNo }}</strong></div></div>
             <div style="background:#fff;border:1px solid #e4e8ee;border-radius:12px;overflow:hidden">
               <div style="overflow-x:auto"><div style="min-width:820px">
                 <div style="display:grid;grid-template-columns:110px 120px 120px 150px 110px 1fr 34px;padding:11px 16px;background:#fafbfc;border-bottom:1px solid #e4e8ee;font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#8894a2;text-transform:uppercase;gap:10px">
@@ -1318,6 +1318,18 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                     <sc-if value="{{ iv.canDelete }}" hint-placeholder-val="{{ true }}"><button onClick="{{ iv.onDelete }}" title="Delete this invoice" style="border:0;background:transparent;color:#c0c8d1;cursor:pointer;font-size:14px;padding:2px;line-height:1" style-hover="color:#b91c1c">✕</button></sc-if>
                   </div>
                 </sc-for>
+                <sc-if value="{{ invoiceV.noLedger }}" hint-placeholder-val="{{ false }}">
+                  <div style="padding:20px 16px;text-align:center;font-size:12.5px;color:#8894a2">No invoices issued yet — the first one will be <strong class="mono" style="color:#4a5765">{{ invoiceV.invoiceNo }}</strong>.</div>
+                </sc-if>
+                <div style="display:grid;grid-template-columns:110px 120px 120px 150px 110px 1fr 34px;padding:10px 16px;border-top:1px dashed #cfd8e2;background:#f7f9fc;align-items:center;gap:10px">
+                  <div class="mono" style="font-size:12px;font-weight:600;color:#2b59c3">{{ invoiceV.invoiceNo }}</div>
+                  <div style="font-size:11.5px;color:#8894a2">—</div>
+                  <div style="font-size:11.5px;color:#8894a2">—</div>
+                  <div class="mono" style="font-size:12.5px;font-weight:600;color:#0f1720;text-align:right">{{ invoiceV.total }}</div>
+                  <div style="text-align:center"><span style="font-size:11px;font-weight:600;padding:2px 10px;border-radius:14px;background:#eef1f5;color:#6b7787">Draft</span></div>
+                  <div style="text-align:right;font-size:11.5px;color:#8894a2">next to be issued</div>
+                  <div></div>
+                </div>
               </div></div>
             </div>
             <div style="font-size:12px;color:#8894a2;line-height:1.5;margin-top:10px">Recipients can <strong style="color:#6b7787">pay online</strong> — marking an invoice paid updates the project's Paid / Outstanding totals above. Due date is <strong style="color:#6b7787">15 days</strong> from the sent date.</div>
@@ -6810,7 +6822,7 @@ class Component extends DCLogic {
       (p.invoices || []).forEach(iv => { invoicedTot += Number(iv.total) || 0; if (iv.status === 'paid') paidTot += Number(iv.total) || 0; });
       invoiceV = {
         show: true, rows,
-        ledger, hasLedger: ledger.length > 0,
+        ledger, hasLedger: ledger.length > 0, noLedger: ledger.length === 0, ledgerCount: String(ledger.length),
         invoicedTotal: this.money(invoicedTot), paidTotal: this.money(paidTot), outstandingTotal: this.money(invoicedTot - paidTot),
         billedTo: cust ? (cust.company || cust.name || p.client) : p.client,
         invoiceNo: 'INV-' + String(no).padStart(3, '0'),
