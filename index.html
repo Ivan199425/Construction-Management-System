@@ -833,7 +833,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                         <span style="font-size:11.5px;font-weight:600;letter-spacing:.4px;color:#8894a2;text-transform:uppercase">Agreement</span>
                         <span style="font-size:11px;font-weight:600;padding:2px 10px;border-radius:16px;background:{{ c.agrBg }};color:{{ c.agrColor }}">{{ c.agrLabel }}</span>
                         <span style="font-size:11.5px;color:#8894a2">Retainage <strong style="color:#4a5765">{{ c.retainageLabel }}</strong></span>
-                        <sc-if value="{{ c.hasQuote }}" hint-placeholder-val="{{ true }}"><span style="font-size:11.5px;color:#15803d">🧾 Quote attached</span></sc-if>
+                        <sc-if value="{{ c.hasQuoteFile }}" hint-placeholder-val="{{ true }}"><button onClick="{{ c.onViewQuote }}" title="View the attached quote" style="border:0;background:transparent;font-size:11.5px;color:#15803d;cursor:pointer;font-family:inherit;padding:0;text-decoration:underline">🧾 Quote attached · view</button></sc-if><sc-if value="{{ c.quoteNoFile }}" hint-placeholder-val="{{ false }}"><span style="font-size:11.5px;color:#15803d">🧾 Quote attached</span></sc-if>
                         <sc-if value="{{ c.posted }}" hint-placeholder-val="{{ false }}"><span style="font-size:11.5px;color:#2b59c3">✓ Committed posted → {{ c.postedCode }}</span></sc-if>
                       </div>
                       <div style="display:flex;align-items:center;gap:8px">
@@ -843,7 +843,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                         <sc-if value="{{ c.isSent }}" hint-placeholder-val="{{ false }}">
                           <button onClick="{{ c.onReview }}" style="border:1px solid #2b59c3;background:#f2f6fd;color:#2b59c3;border-radius:7px;padding:6px 13px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">Open review / e-sign link</button>
                         </sc-if>
-                        <button onClick="{{ c.onManage }}" style="border:1px solid #cfd8e2;background:#fff;color:#4a5765;border-radius:7px;padding:6px 13px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">Manage</button>
+                        <button onClick="{{ c.onManage }}" style="border:1px solid #cfd8e2;background:#fff;color:#4a5765;border-radius:7px;padding:6px 13px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">{{ c.manageLabel }}</button>
                         <sc-if value="{{ c.canVoid }}" hint-placeholder-val="{{ false }}">
                           <button onClick="{{ c.onVoid }}" title="Void — issued in error (PM/Admin, before signature)" style="border:1px solid #efd0d0;background:#fff;color:#b91c1c;border-radius:7px;padding:6px 11px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">Void</button>
                         </sc-if>
@@ -3208,7 +3208,10 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
 
           <div style="display:flex;align-items:center;gap:12px;background:#f7f9fb;border:1px solid #e4e8ee;border-radius:9px;padding:12px 14px">
             <div style="flex:1;font-size:12.5px;color:#4a5765"><strong>Quote</strong> <span style="color:#a4afba">— mandatory before sending</span><sc-if value="{{ subModalV.hasQuote }}" hint-placeholder-val="{{ false }}"><div class="mono" style="font-size:12px;color:#15803d;margin-top:2px">🧾 {{ subModalV.quote }}</div></sc-if></div>
-            <sc-if value="{{ subModalV.editable }}" hint-placeholder-val="{{ true }}"><button onClick="{{ subModalV.onAttachQuote }}" style="border:1px solid #cfd8e2;background:#fff;color:#2b59c3;border-radius:7px;padding:7px 13px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">{{ subModalV.quoteBtnLabel }}</button></sc-if>
+            <div style="display:flex;align-items:center;gap:8px;flex:0 0 auto">
+              <sc-if value="{{ subModalV.hasQuoteFile }}" hint-placeholder-val="{{ false }}"><button onClick="{{ subModalV.onViewQuote }}" title="View the attached quote" style="border:1px solid #cfd8e2;background:#fff;color:#2b59c3;border-radius:7px;padding:7px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="border-color:#2b59c3">👁 View</button></sc-if>
+              <sc-if value="{{ subModalV.editable }}" hint-placeholder-val="{{ true }}"><label style="border:1px solid #cfd8e2;background:#fff;color:#2b59c3;border-radius:7px;padding:7px 13px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap;display:inline-block" style-hover="border-color:#2b59c3">{{ subModalV.quoteBtnLabel }}<input type="file" accept="application/pdf,image/*" onChange="{{ subModalV.onAttachQuote }}" style="display:none"></label></sc-if>
+            </div>
           </div>
 
           <sc-if value="{{ subModalV.locked }}" hint-placeholder-val="{{ false }}">
@@ -4676,11 +4679,17 @@ class Component extends DCLogic {
   openSubManage(cmId) {
     const cm = (this.proj(this.state.pid).commitments || []).find(c => c.id === cmId); if (!cm) return;
     const a = this.getAgr(cm);
-    this.setState({ subModal: { mode: 'manage', cmId }, subForm: { vendorId: '', costCode: a.costCode, value: cm.original, taxRate: a.taxRate, retainagePct: a.retainagePct, scope: a.scope, terms: a.terms || this.defaultSubcontractTerms(), inclusions: a.inclusions, exclusions: a.exclusions, defectLiabilityDays: a.defectLiabilityDays, quote: a.quote, start: cm.start, end: cm.end, amendNote: '' } });
+    this.setState({ subModal: { mode: 'manage', cmId }, subForm: { vendorId: '', costCode: a.costCode, value: cm.original, taxRate: a.taxRate, retainagePct: a.retainagePct, scope: a.scope, terms: a.terms || this.defaultSubcontractTerms(), inclusions: a.inclusions, exclusions: a.exclusions, defectLiabilityDays: a.defectLiabilityDays, quote: a.quote, quoteUrl: a.quoteUrl || '', quoteType: a.quoteType || '', start: cm.start, end: cm.end, amendNote: '' } });
   }
   closeSubModal() { this.setState({ subModal: null, subForm: null }); }
   setSubForm(k, v) { this.setState(s => ({ subForm: { ...s.subForm, [k]: v } })); }
-  attachQuote() { this.setState(s => ({ subForm: { ...s.subForm, quote: 'quote-' + Date.now().toString().slice(-4) + '.pdf' } })); }
+  attachQuote(e) {
+    const f = (e && e.target && e.target.files && e.target.files[0]); if (e && e.target) e.target.value = ''; if (!f) return;
+    this.setState(s => (s.subForm ? { subForm: { ...s.subForm, quote: f.name } } : {}));
+    this._sbUploadFile(f, 'quotes').then(url => { if (url) this.setState(s => (s.subForm ? { subForm: { ...s.subForm, quoteUrl: url, quoteType: f.type || '' } } : {})); });
+  }
+  viewSubQuote() { const f = this.state.subForm; if (f && f.quoteUrl) this.openAttachment({ name: f.quote || 'quote', url: f.quoteUrl, type: f.quoteType || '' }); }
+  viewCommitmentQuote(cmId) { const cm = (this.proj(this.state.pid).commitments || []).find(c => c.id === cmId); const a = cm && this.getAgr(cm); if (a && a.quoteUrl) this.openAttachment({ name: a.quote || 'quote', url: a.quoteUrl, type: a.quoteType || '' }); }
   applyTermsTpl(id) { const t = this.termsTemplates().find(x => x.id === id); if (t) this.setSubForm('terms', t.body); }
   applyScopeTpl(id) { const t = this.scopeTemplates().find(x => x.id === id); if (t) this.setState(s => ({ subForm: { ...s.subForm, inclusions: t.inclusions, exclusions: t.exclusions } })); }
   saveSubCreate() {
@@ -4689,12 +4698,12 @@ class Component extends DCLogic {
     const id = 'c' + Date.now();
     const proj = this.proj(this.state.pid);
     const cm = { id, ref: this.nextSeqRef(proj && proj.commitments, 'ref', 'SC-', 3), vendor: vendor ? vendor.company : 'New subcontractor', type: 'subcontract', scope: f.scope || 'New scope', start: f.start || '', end: f.end || '', status: 'draft', original: Number(f.value) || 0, variations: [],
-      agr: { status: 'draft', retainagePct: Number(f.retainagePct) || 0, taxRate: Number(f.taxRate) || 0, costCode: f.costCode, quote: f.quote, scope: f.scope, terms: f.terms, inclusions: f.inclusions, exclusions: f.exclusions, defectLiabilityDays: Number(f.defectLiabilityDays) || 0, amendments: [], activity: [{ at: this.now(), by: this.state.role, msg: 'Draft subcontract created' }] } };
+      agr: { status: 'draft', retainagePct: Number(f.retainagePct) || 0, taxRate: Number(f.taxRate) || 0, costCode: f.costCode, quote: f.quote, quoteUrl: f.quoteUrl || '', quoteType: f.quoteType || '', scope: f.scope, terms: f.terms, inclusions: f.inclusions, exclusions: f.exclusions, defectLiabilityDays: Number(f.defectLiabilityDays) || 0, amendments: [], activity: [{ at: this.now(), by: this.state.role, msg: 'Draft subcontract created' }] } };
     this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, commitments: [...p.commitments, cm] }), subModal: null, subForm: null, expanded: { ...s.expanded, [id]: true } }));
   }
   saveSubEdit() {
     const { subModal, subForm: f } = this.state; if (!subModal || !f) return;
-    this.updateAgr(subModal.cmId, { costCode: f.costCode, retainagePct: Number(f.retainagePct) || 0, taxRate: Number(f.taxRate) || 0, scope: f.scope, terms: f.terms, inclusions: f.inclusions, exclusions: f.exclusions, defectLiabilityDays: Number(f.defectLiabilityDays) || 0, quote: f.quote }, 'Draft details updated');
+    this.updateAgr(subModal.cmId, { costCode: f.costCode, retainagePct: Number(f.retainagePct) || 0, taxRate: Number(f.taxRate) || 0, scope: f.scope, terms: f.terms, inclusions: f.inclusions, exclusions: f.exclusions, defectLiabilityDays: Number(f.defectLiabilityDays) || 0, quote: f.quote, quoteUrl: f.quoteUrl || '', quoteType: f.quoteType || '' }, 'Draft details updated');
     this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, commitments: p.commitments.map(cm => cm.id === subModal.cmId ? { ...cm, original: Number(f.value) || cm.original } : cm) }) }));
   }
   sendSubFromModal(cmId) {
@@ -4706,7 +4715,7 @@ class Component extends DCLogic {
       if (c.id !== cmId) return c;
       const base = this.getAgr(c);
       const activity = [{ at: this.now(), by: s.role, msg: 'Sent to subcontractor (' + to + ')' }, { at: this.now(), by: s.role, msg: 'Draft details updated' }, ...base.activity];
-      return { ...c, original: Number(f.value) || c.original, agr: { ...base, costCode: f.costCode, retainagePct: Number(f.retainagePct) || 0, taxRate: Number(f.taxRate) || 0, scope: f.scope, terms: f.terms, inclusions: f.inclusions, exclusions: f.exclusions, defectLiabilityDays: Number(f.defectLiabilityDays) || 0, quote: f.quote, status: 'sent', sentAt: this.now(), sentTo: to, activity } };
+      return { ...c, original: Number(f.value) || c.original, agr: { ...base, costCode: f.costCode, retainagePct: Number(f.retainagePct) || 0, taxRate: Number(f.taxRate) || 0, scope: f.scope, terms: f.terms, inclusions: f.inclusions, exclusions: f.exclusions, defectLiabilityDays: Number(f.defectLiabilityDays) || 0, quote: f.quote, quoteUrl: f.quoteUrl || '', quoteType: f.quoteType || '', status: 'sent', sentAt: this.now(), sentTo: to, activity } };
     }) }), subModal: null, subForm: null }));
   }
   previewAgreement() {
@@ -6454,7 +6463,7 @@ class Component extends DCLogic {
           billed: this.money(billed), remaining: this.money(remaining), remainingColor: remaining < 0 ? '#b91c1c' : '#15803d',
           billCount: (p.bills || []).filter(b => b.commitmentId === cm.id).length,
           agrStatus: agr.status, agrLabel: this.agrLabel(agr.status), agrColor: am.color, agrBg: am.bg,
-          retainageLabel: agr.retainagePct + '%', quote: agr.quote, hasQuote: !!agr.quote, posted, postedCode: agr.costCode,
+          retainageLabel: agr.retainagePct + '%', quote: agr.quote, hasQuote: !!agr.quote, hasQuoteFile: !!agr.quoteUrl, quoteNoFile: !!agr.quote && !agr.quoteUrl, manageLabel: agr.status === 'draft' ? '✎ Edit' : 'Manage', onViewQuote: (e) => { e.stopPropagation(); this.viewCommitmentQuote(cm.id); }, posted, postedCode: agr.costCode,
           isDraft: agr.status === 'draft', isSent: agr.status === 'sent', isSigned: agr.status === 'signed',
           canSend, sendBlocked: agr.status === 'draft' && !agr.quote,
           sendBg: canSend ? '#2b59c3' : '#c7d0db', sendCursor: canSend ? 'pointer' : 'not-allowed',
@@ -6943,7 +6952,7 @@ class Component extends DCLogic {
         totalAgreed: this.money((Number(f.value) || 0) * (1 + (Number(f.taxRate) || 0) / 100)),
         onTax: e => this.setSubForm('taxRate', e.target.value),
         scope: f.scope, terms: f.terms, inclusions: f.inclusions, exclusions: f.exclusions, defectLiabilityDays: f.defectLiabilityDays,
-        quote: f.quote, hasQuote: !!f.quote, start: f.start, end: f.end, amendNote: f.amendNote,
+        quote: f.quote, hasQuote: !!f.quote, hasQuoteFile: !!f.quoteUrl, start: f.start, end: f.end, amendNote: f.amendNote,
         termsTpls: this.termsTemplates().map(t => ({ id: t.id, name: t.name, onClick: () => this.applyTermsTpl(t.id) })),
         scopeTpls: this.scopeTemplates().map(t => ({ id: t.id, name: t.name, onClick: () => this.applyScopeTpl(t.id) })),
         canSend: status === 'draft' && !!f.quote && this.canIssue(), sendBlocked: status === 'draft' && !f.quote,
@@ -6962,7 +6971,7 @@ class Component extends DCLogic {
         onIncl: e => this.setSubForm('inclusions', e.target.value), onExcl: e => this.setSubForm('exclusions', e.target.value),
         onDefect: e => this.setSubForm('defectLiabilityDays', e.target.value), onAmendNote: e => this.setSubForm('amendNote', e.target.value),
         onStart: e => this.setSubForm('start', e.target.value), onEnd: e => this.setSubForm('end', e.target.value),
-        onAttachQuote: () => this.attachQuote(),
+        onAttachQuote: e => this.attachQuote(e), onViewQuote: () => this.viewSubQuote(),
         onSaveCreate: () => this.saveSubCreate(), onSaveEdit: () => this.saveSubEdit(),
         onSend: () => this.sendSubFromModal(S.subModal.cmId), onReview: () => this.openSign(S.subModal.cmId),
         onVoid: () => this.voidAgreement(S.subModal.cmId), onAmend: () => this.logAmendment(S.subModal.cmId),
