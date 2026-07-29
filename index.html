@@ -3423,7 +3423,7 @@ class Component extends DCLogic {
       codeUpload: null,
       codeModal: null,
       codeForm: { parentCode: '', parentDesc: '', childCode: '', childDesc: '' },
-      vendors: this.seedVendors(),
+      vendors: this._loadVendors(),
       vendorModal: null,
       vendorForm: { type: 'supplier', company: '', rep: '', phone: '', email: '', address: '' },
       role: 'PM',
@@ -3457,6 +3457,16 @@ class Component extends DCLogic {
       } else {
         const local = this.state.customCodes || [];
         if (local.length) this._sbSaveCatalog('cost_codes', local);
+      }
+    }).catch(() => {});
+    // Pull the SHARED vendor/contractor directory (server = source of truth; if empty, seed it from local).
+    this._sbLoadCatalog('vendors').then(serverData => {
+      if (Array.isArray(serverData) && serverData.length) {
+        try { if (typeof localStorage !== 'undefined') localStorage.setItem('cubicVendors', JSON.stringify(serverData)); } catch (e) {}
+        this.setState({ vendors: serverData });
+      } else {
+        const local = this.state.vendors || [];
+        if (local.length) this._sbSaveCatalog('vendors', local);
       }
     }).catch(() => {});
     // Phase 3+: pull the SHARED company profile (Settings → Company profile).
@@ -3935,6 +3945,21 @@ class Component extends DCLogic {
     if (this._sbTimer) clearTimeout(this._sbTimer);
     this._sbTimer = setTimeout(() => this._sbSaveCatalog('cost_codes', arr || []), 500); // debounce shared save
   }
+  // ----- Vendor / contractor directory (SHARED catalog, like cost codes) -----
+  _loadVendors() {
+    try {
+      if (typeof localStorage === 'undefined') return this.seedVendors();
+      const raw = localStorage.getItem('cubicVendors');
+      const arr = raw ? JSON.parse(raw) : null;
+      return (Array.isArray(arr) && arr.length) ? arr : this.seedVendors();
+    } catch (e) { return this.seedVendors(); }
+  }
+  _saveVendors(arr) {
+    try { if (typeof localStorage !== 'undefined') localStorage.setItem('cubicVendors', JSON.stringify(arr || [])); } catch (e) {}
+    if (this._vendTimer) clearTimeout(this._vendTimer);
+    this._vendTimer = setTimeout(() => this._sbSaveCatalog('vendors', arr || []), 500); // debounce shared save
+  }
+  _commitVendors(next) { this._saveVendors(next); this.setState({ vendors: next }); }
   _sbHeaders(extra) { const c = this._SB || {}; return Object.assign({ apikey: c.key, Authorization: 'Bearer ' + c.key }, extra || {}); }
   _sbLoadCatalog(key) {
     const c = this._SB; if (!c || !c.url || !c.key || typeof fetch === 'undefined') return Promise.resolve(null);
@@ -4282,9 +4307,10 @@ class Component extends DCLogic {
   vendorName(id) { const v = this.state.vendors.find(x => x.id === id); return v ? v.company : ''; }
   vendorTypeLabel(t) { return { contractor: 'Contractor', supplier: 'Supplier', service: 'Service' }[t] || t; }
   goVendors() { this.setState({ view: 'vendors', anim: this.state.anim + 1 }); }
-  setVendorField(id, field, val) { this.setState(s => ({ vendors: s.vendors.map(v => v.id === id ? { ...v, [field]: val } : v) })); }
+  setVendorField(id, field, val) { const next = (this.state.vendors || []).map(v => v.id === id ? { ...v, [field]: val } : v); this._commitVendors(next); }
   deleteVendor(id) {
-    this.setState(s => ({ vendors: s.vendors.filter(v => v.id !== id), projects: s.projects.map(p => ({ ...p, bills: (p.bills || []).map(b => b.vendorId === id ? { ...b, vendorId: '' } : b) })) }));
+    const next = (this.state.vendors || []).filter(v => v.id !== id); this._saveVendors(next);
+    this.setState(s => ({ vendors: next, projects: s.projects.map(p => ({ ...p, bills: (p.bills || []).map(b => b.vendorId === id ? { ...b, vendorId: '' } : b) })) }));
   }
   openVendorModal() { this.setState({ vendorModal: { billId: null }, vendorForm: { type: 'supplier', company: '', rep: '', phone: '', email: '', address: '' } }); }
   vendorStats(id) {
@@ -5019,8 +5045,9 @@ class Component extends DCLogic {
     if (!vendorModal || !vendorForm.company.trim()) return;
     const id = 'v' + Date.now();
     const vendor = { id, type: vendorForm.type, company: vendorForm.company.trim(), rep: vendorForm.rep.trim(), phone: vendorForm.phone.trim(), email: vendorForm.email.trim(), address: vendorForm.address.trim() };
+    const nextVendors = [...(this.state.vendors || []), vendor]; this._saveVendors(nextVendors);
     this.setState(s => ({
-      vendors: [...s.vendors, vendor],
+      vendors: nextVendors,
       vendorModal: null,
       projects: vendorModal.billId ? s.projects.map(p => p.id !== s.pid ? p : { ...p, bills: (p.bills || []).map(x => x.id === vendorModal.billId ? { ...x, vendorId: id } : x) }) : s.projects,
     }));
