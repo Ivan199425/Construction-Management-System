@@ -3249,22 +3249,73 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
   <!-- SEND FOR SIGNATURE MODAL -->
   <sc-if value="{{ shareModalV.open }}" hint-placeholder-val="{{ false }}">
     <div onClick="{{ shareModalV.onClose }}" style="position:fixed;inset:0;background:rgba(15,23,32,.5);display:flex;align-items:center;justify-content:center;z-index:60;padding:24px;animation:fadeUp .15s ease">
-      <div onClick="{{ stop }}" style="background:#fff;border-radius:14px;width:460px;max-width:94vw;box-shadow:0 24px 60px rgba(15,23,32,.3);overflow:hidden">
-        <div style="padding:18px 22px;border-bottom:1px solid #eef1f4"><div style="font-size:16px;font-weight:600;color:#0f1720">Send for e-signature</div><div style="font-size:12.5px;color:#8894a2;margin-top:2px">{{ shareModalV.vendor }} · {{ shareModalV.ref }} — a secure review &amp; sign link is shared; no system access required.</div></div>
-        <div style="padding:20px 22px;display:flex;flex-direction:column;gap:12px">
-          <div onClick="{{ shareModalV.onToggleEmail }}" style="border:1px solid {{ shareModalV.emailBorder }};background:{{ shareModalV.emailBg }};border-radius:10px;padding:12px 14px;cursor:pointer">
-            <div style="display:flex;align-items:center;gap:9px;font-size:13.5px;font-weight:600;color:#0f1720"><span>✉️ Email</span></div>
-            <input value="{{ shareModalV.email }}" onInput="{{ shareModalV.onEmail }}" onClick="{{ stop }}" placeholder="name@company.com" style="width:100%;margin-top:8px;border:1px solid #cfd8e2;border-radius:7px;padding:8px 10px;font-size:12.5px;font-family:inherit">
+      <div onClick="{{ stop }}" style="background:#fff;border-radius:14px;width:620px;max-width:96vw;max-height:92vh;box-shadow:0 24px 60px rgba(15,23,32,.3);overflow:hidden;display:flex;flex-direction:column">
+        <div style="padding:18px 22px;border-bottom:1px solid #eef1f4;flex:0 0 auto"><div style="font-size:16px;font-weight:600;color:#0f1720">Send to subcontractor</div><div style="font-size:12.5px;color:#8894a2;margin-top:2px">{{ shareModalV.vendor }} · {{ shareModalV.ref }} — write a message, attach the documents and send the review &amp; e-sign link.</div></div>
+        <div style="padding:18px 22px;display:flex;flex-direction:column;gap:14px;overflow-y:auto;flex:1 1 auto">
+
+          <div>
+            <div style="font-size:11px;font-weight:700;letter-spacing:.5px;color:#8894a2;text-transform:uppercase;margin-bottom:6px">From (reply-to)</div>
+            <input value="{{ shareModalV.from }}" onInput="{{ shareModalV.onFrom }}" type="email" placeholder="your@email.com" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:12.5px;font-family:inherit;color:#0f1720" style-focus="border-color:#2b59c3;outline:none">
           </div>
-          <div onClick="{{ shareModalV.onToggleSms }}" style="border:1px solid {{ shareModalV.smsBorder }};background:{{ shareModalV.smsBg }};border-radius:10px;padding:12px 14px;cursor:pointer">
-            <div style="display:flex;align-items:center;gap:9px;font-size:13.5px;font-weight:600;color:#0f1720"><span>💬 SMS</span></div>
-            <input value="{{ shareModalV.phone }}" onInput="{{ shareModalV.onPhone }}" onClick="{{ stop }}" placeholder="+1 …" class="mono" style="width:100%;margin-top:8px;border:1px solid #cfd8e2;border-radius:7px;padding:8px 10px;font-size:12.5px;font-family:'IBM Plex Mono',monospace">
+
+          <div>
+            <div style="font-size:11px;font-weight:700;letter-spacing:.5px;color:#8894a2;text-transform:uppercase;margin-bottom:6px">Subject</div>
+            <input value="{{ shareModalV.subject }}" onInput="{{ shareModalV.onSubject }}" placeholder="Email subject" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:12.5px;font-family:inherit;color:#0f1720" style-focus="border-color:#2b59c3;outline:none">
           </div>
-          <div style="font-size:11.5px;color:#a4afba;line-height:1.5">Tap a channel to toggle it on/off. The link opens the agreement (details, terms, scope &amp; quote) for the subcontractor to review and e-sign or decline.</div>
+
+          <div>
+            <div style="font-size:11px;font-weight:700;letter-spacing:.5px;color:#8894a2;text-transform:uppercase;margin-bottom:6px">Recipients</div>
+            <sc-if value="{{ shareModalV.hasRecipients }}" hint-placeholder-val="{{ true }}">
+              <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px">
+                <sc-for list="{{ shareModalV.recipients }}" as="r" hint-placeholder-count="2"><span style="display:inline-flex;align-items:center;gap:7px;background:#f2f6fd;border:1px solid #cdddf8;color:#2b59c3;border-radius:16px;padding:4px 8px 4px 12px;font-size:12px;font-weight:600">{{ r.email }}<button onClick="{{ r.onRemove }}" title="Remove recipient" style="border:0;background:transparent;color:#8aa4d8;cursor:pointer;font-size:13px;line-height:1;padding:0 2px" style-hover="color:#b91c1c">✕</button></span></sc-for>
+              </div>
+            </sc-if>
+            <sc-if value="{{ shareModalV.noRecipients }}" hint-placeholder-val="{{ false }}">
+              <div style="font-size:12px;color:#b45309;background:#fbf1e3;border:1px solid #eddcc0;border-radius:8px;padding:8px 11px;margin-bottom:8px">Add at least one email address to send.</div>
+            </sc-if>
+            <div style="display:flex;gap:8px">
+              <input value="{{ shareModalV.newEmail }}" onInput="{{ shareModalV.onNewEmail }}" type="email" placeholder="Add another email…" style="flex:1;min-width:0;border:1px solid #cfd8e2;border-radius:8px;padding:8px 10px;font-size:12.5px;font-family:inherit" style-focus="border-color:#2b59c3;outline:none">
+              <button onClick="{{ shareModalV.onAddEmail }}" style="border:1px solid #cfd8e2;background:#fff;color:#2b59c3;border-radius:8px;padding:8px 13px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap" style-hover="border-color:#2b59c3">＋ Add</button>
+            </div>
+          </div>
+
+          <div>
+            <div style="font-size:11px;font-weight:700;letter-spacing:.5px;color:#8894a2;text-transform:uppercase;margin-bottom:6px">Message</div>
+            <textarea value="{{ shareModalV.message }}" onInput="{{ shareModalV.onMessage }}" rows="8" placeholder="Write a note to the subcontractor…" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:10px 11px;font-size:12.5px;font-family:inherit;line-height:1.6;color:#0f1720;resize:vertical" style-focus="border-color:#2b59c3;outline:none"></textarea>
+          </div>
+
+          <div>
+            <div style="font-size:11px;font-weight:700;letter-spacing:.5px;color:#8894a2;text-transform:uppercase;margin-bottom:6px">Attachments</div>
+            <div style="border:1px solid #e4e8ee;border-radius:9px;padding:10px 12px;display:flex;flex-direction:column;gap:9px">
+              <div style="display:flex;align-items:center;gap:9px;font-size:12.5px;color:#0f1720"><span style="{{ shareModalV.emailChk }}">✓</span>📄 Subcontract agreement (PDF) <span style="color:#a4afba">· always included</span></div>
+              <sc-if value="{{ shareModalV.hasQuote }}" hint-placeholder-val="{{ true }}">
+                <div style="display:flex;align-items:center;gap:9px;font-size:12.5px;color:#0f1720"><span onClick="{{ shareModalV.onToggleQuote }}" style="{{ shareModalV.quoteChk }};cursor:pointer">{{ shareModalV.quoteTick }}</span><span onClick="{{ shareModalV.onToggleQuote }}" style="cursor:pointer">🧾 {{ shareModalV.quoteName }}</span><sc-if value="{{ shareModalV.canViewQuote }}" hint-placeholder-val="{{ false }}"><button onClick="{{ shareModalV.onViewQuote }}" title="View the quote" style="border:1px solid #cfd8e2;background:#fff;color:#2b59c3;border-radius:6px;padding:3px 9px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="border-color:#2b59c3">👁 View</button></sc-if></div>
+              </sc-if>
+            </div>
+          </div>
+
+          <div>
+            <div style="font-size:11px;font-weight:700;letter-spacing:.5px;color:#8894a2;text-transform:uppercase;margin-bottom:6px">Send via</div>
+            <div style="display:flex;gap:10px">
+              <div onClick="{{ shareModalV.onToggleEmail }}" style="flex:1;border:1px solid {{ shareModalV.emailBorder }};background:{{ shareModalV.emailBg }};border-radius:10px;padding:10px 12px;cursor:pointer;display:flex;align-items:center;gap:9px">
+                <span style="{{ shareModalV.emailChk }}">{{ shareModalV.emailTick }}</span><span style="font-size:13px;font-weight:600;color:#0f1720">✉️ Email</span>
+              </div>
+              <div onClick="{{ shareModalV.onToggleSms }}" style="flex:1;border:1px solid {{ shareModalV.smsBorder }};background:{{ shareModalV.smsBg }};border-radius:10px;padding:10px 12px;cursor:pointer;display:flex;align-items:center;gap:9px">
+                <span style="{{ shareModalV.smsChk }}">{{ shareModalV.smsTick }}</span><span style="font-size:13px;font-weight:600;color:#0f1720">💬 SMS</span>
+              </div>
+            </div>
+            <sc-if value="{{ shareModalV.viaSms }}" hint-placeholder-val="{{ false }}">
+              <input value="{{ shareModalV.phone }}" onInput="{{ shareModalV.onPhone }}" placeholder="+61 …" class="mono" style="width:100%;margin-top:8px;border:1px solid #cfd8e2;border-radius:8px;padding:8px 10px;font-size:12.5px;font-family:'IBM Plex Mono',monospace" style-focus="border-color:#2b59c3;outline:none">
+            </sc-if>
+          </div>
+
         </div>
-        <div style="padding:15px 22px;border-top:1px solid #eef1f4;display:flex;justify-content:flex-end;gap:10px">
-          <button onClick="{{ shareModalV.onClose }}" style="border:1px solid #cfd8e2;background:#fff;color:#4a5765;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Cancel</button>
-          <button onClick="{{ shareModalV.onSend }}" disabled="{{ shareModalV.cannotShare }}" style="border:0;background:{{ shareModalV.shareBg }};color:#fff;border-radius:8px;padding:9px 20px;font-size:13px;font-weight:600;cursor:{{ shareModalV.shareCursor }};font-family:inherit">Send link</button>
+        <div style="padding:14px 22px;border-top:1px solid #eef1f4;display:flex;justify-content:space-between;align-items:center;gap:10px;flex:0 0 auto">
+          <div style="font-size:12px;color:#8894a2">{{ shareModalV.recipientCount }} recipient(s) · {{ shareModalV.attachSummary }}</div>
+          <div style="display:flex;gap:10px">
+            <button onClick="{{ shareModalV.onClose }}" style="border:1px solid #cfd8e2;background:#fff;color:#4a5765;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Cancel</button>
+            <button onClick="{{ shareModalV.onSend }}" disabled="{{ shareModalV.cannotShare }}" style="border:0;background:{{ shareModalV.shareBg }};color:#fff;border-radius:8px;padding:9px 20px;font-size:13px;font-weight:600;cursor:{{ shareModalV.shareCursor }};font-family:inherit">Send to subcontractor</button>
+          </div>
         </div>
       </div>
     </div>
@@ -4795,6 +4846,16 @@ class Component extends DCLogic {
     const _special = String(f.terms == null ? '' : f.terms).trim();
     const specialHtml = (_special && _special !== _legacyTerms) ? ml(_special)
       : '<span style="color:#3A4152">Nil — the Standard Terms and Conditions at Annexure A apply without amendment.</span>';
+    // Annexure B — the subcontractor's quote. Images embed straight into the document; a PDF quote
+    // can't be inlined into printed HTML, so it's recorded as a separately-attached annexure.
+    const _qIsImg = /^image\//i.test(f.quoteType || '') || /\.(png|jpe?g|gif|webp)$/i.test(f.quote || '');
+    const quoteAnnexure = !f.quote ? '' : ('<div style="break-before:page;padding-top:2px">'
+      + '<h1 style="font-size:17pt">Annexure B — Subcontractor\'s Quotation</h1>'
+      + '<p style="font-size:9pt;color:#3A4152">' + esc(f.quote) + ' — forms part of this Agreement as listed in section 4.</p>'
+      + ((_qIsImg && f.quoteUrl) ? '<img src="' + esc(f.quoteUrl) + '" alt="Quotation" style="max-width:100%;height:auto;border:1px solid #C9CDD6">'
+        : '<div style="border:1px solid #C9CDD6;padding:12px 14px;font-size:10pt;line-height:1.6">The quotation is attached to this Agreement as a separate PDF document'
+          + (f.quoteUrl ? ' and is available at:<br><span style="font-size:8.5pt;color:#2A3580;word-break:break-all">' + esc(f.quoteUrl) + '</span>' : '') + '.</div>')
+      + '</div>');
     // Annexure A — the standard terms, identical for every project (loaded from subcontract-terms.js)
     const stdTerms = (typeof window !== 'undefined' && window.CCM_SUBCONTRACT_TERMS) ? window.CCM_SUBCONTRACT_TERMS : '';
     const termsHtml = stdTerms || ('<div style="break-before:page"><h1 style="font-size:17pt">Terms and Conditions of Subcontract</h1><p style="color:#8a1c1c">Standard terms could not be loaded (subcontract-terms.js). Attach Annexure A before execution.</p></div>');
@@ -4858,6 +4919,7 @@ class Component extends DCLogic {
       + '<p>This Agreement comprises the documents listed below. Where there is any inconsistency, they take precedence in the order listed.</p>'
       + '<ol><li>This Formal Instrument of Agreement, including the particulars above.</li>'
       + '<li>Annexure A: ' + esc(coName) + ' Standard Terms and Conditions of Subcontract.</li>'
+      + (f.quote ? '<li>Annexure B: Subcontractor\'s quotation — ' + esc(f.quote) + '.</li>' : '')
       + '<li>Any other document expressly incorporated in writing by the Contractor.</li></ol>'
       + '<p>The Subcontractor acknowledges that it has read Annexure A, that this Subcontract is back-to-back with the Head Contract to the extent applicable to the Subcontract Works, and that no other terms — including any terms on the Subcontractor\'s quotation, order acknowledgement or invoice — form part of this Agreement.</p>'
       // ---- 7. Special Conditions (project-specific) ----
@@ -4866,6 +4928,8 @@ class Component extends DCLogic {
       + '<div class="ftr">' + esc(ref) + ' &nbsp;·&nbsp; ' + esc(p.name) + ' &nbsp;·&nbsp; Commercial in confidence</div>'
       // ---- Annexure A — standard terms, identical for every project ----
       + termsHtml
+      // ---- Annexure B — the subcontractor's quote (image embeds inline; PDFs are referenced) ----
+      + quoteAnnexure
       + scr + '</body></html>';
     this._openPrintDoc(html, 'agreement');
   }
@@ -4926,29 +4990,60 @@ class Component extends DCLogic {
   openShare(cmId) {
     const cm = (this.proj(this.state.pid).commitments || []).find(c => c.id === cmId); if (!cm) return;
     const fromModal = !!(this.state.subModal && this.state.subModal.cmId === cmId && this.state.subForm);
-    const quote = fromModal ? this.state.subForm.quote : this.getAgr(cm).quote;
+    const agr = this.getAgr(cm); const f = fromModal ? this.state.subForm : null;
+    const quote = fromModal ? f.quote : agr.quote;
     if (!quote || !this.canIssue()) return;
+    const p = this.proj(this.state.pid);
     const vendor = this.state.vendors.find(v => v.company === cm.vendor);
-    this.setState({ shareModal: { cmId, fromModal }, shareForm: { viaEmail: true, viaSms: false, email: vendor ? vendor.email : '', phone: vendor ? vendor.phone : '' } });
+    const me = this.currentUser() || {};
+    const amount = fromModal ? (Number(f.value) || 0) : (Number(cm.original) || 0);
+    const first = (vendor && vendor.rep) ? String(vendor.rep).trim().split(/\s+/)[0] : '';
+    const body = 'Hi ' + (first || 'there') + ',\n\n'
+      + 'Please find attached the subcontract agreement ' + cm.ref + ' for ' + p.name + (p.address ? ' (' + p.address + ')' : '') + '.\n\n'
+      + 'Scope: ' + (cm.scope || (f && f.scope) || 'as per the attached agreement') + '\n'
+      + 'Agreement value: ' + this.money(amount) + ' excl. GST\n\n'
+      + 'Please review, sign and return at your earliest convenience. If anything needs clarifying, reply to this email.\n\n'
+      + 'Regards,\n' + (me.name || '') + (me.title ? '\n' + me.title : '');
+    this.setState({ shareModal: { cmId, fromModal }, shareForm: {
+      viaEmail: true, viaSms: false,
+      recipients: (vendor && vendor.email) ? [vendor.email] : [], newEmail: '',
+      phone: vendor ? vendor.phone : '',
+      from: p.senderEmail || me.email || 'accounts@cubiccm.com',
+      subject: 'Subcontract ' + cm.ref + ' for signing — ' + p.name,
+      message: body, attachQuote: true,
+    } });
   }
   closeShare() { this.setState({ shareModal: null }); }
   setShareForm(k, v) { this.setState(s => ({ shareForm: { ...s.shareForm, [k]: v } })); }
+  addShareEmail() {
+    this.setState(s => {
+      if (!s.shareForm) return {};
+      const e = String(s.shareForm.newEmail || '').trim(); if (!e) return {};
+      const cur = s.shareForm.recipients || [];
+      if (cur.indexOf(e) >= 0) return { shareForm: { ...s.shareForm, newEmail: '' } };
+      return { shareForm: { ...s.shareForm, recipients: [...cur, e], newEmail: '' } };
+    });
+  }
+  removeShareEmail(email) { this.setState(s => (s.shareForm ? { shareForm: { ...s.shareForm, recipients: (s.shareForm.recipients || []).filter(x => x !== email) } } : {})); }
   confirmShare() {
     const { shareModal, shareForm: sf, subForm: f } = this.state; if (!shareModal) return;
+    const recips = (sf.recipients || []).filter(Boolean);
     const chans = [];
-    if (sf.viaEmail && sf.email) chans.push('Email (' + sf.email + ')');
+    if (sf.viaEmail && recips.length) chans.push('Email (' + recips.join(', ') + ')');
     if (sf.viaSms && sf.phone) chans.push('SMS (' + sf.phone + ')');
     if (!chans.length) return;
-    const to = (sf.viaEmail && sf.email) ? sf.email : sf.phone;
-    const msg = 'Sent for e-signature via ' + chans.join(' & ');
+    const to = (sf.viaEmail && recips.length) ? recips[0] : sf.phone;
+    const atts = ['Agreement PDF'].concat(sf.attachQuote ? ['Quote'] : []);
+    const note = (sf.message || '').trim() ? ' — “' + String(sf.message).trim().replace(/\s+/g, ' ').slice(0, 140) + '”' : '';
+    const msg = 'Sent for e-signature via ' + chans.join(' & ') + ' · attached: ' + atts.join(' + ') + note;
     const cmId = shareModal.cmId; const persist = shareModal.fromModal && f;
-    this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, commitments: p.commitments.map(c => {
+    this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, senderEmail: sf.from || p.senderEmail, commitments: p.commitments.map(c => {
       if (c.id !== cmId) return c;
       const base = this.getAgr(c);
       const activity = [{ at: this.now(), by: s.role, msg }, ...(persist ? [{ at: this.now(), by: s.role, msg: 'Draft details updated' }] : []), ...base.activity];
-      const patch = persist ? { costCode: f.costCode, retainagePct: Number(f.retainagePct) || 0, taxRate: Number(f.taxRate) || 0, scope: f.scope, terms: f.terms, inclusions: f.inclusions, exclusions: f.exclusions, defectLiabilityDays: Number(f.defectLiabilityDays) || 0, quote: f.quote } : {};
-      const orig = persist ? { original: Number(f.value) || c.original } : {};
-      return { ...c, ...orig, agr: { ...base, ...patch, status: 'sent', sentAt: this.now(), sentTo: to, sentVia: chans.join(', '), activity } };
+      const patch = persist ? { costCode: f.costCode, retainagePct: Number(f.retainagePct) || 0, taxRate: Number(f.taxRate) || 0, scope: f.scope, terms: f.terms, inclusions: f.inclusions, exclusions: f.exclusions, defectLiabilityDays: Number(f.defectLiabilityDays) || 0, quote: f.quote, quoteUrl: f.quoteUrl || '', quoteType: f.quoteType || '' } : {};
+      const orig = persist ? { original: Number(f.value) || c.original, start: f.start || c.start, end: f.end || c.end } : {};
+      return { ...c, ...orig, agr: { ...base, ...patch, status: 'sent', sentAt: this.now(), sentTo: to, sentVia: chans.join(', '), sentSubject: sf.subject || '', sentMessage: sf.message || '', sentRecipients: recips, sentAttachments: atts, activity } };
     }) }), shareModal: null, subModal: persist ? null : s.subModal, subForm: persist ? null : s.subForm }));
   }
   openSign(cmId) { this.setState({ signModal: { cmId }, signName: '', rejectReason: '' }); }
@@ -7154,14 +7249,31 @@ class Component extends DCLogic {
       const cm = (p.commitments || []).find(c => c.id === S.shareModal.cmId);
       if (cm) {
         const sf = S.shareForm;
-        const canShare = (sf.viaEmail && !!sf.email) || (sf.viaSms && !!sf.phone);
+        const recips = sf.recipients || [];
+        const canShare = (sf.viaEmail && recips.length > 0) || (sf.viaSms && !!sf.phone);
+        const agrS = this.getAgr(cm);
+        const quoteName = (S.subForm && S.shareModal.fromModal) ? S.subForm.quote : agrS.quote;
+        const quoteUrl = (S.subForm && S.shareModal.fromModal) ? S.subForm.quoteUrl : agrS.quoteUrl;
+        const chk = on => on ? 'width:17px;height:17px;border-radius:5px;background:#2b59c3;border:1px solid #2b59c3;color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:11px;flex:0 0 auto'
+                            : 'width:17px;height:17px;border-radius:5px;background:#fff;border:1.5px solid #c3ccd8;color:transparent;display:inline-flex;align-items:center;justify-content:center;font-size:11px;flex:0 0 auto';
         shareModalV = {
-          open: true, vendor: cm.vendor, ref: cm.ref, viaEmail: sf.viaEmail, viaSms: sf.viaSms, email: sf.email, phone: sf.phone,
+          open: true, vendor: cm.vendor, ref: cm.ref, viaEmail: sf.viaEmail, viaSms: sf.viaSms, phone: sf.phone,
+          from: sf.from || '', subject: sf.subject || '', message: sf.message || '', newEmail: sf.newEmail || '',
+          recipients: recips.map(e => ({ email: e, onRemove: () => this.removeShareEmail(e) })),
+          recipientCount: String(recips.length), hasRecipients: recips.length > 0, noRecipients: recips.length === 0,
           emailBg: sf.viaEmail ? '#f2f6fd' : '#fff', emailBorder: sf.viaEmail ? '#2b59c3' : '#cfd8e2',
           smsBg: sf.viaSms ? '#f2f6fd' : '#fff', smsBorder: sf.viaSms ? '#2b59c3' : '#cfd8e2',
+          emailChk: chk(sf.viaEmail), emailTick: sf.viaEmail ? '✓' : '', smsChk: chk(sf.viaSms), smsTick: sf.viaSms ? '✓' : '',
+          hasQuote: !!quoteName, quoteName: quoteName || '', quoteChk: chk(!!sf.attachQuote), quoteTick: sf.attachQuote ? '✓' : '',
+          canViewQuote: !!quoteUrl, onViewQuote: () => this.viewCommitmentQuote(cm.id),
+          attachSummary: 'Agreement PDF' + (sf.attachQuote && quoteName ? ' + ' + quoteName : ''),
           canShare, cannotShare: !canShare, shareBg: canShare ? '#2b59c3' : '#c7d0db', shareCursor: canShare ? 'pointer' : 'not-allowed',
           onToggleEmail: () => this.setShareForm('viaEmail', !sf.viaEmail), onToggleSms: () => this.setShareForm('viaSms', !sf.viaSms),
-          onEmail: e => this.setShareForm('email', e.target.value), onPhone: e => this.setShareForm('phone', e.target.value),
+          onToggleQuote: () => this.setShareForm('attachQuote', !sf.attachQuote),
+          onFrom: e => this.setShareForm('from', e.target.value), onSubject: e => this.setShareForm('subject', e.target.value),
+          onMessage: e => this.setShareForm('message', e.target.value),
+          onNewEmail: e => this.setShareForm('newEmail', e.target.value), onAddEmail: () => this.addShareEmail(),
+          onPhone: e => this.setShareForm('phone', e.target.value),
           onSend: () => this.confirmShare(), onClose: () => this.closeShare(),
         };
       }
