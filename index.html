@@ -1364,7 +1364,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                     <span style="align-self:flex-start;font-size:10px;font-weight:600;padding:1px 8px;border-radius:12px;background:{{ r.statusBg }};color:{{ r.statusColor }}">{{ r.statusLabel }}</span>
                     <div style="display:flex;gap:4px;align-items:center">
                       <input value="{{ r.paid }}" onInput="{{ r.onPaid }}" title="Amount paid to date" class="mono" style="flex:1;min-width:0;border:1px solid #e4e8ee;border-radius:6px;padding:4px 6px;font-size:11px;text-align:right;font-family:'IBM Plex Mono',monospace;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none">
-                      <button onClick="{{ r.onPayFull }}" title="Record payment in full" style="border:1px solid #bfe3cc;background:#e9f6ee;color:#15803d;border-radius:5px;padding:4px 7px;font-size:10.5px;font-weight:600;cursor:pointer;font-family:inherit">Pay</button>
+                      <button onClick="{{ r.onPayFull }}" title="Record payment in full" style="border:1px solid #bfe3cc;background:#e9f6ee;color:#15803d;border-radius:5px;padding:4px 7px;font-size:10.5px;font-weight:600;cursor:pointer;font-family:inherit">Pay</button><button onClick="{{ r.onAddPayment }}" title="Add a payment with method, date, cheque no., notes and attachments" style="border:1px solid #cdddf8;background:#f2f6fd;color:#2b59c3;border-radius:5px;padding:4px 7px;font-size:10.5px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap">＋ Pmt</button>
                     </div>
                     <span style="font-size:9.5px;color:{{ r.outstandingColor }}">Outstanding {{ r.outstanding }}</span>
                     <sc-if value="{{ r.overdue }}" hint-placeholder-val="{{ false }}"><span style="font-size:9px;font-weight:700;letter-spacing:.3px;color:#b91c1c">⚠ OVERDUE</span></sc-if>
@@ -3308,86 +3308,149 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
     </div>
   </sc-if>
 
-  <!-- BILL → ACCOUNTS EMAIL (compose + preview) -->
-  <sc-if value="{{ billSendV.open }}" hint-placeholder-val="{{ false }}">
-    <div onClick="{{ billSendV.onClose }}" style="position:fixed;inset:0;background:rgba(15,23,32,.5);display:flex;align-items:center;justify-content:center;z-index:60;padding:24px;animation:fadeUp .15s ease">
+  <!-- ADD PAYMENT -->
+  <sc-if value="{{ paymentModalV.open }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ paymentModalV.onClose }}" style="position:fixed;inset:0;background:rgba(15,23,32,.5);display:flex;align-items:center;justify-content:center;z-index:65;padding:24px;animation:fadeUp .15s ease">
+      <div onClick="{{ stop }}" style="background:#fff;border-radius:14px;width:560px;max-width:96vw;max-height:92vh;box-shadow:0 24px 60px rgba(15,23,32,.3);overflow:hidden;display:flex;flex-direction:column">
+        <div style="padding:18px 22px;border-bottom:1px solid #eef1f4;display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex:0 0 auto">
+          <div><div style="font-size:17px;font-weight:600;color:#0f1720">Add payment</div><div style="font-size:12.5px;color:#8894a2;margin-top:2px">{{ paymentModalV.billLabel }}</div></div>
+          <button onClick="{{ paymentModalV.onClose }}" style="border:0;background:transparent;color:#8894a2;cursor:pointer;font-size:20px;line-height:1">✕</button>
+        </div>
+        <div style="padding:18px 22px;display:flex;flex-direction:column;gap:14px;overflow-y:auto;flex:1 1 auto">
+
+          <div style="display:flex;gap:18px;background:#f7f9fb;border:1px solid #e4e8ee;border-radius:9px;padding:10px 13px;font-size:12px">
+            <span><span style="color:#8894a2">Bill total</span> <span class="mono" style="font-weight:600">{{ paymentModalV.billTotal }}</span></span>
+            <span><span style="color:#8894a2">Already paid</span> <span class="mono" style="font-weight:600">{{ paymentModalV.alreadyPaid }}</span></span>
+            <span><span style="color:#8894a2">Outstanding</span> <span class="mono" style="font-weight:700;color:#b45309">{{ paymentModalV.outstanding }}</span></span>
+          </div>
+
+          <div>
+            <label style="font-size:12px;font-weight:600;color:#4a5765;display:block;margin-bottom:5px">Progress claim</label>
+            <select value="{{ paymentModalV.claimId }}" onChange="{{ paymentModalV.onClaim }}" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:inherit;background:#fff;cursor:pointer" style-focus="border-color:#2b59c3;outline:none">
+              <option value="">— None —</option>
+              <sc-for list="{{ paymentModalV.claimOptions }}" as="o" hint-placeholder-count="3"><option value="{{ o.id }}">{{ o.label }}</option></sc-for>
+            </select>
+          </div>
+
+          <div style="display:flex;gap:12px">
+            <div style="flex:1"><label style="font-size:12px;font-weight:600;color:#4a5765;display:block;margin-bottom:5px">Payment #</label><input value="{{ paymentModalV.paymentNo }}" onInput="{{ paymentModalV.onPaymentNo }}" class="mono" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:'IBM Plex Mono',monospace" style-focus="border-color:#2b59c3;outline:none"></div>
+            <div style="flex:1"><label style="font-size:12px;font-weight:600;color:#4a5765;display:block;margin-bottom:5px">Payment method</label>
+              <select value="{{ paymentModalV.method }}" onChange="{{ paymentModalV.onMethod }}" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:inherit;background:#fff;cursor:pointer" style-focus="border-color:#2b59c3;outline:none">
+                <sc-for list="{{ paymentModalV.methodOptions }}" as="m" hint-placeholder-count="7"><option value="{{ m.v }}">{{ m.v }}</option></sc-for>
+              </select>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:12px">
+            <div style="flex:1"><label style="font-size:12px;font-weight:600;color:#4a5765;display:block;margin-bottom:5px">Amount</label><input value="{{ paymentModalV.amount }}" onInput="{{ paymentModalV.onAmount }}" placeholder="0.00" class="mono" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:'IBM Plex Mono',monospace" style-focus="border-color:#2b59c3;outline:none"></div>
+            <div style="flex:1"><label style="font-size:12px;font-weight:600;color:#4a5765;display:block;margin-bottom:5px">Date paid</label><input value="{{ paymentModalV.datePaid }}" onInput="{{ paymentModalV.onDatePaid }}" type="date" class="mono" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:'IBM Plex Mono',monospace" style-focus="border-color:#2b59c3;outline:none"></div>
+          </div>
+
+          <div style="display:flex;gap:12px">
+            <div style="flex:1"><label style="font-size:12px;font-weight:600;color:#4a5765;display:block;margin-bottom:5px">Progress claim #</label><input value="{{ paymentModalV.claimNo }}" onInput="{{ paymentModalV.onClaimNo }}" class="mono" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:'IBM Plex Mono',monospace" style-focus="border-color:#2b59c3;outline:none"></div>
+            <div style="flex:1"><label style="font-size:12px;font-weight:600;color:#4a5765;display:block;margin-bottom:5px">Cheque #</label><input value="{{ paymentModalV.chequeNo }}" onInput="{{ paymentModalV.onCheque }}" class="mono" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:'IBM Plex Mono',monospace" style-focus="border-color:#2b59c3;outline:none"></div>
+          </div>
+
+          <div><label style="font-size:12px;font-weight:600;color:#4a5765;display:block;margin-bottom:5px">Notes</label><input value="{{ paymentModalV.notes }}" onInput="{{ paymentModalV.onNotes }}" placeholder="Reference, remittance detail, anything accounts should know…" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:inherit" style-focus="border-color:#2b59c3;outline:none"></div>
+
+          <div>
+            <label style="font-size:12px;font-weight:600;color:#4a5765;display:block;margin-bottom:5px">Attachments</label>
+            <sc-if value="{{ paymentModalV.hasAttachments }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px">
+                <sc-for list="{{ paymentModalV.attachments }}" as="a" hint-placeholder-count="2"><div style="display:flex;align-items:center;gap:9px;border:1px solid #e4e8ee;border-radius:8px;padding:7px 11px;font-size:12.5px"><span style="flex:1;color:#0f1720;word-break:break-all">📎 {{ a.name }}</span><span style="font-size:11px;color:#8894a2">{{ a.statusText }}</span><button onClick="{{ a.onRemove }}" title="Remove" style="border:0;background:transparent;color:#c0c8d1;cursor:pointer;font-size:14px;line-height:1;padding:0 2px" style-hover="color:#b91c1c">✕</button></div></sc-for>
+              </div>
+            </sc-if>
+            <label style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;border:1.5px dashed #cfd8e2;border-radius:10px;padding:18px 14px;cursor:pointer;background:#fafbfc" style-hover="border-color:#2b59c3;background:#f5f8fd">
+              <span style="border:1px solid #cfd8e2;background:#fff;border-radius:7px;padding:7px 15px;font-size:12.5px;font-weight:600;color:#0f1720">Attach Files</span>
+              <span style="font-size:11.5px;color:#a4afba">remittance, receipt, bank confirmation…</span>
+              <input type="file" multiple onChange="{{ paymentModalV.onAttach }}" style="display:none">
+            </label>
+          </div>
+
+        </div>
+        <div style="padding:15px 22px;border-top:1px solid #eef1f4;display:flex;justify-content:flex-end;gap:10px;flex:0 0 auto">
+          <button onClick="{{ paymentModalV.onClose }}" style="border:1px solid #cfd8e2;background:#fff;color:#4a5765;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Cancel</button>
+          <button onClick="{{ paymentModalV.onSave }}" disabled="{{ paymentModalV.cannotSave }}" style="border:0;background:{{ paymentModalV.saveBg }};color:#fff;border-radius:8px;padding:9px 24px;font-size:13px;font-weight:600;cursor:{{ paymentModalV.saveCursor }};font-family:inherit">Add</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- BILL / CLAIM → ACCOUNTS EMAIL (compose + preview) -->
+  <sc-if value="{{ acctSendV.open }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ acctSendV.onClose }}" style="position:fixed;inset:0;background:rgba(15,23,32,.5);display:flex;align-items:center;justify-content:center;z-index:60;padding:24px;animation:fadeUp .15s ease">
       <div onClick="{{ stop }}" style="background:#fff;border-radius:14px;width:660px;max-width:96vw;max-height:92vh;box-shadow:0 24px 60px rgba(15,23,32,.3);overflow:hidden;display:flex;flex-direction:column">
-        <div style="padding:18px 22px;border-bottom:1px solid #eef1f4;flex:0 0 auto"><div style="font-size:16px;font-weight:600;color:#0f1720">Send invoice to accounts</div><div style="font-size:12.5px;color:#8894a2;margin-top:2px">{{ billSendV.billNo }} · {{ billSendV.vendorName }} — review below, then send for payment.</div></div>
+        <div style="padding:18px 22px;border-bottom:1px solid #eef1f4;flex:0 0 auto"><div style="font-size:16px;font-weight:600;color:#0f1720">{{ acctSendV.title }}</div><div style="font-size:12.5px;color:#8894a2;margin-top:2px">{{ acctSendV.subtitle }}</div></div>
         <div style="padding:18px 22px;display:flex;flex-direction:column;gap:14px;overflow-y:auto;flex:1 1 auto">
 
           <div>
             <div style="font-size:11px;font-weight:700;letter-spacing:.5px;color:#8894a2;text-transform:uppercase;margin-bottom:6px">Preview</div>
             <div style="border:1px solid #e4e8ee;border-radius:10px;overflow:hidden">
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:0">
-                <div style="padding:9px 12px;border-bottom:1px solid #eef1f4;border-right:1px solid #eef1f4;font-size:12px"><span style="color:#8894a2">Vendor</span><div style="color:#0f1720;font-weight:600">{{ billSendV.vendorName }}</div></div>
-                <div style="padding:9px 12px;border-bottom:1px solid #eef1f4;font-size:12px"><span style="color:#8894a2">Bill no.</span><div class="mono" style="color:#0f1720;font-weight:600">{{ billSendV.billNo }}</div></div>
-                <div style="padding:9px 12px;border-bottom:1px solid #eef1f4;border-right:1px solid #eef1f4;font-size:12px"><span style="color:#8894a2">Description</span><div style="color:#0f1720">{{ billSendV.desc }}</div></div>
-                <div style="padding:9px 12px;border-bottom:1px solid #eef1f4;font-size:12px"><span style="color:#8894a2">Cost code</span><div class="mono" style="color:#0f1720">{{ billSendV.costCode }}</div></div>
-                <div style="padding:9px 12px;border-bottom:1px solid #eef1f4;border-right:1px solid #eef1f4;font-size:12px"><span style="color:#8894a2">Bill date</span><div class="mono" style="color:#0f1720">{{ billSendV.billDate }}</div></div>
-                <div style="padding:9px 12px;border-bottom:1px solid #eef1f4;font-size:12px"><span style="color:#8894a2">Due date</span><div class="mono" style="color:#0f1720">{{ billSendV.dueDate }}</div></div>
+                <sc-for list="{{ acctSendV.previewRows }}" as="pr" hint-placeholder-count="6"><div style="padding:9px 12px;border-bottom:1px solid #eef1f4;font-size:12px;min-width:0"><span style="color:#8894a2">{{ pr.k }}</span><div class="{{ pr.cls }}" style="color:#0f1720;font-weight:600;word-break:break-word">{{ pr.v }}</div></div></sc-for>
               </div>
               <div style="display:flex;align-items:center;justify-content:space-between;gap:14px;padding:11px 14px;background:#0f1a24;color:#fff">
-                <div style="display:flex;gap:20px;font-size:12px"><span><span style="color:#9aa8b6">Net</span> <span class="mono">{{ billSendV.net }}</span></span><span><span style="color:#9aa8b6">GST ({{ billSendV.taxRate }}%)</span> <span class="mono">{{ billSendV.tax }}</span></span></div>
-                <div style="text-align:right"><div style="font-size:10px;color:#9aa8b6;letter-spacing:.4px;text-transform:uppercase">Total payable</div><div class="mono" style="font-size:17px;font-weight:700">{{ billSendV.total }}</div></div>
+                <div style="display:flex;gap:20px;font-size:12px"><span><span style="color:#9aa8b6">Net</span> <span class="mono">{{ acctSendV.net }}</span></span><span><span style="color:#9aa8b6">GST ({{ acctSendV.taxRate }}%)</span> <span class="mono">{{ acctSendV.tax }}</span></span></div>
+                <div style="text-align:right"><div style="font-size:10px;color:#9aa8b6;letter-spacing:.4px;text-transform:uppercase">Total payable</div><div class="mono" style="font-size:17px;font-weight:700">{{ acctSendV.total }}</div></div>
               </div>
             </div>
           </div>
 
           <div>
             <div style="font-size:11px;font-weight:700;letter-spacing:.5px;color:#8894a2;text-transform:uppercase;margin-bottom:6px">From (reply-to)</div>
-            <input value="{{ billSendV.from }}" onInput="{{ billSendV.onFrom }}" type="email" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:12.5px;font-family:inherit;color:#0f1720" style-focus="border-color:#2b59c3;outline:none">
+            <input value="{{ acctSendV.from }}" onInput="{{ acctSendV.onFrom }}" type="email" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:12.5px;font-family:inherit;color:#0f1720" style-focus="border-color:#2b59c3;outline:none">
           </div>
 
           <div>
             <div style="font-size:11px;font-weight:700;letter-spacing:.5px;color:#8894a2;text-transform:uppercase;margin-bottom:6px">Subject</div>
-            <input value="{{ billSendV.subject }}" onInput="{{ billSendV.onSubject }}" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:12.5px;font-family:inherit;color:#0f1720" style-focus="border-color:#2b59c3;outline:none">
+            <input value="{{ acctSendV.subject }}" onInput="{{ acctSendV.onSubject }}" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:12.5px;font-family:inherit;color:#0f1720" style-focus="border-color:#2b59c3;outline:none">
           </div>
 
           <div>
             <div style="font-size:11px;font-weight:700;letter-spacing:.5px;color:#8894a2;text-transform:uppercase;margin-bottom:6px">Recipients <span style="font-weight:400;text-transform:none;letter-spacing:0;color:#a4afba">· accounts &amp; Gordon are added automatically</span></div>
-            <sc-if value="{{ billSendV.hasRecipients }}" hint-placeholder-val="{{ true }}">
+            <sc-if value="{{ acctSendV.hasRecipients }}" hint-placeholder-val="{{ true }}">
               <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px">
-                <sc-for list="{{ billSendV.recipients }}" as="r" hint-placeholder-count="2"><span style="display:inline-flex;align-items:center;gap:7px;background:#f2f6fd;border:1px solid #cdddf8;color:#2b59c3;border-radius:16px;padding:4px 8px 4px 12px;font-size:12px;font-weight:600">{{ r.email }}<button onClick="{{ r.onRemove }}" title="Remove recipient" style="border:0;background:transparent;color:#8aa4d8;cursor:pointer;font-size:13px;line-height:1;padding:0 2px" style-hover="color:#b91c1c">✕</button></span></sc-for>
+                <sc-for list="{{ acctSendV.recipients }}" as="r" hint-placeholder-count="2"><span style="display:inline-flex;align-items:center;gap:7px;background:#f2f6fd;border:1px solid #cdddf8;color:#2b59c3;border-radius:16px;padding:4px 8px 4px 12px;font-size:12px;font-weight:600">{{ r.email }}<button onClick="{{ r.onRemove }}" title="Remove recipient" style="border:0;background:transparent;color:#8aa4d8;cursor:pointer;font-size:13px;line-height:1;padding:0 2px" style-hover="color:#b91c1c">✕</button></span></sc-for>
               </div>
             </sc-if>
-            <sc-if value="{{ billSendV.noRecipients }}" hint-placeholder-val="{{ false }}">
+            <sc-if value="{{ acctSendV.noRecipients }}" hint-placeholder-val="{{ false }}">
               <div style="font-size:12px;color:#b45309;background:#fbf1e3;border:1px solid #eddcc0;border-radius:8px;padding:8px 11px;margin-bottom:8px">Add at least one email address to send.</div>
             </sc-if>
-            <sc-if value="{{ billSendV.hasContactPicks }}" hint-placeholder-val="{{ true }}">
-              <select value="" onChange="{{ billSendV.onPickContact }}" style="width:100%;margin-bottom:8px;border:1px solid #cfd8e2;border-radius:8px;padding:8px 10px;font-size:12.5px;font-family:inherit;color:#4a5765;background:#fff;cursor:pointer" style-focus="border-color:#2b59c3;outline:none">
+            <sc-if value="{{ acctSendV.hasContactPicks }}" hint-placeholder-val="{{ true }}">
+              <select value="" onChange="{{ acctSendV.onPickContact }}" style="width:100%;margin-bottom:8px;border:1px solid #cfd8e2;border-radius:8px;padding:8px 10px;font-size:12.5px;font-family:inherit;color:#4a5765;background:#fff;cursor:pointer" style-focus="border-color:#2b59c3;outline:none">
                 <option value="">＋ Add from project contacts…</option>
-                <sc-for list="{{ billSendV.contactPicks }}" as="c" hint-placeholder-count="4"><option value="{{ c.email }}">{{ c.label }}</option></sc-for>
+                <sc-for list="{{ acctSendV.contactPicks }}" as="c" hint-placeholder-count="4"><option value="{{ c.email }}">{{ c.label }}</option></sc-for>
               </select>
             </sc-if>
             <div style="display:flex;gap:8px">
-              <input value="{{ billSendV.newEmail }}" onInput="{{ billSendV.onNewEmail }}" type="email" placeholder="…or type any other email" style="flex:1;min-width:0;border:1px solid #cfd8e2;border-radius:8px;padding:8px 10px;font-size:12.5px;font-family:inherit" style-focus="border-color:#2b59c3;outline:none">
-              <button onClick="{{ billSendV.onAddEmail }}" style="border:1px solid #cfd8e2;background:#fff;color:#2b59c3;border-radius:8px;padding:8px 13px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap" style-hover="border-color:#2b59c3">＋ Add</button>
+              <input value="{{ acctSendV.newEmail }}" onInput="{{ acctSendV.onNewEmail }}" type="email" placeholder="…or type any other email" style="flex:1;min-width:0;border:1px solid #cfd8e2;border-radius:8px;padding:8px 10px;font-size:12.5px;font-family:inherit" style-focus="border-color:#2b59c3;outline:none">
+              <button onClick="{{ acctSendV.onAddEmail }}" style="border:1px solid #cfd8e2;background:#fff;color:#2b59c3;border-radius:8px;padding:8px 13px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap" style-hover="border-color:#2b59c3">＋ Add</button>
             </div>
           </div>
 
           <div>
             <div style="font-size:11px;font-weight:700;letter-spacing:.5px;color:#8894a2;text-transform:uppercase;margin-bottom:6px">Message</div>
-            <textarea value="{{ billSendV.message }}" onInput="{{ billSendV.onMessage }}" rows="8" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:10px 11px;font-size:12.5px;font-family:inherit;line-height:1.6;color:#0f1720;resize:vertical" style-focus="border-color:#2b59c3;outline:none"></textarea>
+            <textarea value="{{ acctSendV.message }}" onInput="{{ acctSendV.onMessage }}" rows="8" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:10px 11px;font-size:12.5px;font-family:inherit;line-height:1.6;color:#0f1720;resize:vertical" style-focus="border-color:#2b59c3;outline:none"></textarea>
           </div>
 
           <div>
             <div style="font-size:11px;font-weight:700;letter-spacing:.5px;color:#8894a2;text-transform:uppercase;margin-bottom:6px">Invoice attachment</div>
             <div style="border:1px solid #e4e8ee;border-radius:9px;padding:10px 12px;display:flex;align-items:center;gap:9px;font-size:12.5px;color:#0f1720">
-              <span onClick="{{ billSendV.onToggleInvoice }}" style="{{ billSendV.invoiceChk }};cursor:pointer">{{ billSendV.invoiceTick }}</span>
-              <span onClick="{{ billSendV.onToggleInvoice }}" style="cursor:pointer;flex:1">🧾 {{ billSendV.invoiceName }}</span>
-              <sc-if value="{{ billSendV.hasInvoiceFile }}" hint-placeholder-val="{{ false }}"><button onClick="{{ billSendV.onViewInvoice }}" style="border:1px solid #cfd8e2;background:#fff;color:#2b59c3;border-radius:6px;padding:3px 9px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="border-color:#2b59c3">👁 View</button></sc-if>
+              <span onClick="{{ acctSendV.onToggleInvoice }}" style="{{ acctSendV.invoiceChk }};cursor:pointer">{{ acctSendV.invoiceTick }}</span>
+              <span onClick="{{ acctSendV.onToggleInvoice }}" style="cursor:pointer;flex:1">🧾 {{ acctSendV.invoiceName }}</span>
+              <sc-if value="{{ acctSendV.hasInvoiceFile }}" hint-placeholder-val="{{ false }}"><button onClick="{{ acctSendV.onViewInvoice }}" style="border:1px solid #cfd8e2;background:#fff;color:#2b59c3;border-radius:6px;padding:3px 9px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="border-color:#2b59c3">👁 View</button></sc-if>
             </div>
-            <sc-if value="{{ billSendV.missingInvoice }}" hint-placeholder-val="{{ false }}">
+            <sc-if value="{{ acctSendV.missingInvoice }}" hint-placeholder-val="{{ false }}">
               <div style="font-size:11.5px;color:#b45309;margin-top:6px">No invoice file is attached to this bill — attach one on the bill row (＋ Invoice) so it travels with the email.</div>
             </sc-if>
           </div>
 
         </div>
         <div style="padding:14px 22px;border-top:1px solid #eef1f4;display:flex;justify-content:space-between;align-items:center;gap:10px;flex:0 0 auto">
-          <div style="font-size:12px;color:#8894a2">{{ billSendV.recipientCount }} recipient(s) · {{ billSendV.attachSummary }}</div>
+          <div style="font-size:12px;color:#8894a2">{{ acctSendV.recipientCount }} recipient(s) · {{ acctSendV.attachSummary }}</div>
           <div style="display:flex;gap:10px">
-            <button onClick="{{ billSendV.onClose }}" style="border:1px solid #cfd8e2;background:#fff;color:#4a5765;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Cancel</button>
-            <button onClick="{{ billSendV.onSend }}" disabled="{{ billSendV.cannotSend }}" style="border:0;background:{{ billSendV.sendBg }};color:#fff;border-radius:8px;padding:9px 20px;font-size:13px;font-weight:600;cursor:{{ billSendV.sendCursor }};font-family:inherit">Send to accounts</button>
+            <button onClick="{{ acctSendV.onClose }}" style="border:1px solid #cfd8e2;background:#fff;color:#4a5765;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Cancel</button>
+            <button onClick="{{ acctSendV.onSend }}" disabled="{{ acctSendV.cannotSend }}" style="border:0;background:{{ acctSendV.sendBg }};color:#fff;border-radius:8px;padding:9px 20px;font-size:13px;font-weight:600;cursor:{{ acctSendV.sendCursor }};font-family:inherit">Send to accounts</button>
           </div>
         </div>
       </div>
@@ -3635,6 +3698,10 @@ class Component extends DCLogic {
       vendors: this._loadVendors(),
       vendorModal: null,
       billSend: null,
+      claimSend: null,
+      paymentModal: null,
+      paymentForm: null,
+      highlightId: '',
       mailHandoff: null,
       mailCopied: false,
       vendorForm: { type: 'supplier', company: '', rep: '', abn: '', phone: '', email: '', address: '' },
@@ -3725,6 +3792,7 @@ class Component extends DCLogic {
         this.setState({ projects: serverProjects });
       }
       this._projLoaded = true;
+      this._applyDeepLink(); // ?project=&bill=/&claim= → open that record
     }).catch(() => { this._projLoaded = true; });
   }
   componentDidUpdate() {
@@ -4195,6 +4263,25 @@ class Component extends DCLogic {
       setTimeout(() => { try { a.remove(); } catch (e) {} }, 0);
       return true;
     } catch (e) { return false; }
+  }
+  // Deep link straight to a record, so an emailed recipient lands on the real thing in the app.
+  _appLink(kind, id) {
+    let base = 'https://construction-management-system.vercel.app/';
+    try { if (typeof window !== 'undefined' && window.location && /^https?:/.test(window.location.protocol)) base = window.location.origin + window.location.pathname; } catch (e) {}
+    return base + '?project=' + encodeURIComponent(this.state.pid || '') + '&' + kind + '=' + encodeURIComponent(id || '');
+  }
+  // Read ?project=&bill=/&claim= on load and open that record.
+  _applyDeepLink() {
+    try {
+      if (typeof window === 'undefined' || !window.location || !window.location.search) return;
+      const q = new URLSearchParams(window.location.search);
+      const pid = q.get('project'); const billId = q.get('bill'); const claimId = q.get('claim');
+      if (!pid || (!billId && !claimId)) return;
+      const proj = (this.state.projects || []).find(p => p.id === pid); if (!proj) return;
+      this.setState({ view: 'project', pid, module: 'commitments', commitTab: billId ? 'bills' : 'claims',
+        highlightId: billId || claimId });
+      setTimeout(() => { try { const el = document.getElementById('rec-' + (billId || claimId)); if (el) el.scrollIntoView({ block: 'center' }); } catch (e) {} }, 600);
+    } catch (e) {}
   }
   // Web-mail compose links — these work with no desktop mail app installed.
   _composeUrls(to, subject, body) {
@@ -5443,6 +5530,54 @@ class Component extends DCLogic {
       return { ...x, paid, status };
     }) }) }));
   }
+  // ---- Payment record (accounts/Gordon capture the detail of a payment against a bill) ----
+  paymentMethods() { return ['EFT / Bank transfer', 'BPAY', 'Cheque', 'Credit card', 'Direct debit', 'Cash', 'Other']; }
+  openPaymentModal(billId) {
+    const p = this.proj(this.state.pid); const b = (p.bills || []).find(x => x.id === billId); if (!b) return;
+    const outstanding = Math.max(0, this.billTotal(b) - this._num(b.paid));
+    const claim = (p.claims || []).find(c => c.id === b.claimId);
+    this.setState({ paymentModal: { billId }, paymentForm: {
+      claimId: b.claimId || '', paymentNo: this.nextSeqRef((p.bills || []).reduce((a, x) => a.concat(x.payments || []), []), 'no', 'PAY-', 4),
+      method: 'EFT / Bank transfer', amount: outstanding > 0 ? outstanding.toFixed(2) : '',
+      datePaid: this.todayLocal(), claimNo: (claim && claim.claimNo) || '', chequeNo: '', notes: '', attachments: [],
+    } });
+  }
+  closePaymentModal() { this.setState({ paymentModal: null, paymentForm: null }); }
+  setPaymentField(k, v) {
+    this.setState(s => {
+      if (!s.paymentForm) return {};
+      const f = { ...s.paymentForm, [k]: v };
+      if (k === 'claimId') { const p = this.proj(s.pid); const c = (p.claims || []).find(x => x.id === v); f.claimNo = (c && c.claimNo) || ''; }
+      return { paymentForm: f };
+    });
+  }
+  addPaymentAttachment(e) {
+    const files = Array.prototype.slice.call((e.target && e.target.files) || []); if (e.target) e.target.value = '';
+    files.forEach(file => {
+      const aid = 'pa' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+      this.setState(s => (s.paymentForm ? { paymentForm: { ...s.paymentForm, attachments: [...(s.paymentForm.attachments || []), { id: aid, name: file.name, url: '', uploading: true }] } } : {}));
+      this._sbUploadFile(file, 'payments').then(url => {
+        this.setState(s => (s.paymentForm ? { paymentForm: { ...s.paymentForm, attachments: (s.paymentForm.attachments || []).map(a => a.id === aid ? { ...a, url: url || '', uploading: false } : a) } } : {}));
+      });
+    });
+  }
+  removePaymentAttachment(aid) { this.setState(s => (s.paymentForm ? { paymentForm: { ...s.paymentForm, attachments: (s.paymentForm.attachments || []).filter(a => a.id !== aid) } } : {})); }
+  savePayment() {
+    const pm = this.state.paymentModal, f = this.state.paymentForm; if (!pm || !f) return;
+    const amt = this._num(f.amount); if (amt <= 0) return;
+    const me = this.currentUser() || {};
+    const rec = { id: 'pay' + Date.now().toString(36), no: f.paymentNo || '', method: f.method || '', amount: amt,
+      datePaid: f.datePaid || '', claimId: f.claimId || '', claimNo: f.claimNo || '', chequeNo: f.chequeNo || '',
+      notes: f.notes || '', attachments: (f.attachments || []).filter(a => !a.uploading).map(a => ({ id: a.id, name: a.name, url: a.url })),
+      by: me.name || me.email || '', at: this.now() };
+    this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, bills: (p.bills || []).map(x => {
+      if (x.id !== pm.billId) return x;
+      const tot = this.billTotal(x);
+      const paid = Math.max(0, Math.min(tot, this._num(x.paid) + amt));
+      const status = paid <= 0 ? 'unpaid' : (paid + 0.005 >= tot ? 'paid' : 'partial');
+      return { ...x, payments: [...(x.payments || []), rec], paid, status };
+    }) }), paymentModal: null, paymentForm: null }));
+  }
   attachBillInvoice(id, e) { const f = (e.target && e.target.files && e.target.files[0]); if (!f) return; if (e.target) e.target.value = ''; this.setBillField(id, 'invoice', f.name); this._sbUploadFile(f, 'bills').then(url => { if (url) { this.setBillField(id, 'invoiceUrl', url); this.setBillField(id, 'invoiceType', f.type || ''); } }); }
   viewBillInvoice(id) { const p = this.proj(this.state.pid); const b = p && (p.bills || []).find(x => x.id === id); if (b && b.invoiceUrl) this.openAttachment({ name: b.invoice || 'invoice', url: b.invoiceUrl, type: b.invoiceType || '' }); }
   // Bills are forwarded to accounts for payment — the accountant always gets it, Gordon is always copied.
@@ -5463,6 +5598,7 @@ class Component extends DCLogic {
       + (bill.code ? 'Cost code: ' + bill.code + '\n' : '')
       + 'Amount: ' + this.money(this._num(bill.amount)) + ' + GST ' + this.money(tot - this._num(bill.amount)) + ' = ' + this.money(tot) + '\n'
       + (bill.dueDate ? 'Due: ' + this.fmtDate(bill.dueDate) + '\n' : '')
+      + '\nOpen this bill in CPMS:\n' + this._appLink('bill', bill.id) + '\n'
       + '\nRegards,\n' + (me.name || '') + (me.title ? '\n' + me.title : '');
     this.setState({ billSend: { id, recipients: this._billStandardRecipients(), newEmail: '',
       from: p.senderEmail || me.email || this._accountsEmail(),
@@ -5495,11 +5631,44 @@ class Component extends DCLogic {
   }
   attachClaimInvoice(id, e) { const f = (e.target && e.target.files && e.target.files[0]); if (!f) return; if (e.target) e.target.value = ''; this.setClaimField(id, 'invoice', f.name); this._sbUploadFile(f, 'claims').then(url => { if (url) { this.setClaimField(id, 'invoiceUrl', url); this.setClaimField(id, 'invoiceType', f.type || ''); } }); }
   viewClaimInvoice(id) { const p = this.proj(this.state.pid); const c = p && (p.claims || []).find(x => x.id === id); if (c && c.invoiceUrl) this.openAttachment({ name: c.invoice || 'invoice', url: c.invoiceUrl, type: c.invoiceType || '' }); }
-  sendClaim(id) {
+  // Progress claim → accounts, same treatment as bills (preview, recipients, link, attachment).
+  openClaimSend(id) {
     const p = this.proj(this.state.pid); const c = (p.claims || []).find(x => x.id === id); if (!c) return;
     const cm = (p.commitments || []).find(k => k.id === c.commitmentId);
-    const v = cm ? this.state.vendors.find(x => x.company === cm.vendor) : null; const to = v ? v.email : (cm ? cm.vendor : 'subcontractor');
-    this.setClaimField(id, 'sentAt', 'Sent ' + this.now() + ' → ' + to);
+    const me = this.currentUser() || {};
+    const sub = cm ? cm.vendor : 'Subcontractor';
+    const net = this._num(c.status === 'approved' || c.status === 'paid' ? c.certified : c.thisClaim);
+    const tax = net * this._num(c.taxRate) / 100;
+    const body = 'Hi,\n\n'
+      + 'Please process the attached progress claim for payment.\n\n'
+      + 'Project: ' + p.name + (p.code ? ' (' + p.code + ')' : '') + '\n'
+      + 'Subcontractor: ' + sub + '\n'
+      + 'Claim no: ' + (c.claimNo || '—') + '\n'
+      + (cm ? 'Subcontract: ' + cm.ref + '\n' : '')
+      + 'Amount: ' + this.money(net) + ' + GST ' + this.money(tax) + ' = ' + this.money(net + tax) + '\n'
+      + (c.paymentDue ? 'Payment due: ' + this.fmtDate(c.paymentDue) + '\n' : '')
+      + '\nOpen this progress claim in CPMS:\n' + this._appLink('claim', c.id) + '\n'
+      + '\nRegards,\n' + (me.name || '') + (me.title ? '\n' + me.title : '');
+    this.setState({ claimSend: { id, recipients: this._billStandardRecipients(), newEmail: '',
+      from: p.senderEmail || me.email || this._accountsEmail(),
+      subject: 'Progress claim for payment — ' + (c.claimNo || '') + ' · ' + sub + ' — ' + p.name,
+      message: body, attachInvoice: true } });
+  }
+  closeClaimSend() { this.setState({ claimSend: null }); }
+  setClaimSend(k, v) { this.setState(s => (s.claimSend ? { claimSend: { ...s.claimSend, [k]: v } } : {})); }
+  addClaimSendRecipient(email) { if (!email) return; this.setState(s => { if (!s.claimSend) return {}; const cur = s.claimSend.recipients || []; if (cur.indexOf(email) >= 0) return {}; return { claimSend: { ...s.claimSend, recipients: [...cur, email] } }; }); }
+  addClaimSendEmail() { this.setState(s => { if (!s.claimSend) return {}; const e = String(s.claimSend.newEmail || '').trim(); if (!e) return {}; const cur = s.claimSend.recipients || []; if (cur.indexOf(e) >= 0) return { claimSend: { ...s.claimSend, newEmail: '' } }; return { claimSend: { ...s.claimSend, recipients: [...cur, e], newEmail: '' } }; }); }
+  removeClaimSendEmail(email) { this.setState(s => (s.claimSend ? { claimSend: { ...s.claimSend, recipients: (s.claimSend.recipients || []).filter(x => x !== email) } } : {})); }
+  confirmSendClaim() {
+    const st = this.state.claimSend; if (!st) return;
+    const recips = (st.recipients || []).filter(Boolean); if (!recips.length) return;
+    const p = this.proj(this.state.pid); const c = (p.claims || []).find(x => x.id === st.id); if (!c) return;
+    const atts = (st.attachInvoice && c.invoiceUrl) ? [{ name: c.invoice || 'claim', url: c.invoiceUrl }] : [];
+    this._sendEmailNow({ to: recips, subject: st.subject || '', text: st.message || '', attachments: atts });
+    this.setState(s => ({ projects: s.projects.map(pr => pr.id !== s.pid ? pr : { ...pr, senderEmail: st.from || pr.senderEmail,
+      claims: (pr.claims || []).map(x => x.id !== st.id ? x : { ...x,
+        sentAt: 'Sent ' + this.now() + ' → ' + recips.join(', '),
+        sentSubject: st.subject || '', sentMessage: st.message || '', sentRecipients: recips }) }), claimSend: null }));
   }
   lineActualPaid(l, p) { const proj = p || this.proj(this.state.pid) || {}; return (proj.bills || []).filter(b => b.code && b.code === l.code).reduce((s, b) => s + this._num(b.paid), 0); }
   onBillVendor(id, val) {
@@ -7342,7 +7511,7 @@ class Component extends DCLogic {
           isSubmitted: x.status === 'submitted', isApproved: x.status === 'approved', canPay: x.status === 'approved',
           assessOverdue, payOverdue,
           onTax: e => this.setClaimField(x.id, 'taxRate', e.target.value),
-          onAttachInvoice: e => this.attachClaimInvoice(x.id, e), onSend: () => this.sendClaim(x.id),
+          onAttachInvoice: e => this.attachClaimInvoice(x.id, e), onSend: () => this.openClaimSend(x.id),
           onClaimNo: e => this.setClaimField(x.id, 'claimNo', e.target.value),
           onCommitment: e => this.setClaimField(x.id, 'commitmentId', e.target.value),
           onPeriod: e => this.setClaimField(x.id, 'period', e.target.value),
@@ -7381,7 +7550,7 @@ class Component extends DCLogic {
           paid: x.paid == null ? 0 : x.paid, paidLabel: this.money(paid), outstanding: this.money(outstanding), outstandingColor: outstanding > 0.005 ? '#b45309' : '#15803d', fullyPaid: outstanding <= 0.005,
           invoice: x.invoice || '', hasInvoice: !!x.invoice, invoiceLabel: x.invoice ? x.invoice : '＋ Invoice', hasInvoiceFile: !!x.invoiceUrl, onViewInvoice: () => this.viewBillInvoice(x.id), sent: !!x.sentAt, sentAt: x.sentAt || '',
           commitmentId: x.commitmentId || '', commitmentOptions,
-          onPaid: e => this.setBillPaid(x.id, e.target.value), onPayFull: () => this.recordBillPayment(x.id, null),
+          onPaid: e => this.setBillPaid(x.id, e.target.value), onPayFull: () => this.recordBillPayment(x.id, null), onAddPayment: () => this.openPaymentModal(x.id),
           onAttachInvoice: e => this.attachBillInvoice(x.id, e), onSend: () => this.openBillSend(x.id),
           onCommitment: e => this.setBillField(x.id, 'commitmentId', e.target.value),
           onBillNo: e => this.setBillField(x.id, 'billNo', e.target.value),
@@ -7559,43 +7728,102 @@ class Component extends DCLogic {
       };
     }
 
-    // bill → accounts email (compose + preview before sending)
-    let billSendV = { open: false };
-    if (S.billSend) {
-      const bs = S.billSend;
-      const bill = (p.bills || []).find(b => b.id === bs.id);
+    // add-payment popup (accounts / Gordon record the detail of a payment)
+    let paymentModalV = { open: false };
+    if (S.paymentModal && S.paymentForm) {
+      const f = S.paymentForm;
+      const bill = (p.bills || []).find(b => b.id === S.paymentModal.billId);
       if (bill) {
-        const recips = bs.recipients || [];
         const ven = (S.vendors || []).find(v => v.id === bill.vendorId);
-        const amt = this._num(bill.amount), tot = this.billTotal(bill);
-        const seenB = {}; recips.forEach(e => { seenB[e] = 1; });
-        const picks = [];
-        this.projectContacts(p).forEach(c => { if (c.email && !seenB[c.email]) { seenB[c.email] = 1; picks.push({ email: c.email, label: (c.name || c.email) + ' — ' + c.email + (c.sub ? ' · ' + c.sub : '') }); } });
-        (S.vendors || []).forEach(v => { if (v.email && !seenB[v.email]) { seenB[v.email] = 1; picks.push({ email: v.email, label: (v.rep || v.company) + ' — ' + v.email + ' · ' + v.company }); } });
-        const chkB = on => on ? 'width:17px;height:17px;border-radius:5px;background:#2b59c3;border:1px solid #2b59c3;color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:11px;flex:0 0 auto'
-                             : 'width:17px;height:17px;border-radius:5px;background:#fff;border:1.5px solid #c3ccd8;color:transparent;display:inline-flex;align-items:center;justify-content:center;font-size:11px;flex:0 0 auto';
-        billSendV = {
-          open: true, from: bs.from || '', subject: bs.subject || '', message: bs.message || '', newEmail: bs.newEmail || '',
-          recipients: recips.map(e => ({ email: e, onRemove: () => this.removeBillSendEmail(e) })),
-          recipientCount: String(recips.length), hasRecipients: recips.length > 0, noRecipients: recips.length === 0,
-          contactPicks: picks, hasContactPicks: picks.length > 0,
-          onPickContact: e => { const v = e.target.value; e.target.value = ''; this.addBillSendRecipient(v); },
-          // preview of the bill being forwarded
-          billNo: bill.billNo || '—', vendorName: (ven && ven.company) || bill.vendor || '—', desc: bill.desc || '—',
-          costCode: bill.code || '—', billDate: bill.billDate ? this.fmtDate(bill.billDate) : '—', dueDate: bill.dueDate ? this.fmtDate(bill.dueDate) : '—',
-          net: this.money(amt), tax: this.money(tot - amt), total: this.money(tot), taxRate: String(this._num(bill.taxRate)),
-          hasInvoice: !!bill.invoice, invoiceName: bill.invoice || 'No invoice file attached',
-          hasInvoiceFile: !!bill.invoiceUrl, onViewInvoice: () => this.viewBillInvoice(bill.id),
-          invoiceChk: chkB(!!bs.attachInvoice), invoiceTick: bs.attachInvoice ? '✓' : '', onToggleInvoice: () => this.setBillSend('attachInvoice', !bs.attachInvoice),
-          missingInvoice: !bill.invoiceUrl,
-          attachSummary: (bs.attachInvoice && bill.invoice) ? bill.invoice : 'no invoice file',
-          canSend: recips.length > 0, cannotSend: recips.length === 0,
-          sendBg: recips.length ? '#2b59c3' : '#c7d0db', sendCursor: recips.length ? 'pointer' : 'not-allowed',
-          onFrom: e => this.setBillSend('from', e.target.value), onSubject: e => this.setBillSend('subject', e.target.value),
-          onMessage: e => this.setBillSend('message', e.target.value),
-          onNewEmail: e => this.setBillSend('newEmail', e.target.value), onAddEmail: () => this.addBillSendEmail(),
-          onSend: () => this.confirmSendBill(), onClose: () => this.closeBillSend(),
+        const tot = this.billTotal(bill), already = this._num(bill.paid);
+        const atts = (f.attachments || []).map(a => ({ id: a.id, name: a.name, uploading: !!a.uploading, ready: !a.uploading,
+          statusText: a.uploading ? 'uploading…' : 'attached', onRemove: () => this.removePaymentAttachment(a.id) }));
+        paymentModalV = {
+          open: true,
+          billLabel: (bill.billNo || 'Bill') + ' · ' + ((ven && ven.company) || bill.vendor || ''),
+          billTotal: this.money(tot), alreadyPaid: this.money(already), outstanding: this.money(Math.max(0, tot - already)),
+          claimOptions: (p.claims || []).map(c => ({ id: c.id, label: (c.claimNo || 'Claim') + ' · ' + this.money(this._num(c.thisClaim)) + (c.period ? ' · ' + c.period : '') })),
+          claimId: f.claimId || '', paymentNo: f.paymentNo || '', method: f.method || '', methodOptions: this.paymentMethods().map(m => ({ v: m })),
+          amount: f.amount || '', datePaid: f.datePaid || '', claimNo: f.claimNo || '', chequeNo: f.chequeNo || '', notes: f.notes || '',
+          attachments: atts, hasAttachments: atts.length > 0,
+          canSave: this._num(f.amount) > 0, cannotSave: !(this._num(f.amount) > 0),
+          saveBg: this._num(f.amount) > 0 ? '#2b59c3' : '#c7d0db', saveCursor: this._num(f.amount) > 0 ? 'pointer' : 'not-allowed',
+          onClaim: e => this.setPaymentField('claimId', e.target.value), onPaymentNo: e => this.setPaymentField('paymentNo', e.target.value),
+          onMethod: e => this.setPaymentField('method', e.target.value), onAmount: e => this.setPaymentField('amount', e.target.value),
+          onDatePaid: e => this.setPaymentField('datePaid', e.target.value), onClaimNo: e => this.setPaymentField('claimNo', e.target.value),
+          onCheque: e => this.setPaymentField('chequeNo', e.target.value), onNotes: e => this.setPaymentField('notes', e.target.value),
+          onAttach: e => this.addPaymentAttachment(e), onSave: () => this.savePayment(), onClose: () => this.closePaymentModal(),
         };
+      }
+    }
+
+    // bill / progress claim → accounts email (one shared compose+preview model)
+    let acctSendV = { open: false };
+    {
+      const isBill = !!S.billSend, isClaim = !S.billSend && !!S.claimSend;
+      const st = S.billSend || S.claimSend;
+      if (st) {
+        const bill = isBill ? (p.bills || []).find(b => b.id === st.id) : null;
+        const clm = isClaim ? (p.claims || []).find(c => c.id === st.id) : null;
+        const rec = bill || clm;
+        if (rec) {
+          const setF = (k, v) => (isBill ? this.setBillSend(k, v) : this.setClaimSend(k, v));
+          const recips = st.recipients || [];
+          const seenB = {}; recips.forEach(e => { seenB[e] = 1; });
+          const picks = [];
+          this.projectContacts(p).forEach(c => { if (c.email && !seenB[c.email]) { seenB[c.email] = 1; picks.push({ email: c.email, label: (c.name || c.email) + ' — ' + c.email + (c.sub ? ' · ' + c.sub : '') }); } });
+          (S.vendors || []).forEach(v => { if (v.email && !seenB[v.email]) { seenB[v.email] = 1; picks.push({ email: v.email, label: (v.rep || v.company) + ' — ' + v.email + ' · ' + v.company }); } });
+          const chkB = on => on ? 'width:17px;height:17px;border-radius:5px;background:#2b59c3;border:1px solid #2b59c3;color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:11px;flex:0 0 auto'
+                               : 'width:17px;height:17px;border-radius:5px;background:#fff;border:1.5px solid #c3ccd8;color:transparent;display:inline-flex;align-items:center;justify-content:center;font-size:11px;flex:0 0 auto';
+          let net = 0, tax = 0, rows = [], attName = '', attUrl = '', onViewAtt = () => {};
+          if (isBill) {
+            const ven = (S.vendors || []).find(v => v.id === bill.vendorId);
+            net = this._num(bill.amount); tax = this.billTotal(bill) - net;
+            rows = [
+              { k: 'Vendor', v: (ven && ven.company) || bill.vendor || '—', mono: false },
+              { k: 'Bill no.', v: bill.billNo || '—', mono: true },
+              { k: 'Description', v: bill.desc || '—', mono: false },
+              { k: 'Cost code', v: bill.code || '—', mono: true },
+              { k: 'Bill date', v: bill.billDate ? this.fmtDate(bill.billDate) : '—', mono: true },
+              { k: 'Due date', v: bill.dueDate ? this.fmtDate(bill.dueDate) : '—', mono: true },
+            ];
+            attName = bill.invoice || ''; attUrl = bill.invoiceUrl || ''; onViewAtt = () => this.viewBillInvoice(bill.id);
+          } else {
+            const cm = (p.commitments || []).find(k => k.id === clm.commitmentId);
+            net = this._num((clm.status === 'approved' || clm.status === 'paid') ? clm.certified : clm.thisClaim);
+            tax = net * this._num(clm.taxRate) / 100;
+            rows = [
+              { k: 'Subcontractor', v: (cm && cm.vendor) || '—', mono: false },
+              { k: 'Claim no.', v: clm.claimNo || '—', mono: true },
+              { k: 'Subcontract', v: (cm && cm.ref) || '—', mono: true },
+              { k: 'Period', v: clm.period || '—', mono: true },
+              { k: 'Submitted', v: clm.submitted ? this.fmtDate(clm.submitted) : '—', mono: true },
+              { k: 'Payment due', v: clm.paymentDue ? this.fmtDate(clm.paymentDue) : '—', mono: true },
+            ];
+            attName = clm.invoice || ''; attUrl = clm.invoiceUrl || ''; onViewAtt = () => this.viewClaimInvoice(clm.id);
+          }
+          acctSendV = {
+            open: true, isBill, isClaim,
+            title: isBill ? 'Send invoice to accounts' : 'Send progress claim to accounts',
+            subtitle: (rows[1] ? rows[1].v : '') + ' · ' + (rows[0] ? rows[0].v : '') + ' — review below, then send for payment.',
+            previewRows: rows.map(r => ({ k: r.k, v: r.v, cls: r.mono ? 'mono' : '' })),
+            net: this.money(net), tax: this.money(tax), total: this.money(net + tax), taxRate: String(isBill ? this._num(bill.taxRate) : this._num(clm.taxRate)),
+            from: st.from || '', subject: st.subject || '', message: st.message || '', newEmail: st.newEmail || '',
+            recipients: recips.map(e => ({ email: e, onRemove: () => (isBill ? this.removeBillSendEmail(e) : this.removeClaimSendEmail(e)) })),
+            recipientCount: String(recips.length), hasRecipients: recips.length > 0, noRecipients: recips.length === 0,
+            contactPicks: picks, hasContactPicks: picks.length > 0,
+            onPickContact: e => { const v = e.target.value; e.target.value = ''; if (isBill) this.addBillSendRecipient(v); else this.addClaimSendRecipient(v); },
+            invoiceName: attName || 'No file attached', hasInvoiceFile: !!attUrl, onViewInvoice: onViewAtt, missingInvoice: !attUrl,
+            invoiceChk: chkB(!!st.attachInvoice), invoiceTick: st.attachInvoice ? '✓' : '', onToggleInvoice: () => setF('attachInvoice', !st.attachInvoice),
+            attachSummary: (st.attachInvoice && attName) ? attName : 'no file',
+            canSend: recips.length > 0, cannotSend: recips.length === 0,
+            sendBg: recips.length ? '#2b59c3' : '#c7d0db', sendCursor: recips.length ? 'pointer' : 'not-allowed',
+            onFrom: e => setF('from', e.target.value), onSubject: e => setF('subject', e.target.value), onMessage: e => setF('message', e.target.value),
+            onNewEmail: e => setF('newEmail', e.target.value), onAddEmail: () => (isBill ? this.addBillSendEmail() : this.addClaimSendEmail()),
+            onSend: () => (isBill ? this.confirmSendBill() : this.confirmSendClaim()),
+            onClose: () => (isBill ? this.closeBillSend() : this.closeClaimSend()),
+          };
+        }
       }
     }
 
@@ -7859,7 +8087,7 @@ class Component extends DCLogic {
       onAddDefect: () => this.addDefect(), onExportDefectsPdf: () => this.exportDefectsPdf(),
       onDefectSearch: e => this.setDefectSearch(e.target.value),
       claimRows, claimTotals, claimSearchV, onAddClaim: () => this.addClaim(),
-      moduleCommitments, subModalV, signModalV, shareModalV, billSendV, mailHandoffV,
+      moduleCommitments, subModalV, signModalV, shareModalV, acctSendV, paymentModalV, mailHandoffV,
       onAddContractVar: () => this.openModal('contract'),
       projDescription, clientRepRows, teamRows, clientNameV, scheduleSummary, detailsV, contactsV, filesV, scheduleV, reportV, invoiceV, invoiceSendV, variationSendV, eotV, eotSendV, documentsV, rfiSendV, meetingSendV,
       docViewerV: S.docViewer ? { open: true, name: S.docViewer.curName, url: S.docViewer.curUrl, isPdf: S.docViewer.curKind === 'pdf', isImage: S.docViewer.curKind === 'image', isOther: S.docViewer.curKind === 'other', hasNav: (S.docViewer.items || []).length > 1, position: (S.docViewer.index + 1) + ' / ' + (S.docViewer.items || []).length, onPrev: () => this.docViewerNav(-1), onNext: () => this.docViewerNav(1), onClose: () => this.closeDocViewer(), onNewTab: () => this.docViewerNewTab() } : { open: false },
