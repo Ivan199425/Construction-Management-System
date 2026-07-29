@@ -1301,11 +1301,11 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
             <div style="font-size:13px;font-weight:600;color:#0f1720;margin-bottom:8px">Sent invoices</div>
             <div style="background:#fff;border:1px solid #e4e8ee;border-radius:12px;overflow:hidden">
               <div style="overflow-x:auto"><div style="min-width:820px">
-                <div style="display:grid;grid-template-columns:110px 120px 120px 150px 110px 1fr;padding:11px 16px;background:#fafbfc;border-bottom:1px solid #e4e8ee;font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#8894a2;text-transform:uppercase;gap:10px">
-                  <div>Invoice</div><div>Date</div><div>Due date</div><div style="text-align:right">Amount</div><div style="text-align:center">Status</div><div style="text-align:right">Payment</div>
+                <div style="display:grid;grid-template-columns:110px 120px 120px 150px 110px 1fr 34px;padding:11px 16px;background:#fafbfc;border-bottom:1px solid #e4e8ee;font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#8894a2;text-transform:uppercase;gap:10px">
+                  <div>Invoice</div><div>Date</div><div>Due date</div><div style="text-align:right">Amount</div><div style="text-align:center">Status</div><div style="text-align:right">Payment</div><div></div>
                 </div>
                 <sc-for list="{{ invoiceV.ledger }}" as="iv" hint-placeholder-count="1">
-                  <div style="display:grid;grid-template-columns:110px 120px 120px 150px 110px 1fr;padding:10px 16px;border-bottom:1px solid #eef1f4;align-items:center;gap:10px">
+                  <div style="display:grid;grid-template-columns:110px 120px 120px 150px 110px 1fr 34px;padding:10px 16px;border-bottom:1px solid #eef1f4;align-items:center;gap:10px">
                     <div class="mono" style="font-size:12px;font-weight:600;color:#0f1720">{{ iv.no }}</div>
                     <div class="mono" style="font-size:11.5px;color:#4a5765">{{ iv.date }}</div>
                     <div class="mono" style="font-size:11.5px;color:#4a5765">{{ iv.due }}</div>
@@ -1315,6 +1315,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                       <sc-if value="{{ iv.paid }}" hint-placeholder-val="{{ true }}"><span class="mono" style="font-size:11px;color:#15803d">✓ {{ iv.payRef }} · {{ iv.paidAt }}</span></sc-if>
                       <sc-if value="{{ iv.unpaid }}" hint-placeholder-val="{{ false }}"><button onClick="{{ iv.onPay }}" style="border:0;background:#15803d;color:#fff;border-radius:7px;padding:6px 13px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="background:#0f6b31">💳 Pay online</button></sc-if>
                     </div>
+                    <sc-if value="{{ iv.canDelete }}" hint-placeholder-val="{{ true }}"><button onClick="{{ iv.onDelete }}" title="Delete this invoice" style="border:0;background:transparent;color:#c0c8d1;cursor:pointer;font-size:14px;padding:2px;line-height:1" style-hover="color:#b91c1c">✕</button></sc-if>
                   </div>
                 </sc-for>
               </div></div>
@@ -3308,6 +3309,31 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
     </div>
   </sc-if>
 
+  <!-- GUARDED DELETE (type "delete" to confirm) -->
+  <sc-if value="{{ deleteConfirmV.open }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ deleteConfirmV.onClose }}" style="position:fixed;inset:0;background:rgba(15,23,32,.55);display:flex;align-items:center;justify-content:center;z-index:75;padding:24px;animation:fadeUp .15s ease">
+      <div onClick="{{ stop }}" style="background:#fff;border-radius:14px;width:440px;max-width:94vw;box-shadow:0 24px 60px rgba(15,23,32,.3);overflow:hidden">
+        <div style="padding:18px 22px;border-bottom:1px solid #eef1f4;display:flex;align-items:center;gap:11px">
+          <span style="width:34px;height:34px;border-radius:50%;background:#fdecec;color:#b91c1c;display:flex;align-items:center;justify-content:center;font-size:17px;flex:0 0 auto">⚠</span>
+          <div><div style="font-size:16px;font-weight:600;color:#0f1720">Delete {{ deleteConfirmV.kindLabel }} {{ deleteConfirmV.label }}?</div><div style="font-size:12.5px;color:#8894a2;margin-top:1px">This cannot be undone.</div></div>
+        </div>
+        <div style="padding:18px 22px;display:flex;flex-direction:column;gap:12px">
+          <sc-if value="{{ deleteConfirmV.note }}" hint-placeholder-val="{{ true }}">
+            <div style="font-size:12.5px;color:#4a5765;line-height:1.55;background:#f7f9fb;border:1px solid #e4e8ee;border-radius:9px;padding:10px 12px">{{ deleteConfirmV.note }}</div>
+          </sc-if>
+          <div>
+            <div style="font-size:12.5px;color:#4a5765;margin-bottom:6px">Type <strong style="color:#b91c1c;font-family:'IBM Plex Mono',monospace">delete</strong> to confirm:</div>
+            <input value="{{ deleteConfirmV.typed }}" onInput="{{ deleteConfirmV.onType }}" placeholder="delete" class="mono" style="width:100%;border:1.5px solid #cfd8e2;border-radius:8px;padding:10px 12px;font-size:13.5px;font-family:'IBM Plex Mono',monospace;color:#0f1720" style-focus="border-color:#b91c1c;outline:none">
+          </div>
+        </div>
+        <div style="padding:15px 22px;border-top:1px solid #eef1f4;display:flex;justify-content:flex-end;gap:10px">
+          <button onClick="{{ deleteConfirmV.onClose }}" style="border:1px solid #cfd8e2;background:#fff;color:#4a5765;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Cancel</button>
+          <button onClick="{{ deleteConfirmV.onConfirm }}" disabled="{{ deleteConfirmV.cannotDelete }}" style="border:0;background:{{ deleteConfirmV.delBg }};color:#fff;border-radius:8px;padding:9px 20px;font-size:13px;font-weight:600;cursor:{{ deleteConfirmV.delCursor }};font-family:inherit">Delete</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
   <!-- ADD PAYMENT -->
   <sc-if value="{{ paymentModalV.open }}" hint-placeholder-val="{{ false }}">
     <div onClick="{{ paymentModalV.onClose }}" style="position:fixed;inset:0;background:rgba(15,23,32,.5);display:flex;align-items:center;justify-content:center;z-index:65;padding:24px;animation:fadeUp .15s ease">
@@ -3698,6 +3724,7 @@ class Component extends DCLogic {
       vendors: this._loadVendors(),
       vendorModal: null,
       billSend: null,
+      deleteConfirm: null,
       reportColMenu: false,
       claimSend: null,
       paymentModal: null,
@@ -5434,6 +5461,30 @@ class Component extends DCLogic {
   setInvoiceMessage(v) { this.setState(s => s.invoiceSend ? { invoiceSend: { ...s.invoiceSend, message: v } } : {}); }
   setInvoiceFrom(v) { this.setState(s => s.invoiceSend ? { invoiceSend: { ...s.invoiceSend, from: v } } : {}); }
   setInvoiceSubject(v) { this.setState(s => s.invoiceSend ? { invoiceSend: { ...s.invoiceSend, subject: v } } : {}); }
+  // ---- Guarded delete: the user must type "delete" to confirm (prevents accidental removal) ----
+  openDeleteConfirm(kind, id, label, note) { this.setState({ deleteConfirm: { kind, id, label: label || '', note: note || '', typed: '' } }); }
+  closeDeleteConfirm() { this.setState({ deleteConfirm: null }); }
+  setDeleteConfirmText(v) { this.setState(s => (s.deleteConfirm ? { deleteConfirm: { ...s.deleteConfirm, typed: v } } : {})); }
+  confirmGuardedDelete() {
+    const d = this.state.deleteConfirm; if (!d) return;
+    if (String(d.typed || '').trim().toLowerCase() !== 'delete') return;
+    if (d.kind === 'invoice') this.deleteInvoice(d.id);
+    this.setState({ deleteConfirm: null });
+  }
+  // Removing an invoice also rolls back the amounts it invoiced, so the work can be re-claimed.
+  deleteInvoice(id) {
+    if (!this.can('invoices', 'edit')) return;
+    this.setState(s => ({ projects: s.projects.map(p => {
+      if (p.id !== s.pid) return p;
+      const iv = (p.invoices || []).find(x => x.id === id); if (!iv) return p;
+      const invoiced = Object.assign({}, p.clientInvoiced || {});
+      Object.keys(iv.lines || {}).forEach(code => {
+        const left = (Number(invoiced[code]) || 0) - (Number(iv.lines[code]) || 0);
+        if (left > 0.005) invoiced[code] = left; else delete invoiced[code];
+      });
+      return { ...p, invoices: (p.invoices || []).filter(x => x.id !== id), clientInvoiced: invoiced };
+    }) }));
+  }
   payInvoiceOnline(id) { const today = this.todayLocal(); const ref = 'PAY-' + Math.random().toString(36).slice(2, 8).toUpperCase(); this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, invoices: (p.invoices || []).map(iv => iv.id !== id ? iv : { ...iv, status: 'paid', paidAt: today, payRef: ref }) }) })); }
   toggleRecipient(email) { this.setState(s => { if (!s.invoiceSend) return {}; const cur = s.invoiceSend.recipients || []; const has = cur.indexOf(email) >= 0; return { invoiceSend: { ...s.invoiceSend, recipients: has ? cur.filter(e => e !== email) : [...cur, email] } }; }); }
   setInvoiceNewEmail(v) { this.setState(s => s.invoiceSend ? { invoiceSend: { ...s.invoiceSend, newEmail: v } } : {}); }
@@ -5443,11 +5494,12 @@ class Component extends DCLogic {
     const sc = st.invoiceSend || {}; const recips = sc.recipients || []; if (!recips.length) return;
     const gst = Number(p.gstRate) || 0; const prog = p.clientProgress || {}; const inv = { ...(p.clientInvoiced || {}) };
     let claim = 0, any = false;
-    (p.costLines || []).forEach(l => { const B = this.lineCurrent(l, p); const raw = prog[l.code]; const pct = raw == null || raw === '' ? 0 : Number(raw) || 0; const toDate = B * pct / 100; const PI = Number(inv[l.code]) || 0; if (this.clientLineSelected(p, l.code) && toDate - PI > 0.005) { claim += toDate - PI; inv[l.code] = toDate; any = true; } });
+    const invLines = {};
+    (p.costLines || []).forEach(l => { const B = this.lineCurrent(l, p); const raw = prog[l.code]; const pct = raw == null || raw === '' ? 0 : Number(raw) || 0; const toDate = B * pct / 100; const PI = Number(inv[l.code]) || 0; if (this.clientLineSelected(p, l.code) && toDate - PI > 0.005) { claim += toDate - PI; invLines[l.code] = (invLines[l.code] || 0) + (toDate - PI); inv[l.code] = toDate; any = true; } });
     if (!any) { this.setState({ invoiceSend: null }); return; }
     const today = this.todayLocal(); const no = (Number(p.clientInvoiceNo) || 0) + 1;
     const noStr = 'INV-' + String(no).padStart(3, '0'); const total = claim + claim * gst / 100; const due = this.addDays(today, 15);
-    const record = { id: 'inv' + Date.now(), no: noStr, date: today, dueDate: due, amount: claim, gstRate: gst, total, from: sc.from || '', subject: sc.subject || '', message: (sc.message || '').trim(), recipients: recips.slice(), status: 'sent', paidAt: '', payRef: '' };
+    const record = { id: 'inv' + Date.now(), no: noStr, date: today, dueDate: due, amount: claim, gstRate: gst, total, from: sc.from || '', subject: sc.subject || '', message: (sc.message || '').trim(), recipients: recips.slice(), status: 'sent', paidAt: '', payRef: '', lines: invLines };
     const msg = record.message ? ' — “' + record.message + '”' : '';
     this.setState(s => ({ projects: s.projects.map(x => x.id !== s.pid ? x : { ...x, clientInvoiced: inv, clientInvoiceNo: no, senderEmail: sc.from || x.senderEmail, invoices: [...(x.invoices || []), record], clientInvoiceSentAt: noStr + ' sent to ' + recips.length + ' recipient(s): ' + recips.join(', ') + ' on ' + today + ' · due ' + this.fmtDate(due) + msg }), invoiceSend: null }));
   }
@@ -6750,6 +6802,8 @@ class Component extends DCLogic {
           statusColor: paid ? '#15803d' : (overdue ? '#b91c1c' : '#1d4ed8'), statusBg: paid ? '#e6f4ea' : (overdue ? '#fbeef0' : '#e7eefc'),
           paid, unpaid: !paid, payRef: iv.payRef || '', paidAt: this.fmtDate(iv.paidAt),
           onPay: () => this.payInvoiceOnline(iv.id),
+          canDelete: this.can('invoices', 'edit'),
+          onDelete: () => this.openDeleteConfirm('invoice', iv.id, iv.no, 'The amounts this invoice claimed will be released so they can be invoiced again.'),
         };
       });
       let invoicedTot = 0, paidTot = 0;
@@ -7745,6 +7799,21 @@ class Component extends DCLogic {
       };
     }
 
+    // guarded delete — the Delete button only enables once "delete" has been typed
+    let deleteConfirmV = { open: false };
+    if (S.deleteConfirm) {
+      const d = S.deleteConfirm;
+      const ok = String(d.typed || '').trim().toLowerCase() === 'delete';
+      deleteConfirmV = {
+        open: true, label: d.label || '', note: d.note || '', typed: d.typed || '',
+        kindLabel: d.kind === 'invoice' ? 'invoice' : d.kind,
+        canDelete: ok, cannotDelete: !ok,
+        delBg: ok ? '#b91c1c' : '#e3c8c8', delCursor: ok ? 'pointer' : 'not-allowed',
+        onType: e => this.setDeleteConfirmText(e.target.value),
+        onConfirm: () => this.confirmGuardedDelete(), onClose: () => this.closeDeleteConfirm(),
+      };
+    }
+
     // add-payment popup (accounts / Gordon record the detail of a payment)
     let paymentModalV = { open: false };
     if (S.paymentModal && S.paymentForm) {
@@ -8104,7 +8173,7 @@ class Component extends DCLogic {
       onAddDefect: () => this.addDefect(), onExportDefectsPdf: () => this.exportDefectsPdf(),
       onDefectSearch: e => this.setDefectSearch(e.target.value),
       claimRows, claimTotals, claimSearchV, onAddClaim: () => this.addClaim(),
-      moduleCommitments, subModalV, signModalV, shareModalV, acctSendV, paymentModalV, mailHandoffV,
+      moduleCommitments, subModalV, signModalV, shareModalV, acctSendV, paymentModalV, mailHandoffV, deleteConfirmV,
       onAddContractVar: () => this.openModal('contract'),
       projDescription, clientRepRows, teamRows, clientNameV, scheduleSummary, detailsV, contactsV, filesV, scheduleV, reportV, invoiceV, invoiceSendV, variationSendV, eotV, eotSendV, documentsV, rfiSendV, meetingSendV,
       docViewerV: S.docViewer ? { open: true, name: S.docViewer.curName, url: S.docViewer.curUrl, isPdf: S.docViewer.curKind === 'pdf', isImage: S.docViewer.curKind === 'image', isOther: S.docViewer.curKind === 'other', hasNav: (S.docViewer.items || []).length > 1, position: (S.docViewer.index + 1) + ' / ' + (S.docViewer.items || []).length, onPrev: () => this.docViewerNav(-1), onNext: () => this.docViewerNav(1), onClose: () => this.closeDocViewer(), onNewTab: () => this.docViewerNewTab() } : { open: false },
