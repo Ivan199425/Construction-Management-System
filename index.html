@@ -240,8 +240,9 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
         <span>{{ crumb1 }}</span>
         <sc-if value="{{ crumb2 }}" hint-placeholder-val="{{ true }}"><span style="color:#c0c8d1">/</span><span style="color:#0f1720;font-weight:500">{{ crumb2 }}</span></sc-if>
       </div>
-      <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:#6b7787">
-        <span style="width:7px;height:7px;border-radius:50%;background:#15803d"></span> Live prototype · in-memory data
+      <div style="display:flex;align-items:center;gap:10px">
+        <span title="Your work saves automatically, with a safety re-check every 30 seconds" style="display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:{{ globalSaveV.color }};background:{{ globalSaveV.bg }};border-radius:20px;padding:5px 12px;white-space:nowrap"><span style="width:7px;height:7px;border-radius:50%;background:{{ globalSaveV.dot }};flex:0 0 auto"></span>{{ globalSaveV.text }}</span>
+        <button onClick="{{ globalSaveV.onSave }}" title="Save everything to the server right now" style="border:0;background:#2b59c3;color:#fff;border-radius:8px;padding:8px 16px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap" style-hover="background:#244fb0">{{ globalSaveV.label }}</button>
       </div>
     </header>
     <div style="flex:1;overflow-y:auto;padding:28px 32px 60px">
@@ -3419,7 +3420,7 @@ class Component extends DCLogic {
       budgetCatFilter: '',
       schedView: { crit: true, pct: true, deps: true },
       search: {},
-      saveStatus: { company: 'saved', defaults: 'saved', financial: 'saved', profile: 'saved', projects: 'saved' },
+      saveStatus: { company: 'saved', defaults: 'saved', financial: 'saved', profile: 'saved', projects: 'saved', vendors: 'saved', cost_codes: 'saved' },
       codeUpload: null,
       codeModal: null,
       codeForm: { parentCode: '', parentDesc: '', childCode: '', childDesc: '' },
@@ -3492,6 +3493,7 @@ class Component extends DCLogic {
       }
     }).catch(() => {});
     this._initSigEditor();
+    this._startAutosave(); // 30s sweep: flush/retry anything still pending
     // Phase 2: restore/validate the logged-in session against Supabase.
     const sess = this.state.session;
     if (sess && sess.profile) {
@@ -3524,7 +3526,7 @@ class Component extends DCLogic {
         const snapshot = this.state.projects;
         this._setSave('projects', 'saving');
         if (this._projTimer) clearTimeout(this._projTimer);
-        this._projTimer = setTimeout(() => this._sbSaveCatalog('projects', snapshot).then(() => this._setSave('projects', 'saved')), 800);
+        this._projTimer = setTimeout(() => this._sbSaveCatalog('projects', snapshot).then(ok => this._setSave('projects', ok === false ? 'error' : 'saved')).catch(() => this._setSave('projects', 'error')), 800);
       }
     }
   }
@@ -3942,8 +3944,9 @@ class Component extends DCLogic {
   }
   _saveCodes(arr) {
     try { if (typeof localStorage !== 'undefined') localStorage.setItem('cubicCostCodes', JSON.stringify(arr || [])); } catch (e) {}
+    this._setSave('cost_codes', 'saving');
     if (this._sbTimer) clearTimeout(this._sbTimer);
-    this._sbTimer = setTimeout(() => this._sbSaveCatalog('cost_codes', arr || []), 500); // debounce shared save
+    this._sbTimer = setTimeout(() => this._sbSaveCatalog('cost_codes', arr || []).then(ok => this._setSave('cost_codes', ok === false ? 'error' : 'saved')).catch(() => this._setSave('cost_codes', 'error')), 500); // debounce shared save
   }
   // ----- Vendor / contractor directory (SHARED catalog, like cost codes) -----
   _loadVendors() {
@@ -3956,8 +3959,9 @@ class Component extends DCLogic {
   }
   _saveVendors(arr) {
     try { if (typeof localStorage !== 'undefined') localStorage.setItem('cubicVendors', JSON.stringify(arr || [])); } catch (e) {}
+    this._setSave('vendors', 'saving');
     if (this._vendTimer) clearTimeout(this._vendTimer);
-    this._vendTimer = setTimeout(() => this._sbSaveCatalog('vendors', arr || []), 500); // debounce shared save
+    this._vendTimer = setTimeout(() => this._sbSaveCatalog('vendors', arr || []).then(ok => this._setSave('vendors', ok === false ? 'error' : 'saved')).catch(() => this._setSave('vendors', 'error')), 500);
   }
   _commitVendors(next) { this._saveVendors(next); this.setState({ vendors: next }); }
   _sbHeaders(extra) { const c = this._SB || {}; return Object.assign({ apikey: c.key, Authorization: 'Bearer ' + c.key }, extra || {}); }
@@ -5185,11 +5189,40 @@ class Component extends DCLogic {
     try { if (typeof localStorage !== 'undefined') localStorage.setItem(lsKey, JSON.stringify(obj || {})); } catch (e) {}
     this._setSave(key, 'saving');
     const tk = '_' + key + 'Timer'; if (this[tk]) clearTimeout(this[tk]);
-    this[tk] = setTimeout(() => this._sbSaveCatalog(key, obj || {}).then(() => this._setSave(key, 'saved')), 500);
+    this[tk] = setTimeout(() => this._sbSaveCatalog(key, obj || {}).then(ok => this._setSave(key, ok === false ? 'error' : 'saved')).catch(() => this._setSave(key, 'error')), 500);
   }
-  _flushCatalog(key) { const tk = '_' + key + 'Timer'; if (this[tk]) { clearTimeout(this[tk]); this[tk] = null; } this._setSave(key, 'saving'); this._sbSaveCatalog(key, this.state[key] || {}).then(() => this._setSave(key, 'saved')); }
-  flushProjects() { if (this._projTimer) { clearTimeout(this._projTimer); this._projTimer = null; } if (!this.currentUser()) { this._setSave('projects', 'saved'); return; } this._lastSavedProjects = this.state.projects; this._setSave('projects', 'saving'); this._sbSaveCatalog('projects', this.state.projects).then(() => this._setSave('projects', 'saved')); }
-  flushProfile() { if (this._myTimer) { clearTimeout(this._myTimer); this._myTimer = null; } const p = this.state.session && this.state.session.profile; if (!p) { this._setSave('profile', 'saved'); return; } this._setSave('profile', 'saving'); this._sbUpdateProfile(p.id, { name: p.name, phone: p.phone, title: p.title, signature: p.signature, photoUrl: p.photoUrl }).then(() => this._setSave('profile', 'saved')); }
+  // every savable channel → a function that pushes the CURRENT state to the server (always re-derived, never a stale snapshot)
+  _saveChannels() {
+    return {
+      company: () => this._sbSaveCatalog('company', this.state.company || {}),
+      defaults: () => this._sbSaveCatalog('defaults', this.state.defaults || {}),
+      financial: () => this._sbSaveCatalog('financial', this.state.financial || {}),
+      vendors: () => this._sbSaveCatalog('vendors', this.state.vendors || []),
+      cost_codes: () => this._sbSaveCatalog('cost_codes', this.state.customCodes || []),
+      projects: () => { if (!this._projLoaded || !this.currentUser()) return Promise.resolve(true); this._lastSavedProjects = this.state.projects; return this._sbSaveCatalog('projects', this.state.projects); },
+      profile: () => { const p = this.state.session && this.state.session.profile; if (!p) return Promise.resolve(true); return this._sbUpdateProfile(p.id, { name: p.name, phone: p.phone, title: p.title, signature: p.signature, photoUrl: p.photoUrl }); },
+    };
+  }
+  _timerFor(ch) { return { company: '_companyTimer', defaults: '_defaultsTimer', financial: '_financialTimer', vendors: '_vendTimer', cost_codes: '_sbTimer', projects: '_projTimer', profile: '_myTimer' }[ch]; }
+  // write one channel now (cancels its pending debounce); marks 'error' if the server rejects so the 30s sweep can retry
+  _flushChannel(ch) {
+    const fn = this._saveChannels()[ch]; if (!fn) return Promise.resolve(false);
+    const tk = this._timerFor(ch); if (tk && this[tk]) { clearTimeout(this[tk]); this[tk] = null; }
+    this._setSave(ch, 'saving');
+    return fn().then(ok => { this._setSave(ch, ok === false ? 'error' : 'saved'); return ok !== false; }).catch(() => { this._setSave(ch, 'error'); return false; });
+  }
+  _flushCatalog(key) { return this._flushChannel(key); }
+  flushProjects() { return this._flushChannel('projects'); }
+  flushProfile() { return this._flushChannel('profile'); }
+  saveAllNow() { Object.keys(this._saveChannels()).forEach(ch => this._flushChannel(ch)); }
+  // 30-second autosave sweep: guarantees anything still pending (or a failed write) gets saved/retried
+  _startAutosave() {
+    if (this._autosaveIv) return;
+    this._autosaveIv = setInterval(() => {
+      const st = this.state.saveStatus || {};
+      Object.keys(this._saveChannels()).forEach(ch => { if (st[ch] === 'saving' || st[ch] === 'error') this._flushChannel(ch); });
+    }, 30000);
+  }
   // ===== Company profile (shared) =====
   _companyDefaults() { return { companyType: '', industries: [], slogan: '', license: '', abn: '', name: '', street: '', city: '', state: '', zip: '', phone: '', website: '', logoUrl: '', pdfHeaderUrl: '' }; }
   _normCompany(o) { const c = Object.assign(this._companyDefaults(), (o && typeof o === 'object') ? o : {}); if (!Array.isArray(c.industries)) c.industries = c.industry ? [c.industry] : []; delete c.industry; return c; }
@@ -5441,6 +5474,19 @@ class Component extends DCLogic {
     // save-status pill + "Save changes" button model (auto-save stays; this is the visible affordance)
     const _saveMeta = (ch, onSave) => { const st = (S.saveStatus && S.saveStatus[ch]) || 'saved'; const saving = st === 'saving'; return { saving, statusText: saving ? 'Saving…' : 'All changes saved', statusColor: saving ? '#8a6d00' : '#15803d', statusBg: saving ? '#fdf6e3' : '#eef8f1', dotColor: saving ? '#e0a800' : '#22a35a', saveLabel: saving ? 'Saving…' : 'Save changes', onSave }; };
     const projectsSaveV = _saveMeta('projects', () => this.flushProjects());
+    // global save indicator in the top bar — aggregates every savable channel
+    const _ssAll = S.saveStatus || {}; let _pendN = 0, _errN = 0;
+    ['company', 'defaults', 'financial', 'vendors', 'cost_codes', 'projects', 'profile'].forEach(c => { if (_ssAll[c] === 'saving') _pendN++; else if (_ssAll[c] === 'error') _errN++; });
+    const _gErr = _errN > 0, _gPend = !_gErr && _pendN > 0;
+    const globalSaveV = {
+      isError: _gErr, isSaving: _gPend, isClean: !_gErr && !_gPend,
+      text: _gErr ? 'Not saved — click Save' : (_gPend ? 'Saving…' : 'All changes saved'),
+      color: _gErr ? '#b91c1c' : (_gPend ? '#8a6d00' : '#15803d'),
+      bg: _gErr ? '#fdecec' : (_gPend ? '#fdf6e3' : '#eef8f1'),
+      dot: _gErr ? '#dc2626' : (_gPend ? '#e0a800' : '#22a35a'),
+      label: _gErr ? 'Retry save' : 'Save now',
+      onSave: () => this.saveAllNow(),
+    };
     const orgName = this.props.orgName ?? 'Cubic';
 
     const accessible = this.accessibleProjects();
@@ -7286,7 +7332,7 @@ class Component extends DCLogic {
       onCloseVendorModal: () => this.closeVendorModal(), onSaveVendor: () => this.saveVendor(),
       pageTitle, pageSub, crumb1, crumb2, pageStatus, primaryAction, kpis, hasKpis: kpis.length > 0,
       statusFilters, portfolioRows, totals, dashModules,
-      contractFields, contractVarRows, contractCalc, hasContractFile, contractFileName, onViewContract: () => this.viewProjectContract(), projectsSaveV,
+      contractFields, contractVarRows, contractCalc, hasContractFile, contractFileName, onViewContract: () => this.viewProjectContract(), projectsSaveV, globalSaveV,
       commitmentRows, commitSearchV, costLineRows, costTotals, chart, costInsight, markupSummary, budgetColTemplate, budgetMinWidth, budgetHeaderCols, budgetTotalCols, colMenuItems, budgetColMenu: S.budgetColMenu, onToggleColMenu: () => this.toggleBudgetColMenu(), onCloseColMenu: () => this.closeBudgetColMenu(), onResetBudgetCols: () => this.resetBudgetCols(), budgetCatOptions, budgetCatValue, budgetFiltered, budgetRowCount, budgetTotalLineCount, onBudgetCatFilter: e => this.setBudgetCatFilter(e.target.value), budgetHasLines: (p && (p.costLines || []).length > 0), onGenSchedule: () => this.generateScheduleFromBudget(), budgetVarRows, varSearchV, budgetVarApproved, budgetVarHas, budgetVarEmpty, onAddVariation: () => this.addVariation(), onAddCostLine: () => this.addCostLine(),
       onExportCsv: () => this.exportCsv(), onExportPdf: () => this.exportPdf(),
       codeModal: S.codeModal ? { open: true, parentCode: S.codeForm.parentCode, parentDesc: S.codeForm.parentDesc, childCode: S.codeForm.childCode, childDesc: S.codeForm.childDesc } : { open: false },
