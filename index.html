@@ -3269,6 +3269,45 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
   </sc-if>
 
   <!-- SEND FOR SIGNATURE MODAL -->
+  <!-- SEND THE COMPOSED EMAIL (used when the server sender isn't deployed) -->
+  <sc-if value="{{ mailHandoffV.open }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ mailHandoffV.onClose }}" style="position:fixed;inset:0;background:rgba(15,23,32,.5);display:flex;align-items:center;justify-content:center;z-index:70;padding:24px;animation:fadeUp .15s ease">
+      <div onClick="{{ stop }}" style="background:#fff;border-radius:14px;width:600px;max-width:96vw;max-height:92vh;box-shadow:0 24px 60px rgba(15,23,32,.3);overflow:hidden;display:flex;flex-direction:column">
+        <div style="padding:18px 22px;border-bottom:1px solid #eef1f4;flex:0 0 auto">
+          <div style="font-size:16px;font-weight:600;color:#0f1720">Finish sending — choose your email</div>
+          <div style="font-size:12.5px;color:#8894a2;margin-top:2px">Your email is ready for {{ mailHandoffV.recipientCount }} recipient(s). Pick where to open it — everything is pre-filled.</div>
+        </div>
+        <div style="padding:18px 22px;display:flex;flex-direction:column;gap:14px;overflow-y:auto;flex:1 1 auto">
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <button onClick="{{ mailHandoffV.onGmail }}" style="flex:1;min-width:150px;border:1px solid #cfd8e2;background:#fff;color:#0f1720;border-radius:10px;padding:12px 14px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="border-color:#2b59c3;background:#f7f9fb">📧 Open in Gmail</button>
+            <button onClick="{{ mailHandoffV.onOutlook }}" style="flex:1;min-width:150px;border:1px solid #cfd8e2;background:#fff;color:#0f1720;border-radius:10px;padding:12px 14px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="border-color:#2b59c3;background:#f7f9fb">📨 Open in Outlook</button>
+            <button onClick="{{ mailHandoffV.onMailApp }}" style="flex:1;min-width:150px;border:1px solid #cfd8e2;background:#fff;color:#0f1720;border-radius:10px;padding:12px 14px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="border-color:#2b59c3;background:#f7f9fb">💻 Mail app</button>
+          </div>
+
+          <div style="border:1px solid #e4e8ee;border-radius:10px;overflow:hidden">
+            <div style="display:flex;gap:8px;padding:9px 12px;border-bottom:1px solid #eef1f4;font-size:12.5px"><span style="flex:0 0 62px;color:#8894a2">To</span><span style="color:#0f1720">{{ mailHandoffV.toText }}</span></div>
+            <div style="display:flex;gap:8px;padding:9px 12px;border-bottom:1px solid #eef1f4;font-size:12.5px"><span style="flex:0 0 62px;color:#8894a2">Subject</span><span style="color:#0f1720;font-weight:600">{{ mailHandoffV.subject }}</span></div>
+            <div style="padding:10px 12px"><div style="font-size:11px;color:#8894a2;margin-bottom:4px">Message</div><div style="white-space:pre-wrap;font-size:12.5px;line-height:1.6;color:#0f1720;max-height:190px;overflow-y:auto">{{ mailHandoffV.body }}</div></div>
+          </div>
+
+          <sc-if value="{{ mailHandoffV.hasAttachments }}" hint-placeholder-val="{{ false }}">
+            <div style="background:#fbf1e3;border:1px solid #eddcc0;border-radius:9px;padding:11px 13px">
+              <div style="font-size:12.5px;font-weight:600;color:#b45309;margin-bottom:6px">⚠ Attach these files manually</div>
+              <div style="font-size:12px;color:#6b5533;line-height:1.55;margin-bottom:8px">Gmail and Outlook can't receive attachments through a link. Open each file, save it, then attach it to the email.</div>
+              <sc-for list="{{ mailHandoffV.attachments }}" as="a" hint-placeholder-count="2"><button onClick="{{ a.onOpen }}" style="display:block;width:100%;text-align:left;border:1px solid #e6d3b3;background:#fff;color:#2b59c3;border-radius:7px;padding:7px 11px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;margin-bottom:6px" style-hover="border-color:#2b59c3">🧾 {{ a.name }} — open to download</button></sc-for>
+            </div>
+          </sc-if>
+
+          <div style="font-size:11.5px;color:#8894a2;line-height:1.55;border-top:1px solid #eef1f4;padding-top:11px">Want this to send automatically, with attachments and no extra clicks? Deploy the <strong style="color:#6b7787">send-email</strong> function (see <span class="mono">supabase/functions/send-email</span>) — the app will use it as soon as it's live.</div>
+        </div>
+        <div style="padding:14px 22px;border-top:1px solid #eef1f4;display:flex;justify-content:space-between;align-items:center;gap:10px;flex:0 0 auto">
+          <button onClick="{{ mailHandoffV.onCopy }}" style="border:1px solid #cfd8e2;background:#fff;color:#4a5765;border-radius:8px;padding:9px 14px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="border-color:#2b59c3;color:#2b59c3">{{ mailHandoffV.copyLabel }}</button>
+          <button onClick="{{ mailHandoffV.onClose }}" style="border:0;background:#2b59c3;color:#fff;border-radius:8px;padding:9px 20px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Done</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
   <!-- BILL → ACCOUNTS EMAIL (compose + preview) -->
   <sc-if value="{{ billSendV.open }}" hint-placeholder-val="{{ false }}">
     <div onClick="{{ billSendV.onClose }}" style="position:fixed;inset:0;background:rgba(15,23,32,.5);display:flex;align-items:center;justify-content:center;z-index:60;padding:24px;animation:fadeUp .15s ease">
@@ -3596,6 +3635,8 @@ class Component extends DCLogic {
       vendors: this._loadVendors(),
       vendorModal: null,
       billSend: null,
+      mailHandoff: null,
+      mailCopied: false,
       vendorForm: { type: 'supplier', company: '', rep: '', abn: '', phone: '', email: '', address: '' },
       role: 'PM',
       perms: this._loadPerms(),
@@ -4155,14 +4196,42 @@ class Component extends DCLogic {
       return true;
     } catch (e) { return false; }
   }
+  // Web-mail compose links — these work with no desktop mail app installed.
+  _composeUrls(to, subject, body) {
+    const e = encodeURIComponent, list = (to || []).join(',');
+    return {
+      gmail: 'https://mail.google.com/mail/?view=cm&fs=1&to=' + e(list) + '&su=' + e(subject || '') + '&body=' + e(body || ''),
+      outlook: 'https://outlook.office.com/mail/deeplink/compose?to=' + e(list) + '&subject=' + e(subject || '') + '&body=' + e(body || ''),
+      mailto: this._mailtoUrl(to, subject, body),
+    };
+  }
   // payload: { to:[], subject, text, attachments:[{name,url}] } → resolves { ok, via }
+  // Tries the server function first; if it isn't deployed, hands the composed email to the user
+  // (Gmail / Outlook web / mail app / copy) instead of silently doing nothing.
   _sendEmailNow(payload) {
     const c = this._SB;
-    const fallback = () => { const opened = this._openMailClient(payload.to, payload.subject, payload.text); return Promise.resolve({ ok: opened, via: 'mail client' }); };
-    if (!c || !c.url || typeof fetch === 'undefined') return fallback();
+    const handoff = () => { this.setState({ mailHandoff: payload }); return Promise.resolve({ ok: false, via: 'handoff' }); };
+    if (!c || !c.url || typeof fetch === 'undefined') return handoff();
     return fetch(c.url + '/functions/v1/send-email', {
       method: 'POST', headers: this._sbHeaders({ 'Content-Type': 'application/json' }), body: JSON.stringify(payload),
-    }).then(r => (r.ok ? { ok: true, via: 'server' } : fallback())).catch(() => fallback());
+    }).then(r => (r.ok ? { ok: true, via: 'server' } : handoff())).catch(() => handoff());
+  }
+  closeMailHandoff() { this.setState({ mailHandoff: null, mailCopied: false }); }
+  openComposeIn(which) {
+    const m = this.state.mailHandoff; if (!m) return;
+    const u = this._composeUrls(m.to, m.subject, m.text);
+    if (which === 'mailto') { this._openMailClient(m.to, m.subject, m.text); return; }
+    try { window.open(u[which], '_blank'); } catch (e) {}
+  }
+  copyMailText() {
+    const m = this.state.mailHandoff; if (!m) return;
+    const txt = 'To: ' + (m.to || []).join(', ') + '\nSubject: ' + (m.subject || '') + '\n\n' + (m.text || '');
+    const done = () => { this.setState({ mailCopied: true }); setTimeout(() => this.setState({ mailCopied: false }), 2500); };
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(txt).then(done).catch(() => {}); return; }
+      const ta = document.createElement('textarea'); ta.value = txt; document.body.appendChild(ta); ta.select();
+      document.execCommand('copy'); ta.remove(); done();
+    } catch (e) {}
   }
   // Open a generated document in a new tab. Uses a blob URL so the tab/print footer shows the
   // document instead of "about:blank" (document.write on a blank window leaves it URL-less).
@@ -7471,6 +7540,22 @@ class Component extends DCLogic {
       }
     }
 
+    // hand the composed email to Gmail / Outlook / mail app when the server sender isn't deployed
+    let mailHandoffV = { open: false };
+    if (S.mailHandoff) {
+      const m = S.mailHandoff;
+      const atts = (m.attachments || []).map(a => ({ name: a.name, url: a.url, onOpen: () => { try { window.open(a.url, '_blank'); } catch (e) {} } }));
+      mailHandoffV = {
+        open: true, toText: (m.to || []).join(', '), subject: m.subject || '', body: m.text || '',
+        recipientCount: String((m.to || []).length),
+        attachments: atts, hasAttachments: atts.length > 0, noAttachments: atts.length === 0,
+        copied: !!S.mailCopied, copyLabel: S.mailCopied ? '✓ Copied' : '⧉ Copy email text',
+        onGmail: () => this.openComposeIn('gmail'), onOutlook: () => this.openComposeIn('outlook'),
+        onMailApp: () => this.openComposeIn('mailto'), onCopy: () => this.copyMailText(),
+        onClose: () => this.closeMailHandoff(),
+      };
+    }
+
     // bill → accounts email (compose + preview before sending)
     let billSendV = { open: false };
     if (S.billSend) {
@@ -7771,7 +7856,7 @@ class Component extends DCLogic {
       onAddDefect: () => this.addDefect(), onExportDefectsPdf: () => this.exportDefectsPdf(),
       onDefectSearch: e => this.setDefectSearch(e.target.value),
       claimRows, claimTotals, claimSearchV, onAddClaim: () => this.addClaim(),
-      moduleCommitments, subModalV, signModalV, shareModalV, billSendV,
+      moduleCommitments, subModalV, signModalV, shareModalV, billSendV, mailHandoffV,
       onAddContractVar: () => this.openModal('contract'),
       projDescription, clientRepRows, teamRows, clientNameV, scheduleSummary, detailsV, contactsV, filesV, scheduleV, reportV, invoiceV, invoiceSendV, variationSendV, eotV, eotSendV, documentsV, rfiSendV, meetingSendV,
       docViewerV: S.docViewer ? { open: true, name: S.docViewer.curName, url: S.docViewer.curUrl, isPdf: S.docViewer.curKind === 'pdf', isImage: S.docViewer.curKind === 'image', isOther: S.docViewer.curKind === 'other', hasNav: (S.docViewer.items || []).length > 1, position: (S.docViewer.index + 1) + ' / ' + (S.docViewer.items || []).length, onPrev: () => this.docViewerNav(-1), onNext: () => this.docViewerNav(1), onClose: () => this.closeDocViewer(), onNewTab: () => this.docViewerNewTab() } : { open: false },
