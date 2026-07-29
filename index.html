@@ -3654,7 +3654,7 @@ class Component extends DCLogic {
       defectSearch: '',
       anim: 0,
     };
-    this._SB = { url: 'https://vzxenkijxzzrgnmopnxh.supabase.co', key: 'sb_publishable_dqhiUAGqlZ6gSt-INv1KNA_kJeRNimR' };
+    this._SB = { url: 'https://vzxenkijxzzrgnmopnxh.supabase.co', key: 'sb_publishable_dqhiUAGqlZ6gSt-INv1KNA_kJeRNimR', emailFn: 'resend-email' };
     if (this.state.session && this.state.session.profile) this.state.role = this.state.session.profile.role;
   }
 
@@ -4212,8 +4212,11 @@ class Component extends DCLogic {
     const c = this._SB;
     const handoff = () => { this.setState({ mailHandoff: payload }); return Promise.resolve({ ok: false, via: 'handoff' }); };
     if (!c || !c.url || typeof fetch === 'undefined') return handoff();
-    return fetch(c.url + '/functions/v1/send-email', {
-      method: 'POST', headers: this._sbHeaders({ 'Content-Type': 'application/json' }), body: JSON.stringify(payload),
+    // Edge Functions verify a real user JWT — the publishable key is rejected, so send the session token.
+    const sess = this.state.session;
+    const headers = { 'Content-Type': 'application/json', apikey: c.key, Authorization: 'Bearer ' + ((sess && sess.access_token) || c.key) };
+    return fetch(c.url + '/functions/v1/' + (c.emailFn || 'send-email'), {
+      method: 'POST', headers, body: JSON.stringify(payload),
     }).then(r => (r.ok ? { ok: true, via: 'server' } : handoff())).catch(() => handoff());
   }
   closeMailHandoff() { this.setState({ mailHandoff: null, mailCopied: false }); }

@@ -1,4 +1,4 @@
-// Supabase Edge Function — send-email
+// Supabase Edge Function — resend-email
 //
 // Sends outgoing mail (subcontract agreements, RFIs, EOTs, invoices…) on behalf of the app.
 // The mail-provider API key lives here as a server-side secret. It must NEVER be put in
@@ -14,7 +14,7 @@
 //       supabase secrets set RESEND_API_KEY=re_xxxxxxxx
 //       supabase secrets set MAIL_FROM="CUBIC Construction Management <no-reply@cubiccm.com>"
 // 3. Deploy:
-//       supabase functions deploy send-email
+//       supabase functions deploy resend-email
 //
 // Request body: { to: string[], subject: string, text: string,
 //                 attachments?: { name: string, url: string }[] }
