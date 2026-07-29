@@ -3190,6 +3190,11 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
 
           <div><label style="font-size:12px;font-weight:600;color:#4a5765;display:block;margin-bottom:5px">Scope summary</label><input value="{{ subModalV.scope }}" onInput="{{ subModalV.onScope }}" disabled="{{ subModalV.locked }}" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:inherit;background:{{ subModalV.inputBg }}"></div>
 
+          <div style="display:flex;gap:12px">
+            <div style="flex:1"><label style="font-size:12px;font-weight:600;color:#4a5765;display:block;margin-bottom:5px">Date for commencement</label><input value="{{ subModalV.start }}" onInput="{{ subModalV.onStart }}" disabled="{{ subModalV.locked }}" type="date" class="mono" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:'IBM Plex Mono',monospace;background:{{ subModalV.inputBg }}"></div>
+            <div style="flex:1"><label style="font-size:12px;font-weight:600;color:#4a5765;display:block;margin-bottom:5px">Date for completion</label><input value="{{ subModalV.end }}" onInput="{{ subModalV.onEnd }}" disabled="{{ subModalV.locked }}" type="date" class="mono" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:'IBM Plex Mono',monospace;background:{{ subModalV.inputBg }}"></div>
+          </div>
+
           <div>
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px"><label style="font-size:12px;font-weight:600;color:#4a5765">Terms &amp; conditions</label>
               <sc-if value="{{ subModalV.editable }}" hint-placeholder-val="{{ true }}"><span style="display:flex;gap:6px;align-items:center"><span style="font-size:11px;color:#a4afba">Templates:</span><sc-for list="{{ subModalV.termsTpls }}" as="t" hint-placeholder-count="2"><button onClick="{{ t.onClick }}" style="border:1px solid #cfd8e2;background:#f7f9fb;color:#2b59c3;border-radius:5px;padding:2px 8px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">{{ t.name }}</button></sc-for></span></sc-if>
@@ -4734,7 +4739,7 @@ class Component extends DCLogic {
   saveSubEdit() {
     const { subModal, subForm: f } = this.state; if (!subModal || !f) return;
     this.updateAgr(subModal.cmId, { costCode: f.costCode, retainagePct: Number(f.retainagePct) || 0, taxRate: Number(f.taxRate) || 0, scope: f.scope, terms: f.terms, inclusions: f.inclusions, exclusions: f.exclusions, defectLiabilityDays: Number(f.defectLiabilityDays) || 0, quote: f.quote, quoteUrl: f.quoteUrl || '', quoteType: f.quoteType || '' }, 'Draft details updated');
-    this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, commitments: p.commitments.map(cm => cm.id === subModal.cmId ? { ...cm, original: Number(f.value) || cm.original } : cm) }) }));
+    this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, commitments: p.commitments.map(cm => cm.id === subModal.cmId ? { ...cm, original: Number(f.value) || cm.original, start: f.start || '', end: f.end || '' } : cm) }) }));
   }
   sendSubFromModal(cmId) {
     const f = this.state.subForm; if (!f || !f.quote || !this.canIssue()) return;
@@ -4745,7 +4750,7 @@ class Component extends DCLogic {
       if (c.id !== cmId) return c;
       const base = this.getAgr(c);
       const activity = [{ at: this.now(), by: s.role, msg: 'Sent to subcontractor (' + to + ')' }, { at: this.now(), by: s.role, msg: 'Draft details updated' }, ...base.activity];
-      return { ...c, original: Number(f.value) || c.original, agr: { ...base, costCode: f.costCode, retainagePct: Number(f.retainagePct) || 0, taxRate: Number(f.taxRate) || 0, scope: f.scope, terms: f.terms, inclusions: f.inclusions, exclusions: f.exclusions, defectLiabilityDays: Number(f.defectLiabilityDays) || 0, quote: f.quote, quoteUrl: f.quoteUrl || '', quoteType: f.quoteType || '', status: 'sent', sentAt: this.now(), sentTo: to, activity } };
+      return { ...c, original: Number(f.value) || c.original, start: f.start || c.start, end: f.end || c.end, agr: { ...base, costCode: f.costCode, retainagePct: Number(f.retainagePct) || 0, taxRate: Number(f.taxRate) || 0, scope: f.scope, terms: f.terms, inclusions: f.inclusions, exclusions: f.exclusions, defectLiabilityDays: Number(f.defectLiabilityDays) || 0, quote: f.quote, quoteUrl: f.quoteUrl || '', quoteType: f.quoteType || '', status: 'sent', sentAt: this.now(), sentTo: to, activity } };
     }) }), subModal: null, subForm: null }));
   }
   previewAgreement() {
@@ -4779,7 +4784,7 @@ class Component extends DCLogic {
       '<h3>SCHEDULE 1 — AGREEMENT DETAILS</h3><table class="sched">' +
       row('Cost code', esc(f.costCode || '—') + (cc ? ' — ' + esc(cc.name) : '')) +
       row('Agreement value (ex-GST)', this.money(net)) + row('GST / Tax', this.money(tax) + ' (' + taxR + '%)') + row('Total agreed value', this.money(total)) +
-      row('Retainage', esc(f.retainagePct) + '%') + row('Date for commencement', esc(f.start || '—')) + row('Date for completion', esc(f.end || '—')) +
+      row('Retainage', esc(f.retainagePct) + '%') + row('Date for commencement', f.start ? esc(this.fmtDate(f.start)) : '—') + row('Date for completion', f.end ? esc(this.fmtDate(f.end)) : '—') +
       row('Defect liability period', esc(f.defectLiabilityDays) + ' days') + row('Working hours', 'Mon–Fri 7:00–15:30; Sat 7:00–12:30') +
       '</table>' +
       '<h3>SCHEDULE 2 — SCOPE OF WORKS</h3>' + scopeBlock('Scope summary', f.scope) + scopeBlock('Inclusions', f.inclusions) + scopeBlock('Exclusions', f.exclusions) +
@@ -6531,7 +6536,7 @@ class Component extends DCLogic {
         const agr = this.getAgr(cm); const am = this.agrMeta(agr.status);
         const canSend = agr.status === 'draft' && !!agr.quote && this.canIssue();
         const posted = agr.status === 'signed';
-        return { id: cm.id, vendor: cm.vendor, ref: cm.ref, typeLabel: this.typeLabel(cm.type), scope: cm.scope, dates: cm.start + ' → ' + cm.end,
+        return { id: cm.id, vendor: cm.vendor, ref: cm.ref, typeLabel: this.typeLabel(cm.type), scope: cm.scope, dates: (cm.start || cm.end) ? ((cm.start ? this.fmtDate(cm.start) : '—') + ' → ' + (cm.end ? this.fmtDate(cm.end) : '—')) : 'Dates not set',
           statusLabel: sm.label, statusColor: sm.color, statusBg: sm.bg, original: this.money(cm.original), current: this.moneyM(cur),
           billed: this.money(billed), remaining: this.money(remaining), remainingColor: remaining < 0 ? '#b91c1c' : '#15803d',
           billCount: (p.bills || []).filter(b => b.commitmentId === cm.id).length,
