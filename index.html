@@ -1301,11 +1301,11 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
             <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:8px"><div style="font-size:13px;font-weight:600;color:#0f1720">Invoice register <span style="font-weight:500;color:#8894a2;font-size:12px">· {{ invoiceV.ledgerCount }} issued</span></div><div style="font-size:12px;color:#8894a2">Next to be issued: <strong class="mono" style="color:#2b59c3">{{ invoiceV.invoiceNo }}</strong></div></div>
             <div style="background:#fff;border:1px solid #e4e8ee;border-radius:12px;overflow:hidden">
               <div style="overflow-x:auto"><div style="min-width:820px">
-                <div style="display:grid;grid-template-columns:110px 120px 120px 150px 110px 1fr 34px;padding:11px 16px;background:#fafbfc;border-bottom:1px solid #e4e8ee;font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#8894a2;text-transform:uppercase;gap:10px">
+                <div style="display:grid;grid-template-columns:110px 120px 120px 150px 110px 1fr 96px;padding:11px 16px;background:#fafbfc;border-bottom:1px solid #e4e8ee;font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#8894a2;text-transform:uppercase;gap:10px">
                   <div>Invoice</div><div>Date</div><div>Due date</div><div style="text-align:right">Amount</div><div style="text-align:center">Status</div><div style="text-align:right">Payment</div><div></div>
                 </div>
                 <sc-for list="{{ invoiceV.ledger }}" as="iv" hint-placeholder-count="1">
-                  <div style="display:grid;grid-template-columns:110px 120px 120px 150px 110px 1fr 34px;padding:10px 16px;border-bottom:1px solid #eef1f4;align-items:center;gap:10px">
+                  <div style="display:grid;grid-template-columns:110px 120px 120px 150px 110px 1fr 96px;padding:10px 16px;border-bottom:1px solid #eef1f4;align-items:center;gap:10px">
                     <div class="mono" style="font-size:12px;font-weight:600;color:#0f1720">{{ iv.no }}</div>
                     <div class="mono" style="font-size:11.5px;color:#4a5765">{{ iv.date }}</div>
                     <div class="mono" style="font-size:11.5px;color:#4a5765">{{ iv.due }}</div>
@@ -1315,13 +1315,13 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                       <sc-if value="{{ iv.paid }}" hint-placeholder-val="{{ true }}"><span class="mono" style="font-size:11px;color:#15803d">✓ {{ iv.payRef }} · {{ iv.paidAt }}</span></sc-if>
                       <sc-if value="{{ iv.unpaid }}" hint-placeholder-val="{{ false }}"><button onClick="{{ iv.onPay }}" style="border:0;background:#15803d;color:#fff;border-radius:7px;padding:6px 13px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="background:#0f6b31">💳 Pay online</button></sc-if>
                     </div>
-                    <sc-if value="{{ iv.canDelete }}" hint-placeholder-val="{{ true }}"><button onClick="{{ iv.onDelete }}" title="Delete this invoice" style="border:0;background:transparent;color:#c0c8d1;cursor:pointer;font-size:14px;padding:2px;line-height:1" style-hover="color:#b91c1c">✕</button></sc-if>
+                    <div style="display:flex;align-items:center;justify-content:flex-end;gap:4px"><button onClick="{{ iv.onViewPdf }}" title="Open the Tax Invoice PDF" style="border:0;background:transparent;color:#8894a2;cursor:pointer;font-size:13px;padding:2px;line-height:1" style-hover="color:#2b59c3">📄</button><sc-if value="{{ iv.canEdit }}" hint-placeholder-val="{{ true }}"><button onClick="{{ iv.onEdit }}" title="Edit &amp; re-send this invoice" style="border:0;background:transparent;color:#8894a2;cursor:pointer;font-size:13px;padding:2px;line-height:1" style-hover="color:#2b59c3">✎</button></sc-if><sc-if value="{{ iv.canDelete }}" hint-placeholder-val="{{ true }}"><button onClick="{{ iv.onDelete }}" title="Delete this invoice" style="border:0;background:transparent;color:#c0c8d1;cursor:pointer;font-size:14px;padding:2px;line-height:1" style-hover="color:#b91c1c">✕</button></sc-if></div>
                   </div>
                 </sc-for>
                 <sc-if value="{{ invoiceV.noLedger }}" hint-placeholder-val="{{ false }}">
                   <div style="padding:20px 16px;text-align:center;font-size:12.5px;color:#8894a2">No invoices issued yet — the first one will be <strong class="mono" style="color:#4a5765">{{ invoiceV.invoiceNo }}</strong>.</div>
                 </sc-if>
-                <div style="display:grid;grid-template-columns:110px 120px 120px 150px 110px 1fr 34px;padding:10px 16px;border-top:1px dashed #cfd8e2;background:#f7f9fc;align-items:center;gap:10px">
+                <div style="display:grid;grid-template-columns:110px 120px 120px 150px 110px 1fr 96px;padding:10px 16px;border-top:1px dashed #cfd8e2;background:#f7f9fc;align-items:center;gap:10px">
                   <div class="mono" style="font-size:12px;font-weight:600;color:#2b59c3">{{ invoiceV.invoiceNo }}</div>
                   <div style="font-size:11.5px;color:#8894a2">—</div>
                   <div style="font-size:11.5px;color:#8894a2">—</div>
@@ -3321,6 +3321,47 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
     </div>
   </sc-if>
 
+  <!-- EDIT / RE-SEND AN ISSUED INVOICE -->
+  <sc-if value="{{ invoiceEditV.open }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ invoiceEditV.onClose }}" style="position:fixed;inset:0;background:rgba(15,23,32,.5);display:flex;align-items:center;justify-content:center;z-index:66;padding:24px;animation:fadeUp .15s ease">
+      <div onClick="{{ stop }}" style="background:#fff;border-radius:14px;width:620px;max-width:96vw;max-height:92vh;box-shadow:0 24px 60px rgba(15,23,32,.3);overflow:hidden;display:flex;flex-direction:column">
+        <div style="padding:18px 22px;border-bottom:1px solid #eef1f4;display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex:0 0 auto">
+          <div><div style="font-size:17px;font-weight:600;color:#0f1720">Edit invoice {{ invoiceEditV.no }}</div><div style="font-size:12.5px;color:#8894a2;margin-top:2px">Saving bumps the revision number so a re-issued invoice is identifiable.</div></div>
+          <button onClick="{{ invoiceEditV.onClose }}" style="border:0;background:transparent;color:#8894a2;cursor:pointer;font-size:20px;line-height:1">&#10005;</button>
+        </div>
+        <div style="padding:18px 22px;display:flex;flex-direction:column;gap:13px;overflow-y:auto;flex:1 1 auto">
+          <div style="display:flex;gap:12px">
+            <div style="flex:1"><label style="font-size:12px;font-weight:600;color:#4a5765;display:block;margin-bottom:5px">Invoice date</label><input value="{{ invoiceEditV.date }}" onInput="{{ invoiceEditV.onDate }}" type="date" class="mono" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:'IBM Plex Mono',monospace" style-focus="border-color:#2b59c3;outline:none"></div>
+            <div style="flex:1"><label style="font-size:12px;font-weight:600;color:#4a5765;display:block;margin-bottom:5px">Due date</label><input value="{{ invoiceEditV.dueDate }}" onInput="{{ invoiceEditV.onDue }}" type="date" class="mono" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:'IBM Plex Mono',monospace" style-focus="border-color:#2b59c3;outline:none"></div>
+            <div style="flex:1"><label style="font-size:12px;font-weight:600;color:#4a5765;display:block;margin-bottom:5px">Reference date</label><input value="{{ invoiceEditV.refDate }}" onInput="{{ invoiceEditV.onRefDate }}" type="date" class="mono" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:'IBM Plex Mono',monospace" style-focus="border-color:#2b59c3;outline:none"></div>
+          </div>
+          <div style="display:flex;gap:12px">
+            <div style="flex:1"><label style="font-size:12px;font-weight:600;color:#4a5765;display:block;margin-bottom:5px">Claim No.</label><input value="{{ invoiceEditV.claimNo }}" onInput="{{ invoiceEditV.onClaimNo }}" class="mono" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:'IBM Plex Mono',monospace" style-focus="border-color:#2b59c3;outline:none"></div>
+            <div style="flex:1"><label style="font-size:12px;font-weight:600;color:#4a5765;display:block;margin-bottom:5px">of (total claims)</label><input value="{{ invoiceEditV.claimOf }}" onInput="{{ invoiceEditV.onClaimOf }}" class="mono" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:'IBM Plex Mono',monospace" style-focus="border-color:#2b59c3;outline:none"></div>
+            <div style="flex:1"><label style="font-size:12px;font-weight:600;color:#4a5765;display:block;margin-bottom:5px">Purchase order</label><input value="{{ invoiceEditV.po }}" onInput="{{ invoiceEditV.onPo }}" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:inherit" style-focus="border-color:#2b59c3;outline:none"></div>
+          </div>
+          <div style="display:flex;gap:12px">
+            <div style="flex:1"><label style="font-size:12px;font-weight:600;color:#4a5765;display:block;margin-bottom:5px">Claim period from</label><input value="{{ invoiceEditV.periodFrom }}" onInput="{{ invoiceEditV.onPeriodFrom }}" type="date" class="mono" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:'IBM Plex Mono',monospace" style-focus="border-color:#2b59c3;outline:none"></div>
+            <div style="flex:1"><label style="font-size:12px;font-weight:600;color:#4a5765;display:block;margin-bottom:5px">to</label><input value="{{ invoiceEditV.periodTo }}" onInput="{{ invoiceEditV.onPeriodTo }}" type="date" class="mono" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:'IBM Plex Mono',monospace" style-focus="border-color:#2b59c3;outline:none"></div>
+          </div>
+          <div style="display:flex;gap:12px">
+            <div style="flex:1"><label style="font-size:12px;font-weight:600;color:#4a5765;display:block;margin-bottom:5px">Retention %</label><input value="{{ invoiceEditV.retentionPct }}" onInput="{{ invoiceEditV.onRetention }}" class="mono" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:'IBM Plex Mono',monospace" style-focus="border-color:#2b59c3;outline:none"></div>
+            <div style="flex:1"><label style="font-size:12px;font-weight:600;color:#4a5765;display:block;margin-bottom:5px">Back charges / deductions</label><input value="{{ invoiceEditV.backCharges }}" onInput="{{ invoiceEditV.onBack }}" placeholder="0.00" class="mono" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:'IBM Plex Mono',monospace" style-focus="border-color:#2b59c3;outline:none"></div>
+          </div>
+          <div><label style="font-size:12px;font-weight:600;color:#4a5765;display:block;margin-bottom:5px">Notes (printed on the invoice)</label><textarea value="{{ invoiceEditV.notes }}" onInput="{{ invoiceEditV.onNotes }}" rows="3" placeholder="Anything the client should see on the invoice&hellip;" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:12.5px;font-family:inherit;line-height:1.6;resize:vertical" style-focus="border-color:#2b59c3;outline:none"></textarea></div>
+        </div>
+        <div style="padding:15px 22px;border-top:1px solid #eef1f4;display:flex;justify-content:space-between;align-items:center;gap:10px;flex:0 0 auto">
+          <button onClick="{{ invoiceEditV.onPreview }}" style="border:1px solid #cfd8e2;background:#fff;color:#2b59c3;border-radius:8px;padding:9px 15px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit">&#128196; Preview PDF</button>
+          <div style="display:flex;gap:10px">
+            <button onClick="{{ invoiceEditV.onClose }}" style="border:1px solid #cfd8e2;background:#fff;color:#4a5765;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Cancel</button>
+            <button onClick="{{ invoiceEditV.onSave }}" style="border:1px solid #cfd8e2;background:#fff;color:#2b59c3;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Save</button>
+            <button onClick="{{ invoiceEditV.onSaveSend }}" style="border:0;background:#2b59c3;color:#fff;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Save &amp; re-send</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
   <!-- GUARDED DELETE (type "delete" to confirm) -->
   <sc-if value="{{ deleteConfirmV.open }}" hint-placeholder-val="{{ false }}">
     <div onClick="{{ deleteConfirmV.onClose }}" style="position:fixed;inset:0;background:rgba(15,23,32,.55);display:flex;align-items:center;justify-content:center;z-index:75;padding:24px;animation:fadeUp .15s ease">
@@ -3736,6 +3777,7 @@ class Component extends DCLogic {
       vendors: this._loadVendors(),
       vendorModal: null,
       billSend: null,
+      invoiceEdit: null,
       deleteConfirm: null,
       reportColMenu: false,
       claimSend: null,
@@ -5468,7 +5510,36 @@ class Component extends DCLogic {
   addDays(iso, n) { const parts = (iso || this.todayLocal()).split('-').map(Number); const d = new Date(parts[0], parts[1] - 1, parts[2]); d.setDate(d.getDate() + n); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
   fmtDate(iso) { if (!iso) return ''; const d = new Date(iso + 'T00:00:00'); if (isNaN(d.getTime())) return iso; const dd = String(d.getDate()).padStart(2, '0'); const mm = String(d.getMonth() + 1).padStart(2, '0'); const yyyy = d.getFullYear(); const f = (this.state && this.state.defaults && this.state.defaults.dateFormat) || 'DD/MM/YYYY'; if (f === 'MM/DD/YYYY') return mm + '/' + dd + '/' + yyyy; if (f === 'YYYY/MM/DD') return yyyy + '/' + mm + '/' + dd; return dd + '/' + mm + '/' + yyyy; }
   _termDays() { const t = (this.state.financial && this.state.financial.defaultTerm) || 'Net 30'; const m = /(\d+)/.exec(t); if (/receipt/i.test(t)) return 0; return m ? Number(m[1]) : 30; }
-  openInvoiceSend() { const p = this.proj(this.state.pid); if (!p) return; const emails = (p.customers || []).map(c => c.email).filter(Boolean); const no = 'INV-' + String((Number(p.clientInvoiceNo) || 0) + 1).padStart(3, '0'); this.setState({ invoiceSend: { recipients: emails, newEmail: '', message: '', from: p.senderEmail || 'ivan@cubiccm.com', subject: 'Progress Payment Claim ' + no + ' — ' + p.name } }); }
+  // Client invoice email — composed from this project's data every time (same idea as the
+  // subcontract send). Pass an invoiceId to re-send an already-issued invoice.
+  openInvoiceSend(invoiceId) {
+    const p = this.proj(this.state.pid); if (!p) return;
+    const m = this._invoiceModel(p, invoiceId || null);
+    const me = this.currentUser() || {};
+    const cust = (p.customers && p.customers[0]) || null;
+    const seen = {}; const recips = [];
+    (p.customers || []).forEach(c => { if (c.email && !seen[c.email]) { seen[c.email] = 1; recips.push(c.email); } });
+    (p.clientReps || []).forEach(c => { if (c.email && !seen[c.email]) { seen[c.email] = 1; recips.push(c.email); } });
+    const first = (cust && cust.name) ? String(cust.name).trim().split(/\s+/)[0] : '';
+    const isResend = !!invoiceId;
+    const body = 'Hi ' + (first || 'there') + ',\n\n'
+      + (isResend ? 'Please find the revised tax invoice for ' : 'Please find the tax invoice for ')
+      + p.name + (p.address ? ' (' + p.address + ')' : '') + '.\n\n'
+      + 'Invoice: ' + m.no + (m.rev ? ' (Rev ' + m.rev + ')' : '') + '\n'
+      + 'Claim no: ' + m.claimNo + '\n'
+      + 'Work claimed this period: ' + this.money(m.claim) + '\n'
+      + (m.retPct ? 'Less retention ' + m.retPct + '%: (' + this.money(m.retAmt) + ')\n' : '')
+      + 'Net (excl. GST): ' + this.money(m.net) + '\n'
+      + 'GST ' + m.gst + '%: ' + this.money(m.gstAmt) + '\n'
+      + 'Total payable (incl. GST): ' + this.money(m.total) + '\n'
+      + 'Due: ' + this.fmtDate(m.due) + ' (' + m.termDays + ' days)\n\n'
+      + 'View this invoice in CPMS:\n' + this._appLink('invoice', invoiceId || 'draft') + '\n\n'
+      + 'Payment reference: ' + m.no + '\n\n'
+      + 'Regards,\n' + (me.name || '') + (me.title ? '\n' + me.title : '');
+    this.setState({ invoiceSend: { invoiceId: invoiceId || null, recipients: recips, newEmail: '', message: body,
+      from: p.senderEmail || me.email || this._accountsEmail(),
+      subject: (isResend ? 'Revised Tax Invoice ' : 'Tax Invoice ') + m.no + ' — ' + p.name } });
+  }
   closeInvoiceSend() { this.setState({ invoiceSend: null }); }
   setInvoiceMessage(v) { this.setState(s => s.invoiceSend ? { invoiceSend: { ...s.invoiceSend, message: v } } : {}); }
   setInvoiceFrom(v) { this.setState(s => s.invoiceSend ? { invoiceSend: { ...s.invoiceSend, from: v } } : {}); }
@@ -5513,6 +5584,7 @@ class Component extends DCLogic {
     const noStr = 'INV-' + String(no).padStart(3, '0'); const total = claim + claim * gst / 100; const due = this.addDays(today, 15);
     const record = { id: 'inv' + Date.now(), no: noStr, date: today, dueDate: due, amount: claim, gstRate: gst, total, from: sc.from || '', subject: sc.subject || '', message: (sc.message || '').trim(), recipients: recips.slice(), status: 'sent', paidAt: '', payRef: '', lines: invLines };
     const msg = record.message ? ' — “' + record.message + '”' : '';
+    this._sendEmailNow({ to: recips, subject: sc.subject || '', text: sc.message || '', attachments: [] });
     this.setState(s => ({ projects: s.projects.map(x => x.id !== s.pid ? x : { ...x, clientInvoiced: inv, clientInvoiceNo: no, senderEmail: sc.from || x.senderEmail, invoices: [...(x.invoices || []), record], clientInvoiceSentAt: noStr + ' sent to ' + recips.length + ' recipient(s): ' + recips.join(', ') + ' on ' + today + ' · due ' + this.fmtDate(due) + msg }), invoiceSend: null }));
   }
   // ---- Tax Invoice / Progress Payment Claim (approved CCM template) ----
@@ -5560,6 +5632,33 @@ class Component extends DCLogic {
       vars, varTotal: vars.reduce((a, v) => a + this._num(v.value), 0),
       termDays: this._termDays(),
     };
+  }
+  // ---- Edit an issued invoice (correct details, bump revision, re-send) ----
+  openInvoiceEdit(id) {
+    const p = this.proj(this.state.pid); const iv = (p.invoices || []).find(x => x.id === id); if (!iv) return;
+    const m = this._invoiceModel(p, id);
+    this.setState({ invoiceEdit: { id, no: iv.no || '', date: iv.date || '', dueDate: iv.dueDate || '',
+      refDate: m.refDate || '', claimNo: m.claimNo || '', claimOf: m.claimOf || '', po: m.po || '',
+      periodFrom: m.periodFrom || '', periodTo: m.periodTo || '', retentionPct: String(m.retPct),
+      backCharges: String(m.back || ''), notes: m.notes || '' } });
+  }
+  closeInvoiceEdit() { this.setState({ invoiceEdit: null }); }
+  setInvoiceEditField(k, v) { this.setState(st => (st.invoiceEdit ? { invoiceEdit: Object.assign({}, st.invoiceEdit, { [k]: v }) } : {})); }
+  // Writes the edits back and increments Rev so a re-issued invoice is identifiable.
+  saveInvoiceEdit(alsoSend) {
+    const e = this.state.invoiceEdit; if (!e) return;
+    this.setState(st => ({ projects: st.projects.map(pr => pr.id !== st.pid ? pr : { ...pr,
+      invoices: (pr.invoices || []).map(iv => {
+        if (iv.id !== e.id) return iv;
+        const prevRev = this._num((iv.extra || {}).rev);
+        const extra = Object.assign({}, iv.extra || {}, {
+          rev: prevRev + 1, refDate: e.refDate, claimNo: e.claimNo, claimOf: e.claimOf, po: e.po,
+          periodFrom: e.periodFrom, periodTo: e.periodTo, retentionPct: this._num(e.retentionPct),
+          backCharges: this._num(e.backCharges), notes: e.notes,
+        });
+        return Object.assign({}, iv, { date: e.date || iv.date, dueDate: e.dueDate || iv.dueDate, extra });
+      }) }) , invoiceEdit: null }));
+    if (alsoSend) setTimeout(() => this.openInvoiceSend(e.id), 60);
   }
   previewInvoicePdf(invoiceId) {
     const p = this.proj(this.state.pid); if (!p) return;
@@ -6917,7 +7016,8 @@ class Component extends DCLogic {
           statusColor: paid ? '#15803d' : (overdue ? '#b91c1c' : '#1d4ed8'), statusBg: paid ? '#e6f4ea' : (overdue ? '#fbeef0' : '#e7eefc'),
           paid, unpaid: !paid, payRef: iv.payRef || '', paidAt: this.fmtDate(iv.paidAt),
           onPay: () => this.payInvoiceOnline(iv.id),
-          canDelete: this.can('invoices', 'edit'),
+          canDelete: this.can('invoices', 'edit'), canEdit: this.can('invoices', 'edit'),
+          onEdit: () => this.openInvoiceEdit(iv.id), onViewPdf: () => this.previewInvoicePdf(iv.id),
           onDelete: () => this.openDeleteConfirm('invoice', iv.id, iv.no, 'The amounts this invoice claimed will be released so they can be invoiced again.'),
         };
       });
@@ -7914,6 +8014,32 @@ class Component extends DCLogic {
       };
     }
 
+    // edit an issued invoice
+    let invoiceEditV = { open: false };
+    if (S.invoiceEdit) {
+      const e = S.invoiceEdit;
+      invoiceEditV = {
+        open: true, no: e.no,
+        date: e.date, dueDate: e.dueDate, refDate: e.refDate, claimNo: e.claimNo, claimOf: e.claimOf,
+        po: e.po, periodFrom: e.periodFrom, periodTo: e.periodTo,
+        retentionPct: e.retentionPct, backCharges: e.backCharges, notes: e.notes,
+        onDate: ev => this.setInvoiceEditField('date', ev.target.value),
+        onDue: ev => this.setInvoiceEditField('dueDate', ev.target.value),
+        onRefDate: ev => this.setInvoiceEditField('refDate', ev.target.value),
+        onClaimNo: ev => this.setInvoiceEditField('claimNo', ev.target.value),
+        onClaimOf: ev => this.setInvoiceEditField('claimOf', ev.target.value),
+        onPo: ev => this.setInvoiceEditField('po', ev.target.value),
+        onPeriodFrom: ev => this.setInvoiceEditField('periodFrom', ev.target.value),
+        onPeriodTo: ev => this.setInvoiceEditField('periodTo', ev.target.value),
+        onRetention: ev => this.setInvoiceEditField('retentionPct', ev.target.value),
+        onBack: ev => this.setInvoiceEditField('backCharges', ev.target.value),
+        onNotes: ev => this.setInvoiceEditField('notes', ev.target.value),
+        onPreview: () => this.previewInvoicePdf(e.id),
+        onSave: () => this.saveInvoiceEdit(false), onSaveSend: () => this.saveInvoiceEdit(true),
+        onClose: () => this.closeInvoiceEdit(),
+      };
+    }
+
     // guarded delete — the Delete button only enables once "delete" has been typed
     let deleteConfirmV = { open: false };
     if (S.deleteConfirm) {
@@ -8288,7 +8414,7 @@ class Component extends DCLogic {
       onAddDefect: () => this.addDefect(), onExportDefectsPdf: () => this.exportDefectsPdf(),
       onDefectSearch: e => this.setDefectSearch(e.target.value),
       claimRows, claimTotals, claimSearchV, onAddClaim: () => this.addClaim(),
-      moduleCommitments, subModalV, signModalV, shareModalV, acctSendV, paymentModalV, mailHandoffV, deleteConfirmV,
+      moduleCommitments, subModalV, signModalV, shareModalV, acctSendV, paymentModalV, mailHandoffV, deleteConfirmV, invoiceEditV,
       onAddContractVar: () => this.openModal('contract'),
       projDescription, clientRepRows, teamRows, clientNameV, scheduleSummary, detailsV, contactsV, filesV, scheduleV, reportV, invoiceV, invoiceSendV, variationSendV, eotV, eotSendV, documentsV, rfiSendV, meetingSendV,
       docViewerV: S.docViewer ? { open: true, name: S.docViewer.curName, url: S.docViewer.curUrl, isPdf: S.docViewer.curKind === 'pdf', isImage: S.docViewer.curKind === 'image', isOther: S.docViewer.curKind === 'other', hasNav: (S.docViewer.items || []).length > 1, position: (S.docViewer.index + 1) + ' / ' + (S.docViewer.items || []).length, onPrev: () => this.docViewerNav(-1), onNext: () => this.docViewerNav(1), onClose: () => this.closeDocViewer(), onNewTab: () => this.docViewerNewTab() } : { open: false },
