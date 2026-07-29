@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <script src="./support.js"></script>
+<script src="./subcontract-terms.js"></script>
 </head>
 <body>
 <x-dc>
@@ -3179,6 +3180,8 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
             <div><label style="font-size:12px;font-weight:600;color:#4a5765;display:block;margin-bottom:5px">GST / Tax %</label><input value="{{ subModalV.taxRate }}" onInput="{{ subModalV.onTax }}" disabled="{{ subModalV.locked }}" class="mono" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:'IBM Plex Mono',monospace;background:{{ subModalV.inputBg }}"></div>
             <div><label style="font-size:12px;font-weight:600;color:#4a5765;display:block;margin-bottom:5px">Retainage %<sc-if value="{{ subModalV.canIssue }}" hint-placeholder-val="{{ true }}"><span style="color:#a4afba;font-weight:400"> · default {{ subModalV.retainagePct }}</span></sc-if></label><input value="{{ subModalV.retainagePct }}" onInput="{{ subModalV.onRetainage }}" disabled="{{ subModalV.locked }}" class="mono" title="Only PM/Admin can override the default" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:'IBM Plex Mono',monospace;background:{{ subModalV.inputBg }}"></div>
             <div><label style="font-size:12px;font-weight:600;color:#4a5765;display:block;margin-bottom:5px">Defect liability (days)</label><input value="{{ subModalV.defectLiabilityDays }}" onInput="{{ subModalV.onDefect }}" disabled="{{ subModalV.locked }}" class="mono" title="Drives automatic Expired status after signing" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:'IBM Plex Mono',monospace;background:{{ subModalV.inputBg }}"></div>
+            <div><label style="font-size:12px;font-weight:600;color:#4a5765;display:block;margin-bottom:5px">Date for commencement</label><input value="{{ subModalV.start }}" onInput="{{ subModalV.onStart }}" disabled="{{ subModalV.locked }}" type="date" class="mono" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:'IBM Plex Mono',monospace;background:{{ subModalV.inputBg }}"></div>
+            <div><label style="font-size:12px;font-weight:600;color:#4a5765;display:block;margin-bottom:5px">Date for completion</label><input value="{{ subModalV.end }}" onInput="{{ subModalV.onEnd }}" disabled="{{ subModalV.locked }}" type="date" class="mono" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:'IBM Plex Mono',monospace;background:{{ subModalV.inputBg }}"></div>
           </div>
           <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;background:#0f1a24;color:#fff;border-radius:10px;padding:13px 18px">
             <div style="display:flex;gap:22px;flex-wrap:wrap">
@@ -3190,13 +3193,8 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
 
           <div><label style="font-size:12px;font-weight:600;color:#4a5765;display:block;margin-bottom:5px">Scope summary</label><input value="{{ subModalV.scope }}" onInput="{{ subModalV.onScope }}" disabled="{{ subModalV.locked }}" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:inherit;background:{{ subModalV.inputBg }}"></div>
 
-          <div style="display:flex;gap:12px">
-            <div style="flex:1"><label style="font-size:12px;font-weight:600;color:#4a5765;display:block;margin-bottom:5px">Date for commencement</label><input value="{{ subModalV.start }}" onInput="{{ subModalV.onStart }}" disabled="{{ subModalV.locked }}" type="date" class="mono" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:'IBM Plex Mono',monospace;background:{{ subModalV.inputBg }}"></div>
-            <div style="flex:1"><label style="font-size:12px;font-weight:600;color:#4a5765;display:block;margin-bottom:5px">Date for completion</label><input value="{{ subModalV.end }}" onInput="{{ subModalV.onEnd }}" disabled="{{ subModalV.locked }}" type="date" class="mono" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:'IBM Plex Mono',monospace;background:{{ subModalV.inputBg }}"></div>
-          </div>
-
           <div>
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px"><label style="font-size:12px;font-weight:600;color:#4a5765">Terms &amp; conditions</label>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px"><label style="font-size:12px;font-weight:600;color:#4a5765">Special conditions <span style="color:#a4afba;font-weight:400">· project-specific only — the standard T&amp;Cs attach automatically as Annexure A</span></label>
               <sc-if value="{{ subModalV.editable }}" hint-placeholder-val="{{ true }}"><span style="display:flex;gap:6px;align-items:center"><span style="font-size:11px;color:#a4afba">Templates:</span><sc-for list="{{ subModalV.termsTpls }}" as="t" hint-placeholder-count="2"><button onClick="{{ t.onClick }}" style="border:1px solid #cfd8e2;background:#f7f9fb;color:#2b59c3;border-radius:5px;padding:2px 8px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">{{ t.name }}</button></sc-for></span></sc-if>
             </div>
             <textarea value="{{ subModalV.terms }}" onInput="{{ subModalV.onTerms }}" disabled="{{ subModalV.locked }}" rows="3" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:12.5px;font-family:inherit;line-height:1.5;resize:vertical;background:{{ subModalV.inputBg }}"></textarea>
@@ -3328,6 +3326,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
           </div>
           <div><label style="font-size:12px;font-weight:600;color:#4a5765;display:block;margin-bottom:5px">Email</label><input value="{{ vendorModal.email }}" onInput="{{ onVendorEmail }}" placeholder="accounts@company.com" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:inherit"></div>
           <div><label style="font-size:12px;font-weight:600;color:#4a5765;display:block;margin-bottom:5px">Address</label><input value="{{ vendorModal.address }}" onInput="{{ onVendorAddress }}" placeholder="Street, city" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:inherit"></div>
+          <div><label style="font-size:12px;font-weight:600;color:#4a5765;display:block;margin-bottom:5px">ABN <span style="color:#a4afba;font-weight:400">· shown on the subcontract agreement</span></label><input value="{{ vendorModal.abn }}" onInput="{{ onVendorAbn }}" placeholder="12 345 678 901" class="mono" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:'IBM Plex Mono',monospace"></div>
         </div>
         <div style="padding:15px 22px;border-top:1px solid #eef1f4;display:flex;justify-content:flex-end;gap:10px">
           <button onClick="{{ onCloseVendorModal }}" style="border:1px solid #cfd8e2;background:#fff;color:#4a5765;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Cancel</button>
@@ -3431,7 +3430,7 @@ class Component extends DCLogic {
       codeForm: { parentCode: '', parentDesc: '', childCode: '', childDesc: '' },
       vendors: this._loadVendors(),
       vendorModal: null,
-      vendorForm: { type: 'supplier', company: '', rep: '', phone: '', email: '', address: '' },
+      vendorForm: { type: 'supplier', company: '', rep: '', abn: '', phone: '', email: '', address: '' },
       role: 'PM',
       perms: this._loadPerms(),
       users: [],
@@ -4321,7 +4320,7 @@ class Component extends DCLogic {
     const next = (this.state.vendors || []).filter(v => v.id !== id); this._saveVendors(next);
     this.setState(s => ({ vendors: next, projects: s.projects.map(p => ({ ...p, bills: (p.bills || []).map(b => b.vendorId === id ? { ...b, vendorId: '' } : b) })) }));
   }
-  openVendorModal() { this.setState({ vendorModal: { billId: null }, vendorForm: { type: 'supplier', company: '', rep: '', phone: '', email: '', address: '' } }); }
+  openVendorModal() { this.setState({ vendorModal: { billId: null }, vendorForm: { type: 'supplier', company: '', rep: '', abn: '', phone: '', email: '', address: '' } }); }
   vendorStats(id) {
     let count = 0, total = 0, projs = new Set();
     this.state.projects.forEach(p => (p.bills || []).forEach(b => { if (b.vendorId === id) { count++; total += this.billTotal(b); projs.add(p.id); } }));
@@ -4758,39 +4757,112 @@ class Component extends DCLogic {
     const p = this.proj(this.state.pid);
     const cm = this.state.subModal && this.state.subModal.cmId ? (p.commitments || []).find(c => c.id === this.state.subModal.cmId) : null;
     const vendor = cm ? this.state.vendors.find(v => v.company === cm.vendor) : this.state.vendors.find(v => v.id === f.vendorId);
-    const orgName = this.props.orgName ?? 'Cubic';
     const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const ml = s => esc(s).replace(/\n/g, '<br>');               // preserve line breaks in long text
+    const blank = '<span style="color:#9AA0AC">____________________</span>'; // unfilled particular
+    const val = s => (s != null && String(s).trim()) ? esc(s) : blank;
     const net = Number(f.value) || 0, taxR = Number(f.taxRate) || 0, tax = net * taxR / 100, total = net + tax;
     const cc = this.costCodeCatalog().find(c => c.code === f.costCode);
     const ref = cm ? cm.ref : 'DRAFT';
-    const status = cm ? this.agrLabel(this.getAgr(cm).status) : 'Draft';
-    const row = (k, v) => '<tr><td class="k">' + esc(k) + '</td><td class="v">' + v + '</td></tr>';
-    const clauses = this.defaultSubcontractTerms() === f.terms ? this.defaultSubcontractTerms() : (f.terms || '');
-    const clauseHtml = esc(clauses).split('\n').map(line => {
-      if (!line.trim()) return '<div class="sp"></div>';
-      if (/^CLAUSE /.test(line)) return '<h3>' + line + '</h3>';
-      return '<p>' + line + '</p>';
-    }).join('');
-    const scopeBlock = (label, txt) => txt ? '<h4>' + label + '</h4><p>' + esc(txt).replace(/\n/g, '<br>') + '</p>' : '';
-    const st = '<style>*{box-sizing:border-box}body{font-family:Georgia,\'Times New Roman\',serif;color:#1a1a1a;margin:0;padding:64px 72px;line-height:1.6;max-width:900px;margin:0 auto}h1{font-size:22px;margin:0}.doc-meta{color:#555;font-size:12px;margin:2px 0 22px}.band{background:#0f1a24;color:#fff;padding:16px 20px;border-radius:8px;margin-bottom:22px;display:flex;justify-content:space-between;align-items:flex-end;gap:16px}.band .big{font-size:20px;font-weight:700;font-family:Arial,sans-serif}.parties{display:flex;gap:28px;margin-bottom:20px}.parties>div{flex:1}.lbl{font-size:10px;letter-spacing:.6px;text-transform:uppercase;color:#777;font-family:Arial,sans-serif}table.sched{width:100%;border-collapse:collapse;margin-bottom:8px}table.sched td{padding:7px 10px;border-bottom:1px solid #e2e2e2;font-size:13px;vertical-align:top}td.k{width:230px;color:#555;font-family:Arial,sans-serif;font-size:12px}td.v{font-weight:600}h3{font-family:Arial,sans-serif;font-size:13px;letter-spacing:.3px;margin:20px 0 7px;color:#0f1a24;border-bottom:2px solid #0f1a24;padding-bottom:4px;page-break-after:avoid}h4{font-family:Arial,sans-serif;font-size:12px;margin:14px 0 4px;color:#333;page-break-after:avoid}p{font-size:12.5px;margin:6px 0;text-align:justify;orphans:3;widows:3;page-break-inside:avoid}.sp{height:8px}.sign{margin-top:40px;display:flex;gap:40px;page-break-inside:avoid}.sign>div{flex:1;border-top:1px solid #333;padding-top:6px;font-size:12px;color:#555;font-family:Arial,sans-serif}.total{font-family:Arial,sans-serif}@media print{@page{size:A4;margin:20mm}body{padding:0;max-width:none}}</style>';
+    const agr = cm ? this.getAgr(cm) : null;
+    const status = cm ? this.agrLabel(agr.status) : 'Draft';
+    // Head Contractor block — from Settings → Company profile, falling back to the CCM letterhead
+    const co = this.state.company || {};
+    const coName = (co.name || '').trim() || 'Cubic Construction Management';
+    const coAbn = (co.abn || '').trim() || '32 161 357 142';
+    const coAddr = [co.street, co.city, co.state, co.zip].map(x => String(x == null ? '' : x).trim().replace(/^,+|,+$/g, '').trim()).filter(Boolean).join(', ') || 'Unit 3, 5 Bessemer Street, Blacktown NSW 2148';
+    const me = this.currentUser() || {};
+    // Trade package: prefer the cost-code description, else the vendor's trade type
+    const trade = (cc && cc.name) ? cc.name : (vendor ? this.vendorTypeLabel(vendor.type) : '');
+    const agDate = (agr && (agr.signedAt || agr.sentAt)) ? String(agr.signedAt || agr.sentAt).slice(0, 10) : this.todayLocal();
+    const cellK = 'style="width:24%;background:#F4F5F8;font-weight:600;font-size:9pt;color:#3A4152"';
+    const row2 = (k, v) => '<tr><td ' + cellK + '>' + esc(k) + '</td><td>' + v + '</td></tr>';
+    const row4 = (k1, v1, k2, v2) => '<tr><td ' + cellK + '>' + esc(k1) + '</td><td style="width:26%">' + v1 + '</td><td ' + cellK + '>' + esc(k2) + '</td><td>' + v2 + '</td></tr>';
+    const box = t => '<div style="border:1px solid #C9CDD6;padding:9px 11px;min-height:52px;font-size:10pt;line-height:1.6">' + (t || blank) + '</div>';
+    // Special conditions = project-specific amendments only. The legacy built-in summary clauses are
+    // superseded by Annexure A, so if the field still holds them verbatim, record the section as Nil.
+    const _legacyTerms = String(this.defaultSubcontractTerms() || '').trim();
+    const _special = String(f.terms == null ? '' : f.terms).trim();
+    const specialHtml = (_special && _special !== _legacyTerms) ? ml(_special)
+      : '<span style="color:#3A4152">Nil — the Standard Terms and Conditions at Annexure A apply without amendment.</span>';
+    // Annexure A — the standard terms, identical for every project (loaded from subcontract-terms.js)
+    const stdTerms = (typeof window !== 'undefined' && window.CCM_SUBCONTRACT_TERMS) ? window.CCM_SUBCONTRACT_TERMS : '';
+    const termsHtml = stdTerms || ('<div style="break-before:page"><h1 style="font-size:17pt">Terms and Conditions of Subcontract</h1><p style="color:#8a1c1c">Standard terms could not be loaded (subcontract-terms.js). Attach Annexure A before execution.</p></div>');
+    const st = '<style>*{box-sizing:border-box}'
+      + 'body{margin:0;padding:52px 58px;font-family:Archivo,system-ui,-apple-system,"Segoe UI",sans-serif;color:#1D2330;max-width:940px;margin:0 auto}'
+      + 'table{border-collapse:collapse;width:100%;font-size:10pt;margin-bottom:14px}'
+      + 'th{background:#2A3580;color:#fff;font-weight:600;text-align:left;padding:6px 9px;font-size:8.5pt;letter-spacing:.06em;text-transform:uppercase;border:1px solid #2A3580}'
+      + 'td{padding:7px 9px;border:1px solid #C9CDD6;vertical-align:top}'
+      + 'h1{margin:0;font-size:17pt;font-weight:700;letter-spacing:-.01em}'
+      + 'h2{margin:22px 0 8px;font-size:11.5pt;font-weight:700;color:#2A3580;page-break-after:avoid}'
+      + 'h3{margin:0 0 6px;font-size:10pt;font-weight:700;page-break-after:avoid}'
+      + 'p{margin:0 0 9px;font-size:10.5pt;line-height:1.6}'
+      + 'ol,ul{margin:0 0 10px;padding-left:20px;font-size:10.5pt;line-height:1.6}li{margin-bottom:5px}'
+      + '.hdr{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;border-bottom:2px solid #2A3580;padding-bottom:12px;margin-bottom:18px}'
+      + '.hdr .co{font-size:8.5pt;line-height:1.55;color:#3A4152;text-align:right}'
+      + '.sub{font-size:9pt;color:#3A4152;margin:2px 0 16px}'
+      + '.ftr{text-align:center;font-size:8pt;color:#9AA0AC;margin-top:14px}'
+      + '@media print{@page{size:A4;margin:14mm}body{padding:0;max-width:none}}</style>';
     const scr = '<' + 'script>window.onload=function(){window.print();};<' + '/script>';
     const logo = (typeof window !== 'undefined' && window.CUBIC_LOGO) ? window.CUBIC_LOGO : '';
-    const logoHtml = logo ? '<img src="' + logo + '" alt="Cubic Construction Management" style="height:64px;width:auto;display:block;margin-bottom:14px">' : '';
-    const html = '<!doctype html><html><head><meta charset="utf-8"><title>Subcontract Agreement — ' + esc(ref) + '</title>' + st + '</head><body>' +
-      logoHtml + '<h1>Subcontractor Agreement</h1><div class="doc-meta">' + esc(orgName) + ' Construction Management · ' + esc(p.name) + ' (' + esc(p.code) + ') · Ref ' + esc(ref) + ' · Status: ' + esc(status) + '</div>' +
-      '<div class="band"><div><div class="lbl" style="color:#7b8b9b">Total agreed value (incl. GST)</div><div class="big total">' + this.money(total) + '</div></div><div style="text-align:right;font-family:Arial,sans-serif;font-size:12px;color:#9aa8b6">Net ' + this.money(net) + ' + GST ' + this.money(tax) + ' (' + taxR + '%)</div></div>' +
-      '<div class="parties"><div><div class="lbl">Head Contractor</div><div style="font-weight:600;font-size:14px">' + esc(orgName) + ' Construction Management</div><div style="font-size:12px;color:#555">accounts@cubiccm.com</div></div>' +
-      '<div><div class="lbl">Subcontractor</div><div style="font-weight:600;font-size:14px">' + esc(vendor ? vendor.company : '—') + '</div><div style="font-size:12px;color:#555">' + esc(vendor ? (vendor.rep + ' · ' + vendor.email) : '') + '</div></div></div>' +
-      '<h3>SCHEDULE 1 — AGREEMENT DETAILS</h3><table class="sched">' +
-      row('Cost code', esc(f.costCode || '—') + (cc ? ' — ' + esc(cc.name) : '')) +
-      row('Agreement value (ex-GST)', this.money(net)) + row('GST / Tax', this.money(tax) + ' (' + taxR + '%)') + row('Total agreed value', this.money(total)) +
-      row('Retainage', esc(f.retainagePct) + '%') + row('Date for commencement', f.start ? esc(this.fmtDate(f.start)) : '—') + row('Date for completion', f.end ? esc(this.fmtDate(f.end)) : '—') +
-      row('Defect liability period', esc(f.defectLiabilityDays) + ' days') + row('Working hours', 'Mon–Fri 7:00–15:30; Sat 7:00–12:30') +
-      '</table>' +
-      '<h3>SCHEDULE 2 — SCOPE OF WORKS</h3>' + scopeBlock('Scope summary', f.scope) + scopeBlock('Inclusions', f.inclusions) + scopeBlock('Exclusions', f.exclusions) +
-      '<h3 style="margin-top:22px">TERMS &amp; CONDITIONS</h3>' + clauseHtml +
-      '<div class="sign"><div>Signed for and on behalf of the Head Contractor<br><br>Name / Date</div><div>Signed for and on behalf of the Subcontractor<br><br>Name / Date</div></div>' +
-      scr + '</body></html>';
+    const logoHtml = logo ? '<img src="' + logo + '" alt="' + esc(coName) + '" style="height:58px;width:auto;display:block">' : '<div style="font-weight:700;font-size:13pt;color:#2A3580">' + esc(coName.toUpperCase()) + '</div>';
+    const html = '<!doctype html><html><head><meta charset="utf-8"><title>Subcontract Agreement — ' + esc(ref) + '</title>' + st + '</head><body>'
+      + '<div class="hdr">' + logoHtml + '<div class="co"><strong>' + esc(coName.toUpperCase()) + '</strong><br>ABN ' + esc(coAbn) + '<br>' + esc(coAddr)
+      + (co.phone ? '<br>' + esc(co.phone) : '') + (co.website ? '<br>' + esc(co.website) : '') + '</div></div>'
+      + '<h1>Subcontract Agreement</h1><div class="sub">Formal Instrument of Agreement &nbsp;·&nbsp; Status: ' + esc(status) + '</div>'
+      // ---- particulars (unique per project / subcontract) ----
+      + '<table>'
+      + row4('Subcontract No.', esc(ref), 'Date of Agreement', esc(this.fmtDate(agDate)))
+      + row2('Project', val(p.name) + (p.code ? ' <span style="color:#5B6272">(' + esc(p.code) + ')</span>' : ''))
+      + row2('Site Address', val(p.address))
+      + row4('Head Contract No.', val(p.code), 'Principal', val(p.client || (p.contract && p.contract.client)))
+      + row2('Trade Package', val(trade))
+      + '</table>'
+      // ---- 1. Parties ----
+      + '<h2>1. Parties</h2><table><thead><tr><th>Contractor</th><th>Subcontractor</th></tr></thead><tbody><tr>'
+      + '<td><strong>' + esc(coName) + '</strong><br>ABN ' + esc(coAbn) + '<br>' + esc(coAddr)
+      + '<br>Contact: ' + val(me.name) + '<br>Email: ' + val(me.email) + '</td>'
+      + '<td>Company: ' + val(vendor && vendor.company) + '<br>ABN: ' + val(vendor && vendor.abn)
+      + '<br>Address: ' + val(vendor && vendor.address) + '<br>Contact: ' + val(vendor && vendor.rep) + '<br>Email: ' + val(vendor && vendor.email) + '</td>'
+      + '</tr></tbody></table>'
+      // ---- 2. Subcontract Works ----
+      + '<h2>2. Subcontract Works</h2>'
+      + '<p>The Subcontractor must carry out and complete the works described below, together with everything necessarily inferred from the Subcontract Documents, in accordance with this Agreement and the Contractor\'s Standard Terms and Conditions annexed at Annexure A.</p>'
+      + '<h3>Scope of Works</h3>' + box(ml([f.scope, f.inclusions].filter(x => x && String(x).trim()).join('\n')))
+      + '<h3 style="margin-top:12px">Exclusions</h3>' + box(ml(f.exclusions))
+      // ---- 3. Commercial Terms ----
+      + '<h2>3. Commercial Terms</h2><table>'
+      + row2('Subcontract Sum (excl. GST)', this.money(net))
+      + row2('GST (' + taxR + '%)', this.money(tax))
+      + row2('Total including GST', '<strong>' + this.money(total) + '</strong>')
+      + row2('Basis of price', 'Lump sum &nbsp;<strong>&#9745;</strong> &nbsp;&nbsp; Schedule of rates &nbsp;&#9744; &nbsp;&nbsp; Do &amp; charge &nbsp;&#9744;')
+      + '</table>'
+      // ---- Schedule 1 particulars referenced throughout Annexure A ----
+      + '<h2>Schedule 1 — Contract Particulars</h2><table>'
+      + row4('Date for Commencement', f.start ? esc(this.fmtDate(f.start)) : blank, 'Date for Completion', f.end ? esc(this.fmtDate(f.end)) : blank)
+      + row4('Retention', (f.retainagePct != null && String(f.retainagePct).trim()) ? esc(f.retainagePct) + '%' : blank, 'Defects Liability Period', (f.defectLiabilityDays != null && String(f.defectLiabilityDays).trim()) ? esc(f.defectLiabilityDays) + ' days' : blank)
+      + row4('Cost Code', val(f.costCode) + (cc ? ' — ' + esc(cc.name) : ''), 'Working Hours', 'Mon–Fri 7:00am–3:30pm; Sat 7:00am–12:30pm')
+      + '</table>'
+      // ---- 4. Subcontract Documents (standard) ----
+      + '<h2>4. Subcontract Documents</h2>'
+      + '<p>This Agreement comprises the documents listed below. Where there is any inconsistency, they take precedence in the order listed.</p>'
+      + '<ol><li>This Formal Instrument of Agreement, including the particulars above.</li>'
+      + '<li>Annexure A: ' + esc(coName) + ' Standard Terms and Conditions of Subcontract.</li>'
+      + '<li>Any other document expressly incorporated in writing by the Contractor.</li></ol>'
+      + '<p>The Subcontractor acknowledges that it has read Annexure A, that this Subcontract is back-to-back with the Head Contract to the extent applicable to the Subcontract Works, and that no other terms — including any terms on the Subcontractor\'s quotation, order acknowledgement or invoice — form part of this Agreement.</p>'
+      // ---- 7. Special Conditions (project-specific) ----
+      + '<h2>7. Special Conditions</h2>' + box(specialHtml)
+      // ---- 8. Execution ----
+      + '<h2>8. Execution</h2>'
+      + '<p>Executed as an agreement on the date first written above. Each signatory warrants that they are authorised to execute this Agreement on behalf of the party for whom they sign.</p>'
+      + '<table><thead><tr><th>Signed for the Contractor</th><th>Signed for the Subcontractor</th></tr></thead><tbody><tr>'
+      + '<td style="font-size:9.5pt">Signature:<div style="height:52px;border:1px solid #C9CDD6;margin:2px 0 6px"></div>Full name: ' + val(me.name) + '<br>Position: ' + val(me.title) + '<br>Date: ____ / ____ / 20____</td>'
+      + '<td style="font-size:9.5pt">Signature:<div style="height:52px;border:1px solid #C9CDD6;margin:2px 0 6px"></div>Full name: ' + val(vendor && vendor.rep) + '<br>Position: ____________________<br>Date: ____ / ____ / 20____</td>'
+      + '</tr><tr><td colspan="2" style="font-size:8.5pt;color:#5B6272">If either party is a company (ACN), this Agreement should be executed in accordance with section 127 of the Corporations Act 2001 (Cth) — signed by two directors, or a director and a company secretary.</td></tr></tbody></table>'
+      + '<div class="ftr">' + esc(ref) + ' &nbsp;·&nbsp; ' + esc(p.name) + ' &nbsp;·&nbsp; Commercial in confidence</div>'
+      // ---- Annexure A — standard terms, identical for every project ----
+      + termsHtml
+      + scr + '</body></html>';
     const w = window.open('', '_blank');
     if (!w) { alert('Please allow pop-ups to preview the agreement.'); return; }
     w.document.open(); w.document.write(html); w.document.close();
@@ -5044,7 +5116,7 @@ class Component extends DCLogic {
   }
   lineActualPaid(l, p) { const proj = p || this.proj(this.state.pid) || {}; return (proj.bills || []).filter(b => b.code && b.code === l.code).reduce((s, b) => s + (Number(b.paid) || 0), 0); }
   onBillVendor(id, val) {
-    if (val === '__new__') { this.setState({ vendorModal: { billId: id }, vendorForm: { type: 'supplier', company: '', rep: '', phone: '', email: '', address: '' } }); return; }
+    if (val === '__new__') { this.setState({ vendorModal: { billId: id }, vendorForm: { type: 'supplier', company: '', rep: '', abn: '', phone: '', email: '', address: '' } }); return; }
     this.setBillField(id, 'vendorId', val);
   }
   setVendorForm(k, v) { this.setState(s => ({ vendorForm: { ...s.vendorForm, [k]: v } })); }
@@ -5053,7 +5125,7 @@ class Component extends DCLogic {
     const { vendorModal, vendorForm } = this.state;
     if (!vendorModal || !vendorForm.company.trim()) return;
     const id = 'v' + Date.now();
-    const vendor = { id, type: vendorForm.type, company: vendorForm.company.trim(), rep: vendorForm.rep.trim(), phone: vendorForm.phone.trim(), email: vendorForm.email.trim(), address: vendorForm.address.trim() };
+    const vendor = { id, type: vendorForm.type, company: vendorForm.company.trim(), rep: vendorForm.rep.trim(), abn: (vendorForm.abn || '').trim(), phone: vendorForm.phone.trim(), email: vendorForm.email.trim(), address: vendorForm.address.trim() };
     const nextVendors = [...(this.state.vendors || []), vendor]; this._saveVendors(nextVendors);
     this.setState(s => ({
       vendors: nextVendors,
@@ -7333,7 +7405,7 @@ class Component extends DCLogic {
       vendorModal: S.vendorModal ? { open: true, ...S.vendorForm } : { open: false },
       onVendorType: (e) => this.setVendorForm('type', e.target.value), onVendorCompany: (e) => this.setVendorForm('company', e.target.value),
       onVendorRep: (e) => this.setVendorForm('rep', e.target.value), onVendorPhone: (e) => this.setVendorForm('phone', e.target.value),
-      onVendorEmail: (e) => this.setVendorForm('email', e.target.value), onVendorAddress: (e) => this.setVendorForm('address', e.target.value),
+      onVendorEmail: (e) => this.setVendorForm('email', e.target.value), onVendorAddress: (e) => this.setVendorForm('address', e.target.value), onVendorAbn: (e) => this.setVendorForm('abn', e.target.value),
       onCloseVendorModal: () => this.closeVendorModal(), onSaveVendor: () => this.saveVendor(),
       pageTitle, pageSub, crumb1, crumb2, pageStatus, primaryAction, kpis, hasKpis: kpis.length > 0,
       statusFilters, portfolioRows, totals, dashModules,
