@@ -3295,8 +3295,14 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
             <sc-if value="{{ shareModalV.noRecipients }}" hint-placeholder-val="{{ false }}">
               <div style="font-size:12px;color:#b45309;background:#fbf1e3;border:1px solid #eddcc0;border-radius:8px;padding:8px 11px;margin-bottom:8px">Add at least one email address to send.</div>
             </sc-if>
+            <sc-if value="{{ shareModalV.hasContactPicks }}" hint-placeholder-val="{{ true }}">
+              <select value="" onChange="{{ shareModalV.onPickContact }}" title="Add someone from this project's contacts" style="width:100%;margin-bottom:8px;border:1px solid #cfd8e2;border-radius:8px;padding:8px 10px;font-size:12.5px;font-family:inherit;color:#4a5765;background:#fff;cursor:pointer" style-focus="border-color:#2b59c3;outline:none">
+                <option value="">＋ Add from project contacts…</option>
+                <sc-for list="{{ shareModalV.contactPicks }}" as="c" hint-placeholder-count="4"><option value="{{ c.email }}">{{ c.label }}</option></sc-for>
+              </select>
+            </sc-if>
             <div style="display:flex;gap:8px">
-              <input value="{{ shareModalV.newEmail }}" onInput="{{ shareModalV.onNewEmail }}" type="email" placeholder="Add another email…" style="flex:1;min-width:0;border:1px solid #cfd8e2;border-radius:8px;padding:8px 10px;font-size:12.5px;font-family:inherit" style-focus="border-color:#2b59c3;outline:none">
+              <input value="{{ shareModalV.newEmail }}" onInput="{{ shareModalV.onNewEmail }}" type="email" placeholder="…or type any other email" style="flex:1;min-width:0;border:1px solid #cfd8e2;border-radius:8px;padding:8px 10px;font-size:12.5px;font-family:inherit" style-focus="border-color:#2b59c3;outline:none">
               <button onClick="{{ shareModalV.onAddEmail }}" style="border:1px solid #cfd8e2;background:#fff;color:#2b59c3;border-radius:8px;padding:8px 13px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap" style-hover="border-color:#2b59c3">＋ Add</button>
             </div>
           </div>
@@ -4033,6 +4039,36 @@ class Component extends DCLogic {
       const arr = raw ? JSON.parse(raw) : null;
       return (Array.isArray(arr) && arr.length) ? arr : this.seedVendors();
     } catch (e) { return this.seedVendors(); }
+  }
+  // ===== Outgoing email =====
+  // Delivery goes through the Supabase Edge Function 'send-email', which holds the mail-provider
+  // API key server-side (a key in this file would be public — the app is a static site).
+  // Until that function is deployed, fall back to the user's own mail client via mailto:.
+  _mailtoUrl(to, subject, body) {
+    const enc = encodeURIComponent;
+    const q = [];
+    if (subject) q.push('subject=' + enc(subject));
+    if (body) q.push('body=' + enc(body));
+    return 'mailto:' + (to || []).join(',') + (q.length ? '?' + q.join('&') : '');
+  }
+  _openMailClient(to, subject, body) {
+    try {
+      const a = document.createElement('a');
+      a.href = this._mailtoUrl(to, subject, body);
+      a.style.display = 'none';
+      document.body.appendChild(a); a.click();
+      setTimeout(() => { try { a.remove(); } catch (e) {} }, 0);
+      return true;
+    } catch (e) { return false; }
+  }
+  // payload: { to:[], subject, text, attachments:[{name,url}] } → resolves { ok, via }
+  _sendEmailNow(payload) {
+    const c = this._SB;
+    const fallback = () => { const opened = this._openMailClient(payload.to, payload.subject, payload.text); return Promise.resolve({ ok: opened, via: 'mail client' }); };
+    if (!c || !c.url || typeof fetch === 'undefined') return fallback();
+    return fetch(c.url + '/functions/v1/send-email', {
+      method: 'POST', headers: this._sbHeaders({ 'Content-Type': 'application/json' }), body: JSON.stringify(payload),
+    }).then(r => (r.ok ? { ok: true, via: 'server' } : fallback())).catch(() => fallback());
   }
   // Open a generated document in a new tab. Uses a blob URL so the tab/print footer shows the
   // document instead of "about:blank" (document.write on a blank window leaves it URL-less).
@@ -5051,6 +5087,15 @@ class Component extends DCLogic {
     });
   }
   removeShareEmail(email) { this.setState(s => (s.shareForm ? { shareForm: { ...s.shareForm, recipients: (s.shareForm.recipients || []).filter(x => x !== email) } } : {})); }
+  addShareRecipient(email) {
+    if (!email) return;
+    this.setState(s => {
+      if (!s.shareForm) return {};
+      const cur = s.shareForm.recipients || [];
+      if (cur.indexOf(email) >= 0) return {};
+      return { shareForm: { ...s.shareForm, recipients: [...cur, email] } };
+    });
+  }
   confirmShare() {
     const { shareModal, shareForm: sf, subForm: f } = this.state; if (!shareModal) return;
     const recips = (sf.recipients || []).filter(Boolean);
@@ -5060,6 +5105,17 @@ class Component extends DCLogic {
     if (!chans.length) return;
     const to = (sf.viaEmail && recips.length) ? recips[0] : sf.phone;
     const atts = ['Agreement PDF'].concat(sf.attachQuote ? ['Quote'] : []);
+    // actually send it (server function if deployed, otherwise the user's mail client)
+    if (sf.viaEmail && recips.length) {
+      const cmSend = (this.proj(this.state.pid).commitments || []).find(c => c.id === shareModal.cmId);
+      const agrSend = cmSend ? this.getAgr(cmSend) : {};
+      const qUrl = (f && f.quoteUrl) || agrSend.quoteUrl || '';
+      const qName = (f && f.quote) || agrSend.quote || 'Quote';
+      this._sendEmailNow({
+        to: recips, subject: sf.subject || '', text: sf.message || '',
+        attachments: (sf.attachQuote && qUrl) ? [{ name: qName, url: qUrl }] : [],
+      });
+    }
     const note = (sf.message || '').trim() ? ' — “' + String(sf.message).trim().replace(/\s+/g, ' ').slice(0, 140) + '”' : '';
     const msg = 'Sent for e-signature via ' + chans.join(' & ') + ' · attached: ' + atts.join(' + ') + note;
     const cmId = shareModal.cmId; const persist = shareModal.fromModal && f;
@@ -7291,10 +7347,20 @@ class Component extends DCLogic {
         const quoteUrl = (S.subForm && S.shareModal.fromModal) ? S.subForm.quoteUrl : agrS.quoteUrl;
         const chk = on => on ? 'width:17px;height:17px;border-radius:5px;background:#2b59c3;border:1px solid #2b59c3;color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:11px;flex:0 0 auto'
                             : 'width:17px;height:17px;border-radius:5px;background:#fff;border:1.5px solid #c3ccd8;color:transparent;display:inline-flex;align-items:center;justify-content:center;font-size:11px;flex:0 0 auto';
+        // pick extra recipients from this project's people — customers, client reps, team, and its vendors
+        const _seenC = {}; recips.forEach(e => { _seenC[e] = 1; });
+        const contactPicks = [];
+        this.projectContacts(p).forEach(c => { if (c.email && !_seenC[c.email]) { _seenC[c.email] = 1; contactPicks.push({ email: c.email, label: (c.name || c.email) + ' — ' + c.email + (c.sub ? ' · ' + c.sub : '') }); } });
+        (p.commitments || []).forEach(k => {
+          const v = (S.vendors || []).find(x => x.company === k.vendor);
+          if (v && v.email && !_seenC[v.email]) { _seenC[v.email] = 1; contactPicks.push({ email: v.email, label: (v.rep || v.company) + ' — ' + v.email + ' · ' + v.company }); }
+        });
         shareModalV = {
           open: true, vendor: cm.vendor, ref: cm.ref, viaEmail: sf.viaEmail, viaSms: sf.viaSms, phone: sf.phone,
           from: sf.from || '', subject: sf.subject || '', message: sf.message || '', newEmail: sf.newEmail || '',
           recipients: recips.map(e => ({ email: e, onRemove: () => this.removeShareEmail(e) })),
+          contactPicks, hasContactPicks: contactPicks.length > 0,
+          onPickContact: e => { const v = e.target.value; e.target.value = ''; this.addShareRecipient(v); },
           recipientCount: String(recips.length), hasRecipients: recips.length > 0, noRecipients: recips.length === 0,
           emailBg: sf.viaEmail ? '#f2f6fd' : '#fff', emailBorder: sf.viaEmail ? '#2b59c3' : '#cfd8e2',
           smsBg: sf.viaSms ? '#f2f6fd' : '#fff', smsBorder: sf.viaSms ? '#2b59c3' : '#cfd8e2',
