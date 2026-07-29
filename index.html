@@ -5515,39 +5515,142 @@ class Component extends DCLogic {
     const msg = record.message ? ' — “' + record.message + '”' : '';
     this.setState(s => ({ projects: s.projects.map(x => x.id !== s.pid ? x : { ...x, clientInvoiced: inv, clientInvoiceNo: no, senderEmail: sc.from || x.senderEmail, invoices: [...(x.invoices || []), record], clientInvoiceSentAt: noStr + ' sent to ' + recips.length + ' recipient(s): ' + recips.join(', ') + ' on ' + today + ' · due ' + this.fmtDate(due) + msg }), invoiceSend: null }));
   }
-  previewInvoicePdf() {
+  // ---- Tax Invoice / Progress Payment Claim (approved CCM template) ----
+  // Builds every figure for either the draft (no id) or an already-issued invoice (by id).
+  _invoiceModel(p, invoiceId) {
+    const issued = invoiceId ? (p.invoices || []).find(x => x.id === invoiceId) : null;
+    const gst = issued ? this._num(issued.gstRate) : this._num(p.gstRate);
+    const prog = p.clientProgress || {}, invd = p.clientInvoiced || {};
+    const rows = []; let claim = 0;
+    if (issued) {
+      const ln = issued.lines || {};
+      (p.costLines || []).forEach(l => {
+        const amt = this._num(ln[l.code]); if (amt <= 0.005) return;
+        const B = this.lineCurrent(l, p);
+        rows.push({ code: l.code, desc: l.desc, budget: B, pct: B > 0 ? Math.round((amt / B) * 100) : 0, prior: Math.max(0, this._num(invd[l.code]) - amt), amount: amt });
+        claim += amt;
+      });
+      if (!rows.length) { rows.push({ code: '', desc: 'Progress claim', budget: this._num(issued.amount), pct: 100, prior: 0, amount: this._num(issued.amount) }); claim = this._num(issued.amount); }
+    } else {
+      (p.costLines || []).forEach(l => {
+        const B = this.lineCurrent(l, p); const raw = prog[l.code];
+        const pct = (raw == null || raw === '') ? 0 : this._num(raw);
+        const toDate = B * pct / 100; const PI = this._num(invd[l.code]);
+        const tc = this.clientLineSelected(p, l.code) ? Math.max(0, toDate - PI) : 0;
+        if (tc > 0.005) { rows.push({ code: l.code, desc: l.desc, budget: B, pct, prior: PI, amount: tc }); claim += tc; }
+      });
+    }
+    const ex = (issued && issued.extra) ? issued.extra : {};
+    const retPct = this._num(ex.retentionPct != null ? ex.retentionPct : ((p.contract && p.contract.retentionPct) || 0));
+    const back = this._num(ex.backCharges);
+    const retAmt = claim * retPct / 100;
+    const net = Math.max(0, claim - retAmt - back);
+    const gstAmt = net * gst / 100;
+    const total = net + gstAmt;
+    const nextNo = 'INV-' + String((Number(p.clientInvoiceNo) || 0) + 1).padStart(3, '0');
+    const date = issued ? (issued.date || this.todayLocal()) : this.todayLocal();
+    const due = issued ? (issued.dueDate || this.addDays(date, this._termDays())) : this.addDays(date, this._termDays());
+    const vars = ((p.contract && p.contract.variations) || []).filter(v => v.status === 'approved');
+    return {
+      issued, no: issued ? issued.no : nextNo, rev: this._num(ex.rev),
+      claimNo: ex.claimNo || String((p.invoices || []).length + (issued ? 0 : 1)),
+      claimOf: ex.claimOf || '', po: ex.po || '', refDate: ex.refDate || date,
+      periodFrom: ex.periodFrom || '', periodTo: ex.periodTo || date,
+      notes: ex.notes || '', date, due, rows, claim, retPct, retAmt, back, net, gst, gstAmt, total,
+      vars, varTotal: vars.reduce((a, v) => a + this._num(v.value), 0),
+      termDays: this._termDays(),
+    };
+  }
+  previewInvoicePdf(invoiceId) {
     const p = this.proj(this.state.pid); if (!p) return;
+    const m = this._invoiceModel(p, invoiceId);
     const esc = x => String(x == null ? '' : x).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-    const gst = Number(p.gstRate) || 0; const prog = p.clientProgress || {}; const invd = p.clientInvoiced || {};
-    let claim = 0; const rows = [];
-    (p.costLines || []).forEach(l => {
-      const B = this.lineCurrent(l, p); const raw = prog[l.code]; const pct = raw == null || raw === '' ? 0 : Number(raw) || 0;
-      const toDate = B * pct / 100; const PI = Number(invd[l.code]) || 0; const sel = this.clientLineSelected(p, l.code); const tc = sel ? Math.max(0, toDate - PI) : 0;
-      if (tc > 0.005) { claim += tc; rows.push('<tr><td>' + esc(l.code) + '</td><td>' + esc(l.desc) + '</td><td class="r">' + esc(this.money(B)) + '</td><td class="r">' + pct + '%</td><td class="r">' + esc(this.money(PI)) + '</td><td class="r b">' + esc(this.money(tc)) + '</td></tr>'); }
-    });
-    const gstAmt = claim * gst / 100; const total = claim + gstAmt; const no = 'INV-' + String((Number(p.clientInvoiceNo) || 0) + 1).padStart(3, '0');
-    const msgRaw = (this.state.invoiceSend && (this.state.invoiceSend.message || '').trim()) || '';
-    const msgHtml = msgRaw ? '<div style="margin-top:22px;border:1px solid #e4e8ee;border-radius:8px;padding:12px 14px;background:#fafbfc"><div class="lbl">Message</div><div style="font-size:12.5px;line-height:1.6;white-space:pre-wrap">' + esc(msgRaw) + '</div></div>' : '';
-    const cust = (p.customers && p.customers[0]) || null; const billed = cust ? (cust.company || cust.name || p.client) : p.client;
-    const billLines = cust ? [cust.name, cust.company, cust.email].filter(Boolean).map(esc).join('<br>') : esc(p.client);
-    const isoToday = this.todayLocal();
-    const today = new Date().toLocaleDateString('en-GB', { year: 'numeric', month: 'long', day: 'numeric' });
-    const dueFmt = new Date(this.addDays(isoToday, 15) + 'T00:00:00').toLocaleDateString('en-GB', { year: 'numeric', month: 'long', day: 'numeric' });
+    const blank = '<span style="color:#9AA0AC">____________________</span>';
+    const val = x => (x != null && String(x).trim()) ? esc(x) : blank;
+    const dt = iso => iso ? esc(this.fmtDate(iso)) : blank;
+    const co = this.state.company || {};
+    const coName = (co.name || '').trim() || 'Cubic Construction Management';
+    const coAbn = (co.abn || '').trim() || '32 161 357 142';
+    const coAddr = [co.street, co.city, co.state, co.zip].map(x => String(x == null ? '' : x).trim().replace(/^,+|,+$/g, '').trim()).filter(Boolean).join(', ') || 'Unit 3, 5 Bessemer Street, Blacktown NSW 2148';
+    const cust = (p.customers && p.customers[0]) || null;
+    const sup = ((p.clientReps || []).find(r => /superintend/i.test(r.role || '')) || (p.clientReps || [])[0] || null);
     const logo = (typeof window !== 'undefined' && window.CUBIC_LOGO) ? window.CUBIC_LOGO : '';
-    const logoHtml = logo ? '<img src="' + logo + '" style="height:52px">' : '<div style="font-weight:700;font-size:22px;color:#1d4ed8">CUBIC</div>';
-    const st = '<style>body{font-family:Arial,Helvetica,sans-serif;color:#0f1720;margin:34px}.top{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #0f1a24;padding-bottom:16px;margin-bottom:20px}.tt{font-size:26px;font-weight:800;letter-spacing:1px;color:#0f1a24}.meta{font-size:12px;color:#4a5765;text-align:right;line-height:1.7}.grid{display:flex;gap:40px;margin-bottom:20px}.lbl{font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:#8894a2;margin-bottom:4px}.val{font-size:13px;line-height:1.6}table{border-collapse:collapse;width:100%;margin-top:6px}th{background:#0f1a24;color:#fff;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.4px;padding:8px 9px}td{padding:7px 9px;border-bottom:1px solid #e4e8ee;font-size:12px}.r{text-align:right;font-variant-numeric:tabular-nums}.b{font-weight:700}.tot{margin-top:16px;margin-left:auto;width:300px}.tot .row{display:flex;justify-content:space-between;padding:5px 0;font-size:13px}.tot .grand{border-top:2px solid #0f1a24;margin-top:6px;padding-top:9px;font-weight:800;font-size:15px;color:#1d4ed8}.pbtn{position:fixed;top:16px;right:16px;background:#2b59c3;color:#fff;border:0;border-radius:8px;padding:10px 16px;font-size:13px;font-weight:600;cursor:pointer}@media print{.pbtn{display:none}@page{size:A4;margin:14mm}}</style>';
-    const totBlock = '<div class="tot"><div class="row"><span>This claim (excl. GST)</span><span class="r">' + esc(this.money(claim)) + '</span></div><div class="row"><span>GST (' + gst + '%)</span><span class="r">' + esc(this.money(gstAmt)) + '</span></div><div class="row grand"><span>Total due</span><span class="r">' + esc(this.money(total)) + '</span></div></div>';
-    const html = '<!doctype html><html><head><meta charset="utf-8"><title>' + no + ' — ' + esc(p.name) + '</title>' + st + '</head><body>' +
-      '<button class="pbtn" onclick="window.print()">🖨 Print / Save as PDF</button>' +
-      '<div class="top"><div>' + logoHtml + '<div style="font-size:11px;color:#8894a2;margin-top:6px">Cubic Construction Management</div></div><div><div class="tt">TAX INVOICE</div><div class="meta"><strong>' + no + '</strong><br>Date: ' + today + '<br><strong style="color:#0f1720">Due: ' + dueFmt + '</strong><br>Project: ' + esc(p.name) + ' (' + esc(p.code) + ')</div></div></div>' +
-      '<div class="grid"><div><div class="lbl">Billed to</div><div class="val">' + billLines + '</div></div><div><div class="lbl">Project</div><div class="val">' + esc(p.name) + '<br>' + esc(p.address || '') + '</div></div></div>' +
-      '<div class="lbl">Progress payment claim — works completed this period</div>' +
-      '<table><thead><tr><th>Cost code</th><th>Description</th><th class="r">Approved budget</th><th class="r">Progress</th><th class="r">Prev. invoiced</th><th class="r">This claim</th></tr></thead><tbody>' + (rows.join('') || '<tr><td colspan="6" style="color:#8894a2">No lines selected to claim.</td></tr>') + '</tbody></table>' +
-      totBlock + '<div style="clear:both"></div>' + msgHtml +
-      '<div style="margin-top:22px;border:1px dashed #cfd8e2;border-radius:8px;padding:14px 16px"><div class="lbl">Payment details</div><div style="font-size:12px;color:#b0b8c2;font-style:italic;line-height:1.7">[ Company payment details to be added here — bank name, BSB, account number, PayID / reference. Space reserved. ]</div></div>' +
-      '<div style="margin-top:16px;font-size:12px;color:#4a5765;background:#f2f6fd;border:1px solid #d3e0f7;border-radius:8px;padding:11px 14px"><strong>Payment due by ' + dueFmt + '</strong> (15 days from invoice date). Pay online via the link in the accompanying email.</div>' +
-      '<div style="margin-top:30px;font-size:11px;color:#8894a2;border-top:1px solid #e4e8ee;padding-top:12px">This is a progress payment claim rendered for preview. Amounts are GST-inclusive where shown. Cubic Construction Management · ivan@cubiccm.com</div>' +
-      '</body></html>';
+    const logoHtml = logo ? '<img src="' + logo + '" alt="' + esc(coName) + '" style="height:56px;width:auto;display:block">' : '<div style="font-weight:700;font-size:13pt;color:#2A3580">' + esc(coName.toUpperCase()) + '</div>';
+    const cellK = 'style="width:22%;background:#F4F5F8;font-weight:600"';
+    const r2 = (k, v) => '<tr><td ' + cellK + '>' + esc(k) + '</td><td colspan="3">' + v + '</td></tr>';
+    const r4 = (k1, v1, k2, v2) => '<tr><td ' + cellK + '>' + esc(k1) + '</td><td style="width:28%">' + v1 + '</td><td ' + cellK + '>' + esc(k2) + '</td><td>' + v2 + '</td></tr>';
+    const money = n => esc(this.money(n));
+    const workRows = m.rows.map((r, i) => '<tr>'
+      + '<td style="text-align:center">' + (i + 1) + '</td>'
+      + '<td>' + esc(r.code ? r.code + ' - ' + (r.desc || '') : (r.desc || '')) + '</td>'
+      + '<td style="text-align:right">' + money(r.budget) + '</td>'
+      + '<td style="text-align:right">' + r.pct + '%</td>'
+      + '<td style="text-align:right">' + money(r.budget * r.pct / 100) + '</td>'
+      + '<td style="text-align:right">' + money(r.prior) + '</td>'
+      + '<td style="text-align:right;font-weight:700">' + money(r.amount) + '</td>'
+      + '</tr>').join('') || '<tr><td colspan="7" style="text-align:center;color:#9AA0AC">No work claimed this period</td></tr>';
+    const varRows = m.vars.length
+      ? m.vars.map(v => '<tr><td>' + esc(v.ref) + '</td><td>' + esc(v.desc || '') + '</td><td style="text-align:right">' + money(this._num(v.value)) + '</td></tr>').join('')
+        + '<tr><td colspan="2" style="text-align:right;font-weight:700;background:#F4F5F8">Total variations</td><td style="text-align:right;font-weight:700;background:#F4F5F8">' + money(m.varTotal) + '</td></tr>'
+      : '<tr><td colspan="3" style="text-align:center;color:#9AA0AC">No approved variations</td></tr>';
+    const sumRow = (k, v, strong, red) => '<tr><td ' + cellK + '>' + esc(k) + '</td><td style="text-align:right' + (strong ? ';font-weight:700;font-size:11.5pt' : '') + (red ? ';color:#8a1c1c' : '') + '">' + v + '</td></tr>';
+    const st = '<style>*{box-sizing:border-box}'
+      + 'body{margin:0;padding:44px 50px;font-family:Archivo,system-ui,-apple-system,"Segoe UI",sans-serif;color:#1D2330;max-width:960px;margin:0 auto}'
+      + 'table{border-collapse:collapse;width:100%;font-size:9.5pt;margin-bottom:14px}'
+      + 'th{background:#2A3580;color:#fff;font-weight:600;text-align:left;padding:6px 8px;font-size:8pt;letter-spacing:.05em;text-transform:uppercase;border:1px solid #2A3580}'
+      + 'td{padding:6px 8px;border:1px solid #C9CDD6;vertical-align:top}'
+      + 'h1{margin:0;font-size:20pt;font-weight:700;letter-spacing:-.01em}'
+      + 'h2{margin:20px 0 7px;font-size:10.5pt;font-weight:700;color:#2A3580;text-transform:uppercase;letter-spacing:.07em;page-break-after:avoid}'
+      + '.sub{font-size:9pt;letter-spacing:.14em;text-transform:uppercase;color:#6E7480;font-weight:600;margin:0 0 14px}'
+      + '.hdr{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;border-bottom:2px solid #2A3580;padding-bottom:11px;margin-bottom:16px}'
+      + '.co{font-size:8.5pt;line-height:1.55;color:#3A4152;text-align:right}'
+      + '.band{display:flex;justify-content:space-between;align-items:center;gap:18px;background:#2A3580;color:#fff;border-radius:8px;padding:14px 18px;margin-bottom:16px}'
+      + '.band .big{font-size:22pt;font-weight:700;letter-spacing:-.5px}'
+      + '.ftr{text-align:center;font-size:8pt;color:#9AA0AC;margin-top:14px}'
+      + '@media print{@page{size:A4;margin:12mm}body{padding:0;max-width:none}}</style>';
+    const scr = '<' + 'script>window.onload=function(){window.print();};<' + '/script>';
+    const html = '<!doctype html><html><head><meta charset="utf-8"><title>' + esc(m.no) + ' - ' + esc(p.name) + '</title>' + st + '</head><body>'
+      + '<div class="hdr">' + logoHtml + '<div class="co"><strong>' + esc(coName.toUpperCase()) + '</strong><br>ABN ' + esc(coAbn) + '<br>' + esc(coAddr)
+      + (co.phone ? '<br>' + esc(co.phone) : '') + '<br>accounts@cubiccm.com' + (co.website ? '<br>' + esc(co.website) : '') + '</div></div>'
+      + '<h1>Tax Invoice</h1><div class="sub">Progress Payment Claim</div>'
+      + '<div class="band"><div><div style="font-size:8.5pt;letter-spacing:.5px;text-transform:uppercase;color:#B9C0E8">Amount payable (incl. GST)</div><div class="big">' + money(m.total) + '</div></div>'
+      + '<div style="text-align:right"><div style="font-size:8.5pt;letter-spacing:.5px;text-transform:uppercase;color:#B9C0E8">Due date</div><div style="font-size:12pt;font-weight:600">' + dt(m.due) + '</div></div></div>'
+      + '<table>'
+      + r4('Invoice No.', esc(m.no) + (m.rev ? ' <span style="color:#6E7480">Rev ' + m.rev + '</span>' : ''), 'Claim No.', val(m.claimNo) + (m.claimOf ? ' of ' + esc(m.claimOf) : ''))
+      + r4('Invoice date', dt(m.date), 'Reference date', dt(m.refDate))
+      + r2('Project', val(p.name) + (p.code ? ' <span style="color:#5B6272">(' + esc(p.code) + ')</span>' : ''))
+      + r4('Contract No.', val(p.code), 'Purchase order', val(m.po))
+      + r2('Claim period', (m.periodFrom ? dt(m.periodFrom) : blank) + ' &nbsp;to&nbsp; ' + dt(m.periodTo))
+      + '</table>'
+      + '<table><thead><tr><th>Invoice to</th><th>Deliver / site address</th></tr></thead><tbody><tr>'
+      + '<td>Company: ' + val(cust && (cust.company || cust.name)) + '<br>ABN: ' + val(cust && cust.abn)
+      + '<br>Attention: ' + val(cust && cust.name) + '<br>Address: ' + val((cust && cust.address) || p.address) + '<br>Email: ' + val(cust && cust.email) + '</td>'
+      + '<td>Project: ' + val(p.name) + '<br>Site: ' + val(p.address)
+      + '<br>Superintendent: ' + val(sup && sup.name) + '<br>Email: ' + val(sup && sup.email) + '</td>'
+      + '</tr></tbody></table>'
+      + '<h2>Work completed this claim</h2>'
+      + '<table><thead><tr><th style="width:34px;text-align:center">Item</th><th>Description</th><th style="text-align:right">Contract value</th><th style="text-align:right">% compl.</th><th style="text-align:right">Value to date</th><th style="text-align:right">Prev. claimed</th><th style="text-align:right">This claim</th></tr></thead>'
+      + '<tbody>' + workRows
+      + '<tr><td colspan="6" style="text-align:right;font-weight:700;background:#F4F5F8">Subtotal - work claimed this period (excl. GST)</td><td style="text-align:right;font-weight:700;background:#F4F5F8">' + money(m.claim) + '</td></tr>'
+      + '</tbody></table>'
+      + '<h2>Approved variations included</h2>'
+      + '<table><thead><tr><th style="width:90px">VO No.</th><th>Description</th><th style="text-align:right;width:130px">Value</th></tr></thead><tbody>' + varRows + '</tbody></table>'
+      + '<h2>Summary</h2><table style="width:60%;margin-left:auto">'
+      + sumRow('Work claimed this period', money(m.claim))
+      + sumRow('Less retention ' + m.retPct + '%', '(' + money(m.retAmt) + ')', false, true)
+      + sumRow('Less back charges / deductions', '(' + money(m.back) + ')', false, true)
+      + sumRow('Net amount (excl. GST)', money(m.net))
+      + sumRow('GST ' + m.gst + '%', money(m.gstAmt))
+      + sumRow('Total payable (incl. GST)', money(m.total), true)
+      + '</table>'
+      + (m.notes ? '<h2>Notes</h2><div style="border:1px solid #C9CDD6;border-radius:6px;padding:10px 12px;font-size:9.5pt;line-height:1.6;white-space:pre-wrap">' + esc(m.notes) + '</div>' : '')
+      + '<table style="margin-top:6px"><thead><tr><th>Payment details</th><th>Statutory notice</th></tr></thead><tbody><tr>'
+      + '<td style="width:50%;font-size:9pt;line-height:1.7">Account name: ' + esc(coName) + '<br>BSB: ' + val(co.bsb) + ' &nbsp; Account: ' + val(co.bankAccount)
+      + '<br>Reference: <strong>' + esc(m.no) + '</strong><br>Payment terms: ' + m.termDays + ' days from reference date</td>'
+      + '<td style="font-size:8.5pt;line-height:1.6;color:#3A4152">This is a payment claim made under the Building and Construction Industry Security of Payment Act applicable in the State or Territory in which the works are carried out. A payment schedule must be provided within the statutory period.</td>'
+      + '</tr></tbody></table>'
+      + '<div class="ftr">Tax Invoice / Payment Claim &nbsp;&middot;&nbsp; Ref ' + esc(m.no) + ' &nbsp;&middot;&nbsp; Rev ' + m.rev + ' &nbsp;&middot;&nbsp; ' + esc(p.name) + '</div>'
+      + scr + '</body></html>';
     this._openPrintDoc(html, 'invoice PDF');
   }
   canEditPeople() { return this.can('projectSetup', 'edit') || this.can('directory', 'edit'); }
