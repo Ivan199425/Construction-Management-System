@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  body { margin:0; font-family:Archivo, system-ui, sans-serif; color:#1D2330; }
+  doc-page:not(:defined) { visibility:hidden; }
+  a { color:#2A3580; } a:hover { color:#1A2360; }
+  table { border-collapse:collapse; width:100%; font-size:10pt; }
+  th { background:#2A3580; color:#fff; font-weight:600; text-align:left; padding:6px 9px; font-size:8.5pt; letter-spacing:0.06em; text-transform:uppercase; border:1px solid #2A3580; }
+  td { padding:7px 9px; border:1px solid #C9CDD6; vertical-align:top; }
+  h1, h2 { margin:0; }
+  p { margin:0 0 9px; font-size:10pt; line-height:1.6; }
+  ol { margin:0 0 10px; padding-left:20px; font-size:10pt; line-height:1.6; }
+</style>
+<script src="./doc-page.js"></script>
+</helmet>
+
+<doc-page size="a4" margin="0.6in" style="--doc-hdr-h:1.15in; --doc-ftr-h:0.42in">
+
+  <div slot="header" style="display:flex; align-items:flex-end; justify-content:space-between; gap:24px; padding-bottom:8px; border-bottom:2px solid #2A3580; margin-bottom:18px;">
+    <img src="uploads/CCM%20SIDE%20BLUE.png" alt="Cubic Construction Management" style="width:152px; height:auto; display:block;">
+    <div style="text-align:right; font-size:7.5pt; line-height:1.5; color:#6E7480;">
+      <div style="font-size:8pt; font-weight:600; color:#2A3580; letter-spacing:0.02em; white-space:nowrap; margin-bottom:2px;">CUBIC CONSTRUCTION MANAGEMENT</div>
+      <div>ABN 32 161 357 142</div>
+      <div>Unit 3, 5 Bessemer Street, Blacktown NSW 2148</div>
+      <div>0410 543 828 &nbsp;·&nbsp; gordon@cubiccm.com &nbsp;·&nbsp; cubiccm.com</div>
+    </div>
+  </div>
+
+  <div slot="footer" style="display:flex; justify-content:space-between; gap:16px; padding-top:6px; border-top:1px solid #C9CDD6; margin-top:16px; font-size:7.5pt; color:#6E7480;">
+    <div>Extension of Time Claim &nbsp;·&nbsp; Ref CCM-EOT-0000 &nbsp;·&nbsp; Rev 0</div>
+    <div>Notice under the Contract</div>
+    <div>Page _____ of _____</div>
+  </div>
+
+  <h1 style="font-size:19pt; font-weight:700; letter-spacing:-0.01em; margin-bottom:4px;">Extension of Time Claim</h1>
+  <div style="font-size:9pt; letter-spacing:0.14em; text-transform:uppercase; color:#6E7480; font-weight:600; margin-bottom:16px;">Notice of delay and claim for extension of time</div>
+
+  <table style="margin-bottom:18px;">
+    <tbody>
+      <tr><td style="width:24%; background:#F4F5F8; font-weight:600;">EOT claim No.</td><td style="width:26%;">CCM-EOT-0000</td><td style="width:24%; background:#F4F5F8; font-weight:600;">Date of this notice</td><td>____ / ____ / 20____</td></tr>
+      <tr><td style="background:#F4F5F8; font-weight:600;">Project</td><td colspan="3">&nbsp;</td></tr>
+      <tr><td style="background:#F4F5F8; font-weight:600;">Contract No.</td><td>&nbsp;</td><td style="background:#F4F5F8; font-weight:600;">Contract clause relied on</td><td>&nbsp;</td></tr>
+      <tr><td style="background:#F4F5F8; font-weight:600;">To</td><td>&nbsp;</td><td style="background:#F4F5F8; font-weight:600;">Attention</td><td>&nbsp;</td></tr>
+      <tr><td style="background:#F4F5F8; font-weight:600;">From</td><td colspan="3">Cubic Construction Management Pty Ltd</td></tr>
+    </tbody>
+  </table>
+
+  <h2 style="font-size:11pt; font-weight:700; color:#2A3580; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:8px;">1. Delay event</h2>
+  <table style="margin-bottom:18px;">
+    <tbody>
+      <tr><td style="width:24%; background:#F4F5F8; font-weight:600;">Date event occurred</td><td style="width:26%;">____ / ____ / 20____</td><td style="width:24%; background:#F4F5F8; font-weight:600;">Date event became known</td><td>____ / ____ / 20____</td></tr>
+      <tr><td style="background:#F4F5F8; font-weight:600;">Event still continuing?</td><td>Yes ☐ &nbsp; No ☐</td><td style="background:#F4F5F8; font-weight:600;">Date event ceased</td><td>____ / ____ / 20____</td></tr>
+      <tr><td style="background:#F4F5F8; font-weight:600;">Category</td><td colspan="3">Inclement weather ☐ &nbsp; Variation / late instruction ☐ &nbsp; Late information or approval ☐ &nbsp; Principal-supplied items ☐ &nbsp; Latent condition ☐ &nbsp; Industrial action ☐ &nbsp; Statutory authority ☐ &nbsp; Other ☐</td></tr>
+      <tr><td style="background:#F4F5F8; font-weight:600;">Description of event</td><td colspan="3" style="height:112px;">&nbsp;</td></tr>
+    </tbody>
+  </table>
+
+  <h2 style="font-size:11pt; font-weight:700; color:#2A3580; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:8px;">2. Effect on the programme</h2>
+  <table style="margin-bottom:18px;">
+    <thead><tr><th style="width:34%;">Activity affected</th><th style="width:14%;">Activity ID</th><th style="width:13%;">Planned finish</th><th style="width:13%;">Revised finish</th><th style="width:12%;">Critical path?</th><th>Delay (days)</th></tr></thead>
+    <tbody>
+      <tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>Yes ☐ No ☐</td><td>&nbsp;</td></tr>
+      <tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>Yes ☐ No ☐</td><td>&nbsp;</td></tr>
+      <tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>Yes ☐ No ☐</td><td>&nbsp;</td></tr>
+      <tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>Yes ☐ No ☐</td><td>&nbsp;</td></tr>
+    </tbody>
+  </table>
+
+  <table style="margin-bottom:18px;">
+    <tbody>
+      <tr><td style="width:38%; background:#F4F5F8; font-weight:600;">Current Date for Practical Completion</td><td>____ / ____ / 20____</td></tr>
+      <tr><td style="background:#F4F5F8; font-weight:600;">Extension of time claimed</td><td style="font-weight:700;">_______ calendar days</td></tr>
+      <tr><td style="background:#F4F5F8; font-weight:600;">Revised Date for Practical Completion sought</td><td style="font-weight:700;">____ / ____ / 20____</td></tr>
+      <tr><td style="background:#F4F5F8; font-weight:600;">Float available / absorbed</td><td>&nbsp;</td></tr>
+      <tr><td style="background:#F4F5F8; font-weight:600;">Mitigation measures taken</td><td style="height:56px;">&nbsp;</td></tr>
+    </tbody>
+  </table>
+
+  <h2 style="font-size:11pt; font-weight:700; color:#2A3580; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:8px;">3. Delay costs</h2>
+  <table style="margin-bottom:18px;">
+    <thead><tr><th style="width:58%;">Cost item</th><th style="width:20%; text-align:right;">Rate / day</th><th style="text-align:right;">Amount (excl. GST)</th></tr></thead>
+    <tbody>
+      <tr><td>Extended site establishment and preliminaries</td><td style="text-align:right;">&nbsp;</td><td style="text-align:right;">&nbsp;</td></tr>
+      <tr><td>Supervision and site staff</td><td style="text-align:right;">&nbsp;</td><td style="text-align:right;">&nbsp;</td></tr>
+      <tr><td>Plant and equipment standing time</td><td style="text-align:right;">&nbsp;</td><td style="text-align:right;">&nbsp;</td></tr>
+      <tr><td>Subcontractor delay costs (substantiated)</td><td style="text-align:right;">&nbsp;</td><td style="text-align:right;">&nbsp;</td></tr>
+      <tr><td>Other</td><td style="text-align:right;">&nbsp;</td><td style="text-align:right;">&nbsp;</td></tr>
+      <tr><td colspan="2" style="text-align:right; font-weight:700; background:#F4F5F8;">Total delay costs claimed (excl. GST)</td><td style="text-align:right; font-weight:700; background:#F4F5F8;">$ &nbsp;</td></tr>
+    </tbody>
+  </table>
+  <p style="font-size:9pt; color:#3A4152;">Delay costs are claimed only where the contract provides for them. Where costs cannot yet be quantified, the amount is noted as a continuing claim and will be particularised when the event ceases.</p>
+
+  <h2 style="font-size:11pt; font-weight:700; color:#2A3580; text-transform:uppercase; letter-spacing:0.08em; margin:16px 0 8px;">4. Supporting documents attached</h2>
+  <table style="margin-bottom:18px;">
+    <tbody>
+      <tr><td style="line-height:2;">☐ &nbsp;Marked-up programme showing the delay (as-planned vs as-built)<br>☐ &nbsp;Site diary extracts and daily labour records<br>☐ &nbsp;Bureau of Meteorology records (weather claims)<br>☐ &nbsp;Correspondence, RFIs and instructions relied on<br>☐ &nbsp;Photographs<br>☐ &nbsp;Other: ______________________________________________</td></tr>
+    </tbody>
+  </table>
+
+  <p style="font-size:9pt; color:#3A4152;">This notice is given within the time required by the Contract. Cubic Construction Management reserves its rights in respect of any further or continuing effect of this event, and the right to submit an updated claim.</p>
+
+  <h2 style="font-size:11pt; font-weight:700; color:#2A3580; text-transform:uppercase; letter-spacing:0.08em; margin:18px 0 8px;">For completion by the Superintendent / Principal</h2>
+  <table>
+    <tbody>
+      <tr><td style="width:38%; background:#F4F5F8; font-weight:600;">Determination</td><td>Approved in full ☐ &nbsp; Approved in part ☐ &nbsp; Rejected ☐ &nbsp; Further information required ☐</td></tr>
+      <tr><td style="background:#F4F5F8; font-weight:600;">Extension of time granted</td><td>_______ calendar days &nbsp;·&nbsp; Revised DPC: ____ / ____ / 20____</td></tr>
+      <tr><td style="background:#F4F5F8; font-weight:600;">Reasons</td><td style="height:64px;">&nbsp;</td></tr>
+      <tr><td style="background:#F4F5F8; font-weight:600;">Signature and date</td><td style="height:56px;">Name: ______________________ &nbsp; Signature: ______________________ &nbsp; Date: ____ / ____ / 20____ &nbsp;&nbsp;&nbsp; <span style="color:#9AA0AC; font-size:8pt;">Company stamp</span></td></tr>
+    </tbody>
+  </table>
+
+</doc-page>
+
+</x-dc>
+</body>
+</html>

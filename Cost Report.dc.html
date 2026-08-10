@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+  body { margin:0; font-family:Archivo, system-ui, sans-serif; color:#1D2330; }
+  doc-page:not(:defined) { visibility:hidden; }
+  a { color:#2A3580; } a:hover { color:#1A2360; }
+  table { border-collapse:collapse; width:100%; }
+  th { background:#2A3580; color:#fff; font-weight:600; text-align:left; padding:6px 8px; font-size:7.5pt; letter-spacing:0.06em; text-transform:uppercase; border:1px solid #2A3580; }
+  td { padding:5px 8px; border:1px solid #C9CDD6; vertical-align:top; font-size:8.5pt; }
+  h1, h2 { margin:0; }
+  p { margin:0 0 9px; font-size:9.5pt; line-height:1.6; }
+  .num { text-align:right; font-variant-numeric:tabular-nums; }
+</style>
+<script src="./doc-page.js"></script>
+</helmet>
+
+<doc-page size="a4" orientation="landscape" margin="0.5in" style="--doc-hdr-h:1.0in; --doc-ftr-h:0.42in">
+
+  <div slot="header" style="display:flex; align-items:flex-end; justify-content:space-between; gap:24px; padding-bottom:8px; border-bottom:2px solid #2A3580; margin-bottom:16px;">
+    <img src="uploads/CCM%20SIDE%20BLUE.png" alt="Cubic Construction Management" style="width:140px; height:auto; display:block;">
+    <div style="text-align:right; font-size:7.5pt; line-height:1.5; color:#6E7480;">
+      <div style="font-size:8pt; font-weight:600; color:#2A3580; letter-spacing:0.02em; white-space:nowrap; margin-bottom:2px;">CUBIC CONSTRUCTION MANAGEMENT</div>
+      <div>ABN 32 161 357 142 &nbsp;·&nbsp; Unit 3, 5 Bessemer Street, Blacktown NSW 2148</div>
+      <div>0410 543 828 &nbsp;·&nbsp; accounts@cubiccm.com &nbsp;·&nbsp; cubiccm.com</div>
+    </div>
+  </div>
+
+  <div slot="footer" style="display:flex; justify-content:space-between; gap:16px; padding-top:6px; border-top:1px solid #C9CDD6; margin-top:14px; font-size:7.5pt; color:#6E7480;">
+    <div>Cost Report &nbsp;·&nbsp; Ref CCM-CR-0001 &nbsp;·&nbsp; Rev 0 &nbsp;·&nbsp; Commercial in confidence</div>
+    
+    <div>Page _____ of _____</div>
+  </div>
+
+  <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:24px; margin-bottom:14px;">
+    <div>
+      <h1 style="font-size:18pt; font-weight:700; letter-spacing:-0.01em; margin-bottom:3px;">Cost Report</h1>
+      <div style="font-size:9pt; letter-spacing:0.14em; text-transform:uppercase; color:#6E7480; font-weight:600;">Collaroy Heights</div>
+    </div>
+    <div style="display:flex; gap:0; border:1px solid #C9CDD6;">
+      
+      <div style="padding:6px 14px; border-right:1px solid #C9CDD6;">
+        <div style="font-size:7pt; letter-spacing:0.1em; text-transform:uppercase; color:#6E7480; font-weight:600;">Data date</div>
+        <div style="font-size:9.5pt; font-weight:600;">10 August 2026</div>
+      </div>
+      
+    </div>
+  </div>
+
+  <div style="display:grid; grid-template-columns:repeat(5, 1fr); gap:10px; margin-bottom:16px;">
+    <div style="border:1px solid #C9CDD6; border-top:3px solid #2A3580; padding:9px 12px;">
+      <div style="font-size:7pt; letter-spacing:0.1em; text-transform:uppercase; color:#6E7480; font-weight:600; margin-bottom:3px;">Approved budget</div>
+      <div style="font-size:15pt; font-weight:700; color:#2A3580; font-variant-numeric:tabular-nums;">$34,970.00</div>
+    </div>
+    <div style="border:1px solid #C9CDD6; border-top:3px solid #2A3580; padding:9px 12px;">
+      <div style="font-size:7pt; letter-spacing:0.1em; text-transform:uppercase; color:#6E7480; font-weight:600; margin-bottom:3px;">Committed</div>
+      <div style="font-size:15pt; font-weight:700; font-variant-numeric:tabular-nums;">$6,055.50</div>
+      <div style="font-size:7.5pt; color:#6E7480;">17.3% of budget</div>
+    </div>
+    <div style="border:1px solid #C9CDD6; border-top:3px solid #2A3580; padding:9px 12px;">
+      <div style="font-size:7pt; letter-spacing:0.1em; text-transform:uppercase; color:#6E7480; font-weight:600; margin-bottom:3px;">Actual to date</div>
+      <div style="font-size:15pt; font-weight:700; font-variant-numeric:tabular-nums;">$4,796.00</div>
+      <div style="font-size:7.5pt; color:#6E7480;">13.7% of budget</div>
+    </div>
+    <div style="border:1px solid #C9CDD6; border-top:3px solid #2A3580; padding:9px 12px;">
+      <div style="font-size:7pt; letter-spacing:0.1em; text-transform:uppercase; color:#6E7480; font-weight:600; margin-bottom:3px;">Est. at completion</div>
+      <div style="font-size:15pt; font-weight:700; font-variant-numeric:tabular-nums;">$34,970.00</div>
+    </div>
+    <div style="border:1px solid #C9CDD6; border-top:3px solid #1E7A4B; padding:9px 12px;">
+      <div style="font-size:7pt; letter-spacing:0.1em; text-transform:uppercase; color:#6E7480; font-weight:600; margin-bottom:3px;">Variance</div>
+      <div style="font-size:15pt; font-weight:700; color:#1E7A4B; font-variant-numeric:tabular-nums;">$0.00</div>
+      <div style="font-size:7.5pt; color:#6E7480;">On budget</div>
+    </div>
+  </div>
+
+  <h2 style="font-size:10pt; font-weight:700; color:#2A3580; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:7px;">Cost breakdown by code</h2>
+  <table style="margin-bottom:14px;">
+    <thead>
+      <tr>
+        <th style="width:5.5%;">Code</th>
+        <th style="width:24%;">Description</th>
+        <th style="width:9%;">Category</th>
+        <th style="width:8%; text-align:right;">Budgeted</th>
+        <th style="width:8%; text-align:right;">Approved change</th>
+        <th style="width:8%; text-align:right;">Committed</th>
+        <th style="width:8%; text-align:right;">Actual</th>
+        <th style="width:7%; text-align:right;">FTC</th>
+        <th style="width:9%; text-align:right;">Est. at completion</th>
+        <th style="width:7.5%; text-align:right;">Variance</th>
+        <th style="text-align:right;">% complete</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>01-004</td><td>Engineering review + Membrane warranty documentation</td><td>Other</td><td class="num">$680.00</td><td class="num">$0.00</td><td class="num">$0.00</td><td class="num">$0.00</td><td class="num">$0.00</td><td class="num">$680.00</td><td class="num">$0.00</td><td class="num">0%</td></tr>
+      <tr><td>03-001</td><td>Site establishment / protection + Hoarding / weather protection + Edge protection</td><td>Preliminaries</td><td class="num">$3,400.00</td><td class="num">$0.00</td><td class="num">$0.00</td><td class="num">$0.00</td><td class="num">$0.00</td><td class="num">$3,400.00</td><td class="num">$0.00</td><td class="num">0%</td></tr>
+      <tr><td>03-002</td><td>External &amp; Internal scaffolding</td><td>Subcontractors</td><td class="num">$7,000.00</td><td class="num">$0.00</td><td class="num">$4,796.00</td><td class="num">$4,796.00</td><td class="num">$0.00</td><td class="num">$7,000.00</td><td class="num">$0.00</td><td class="num" style="font-weight:600;">69%</td></tr>
+      <tr><td>03-006</td><td>Skip bins / waste disposal</td><td>Preliminaries</td><td class="num">$1,450.00</td><td class="num">$0.00</td><td class="num">$1,259.50</td><td class="num">$0.00</td><td class="num">$0.00</td><td class="num">$1,450.00</td><td class="num">$0.00</td><td class="num">0%</td></tr>
+      <tr><td>03-017</td><td>Project insurances – contract works &amp; public liability allocation for the works</td><td>Preliminaries</td><td class="num">$1,250.00</td><td class="num">$0.00</td><td class="num">$0.00</td><td class="num">$0.00</td><td class="num">$0.00</td><td class="num">$1,250.00</td><td class="num">$0.00</td><td class="num">0%</td></tr>
+      <tr><td>04-001</td><td>Remove tiles, screed</td><td>Subcontractors</td><td class="num">$1,950.00</td><td class="num">$0.00</td><td class="num">$0.00</td><td class="num">$0.00</td><td class="num">$0.00</td><td class="num">$1,950.00</td><td class="num">$0.00</td><td class="num">0%</td></tr>
+      <tr><td>04-014</td><td>Remove drains / wastes</td><td>Subcontractors</td><td class="num">$480.00</td><td class="num">$0.00</td><td class="num">$0.00</td><td class="num">$0.00</td><td class="num">$0.00</td><td class="num">$480.00</td><td class="num">$0.00</td><td class="num">0%</td></tr>
+      <tr><td>04-012</td><td>Protect balustrade fixings</td><td>Subcontractors</td><td class="num">$420.00</td><td class="num">$0.00</td><td class="num">$0.00</td><td class="num">$0.00</td><td class="num">$0.00</td><td class="num">$420.00</td><td class="num">$0.00</td><td class="num">0%</td></tr>
+      <tr><td>04-017</td><td>Remove side-wall linings + Chandelier removal &amp; protection</td><td>Subcontractors</td><td class="num">$2,300.00</td><td class="num">$0.00</td><td class="num">$0.00</td><td class="num">$0.00</td><td class="num">$0.00</td><td class="num">$2,300.00</td><td class="num">$0.00</td><td class="num">0%</td></tr>
+      <tr><td>09-004</td><td>Re-seal balustrade</td><td>Subcontractors</td><td class="num">$560.00</td><td class="num">$0.00</td><td class="num">$0.00</td><td class="num">$0.00</td><td class="num">$0.00</td><td class="num">$560.00</td><td class="num">$0.00</td><td class="num">0%</td></tr>
+      <tr><td>10-001</td><td>Replace substrate board</td><td>Subcontractors</td><td class="num">$2,400.00</td><td class="num">$0.00</td><td class="num">$0.00</td><td class="num">$0.00</td><td class="num">$0.00</td><td class="num">$2,400.00</td><td class="num">$0.00</td><td class="num">0%</td></tr>
+      <tr><td>10-002</td><td>Prepare, refix &amp; level substrate</td><td>Subcontractors</td><td class="num">$980.00</td><td class="num">$0.00</td><td class="num">$0.00</td><td class="num">$0.00</td><td class="num">$0.00</td><td class="num">$980.00</td><td class="num">$0.00</td><td class="num">0%</td></tr>
+      <tr><td>11-002</td><td>New aluminium sliding door</td><td>Subcontractors</td><td class="num">$6,500.00</td><td class="num">$0.00</td><td class="num">$0.00</td><td class="num">$0.00</td><td class="num">$0.00</td><td class="num">$6,500.00</td><td class="num">$0.00</td><td class="num">0%</td></tr>
+      <tr><td>14-002</td><td>Flashings / reveals</td><td>Subcontractors</td><td class="num">$780.00</td><td class="num">$0.00</td><td class="num">$0.00</td><td class="num">$0.00</td><td class="num">$0.00</td><td class="num">$780.00</td><td class="num">$0.00</td><td class="num">0%</td></tr>
+      <tr><td>15-001</td><td>Strip ceilings + New plasterboard &amp; cornice + Wall patching</td><td>Subcontractors</td><td class="num">$4,820.00</td><td class="num">$0.00</td><td class="num">$0.00</td><td class="num">$0.00</td><td class="num">$0.00</td><td class="num">$4,820.00</td><td class="num">$0.00</td><td class="num">0%</td></tr>
+      <tr style="background:#2A3580; color:#fff;">
+        <td colspan="3" style="border-color:#2A3580; font-weight:700; text-align:right;">Project totals</td>
+        <td class="num" style="border-color:#2A3580; font-weight:700;">$34,970.00</td>
+        <td class="num" style="border-color:#2A3580; font-weight:700;">$0.00</td>
+        <td class="num" style="border-color:#2A3580; font-weight:700;">$6,055.50</td>
+        <td class="num" style="border-color:#2A3580; font-weight:700;">$4,796.00</td>
+        <td class="num" style="border-color:#2A3580; font-weight:700;">$0.00</td>
+        <td class="num" style="border-color:#2A3580; font-weight:700;">$34,970.00</td>
+        <td class="num" style="border-color:#2A3580; font-weight:700;">$0.00</td>
+        <td class="num" style="border-color:#2A3580; font-weight:700;">13.7%</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div style="display:flex; gap:16px; align-items:flex-start;">
+    <div style="width:46%;">
+      <h2 style="font-size:10pt; font-weight:700; color:#2A3580; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:7px;">Summary by category</h2>
+      <table>
+        <thead>
+          <tr><th style="width:28%;">Category</th><th style="text-align:right;">Budgeted</th><th style="text-align:right;">Committed</th><th style="text-align:right;">Actual</th><th style="text-align:right;">Est. at completion</th><th style="text-align:right;">Variance</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Preliminaries</td><td class="num">$6,100.00</td><td class="num">$1,259.50</td><td class="num">$0.00</td><td class="num">$6,100.00</td><td class="num">$0.00</td></tr>
+          <tr><td>Subcontractors</td><td class="num">$28,190.00</td><td class="num">$4,796.00</td><td class="num">$4,796.00</td><td class="num">$28,190.00</td><td class="num">$0.00</td></tr>
+          <tr><td>Other</td><td class="num">$680.00</td><td class="num">$0.00</td><td class="num">$0.00</td><td class="num">$680.00</td><td class="num">$0.00</td></tr>
+          <tr style="background:#F4F5F8; font-weight:700;"><td>Total</td><td class="num">$34,970.00</td><td class="num">$6,055.50</td><td class="num">$4,796.00</td><td class="num">$34,970.00</td><td class="num">$0.00</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div style="flex:1;">
+      <h2 style="font-size:10pt; font-weight:700; color:#2A3580; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:7px;">Commentary &amp; basis of report</h2>
+      <table>
+        <tbody>
+          <tr><td style="width:26%; background:#F4F5F8; font-weight:600;">Cost to complete</td><td>Forecast to complete (FTC) is nil against all codes; estimate at completion is held at approved budget pending subcontractor award of the remaining trades.</td></tr>
+          <tr><td style="background:#F4F5F8; font-weight:600;">Committed vs actual</td><td>Committed value of $6,055.50 covers scaffolding (03-002) and waste disposal (03-006). Waste disposal is ordered but not yet invoiced.</td></tr>
+          <tr><td style="background:#F4F5F8; font-weight:600;">Risks / watch items</td><td>&nbsp;</td></tr>
+          <tr><td style="background:#F4F5F8; font-weight:600;">Approved changes</td><td>No variations approved to the data date. Variations are added to approved change and flow into estimate at completion.</td></tr>
+        </tbody>
+      </table>
+      <p style="font-size:7.5pt; color:#6E7480; margin-top:8px;">All figures in AUD, exclusive of GST. Est. at completion = budgeted + approved change + FTC where committed exceeds budget. Variance = budgeted + approved change − est. at completion; a negative variance is an overrun. % complete = actual ÷ est. at completion.</p>
+    </div>
+  </div>
+
+</doc-page>
+
+</x-dc>
+</body>
+</html>

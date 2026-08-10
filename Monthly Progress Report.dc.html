@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  body { margin:0; font-family:Archivo, system-ui, sans-serif; color:#1D2330; }
+  doc-page:not(:defined) { visibility:hidden; }
+  a { color:#2A3580; } a:hover { color:#1A2360; }
+  table { border-collapse:collapse; width:100%; font-size:10pt; }
+  th { background:#2A3580; color:#fff; font-weight:600; text-align:left; padding:6px 9px; font-size:8.5pt; letter-spacing:0.06em; text-transform:uppercase; border:1px solid #2A3580; }
+  td { padding:7px 9px; border:1px solid #C9CDD6; vertical-align:top; }
+  h1, h2 { margin:0; }
+  p { margin:0 0 9px; font-size:10pt; line-height:1.6; }
+  td[contenteditable]:focus { outline:2px solid #2A3580; outline-offset:-2px; }
+  td[contenteditable]:empty:before { content:attr(data-ph); color:#B4B9C4; font-size:8.5pt; }
+  @media print { [data-noprint] { display:none !important; } }
+</style>
+<script src="./image-slot.js"></script>
+<script src="./doc-page.js"></script>
+</helmet>
+
+<doc-page size="a4" margin="0.6in" style="--doc-hdr-h:1.15in; --doc-ftr-h:0.42in">
+
+  <div slot="header" style="display:flex; align-items:flex-end; justify-content:space-between; gap:24px; padding-bottom:8px; border-bottom:2px solid #2A3580; margin-bottom:18px;">
+    <img src="uploads/CCM%20SIDE%20BLUE.png" alt="Cubic Construction Management" style="width:152px; height:auto; display:block;">
+    <div style="text-align:right; font-size:7.5pt; line-height:1.5; color:#6E7480;">
+      <div style="font-size:8pt; font-weight:600; color:#2A3580; letter-spacing:0.02em; white-space:nowrap; margin-bottom:2px;">CUBIC CONSTRUCTION MANAGEMENT</div>
+      <div>ABN 32 161 357 142</div>
+      <div>Unit 3, 5 Bessemer Street, Blacktown NSW 2148</div>
+      <div>0410 543 828 &nbsp;·&nbsp; gordon@cubiccm.com &nbsp;·&nbsp; cubiccm.com</div>
+    </div>
+  </div>
+
+  <div slot="footer" style="display:flex; justify-content:space-between; gap:16px; padding-top:6px; border-top:1px solid #C9CDD6; margin-top:16px; font-size:7.5pt; color:#6E7480;">
+    <div>Monthly Progress Report &nbsp;·&nbsp; Ref CCM-PR-0000 &nbsp;·&nbsp; Rev 0</div>
+    <div>Commercial in confidence</div>
+    <div>Page _____ of _____</div>
+  </div>
+
+  <h1 style="font-size:19pt; font-weight:700; letter-spacing:-0.01em; margin-bottom:4px;">Monthly Progress Report</h1>
+  <div style="font-size:9pt; letter-spacing:0.14em; text-transform:uppercase; color:#6E7480; font-weight:600; margin-bottom:16px;">Reporting period ____ / ____ / 20____ to ____ / ____ / 20____</div>
+
+  <table style="margin-bottom:18px;">
+    <tbody>
+      <tr><td style="width:24%; background:#F4F5F8; font-weight:600;">Report No.</td><td style="width:26%;">CCM-PR-0000</td><td style="width:24%; background:#F4F5F8; font-weight:600;">Issue date</td><td>____ / ____ / 20____</td></tr>
+      <tr><td style="background:#F4F5F8; font-weight:600;">Project</td><td colspan="3">&nbsp;</td></tr>
+      <tr><td style="background:#F4F5F8; font-weight:600;">Contract No.</td><td>&nbsp;</td><td style="background:#F4F5F8; font-weight:600;">Principal</td><td>&nbsp;</td></tr>
+      <tr><td style="background:#F4F5F8; font-weight:600;">Project Manager</td><td>&nbsp;</td><td style="background:#F4F5F8; font-weight:600;">Site Manager</td><td>&nbsp;</td></tr>
+      <tr><td style="background:#F4F5F8; font-weight:600;">Distribution</td><td colspan="3">&nbsp;</td></tr>
+    </tbody>
+  </table>
+
+  <h2 style="font-size:11pt; font-weight:700; color:#2A3580; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:8px;">1. Project status at a glance</h2>
+  <table style="margin-bottom:18px;">
+    <thead><tr><th style="width:20%;">Measure</th><th style="width:20%;">Planned</th><th style="width:20%;">Actual</th><th style="width:20%;">Variance</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr><td style="font-weight:600;">Progress (%)</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>On track ☐ &nbsp;Watch ☐ &nbsp;Behind ☐</td></tr>
+      <tr><td style="font-weight:600;">Date for Practical Completion</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>On track ☐ &nbsp;Watch ☐ &nbsp;Behind ☐</td></tr>
+      <tr><td style="font-weight:600;">Cost to date (excl. GST)</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>On track ☐ &nbsp;Watch ☐ &nbsp;Over ☐</td></tr>
+      <tr><td style="font-weight:600;">Approved variations</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
+      <tr><td style="font-weight:600;">Forecast final cost</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
+    </tbody>
+  </table>
+
+  <div style="display:flex; align-items:baseline; justify-content:space-between; gap:16px; margin-bottom:8px;">
+    <h2 style="font-size:11pt; font-weight:700; color:#2A3580; text-transform:uppercase; letter-spacing:0.08em; margin:0;">2. Executive summary</h2>
+    <div data-noprint="1" style="display:flex; align-items:center; gap:10px;">
+      <div style="font-size:8pt; color:#9AA0AC;">{{ status }}</div>
+      <button type="button" onClick="{{ onDraft }}" disabled="{{ busy }}" style="font:600 8.5pt/1 Archivo, sans-serif; letter-spacing:0.04em; color:#fff; background:#2A3580; border:0; border-radius:2px; padding:7px 13px; cursor:pointer;" style-hover="background:#1A2360">{{ buttonLabel }}</button>
+    </div>
+  </div>
+  <table style="margin-bottom:18px;"><tbody><tr><td id="ccm-exec-summary" style="height:104px; font-size:9.5pt; line-height:1.6;">&nbsp;</td></tr></tbody></table>
+
+  <h2 style="font-size:11pt; font-weight:700; color:#2A3580; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:8px;">3. Work completed this period</h2>
+  <table style="margin-bottom:18px;">
+    <thead><tr><th style="width:22%;">Area / trade</th><th>Work completed</th><th style="width:14%;">% complete</th></tr></thead>
+    <tbody>
+      <tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
+      <tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
+      <tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
+      <tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
+      <tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
+    </tbody>
+  </table>
+
+  <h2 style="font-size:11pt; font-weight:700; color:#2A3580; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:8px;">4. Planned for next period</h2>
+  <table style="margin-bottom:18px;">
+    <thead><tr><th style="width:22%;">Area / trade</th><th>Planned activities</th><th style="width:18%;">Target date</th></tr></thead>
+    <tbody>
+      <tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
+      <tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
+      <tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
+      <tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
+    </tbody>
+  </table>
+
+  <div style="break-before:page;"></div>
+
+  <h2 style="font-size:11pt; font-weight:700; color:#2A3580; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:8px;">5. Programme and delays</h2>
+  <table style="margin-bottom:18px;">
+    <thead><tr><th style="width:30%;">Delay event</th><th style="width:14%;">Date</th><th style="width:14%;">Days impact</th><th style="width:16%;">EOT ref</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
+      <tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
+      <tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
+    </tbody>
+  </table>
+
+  <h2 style="font-size:11pt; font-weight:700; color:#2A3580; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:8px;">6. Cost and variations</h2>
+  <table style="margin-bottom:18px;">
+    <thead><tr><th style="width:14%;">VO No.</th><th>Description</th><th style="width:16%; text-align:right;">Value (excl. GST)</th><th style="width:18%;">Status</th></tr></thead>
+    <tbody>
+      <tr><td>&nbsp;</td><td>&nbsp;</td><td style="text-align:right;">&nbsp;</td><td>&nbsp;</td></tr>
+      <tr><td>&nbsp;</td><td>&nbsp;</td><td style="text-align:right;">&nbsp;</td><td>&nbsp;</td></tr>
+      <tr><td>&nbsp;</td><td>&nbsp;</td><td style="text-align:right;">&nbsp;</td><td>&nbsp;</td></tr>
+      <tr><td colspan="2" style="text-align:right; font-weight:700; background:#F4F5F8;">Total</td><td style="text-align:right; font-weight:700; background:#F4F5F8;">$ &nbsp;</td><td style="background:#F4F5F8;">&nbsp;</td></tr>
+    </tbody>
+  </table>
+
+  <h2 style="font-size:11pt; font-weight:700; color:#2A3580; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:8px;">7. Work health &amp; safety</h2>
+  <table style="margin-bottom:18px;">
+    <thead><tr><th style="width:25%;">Metric</th><th style="width:25%;">This period</th><th style="width:25%;">Project to date</th><th>Comment</th></tr></thead>
+    <tbody>
+      <tr><td>Lost time injuries</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
+      <tr><td>Medical treatment injuries</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
+      <tr><td>Near misses / hazards</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
+      <tr><td>Toolbox talks / inductions</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
+      <tr><td>Site inspections / audits</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
+    </tbody>
+  </table>
+
+  <h2 style="font-size:11pt; font-weight:700; color:#2A3580; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:8px;">8. Quality, defects and RFIs</h2>
+  <table style="margin-bottom:18px;">
+    <thead><tr><th style="width:34%;">Item</th><th style="width:16%;">Raised</th><th style="width:16%;">Closed</th><th>Open / comment</th></tr></thead>
+    <tbody>
+      <tr><td>RFIs</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
+      <tr><td>Defects (refer defect report)</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
+      <tr><td>ITP / inspection hold points</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
+      <tr><td>Non-conformances</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
+    </tbody>
+  </table>
+
+  <h2 style="font-size:11pt; font-weight:700; color:#2A3580; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:8px;">9. Risks and issues requiring action</h2>
+  <table style="margin-bottom:18px;">
+    <thead><tr><th style="width:34%;">Risk / issue</th><th style="width:18%;">Impact</th><th style="width:26%;">Action required</th><th style="width:12%;">By whom</th><th>Due</th></tr></thead>
+    <tbody>
+      <tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
+      <tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
+      <tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
+    </tbody>
+  </table>
+
+  <h2 style="font-size:11pt; font-weight:700; color:#2A3580; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:8px;">10. Site photographs</h2>
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:18px; break-inside:avoid;">
+    <div style="display:flex; flex-direction:column; gap:5px;">
+      <div style="height:150px; border:1px solid #C9CDD6;"><image-slot id="ccm-pr-photo-1" placeholder="Site photo 1" style="width:100%; height:100%;"></image-slot></div>
+      <div style="font-size:8pt; color:#6E7480;">Caption / location ______________________</div>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:5px;">
+      <div style="height:150px; border:1px solid #C9CDD6;"><image-slot id="ccm-pr-photo-2" placeholder="Site photo 2" style="width:100%; height:100%;"></image-slot></div>
+      <div style="font-size:8pt; color:#6E7480;">Caption / location ______________________</div>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:5px;">
+      <div style="height:150px; border:1px solid #C9CDD6;"><image-slot id="ccm-pr-photo-3" placeholder="Site photo 3" style="width:100%; height:100%;"></image-slot></div>
+      <div style="font-size:8pt; color:#6E7480;">Caption / location ______________________</div>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:5px;">
+      <div style="height:150px; border:1px solid #C9CDD6;"><image-slot id="ccm-pr-photo-4" placeholder="Site photo 4" style="width:100%; height:100%;"></image-slot></div>
+      <div style="font-size:8pt; color:#6E7480;">Caption / location ______________________</div>
+    </div>
+  </div>
+
+</doc-page>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { busy: false, status: "" };
+
+  componentDidMount() {
+    // Make every blank data cell fillable so the report can be typed into on screen.
+    setTimeout(() => {
+      document.querySelectorAll("doc-page td").forEach((td) => {
+        const t = td.textContent.replace(/\u00a0|\s/g, "");
+        const isLabel = /background:\s*#F4F5F8/i.test(td.getAttribute("style") || "");
+        if (!t && !isLabel && !td.querySelector("image-slot")) {
+          td.setAttribute("contenteditable", "true");
+          td.innerHTML = "";
+        }
+      });
+      const ex = document.getElementById("ccm-exec-summary");
+      if (ex) {
+        ex.setAttribute("contenteditable", "true");
+        ex.setAttribute("data-ph", "Fill in the sections below, then use Draft with AI");
+        if (!ex.textContent.trim()) ex.innerHTML = "";
+      }
+    }, 0);
+  }
+
+  // Walk the document and pull each section heading with its table contents as plain text.
+  readReport() {
+    const out = [];
+    const root = document.querySelector("doc-page");
+    if (!root) return "";
+    root.querySelectorAll("h2").forEach((h) => {
+      const heading = h.textContent.trim();
+      if (/executive summary/i.test(heading)) return;
+      let el = h.nextElementSibling;
+      const rows = [];
+      while (el && el.tagName !== "H2") {
+        if (el.tagName === "TABLE") {
+          el.querySelectorAll("tr").forEach((tr) => {
+            const cells = [...tr.children].map((c) => c.textContent.replace(/\s+/g, " ").trim());
+            if (cells.some((c) => c && c !== "\u00a0")) rows.push(cells.join(" | "));
+          });
+        }
+        el = el.nextElementSibling;
+      }
+      if (rows.length) out.push(heading + "\n" + rows.join("\n"));
+    });
+    return out.join("\n\n");
+  }
+
+  onDraft = async () => {
+    if (this.state.busy) return;
+    const data = this.readReport();
+    if (data.replace(/[|\s]/g, "").length < 40) {
+      this.setState({ status: "Fill in a few sections first" });
+      return;
+    }
+    this.setState({ busy: true, status: "Drafting…" });
+    try {
+      const text = await window.claude.complete({
+        model: "claude-sonnet-4-5",
+        max_tokens: 700,
+        system:
+          "You are a construction project manager writing the executive summary of a monthly progress report for an Australian head contractor. " +
+          "Write 2-3 short paragraphs in plain, factual Australian English. Cover: overall progress against programme, the significant work completed, " +
+          "any delay or cost exposure, safety performance, and what needs a decision from the client. " +
+          "Use only the figures given - never invent numbers, dates or names. Where a field is blank, say nothing about it rather than guessing. " +
+          "No headings, no bullet points, no preamble - return the summary prose only.",
+        messages: [{ role: "user", content: "Report data:\n\n" + data }]
+      });
+      const cell = document.getElementById("ccm-exec-summary");
+      if (cell) {
+        cell.innerHTML = String(text)
+          .trim()
+          .split(/\n\s*\n/)
+          .map((p) => '<p style="margin:0 0 8px; font-size:9.5pt; line-height:1.6;">' + p.replace(/\n/g, " ").trim() + "</p>")
+          .join("");
+      }
+      this.setState({ busy: false, status: "Draft inserted — edit as needed" });
+    } catch (e) {
+      this.setState({ busy: false, status: "Couldn't draft — try again" });
+    }
+  };
+
+  renderVals() {
+    return {
+      busy: this.state.busy,
+      status: this.state.status,
+      buttonLabel: this.state.busy ? "Drafting…" : "Draft with AI",
+      onDraft: this.onDraft
+    };
+  }
+}
+</script>
+</body>
+</html>

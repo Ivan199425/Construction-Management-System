@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  body { margin:0; font-family:Archivo, system-ui, sans-serif; color:#1D2330; }
+  doc-page:not(:defined) { visibility:hidden; }
+  a { color:#2A3580; } a:hover { color:#1A2360; }
+  table { border-collapse:collapse; width:100%; font-size:10pt; }
+  th { background:#2A3580; color:#fff; font-weight:600; text-align:left; padding:6px 9px; font-size:8.5pt; letter-spacing:0.06em; text-transform:uppercase; border:1px solid #2A3580; }
+  td { padding:7px 9px; border:1px solid #C9CDD6; vertical-align:top; }
+  h1, h2 { margin:0; }
+  p { margin:0 0 9px; font-size:10pt; line-height:1.6; }
+</style>
+<script src="./signature-pad.js"></script>
+<script src="./doc-page.js"></script>
+</helmet>
+
+<doc-page size="a4" margin="0.6in" style="--doc-hdr-h:1.15in; --doc-ftr-h:0.42in">
+
+  <div slot="header" style="display:flex; align-items:flex-end; justify-content:space-between; gap:24px; padding-bottom:8px; border-bottom:2px solid #2A3580; margin-bottom:18px;">
+    <img src="uploads/CCM%20SIDE%20BLUE.png" alt="Cubic Construction Management" style="width:152px; height:auto; display:block;">
+    <div style="text-align:right; font-size:7.5pt; line-height:1.5; color:#6E7480;">
+      <div style="font-size:8.5pt; font-weight:600; color:#2A3580; letter-spacing:0.04em;">CUBIC CONSTRUCTION MANAGEMENT</div>
+      <div>ABN 32 161 357 142</div>
+      <div>Unit 3, 5 Bessemer Street, Blacktown NSW 2148</div>
+      <div>0410 543 828 &nbsp;·&nbsp; gordon@cubiccm.com &nbsp;·&nbsp; cubiccm.com</div>
+    </div>
+  </div>
+
+  <div slot="footer" style="display:flex; justify-content:space-between; gap:16px; padding-top:6px; border-top:1px solid #C9CDD6; margin-top:16px; font-size:7.5pt; color:#6E7480;">
+    <div>Variation Order &nbsp;·&nbsp; Ref CCM-VO-0000 &nbsp;·&nbsp; Rev 0</div>
+    <div>Commercial in confidence</div>
+    <div>Page _____ of _____</div>
+  </div>
+
+  <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:24px; margin-bottom:16px;">
+    <div>
+      <h1 style="font-size:19pt; font-weight:700; letter-spacing:-0.01em; margin-bottom:4px;">Variation Order</h1>
+      <div style="font-size:9pt; letter-spacing:0.14em; text-transform:uppercase; color:#6E7480; font-weight:600;">Instruction to vary the works</div>
+    </div>
+    <div style="border:1px solid #2A3580; padding:8px 14px; text-align:right; min-width:200px;">
+      <div style="font-size:7.5pt; letter-spacing:0.12em; text-transform:uppercase; color:#6E7480; font-weight:600;">Variation No.</div>
+      <div style="font-size:20pt; font-weight:700; color:#2A3580; line-height:1.2;">VO-0000</div>
+      <div style="font-size:8pt; color:#6E7480;">Date: ____ / ____ / 20____</div>
+    </div>
+  </div>
+
+  <table style="margin-bottom:18px;">
+    <tbody>
+      <tr><td style="width:24%; background:#F4F5F8; font-weight:600;">Project</td><td colspan="3">&nbsp;</td></tr>
+      <tr><td style="background:#F4F5F8; font-weight:600;">Contract No.</td><td style="width:26%;">&nbsp;</td><td style="width:24%; background:#F4F5F8; font-weight:600;">Subcontract No.</td><td>&nbsp;</td></tr>
+      <tr><td style="background:#F4F5F8; font-weight:600;">To (Subcontractor)</td><td>&nbsp;</td><td style="background:#F4F5F8; font-weight:600;">Attention</td><td>&nbsp;</td></tr>
+      <tr><td style="background:#F4F5F8; font-weight:600;">Originated by</td><td>Principal ☐ &nbsp; Superintendent ☐ &nbsp; Contractor ☐ &nbsp; Consultant ☐</td><td style="background:#F4F5F8; font-weight:600;">Reference</td><td>RFI / SI / drawing rev</td></tr>
+    </tbody>
+  </table>
+
+  <h2 style="font-size:11pt; font-weight:700; color:#2A3580; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:8px;">1. Description of variation</h2>
+  <table style="margin-bottom:18px;">
+    <tbody>
+      <tr><td style="height:128px;">&nbsp;</td></tr>
+      <tr><td style="background:#F4F5F8; font-weight:600;">Reason for variation</td></tr>
+      <tr><td style="height:56px;">&nbsp;</td></tr>
+      <tr><td style="background:#F4F5F8; font-weight:600;">Documents / drawings referenced</td></tr>
+      <tr><td style="height:44px;">&nbsp;</td></tr>
+    </tbody>
+  </table>
+
+  <h2 style="font-size:11pt; font-weight:700; color:#2A3580; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:8px;">2. Price breakdown</h2>
+  <table style="margin-bottom:18px;">
+    <thead><tr><th style="width:6%;">Item</th><th style="width:36%;">Description</th><th style="width:10%;">Qty</th><th style="width:10%;">Unit</th><th style="width:14%; text-align:right;">Rate</th><th style="text-align:right;">Amount</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>Labour</td><td>&nbsp;</td><td>hrs</td><td style="text-align:right;">&nbsp;</td><td style="text-align:right;">&nbsp;</td></tr>
+      <tr><td>2</td><td>Materials</td><td>&nbsp;</td><td>&nbsp;</td><td style="text-align:right;">&nbsp;</td><td style="text-align:right;">&nbsp;</td></tr>
+      <tr><td>3</td><td>Plant and equipment</td><td>&nbsp;</td><td>&nbsp;</td><td style="text-align:right;">&nbsp;</td><td style="text-align:right;">&nbsp;</td></tr>
+      <tr><td>4</td><td>Subcontract / supplier quotes (attached)</td><td>&nbsp;</td><td>&nbsp;</td><td style="text-align:right;">&nbsp;</td><td style="text-align:right;">&nbsp;</td></tr>
+      <tr><td>5</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td style="text-align:right;">&nbsp;</td><td style="text-align:right;">&nbsp;</td></tr>
+      <tr><td colspan="5" style="text-align:right; font-weight:600; background:#F4F5F8;">Subtotal</td><td style="text-align:right; font-weight:600; background:#F4F5F8;">$ &nbsp;</td></tr>
+      <tr><td colspan="5" style="text-align:right;">Overhead and profit _____ %</td><td style="text-align:right;">$ &nbsp;</td></tr>
+      <tr><td colspan="5" style="text-align:right; font-weight:600;">Net variation (excl. GST)</td><td style="text-align:right; font-weight:600;">$ &nbsp;</td></tr>
+      <tr><td colspan="5" style="text-align:right;">GST 10%</td><td style="text-align:right;">$ &nbsp;</td></tr>
+      <tr><td colspan="5" style="text-align:right; font-weight:700; background:#2A3580; color:#fff; border-color:#2A3580;">Total variation (incl. GST)</td><td style="text-align:right; font-weight:700; background:#2A3580; color:#fff; border-color:#2A3580;">$ &nbsp;</td></tr>
+    </tbody>
+  </table>
+
+  <h2 style="font-size:11pt; font-weight:700; color:#2A3580; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:8px;">3. Effect on contract sum and programme</h2>
+  <table style="margin-bottom:18px;">
+    <tbody>
+      <tr><td style="width:44%; background:#F4F5F8; font-weight:600;">Contract sum before this variation (excl. GST)</td><td>$ &nbsp;</td></tr>
+      <tr><td style="background:#F4F5F8; font-weight:600;">This variation (addition / omission)</td><td>$ &nbsp;</td></tr>
+      <tr><td style="background:#F4F5F8; font-weight:700;">Adjusted contract sum (excl. GST)</td><td style="font-weight:700;">$ &nbsp;</td></tr>
+      <tr><td style="background:#F4F5F8; font-weight:600;">Effect on Date for Practical Completion</td><td>Nil ☐ &nbsp; Extension of _______ calendar days ☐ (EOT ref: ____________)</td></tr>
+      <tr><td style="background:#F4F5F8; font-weight:600;">Effect on other trades</td><td>&nbsp;</td></tr>
+    </tbody>
+  </table>
+
+  <p style="font-size:9pt; color:#3A4152;">The Subcontractor must not proceed with any varied work until this Variation Order is signed by both parties. Work carried out without a signed Variation Order is at the Subcontractor's own cost. All other terms of the Subcontract remain unchanged.</p>
+
+  <table style="margin-top:12px;">
+    <thead><tr><th style="width:50%;">Issued by the Contractor</th><th>Accepted by the Subcontractor</th></tr></thead>
+    <tbody>
+      <tr>
+        <td style="line-height:2.6; font-size:9.5pt;">Signature:<div style="height:52px; border:1px solid #C9CDD6; margin:2px 0 6px;"><signature-pad id="vo-contractor" label="Sign — Contractor" style="height:100%"></signature-pad></div>Full name: ____________________________<br>Position: ____________________________<br>Date: ____ / ____ / 20____</td>
+        <td style="line-height:2.6; font-size:9.5pt;">Signature:<div style="height:52px; border:1px solid #C9CDD6; margin:2px 0 6px;"><signature-pad id="vo-subcontractor" label="Sign — Subcontractor" style="height:100%"></signature-pad></div>Full name: ____________________________<br>Position: ____________________________<br>Date: ____ / ____ / 20____</td>
+      </tr>
+    </tbody>
+  </table>
+
+</doc-page>
+
+</x-dc>
+</body>
+</html>
