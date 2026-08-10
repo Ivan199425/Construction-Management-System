@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+  body { margin:0; font-family:Archivo, system-ui, sans-serif; color:#1D2330; }
+  doc-page:not(:defined) { visibility:hidden; }
+  a { color:#2A3580; } a:hover { color:#1A2360; }
+  table { border-collapse:collapse; width:100%; }
+  th { background:#2A3580; color:#fff; font-weight:600; text-align:left; padding:6px 8px; font-size:7.5pt; letter-spacing:0.06em; text-transform:uppercase; border:1px solid #2A3580; }
+  td { padding:5px 8px; border:1px solid #C9CDD6; vertical-align:top; font-size:8.5pt; }
+  h1, h2 { margin:0; }
+  p { margin:0 0 9px; font-size:9.5pt; line-height:1.6; }
+  .num { text-align:right; font-variant-numeric:tabular-nums; }
+</style>
+<script src="./doc-page.js"></script>
+</helmet>
+
+<doc-page size="a4" orientation="landscape" margin="0.5in" style="--doc-hdr-h:1.0in; --doc-ftr-h:0.42in">
+
+  <div slot="header" style="display:flex; align-items:flex-end; justify-content:space-between; gap:24px; padding-bottom:8px; border-bottom:2px solid #2A3580; margin-bottom:16px;">
+    <img src="uploads/CCM%20SIDE%20BLUE.png" alt="Cubic Construction Management" style="width: 214px; height: 86px; display: block">
+    <div style="text-align:right; font-size:7.5pt; line-height:1.5; color:#6E7480;">
+      <div style="font-size:8pt; font-weight:600; color:#2A3580; letter-spacing:0.02em; white-space:nowrap; margin-bottom:2px;">CUBIC CONSTRUCTION MANAGEMENT</div>
+      <div>ABN 32 161 357 142 &nbsp;·&nbsp; Unit 3, 5 Bessemer Street, Blacktown NSW 2148</div>
+      
+    </div>
+  </div>
+
+  <div slot="footer" style="display:flex; justify-content:space-between; gap:16px; padding-top:6px; border-top:1px solid #C9CDD6; margin-top:14px; font-size:7.5pt; color:#6E7480;">
+    <div>Cost Report &nbsp;·&nbsp; Ref CCM-CR-0001 &nbsp;·&nbsp; Rev 0 &nbsp;·&nbsp; Commercial in confidence</div>
+    
+    <div>Page _____ of _____</div>
+  </div>
+
+  <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:24px; margin-bottom:14px;">
+    <div>
+      <h1 style="font-size:18pt; font-weight:700; letter-spacing:-0.01em; margin-bottom:3px;">Cost Report</h1>
+      <div style="font-size:9pt; letter-spacing:0.14em; text-transform:uppercase; color:#6E7480; font-weight:600;">Collaroy Heights</div>
+    </div>
+    <div style="display:flex; gap:0; border:1px solid #C9CDD6;">
+      
+      <div style="padding:6px 14px; border-right:1px solid #C9CDD6;">
+        <div style="font-size:7pt; letter-spacing:0.1em; text-transform:uppercase; color:#6E7480; font-weight:600;">Data date</div>
+        <div style="font-size:9.5pt; font-weight:600;">10 August 2026</div>
+      </div>
+      
+    </div>
+  </div>
+
+  <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:0; border:1px solid #C9CDD6; background:#F7F8FA; margin-bottom:16px;">
+    
+    
+    
+  </div>
+
+  <h2 style="font-size:10pt; font-weight:700; color:#2A3580; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:7px;">Cost breakdown by code</h2>
+  <table style="margin-bottom:14px;">
+    <thead>
+      <tr>
+        <th style="width:6%;">Cost code</th>
+        <th style="width:24%;">Description</th>
+        <th style="width:9%; text-align:right;">Original budget</th>
+        <th style="width:9%; text-align:right;">Approved change</th>
+        <th style="width:9%; text-align:right;">Current budget</th>
+        <th style="width:8.5%; text-align:right;">Committed</th>
+        <th style="width:9%; text-align:right;">Actual to date</th>
+        <th style="width:9%; text-align:right;">Forecast final</th>
+        <th style="width:8.5%; text-align:right;">Variance</th>
+        <th style="text-align:right;">% spent</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td style="font-variant-numeric:tabular-nums;">01-004</td><td>Engineering review + Membrane warranty documentation</td><td class="num">$680.00</td><td class="num" style="color:#8A8F99;">+$0.00</td><td class="num">$680.00</td><td class="num">$0.00</td><td class="num">$0.00</td><td class="num">$680.00</td><td class="num" style="color:#8A8F99;">+$0.00</td><td class="num">0%</td></tr>
+      <tr><td style="font-variant-numeric:tabular-nums;">03-001</td><td>Site establishment / protection + Hoarding / weather protection + Edge protection</td><td class="num">$3,400.00</td><td class="num" style="color:#8A8F99;">+$0.00</td><td class="num">$3,400.00</td><td class="num">$0.00</td><td class="num">$0.00</td><td class="num">$3,400.00</td><td class="num" style="color:#8A8F99;">+$0.00</td><td class="num">0%</td></tr>
+      <tr><td style="font-variant-numeric:tabular-nums;">03-002</td><td>External &amp; Internal scaffolding</td><td class="num">$7,000.00</td><td class="num" style="color:#8A8F99;">+$0.00</td><td class="num">$7,000.00</td><td class="num">$4,796.00</td><td class="num">$4,796.00</td><td class="num">$4,796.00</td><td class="num" style="color:#2A6FD6;font-weight:600;">+$2,204.00</td><td class="num" style="font-weight:600;">69%</td></tr>
+      <tr><td style="font-variant-numeric:tabular-nums;">03-006</td><td>Skip bins / waste disposal</td><td class="num">$1,450.00</td><td class="num" style="color:#8A8F99;">+$0.00</td><td class="num">$1,450.00</td><td class="num">$1,259.50</td><td class="num">$0.00</td><td class="num">$1,450.00</td><td class="num" style="color:#8A8F99;">+$0.00</td><td class="num">0%</td></tr>
+      <tr><td style="font-variant-numeric:tabular-nums;">03-017</td><td>Project insurances – contract works &amp; public liability</td><td class="num">$1,250.00</td><td class="num" style="color:#8A8F99;">+$0.00</td><td class="num">$1,250.00</td><td class="num">$0.00</td><td class="num">$0.00</td><td class="num">$1,250.00</td><td class="num" style="color:#8A8F99;">+$0.00</td><td class="num">0%</td></tr>
+      <tr><td style="font-variant-numeric:tabular-nums;">04-001</td><td>Remove tiles, screed</td><td class="num">$1,950.00</td><td class="num" style="color:#8A8F99;">+$0.00</td><td class="num">$1,950.00</td><td class="num">$0.00</td><td class="num">$0.00</td><td class="num">$1,950.00</td><td class="num" style="color:#8A8F99;">+$0.00</td><td class="num">0%</td></tr>
+      <tr><td style="font-variant-numeric:tabular-nums;">04-014</td><td>Remove drains / wastes</td><td class="num">$480.00</td><td class="num" style="color:#8A8F99;">+$0.00</td><td class="num">$480.00</td><td class="num">$0.00</td><td class="num">$0.00</td><td class="num">$480.00</td><td class="num" style="color:#8A8F99;">+$0.00</td><td class="num">0%</td></tr>
+      <tr><td style="font-variant-numeric:tabular-nums;">04-012</td><td>Protect balustrade fixings</td><td class="num">$420.00</td><td class="num" style="color:#8A8F99;">+$0.00</td><td class="num">$420.00</td><td class="num">$0.00</td><td class="num">$0.00</td><td class="num">$420.00</td><td class="num" style="color:#8A8F99;">+$0.00</td><td class="num">0%</td></tr>
+      <tr><td style="font-variant-numeric:tabular-nums;">04-017</td><td>Remove side-wall linings + Chandelier removal &amp; protection</td><td class="num">$2,300.00</td><td class="num" style="color:#8A8F99;">+$0.00</td><td class="num">$2,300.00</td><td class="num">$0.00</td><td class="num">$0.00</td><td class="num">$2,300.00</td><td class="num" style="color:#8A8F99;">+$0.00</td><td class="num">0%</td></tr>
+      <tr><td style="font-variant-numeric:tabular-nums;">09-004</td><td>Re-seal balustrade</td><td class="num">$560.00</td><td class="num" style="color:#8A8F99;">+$0.00</td><td class="num">$560.00</td><td class="num">$0.00</td><td class="num">$0.00</td><td class="num">$560.00</td><td class="num" style="color:#8A8F99;">+$0.00</td><td class="num">0%</td></tr>
+      <tr><td style="font-variant-numeric:tabular-nums;">10-001</td><td>Replace substrate board</td><td class="num">$2,400.00</td><td class="num" style="color:#8A8F99;">+$0.00</td><td class="num">$2,400.00</td><td class="num">$0.00</td><td class="num">$0.00</td><td class="num">$2,400.00</td><td class="num" style="color:#8A8F99;">+$0.00</td><td class="num">0%</td></tr>
+      <tr><td style="font-variant-numeric:tabular-nums;">10-002</td><td>Prepare, refix &amp; level substrate</td><td class="num">$980.00</td><td class="num" style="color:#8A8F99;">+$0.00</td><td class="num">$980.00</td><td class="num">$0.00</td><td class="num">$0.00</td><td class="num">$980.00</td><td class="num" style="color:#8A8F99;">+$0.00</td><td class="num">0%</td></tr>
+      <tr><td style="font-variant-numeric:tabular-nums;">11-002</td><td>New aluminium sliding door</td><td class="num">$6,500.00</td><td class="num" style="color:#8A8F99;">+$0.00</td><td class="num">$6,500.00</td><td class="num">$0.00</td><td class="num">$0.00</td><td class="num">$6,500.00</td><td class="num" style="color:#8A8F99;">+$0.00</td><td class="num">0%</td></tr>
+      <tr><td style="font-variant-numeric:tabular-nums;">14-002</td><td>Flashings / reveals</td><td class="num">$780.00</td><td class="num" style="color:#8A8F99;">+$0.00</td><td class="num">$780.00</td><td class="num">$0.00</td><td class="num">$0.00</td><td class="num">$780.00</td><td class="num" style="color:#8A8F99;">+$0.00</td><td class="num">0%</td></tr>
+      <tr><td style="font-variant-numeric:tabular-nums;">15-001</td><td>Strip ceilings + New plasterboard &amp; cornice + Wall patching</td><td class="num">$4,820.00</td><td class="num" style="color:#8A8F99;">+$0.00</td><td class="num">$4,820.00</td><td class="num">$0.00</td><td class="num">$0.00</td><td class="num">$4,820.00</td><td class="num" style="color:#8A8F99;">+$0.00</td><td class="num">0%</td></tr>
+      <tr><td style="font-variant-numeric:tabular-nums;">16-001</td><td>Pedestal supports + Lay pavers + Mortar bed</td><td class="num">$5,250.00</td><td class="num" style="color:#8A8F99;">+$0.00</td><td class="num">$5,250.00</td><td class="num">$0.00</td><td class="num">$0.00</td><td class="num">$5,250.00</td><td class="num" style="color:#8A8F99;">+$0.00</td><td class="num">0%</td></tr>
+      <tr><td style="font-variant-numeric:tabular-nums;">16-004</td><td>Screed to falls</td><td class="num">$1,520.00</td><td class="num" style="color:#8A8F99;">+$0.00</td><td class="num">$1,520.00</td><td class="num">$0.00</td><td class="num">$0.00</td><td class="num">$1,520.00</td><td class="num" style="color:#8A8F99;">+$0.00</td><td class="num">0%</td></tr>
+      <tr><td style="font-variant-numeric:tabular-nums;">17-001</td><td>Sheet waterproofing membrane (protection layer)</td><td class="num">$3,320.00</td><td class="num" style="color:#8A8F99;">+$0.00</td><td class="num">$3,320.00</td><td class="num">$0.00</td><td class="num">$0.00</td><td class="num">$3,320.00</td><td class="num" style="color:#8A8F99;">+$0.00</td><td class="num">0%</td></tr>
+      <tr><td style="font-variant-numeric:tabular-nums;">18-001</td><td>Reinstate side walls</td><td class="num">$1,450.00</td><td class="num" style="color:#8A8F99;">+$0.00</td><td class="num">$1,450.00</td><td class="num">$0.00</td><td class="num">$0.00</td><td class="num">$1,450.00</td><td class="num" style="color:#8A8F99;">+$0.00</td><td class="num">0%</td></tr>
+      <tr><td style="font-variant-numeric:tabular-nums;">19-001</td><td>3-coat repaint to ceilings, cornices &amp; walls</td><td class="num">$2,240.00</td><td class="num" style="color:#8A8F99;">+$0.00</td><td class="num">$2,240.00</td><td class="num">$0.00</td><td class="num">$0.00</td><td class="num">$2,240.00</td><td class="num" style="color:#8A8F99;">+$0.00</td><td class="num">0%</td></tr>
+      <tr><td style="font-variant-numeric:tabular-nums;">20-009</td><td>Connect drainage</td><td class="num">$640.00</td><td class="num" style="color:#8A8F99;">+$0.00</td><td class="num">$640.00</td><td class="num">$0.00</td><td class="num">$0.00</td><td class="num">$640.00</td><td class="num" style="color:#8A8F99;">+$0.00</td><td class="num">0%</td></tr>
+      <tr><td style="font-variant-numeric:tabular-nums;">20-015</td><td>Strip drain + Additional drainage points</td><td class="num">$5,280.00</td><td class="num" style="color:#8A8F99;">+$0.00</td><td class="num">$5,280.00</td><td class="num">$0.00</td><td class="num">$0.00</td><td class="num">$5,280.00</td><td class="num" style="color:#8A8F99;">+$0.00</td><td class="num">0%</td></tr>
+      <tr><td style="font-variant-numeric:tabular-nums;">21-001</td><td>Downlights + Refit chandelier / make good</td><td class="num">$2,070.00</td><td class="num" style="color:#8A8F99;">+$0.00</td><td class="num">$2,070.00</td><td class="num">$0.00</td><td class="num">$0.00</td><td class="num">$2,070.00</td><td class="num" style="color:#8A8F99;">+$0.00</td><td class="num">0%</td></tr>
+      <tr><td style="font-variant-numeric:tabular-nums;">26-025</td><td>Supply porcelain pavers</td><td class="num">$2,200.00</td><td class="num" style="color:#8A8F99;">+$0.00</td><td class="num">$2,200.00</td><td class="num">$0.00</td><td class="num">$0.00</td><td class="num">$2,200.00</td><td class="num" style="color:#8A8F99;">+$0.00</td><td class="num">0%</td></tr>
+      <tr><td style="font-variant-numeric:tabular-nums;">27-001</td><td>Builder’s clean</td><td class="num">$650.00</td><td class="num" style="color:#8A8F99;">+$0.00</td><td class="num">$650.00</td><td class="num">$0.00</td><td class="num">$0.00</td><td class="num">$650.00</td><td class="num" style="color:#8A8F99;">+$0.00</td><td class="num">0%</td></tr>
+      <tr><td style="font-variant-numeric:tabular-nums;">28-003</td><td>Site supervision &amp; PM</td><td class="num">$3,200.00</td><td class="num" style="color:#8A8F99;">+$0.00</td><td class="num">$3,200.00</td><td class="num">$0.00</td><td class="num">$0.00</td><td class="num">$3,200.00</td><td class="num" style="color:#8A8F99;">+$0.00</td><td class="num">0%</td></tr>
+      <tr><td style="font-variant-numeric:tabular-nums;">32-001</td><td>Contingency</td><td class="num">$850.00</td><td class="num" style="color:#8A8F99;">+$0.00</td><td class="num">$850.00</td><td class="num">$0.00</td><td class="num">$0.00</td><td class="num">$850.00</td><td class="num" style="color:#8A8F99;">+$0.00</td><td class="num">0%</td></tr>
+      <tr style="background:#2A3580; color:#fff;">
+        <td colspan="2" style="border-color:#2A3580; font-weight:700; text-align:right;">Project totals</td>
+        <td class="num" style="border-color:#2A3580; font-weight:700;">$63,640.00</td>
+        <td class="num" style="border-color:#2A3580; font-weight:700;">+$0.00</td>
+        <td class="num" style="border-color:#2A3580; font-weight:700;">$63,640.00</td>
+        <td class="num" style="border-color:#2A3580; font-weight:700;">$6,055.50</td>
+        <td class="num" style="border-color:#2A3580; font-weight:700;">$4,796.00</td>
+        <td class="num" style="border-color:#2A3580; font-weight:700;">$61,436.00</td>
+        <td class="num" style="border-color:#2A3580; font-weight:700;">+$2,204.00</td>
+        <td class="num" style="border-color:#2A3580; font-weight:700;">7.5%</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div style="display:flex; gap:16px; align-items:flex-start;">
+    
+    
+  </div>
+
+</doc-page>
+
+</x-dc>
+</body>
+</html>

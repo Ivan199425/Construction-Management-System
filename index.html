@@ -2221,8 +2221,9 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                 </div>
                 <div style="flex:1 1 auto"></div>
                 <div style="display:flex;gap:7px;flex:0 0 auto;align-items:center">
-                  <button onClick="{{ reportV.onExportPdf }}" title="Export the report as a PDF" style="border:1px solid #cfd8e2;background:#fff;color:#0f1720;border-radius:8px;padding:8px 13px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap" style-hover="border-color:#2b59c3;color:#2b59c3">📄 PDF</button>
-                  <button onClick="{{ reportV.onExportExcel }}" title="Export the report as Excel (CSV)" style="border:1px solid #cfd8e2;background:#fff;color:#0f1720;border-radius:8px;padding:8px 13px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap" style-hover="border-color:#15803d;color:#15803d">📊 Excel</button>
+                  <button onClick="{{ reportV.onDownloadPdf }}" title="Download the report as a landscape PDF" style="border:1px solid #cfd8e2;background:#fff;color:#0f1720;border-radius:8px;padding:8px 13px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap" style-hover="border-color:#2b59c3;color:#2b59c3">&#8595; PDF</button>
+                  <button onClick="{{ reportV.onExportPdf }}" title="Open the report on screen" style="border:1px solid #cfd8e2;background:#fff;color:#0f1720;border-radius:8px;padding:8px 13px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap" style-hover="border-color:#2b59c3;color:#2b59c3">👁 Preview</button>
+                  <button onClick="{{ reportV.onExportExcel }}" title="Download the report as a formatted Excel workbook" style="border:1px solid #cfd8e2;background:#fff;color:#0f1720;border-radius:8px;padding:8px 13px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap" style-hover="border-color:#15803d;color:#15803d">📊 Excel</button>
                   <button onClick="{{ reportV.onSendEmail }}" style="border:0;background:#2b59c3;color:#fff;border-radius:8px;padding:9px 15px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap" style-hover="background:#244dab">✉ Send</button>
                   <div style="position:relative;flex:0 0 auto">
                     <button onClick="{{ reportV.onToggleColMenu }}" title="Choose which columns appear in the report and its exports" style="border:1px solid #cfd8e2;background:#fff;color:#4a5765;border-radius:8px;width:38px;height:36px;font-size:15px;cursor:pointer;font-family:inherit;line-height:1" style-hover="border-color:#2b59c3;color:#2b59c3">▦</button>
@@ -4622,7 +4623,23 @@ class Component extends DCLogic {
       + (landscape ? '10mm' : (portraitMargin || '14mm')) + '}body{margin:0}'
       + '.noprint{display:none}thead{display:table-header-group}tr{break-inside:avoid}}';
   }
+  // Every generated HTML document passes through here, so this is where the system mark
+  // is added - unless the document already draws it in a footer band of its own.
+  _withCpmsMark(html) {
+    const h = String(html == null ? '' : html);
+    if (h.indexOf('M22 24h44v10H32v20h34v10H22z') >= 0) return h;
+    const mark = '<div style="margin-top:22px;padding-top:9px;border-top:1px solid #e4e8ee;display:flex;align-items:center;gap:7px;font-size:10px;color:#8894a2;font-family:inherit">'
+      + '<svg viewBox="0 0 88 88" width="13" height="13" aria-label="CPMS" style="flex:0 0 auto;display:block">'
+      + '<rect width="88" height="88" rx="3" fill="#14232E"></rect>'
+      + '<path d="M22 24h44v10H32v20h34v10H22z" fill="#FFFFFF"></path>'
+      + '<rect x="22" y="24" width="44" height="4" fill="#FF6A13"></rect></svg>'
+      + '<strong style="color:#14232E;letter-spacing:.02em">CPMS</strong>'
+      + '<span>Cobra Project Management</span></div>';
+    const i = h.lastIndexOf('</body>');
+    return i < 0 ? (h + mark) : (h.slice(0, i) + mark + h.slice(i));
+  }
   _openPrintDoc(html, label) {
+    html = this._withCpmsMark(html);
     try {
       const url = URL.createObjectURL(new Blob([html], { type: 'text/html;charset=utf-8' }));
       const prev = this.state.pdfPreview;
@@ -4632,7 +4649,7 @@ class Component extends DCLogic {
     } catch (e) {
       const w = window.open('', '_blank');
       if (!w) { alert('Could not open the ' + (label || 'document') + '.'); return null; }
-      w.document.open(); w.document.write(html); w.document.close(); return w;
+      w.document.open(); w.document.write(html); w.document.close(); return w;   // already marked above
     }
   }
   closePdfPreview() {
@@ -5457,17 +5474,71 @@ class Component extends DCLogic {
     const lines = p.costLines || [];
     return { cols, freq, catalog: ordered, sel, lines, widths, order };
   }
-  exportReportPdf() { const p = this.proj(this.state.pid); if (!p) return; const m = this._reportModel(p); const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); const logo = (typeof window !== 'undefined' && window.CUBIC_LOGO) ? window.CUBIC_LOGO : ''; const title = (this._reportSettings(p).title);
-    const cg = m.sel.some(c => c.width) ? '<colgroup>' + m.sel.map(c => '<col' + (c.width ? ' style="width:' + c.width + 'px"' : '') + '>').join('') + '</colgroup>' : '';
-    const th = m.sel.map(c => '<th style="text-align:' + c.align + (c.width ? ';width:' + c.width + 'px' : '') + '">' + esc(c.label) + '</th>').join('');
-    const body = m.lines.map(l => '<tr>' + m.sel.map(c => { let v, col = ''; if (c.num) { const n = c.num(l); v = c.signed ? this.signed(n) : this.money(n); if (c.varc) col = 'color:' + this.varColor(n); } else v = c.text(l); return '<td class="' + (c.num ? 'm' : '') + '" style="text-align:' + c.align + ';' + col + '">' + esc(v) + '</td>'; }).join('') + '</tr>').join('');
-    let placed = false; const tot = '<tr class="tot">' + m.sel.map(c => { if (c.num) { const s = m.lines.reduce((a, l) => a + c.num(l), 0); const v = c.signed ? this.signed(s) : this.money(s); const col = c.varc ? 'color:' + this.varColor(s) : ''; return '<td class="m" style="text-align:' + c.align + ';font-weight:700;' + col + '">' + esc(v) + '</td>'; } const lbl = !placed ? 'TOTAL' : ''; placed = true; return '<td style="font-weight:700;text-align:' + c.align + '">' + lbl + '</td>'; }).join('') + '</tr>';
-    const html = '<!doctype html><html><head><meta charset="utf-8"><title>' + esc(p.name) + ' — ' + esc(title) + '</title><style>body{font-family:-apple-system,Segoe UI,Roboto,sans-serif;color:#0f1720;margin:34px;font-size:12px}.m{font-family:Consolas,monospace}h1{font-size:19px;margin:0}table{width:100%;border-collapse:collapse;margin-top:12px}th{background:#f4f6f9;padding:7px 9px;font-size:9.5px;letter-spacing:.4px;text-transform:uppercase;color:#8894a2;border-bottom:1px solid #e4e8ee}td{padding:6px 9px;border-bottom:1px solid #eef1f4}tr.tot td{border-top:2px solid #0f1a24;background:#fafbfc}td:first-child,th:first-child{white-space:nowrap}td.m{white-space:nowrap}' + this._printPageCss(m.sel.length) + '</style></head><body>' +
-      '<div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #0f1a24;padding-bottom:12px;margin-bottom:6px">' + (logo ? '<img src="' + logo + '" style="height:40px">' : '<div style="font-weight:800">CUBIC</div>') + '<div style="text-align:right"><h1>' + esc(title) + '</h1><div style="color:#4a5765;margin-top:3px">' + esc(p.name) + ' · ' + esc(p.code || '') + '</div><div class="m" style="color:#8894a2;font-size:11px">' + m.freq + ' report · as at ' + esc(this.fmtDate(this.todayLocal())) + '</div></div></div>' +
-      '<table>' + cg + '<thead><tr>' + th + '</tr></thead><tbody>' + body + tot + '</tbody></table>' +
-      '<div style="margin-top:14px;color:#8894a2;font-size:10px">Generated by Cubic Construction Management. Figures are current budget vs committed / actual / forecast.</div>' +
-      '<div class="noprint" style="margin-top:18px"><button onclick="window.print()" style="background:#2b59c3;color:#fff;border:0;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer">Print / Save as PDF</button></div></body></html>';
-    this._openPrintDoc(html, 'report'); }
+  exportReportPdf() {
+    const p = this.proj(this.state.pid); if (!p) return;
+    const c = this._reportDesignContext(p);
+    const esc = v => String(v == null ? '' : v).replace(/[&<>"]/g, x => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[x]));
+    const logo = (typeof window !== 'undefined' && window.CUBIC_LOGO) ? window.CUBIC_LOGO : ((this.state.company || {}).logoUrl || '');
+    const NAVY = '#2A3580', LINE = '#C9CDD6', MUTED = '#6E7480', BAD = '#B3261E', GOODB = '#2A6FD6';
+    const meta = c.m.meta, wSum = meta.reduce((a, x) => a + (x.w || 100), 0) || 1;
+    const th = meta.map(x => '<th style="width:' + (Math.round((x.w || 100) / wSum * 1000) / 10) + '%'
+      + (x.align === 'right' ? ';text-align:right' : '') + '">' + esc(x.label) + '</th>').join('');
+    const fmt = (v, col) => (typeof v === 'number') ? (col.signed ? this.signed(v) : this.money(v)) : esc(v);
+    const body = c.m.rows.map(row => '<tr>' + row.map((v, i) => {
+      const col = meta[i];
+      let st = '';
+      if (col.signed && typeof v === 'number') st = v < 0 ? 'color:' + BAD + ';font-weight:600;' : (v > 0 ? 'color:' + GOODB + ';font-weight:600;' : 'color:#8A8F99;');
+      if (col.id === 'pct' && v !== '0%' && v !== '\u2014') st += 'font-weight:600;';
+      return '<td' + (col.num || col.id === 'pct' ? ' class="num"' : '') + (st ? ' style="' + st + '"' : '') + '>' + fmt(v, col) + '</td>';
+    }).join('') + '</tr>').join('');
+    let lead = 0; while (lead < meta.length && !meta[lead].num && meta[lead].id !== 'pct') lead++;
+    const totCells = c.m.total.slice(lead).map((v, k) => { const col = meta[lead + k];
+      return '<td class="num" style="border-color:' + NAVY + ';font-weight:700">'
+        + (typeof v === 'number' ? (col.signed ? this.signed(v) : this.money(v)) : esc(v)) + '</td>'; }).join('');
+    const totRow = '<tr style="background:' + NAVY + ';color:#fff">'
+      + (lead > 0 ? '<td colspan="' + lead + '" style="border-color:' + NAVY + ';font-weight:700;text-align:right">Project totals</td>' : '')
+      + totCells + '</tr>';
+
+    const css = 'body{margin:0;font-family:Archivo,system-ui,-apple-system,Segoe UI,sans-serif;color:#1D2330;font-size:8.5pt}'
+      + '.sheet{width:273mm;max-width:100%;margin:0 auto}'
+      + 'table{border-collapse:collapse;width:100%;table-layout:fixed}'
+      + 'th{background:' + NAVY + ';color:#fff;font-weight:600;text-align:left;padding:6px 8px;font-size:7.5pt;letter-spacing:.06em;text-transform:uppercase;border:1px solid ' + NAVY + ';overflow-wrap:break-word}'
+      + 'td{padding:5px 8px;border:1px solid ' + LINE + ';vertical-align:top;font-size:8.5pt;overflow-wrap:break-word}'
+      + '.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}'
+      + 'h1,h2{margin:0}thead{display:table-header-group}tr{break-inside:avoid}'
+      + '.hdr{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;padding-bottom:8px;border-bottom:2px solid ' + NAVY + ';margin-bottom:16px}'
+      + '.ftr{display:flex;justify-content:space-between;gap:16px;padding-top:6px;border-top:1px solid ' + LINE + ';margin-top:14px;font-size:7.5pt;color:' + MUTED + '}'
+      + '@media print{@page{size:297mm 210mm;margin:12mm}.noprint{display:none}.sheet{width:auto;max-width:none;margin:0}}';
+
+    const html = '<!doctype html><html><head><meta charset="utf-8"><title>' + esc(p.name) + ' &mdash; ' + esc(c.docTitle) + '</title>'
+      + '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'
+      + '<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&display=swap" rel="stylesheet">'
+      + '<style>' + css + '</style></head><body><div class="sheet">'
+      + '<div class="hdr">'
+      + (logo ? '<img src="' + esc(logo) + '" alt="' + esc(c.coName) + '" style="height:86px;width:auto;max-width:260px;display:block">'
+              : '<div style="font-weight:800;color:' + NAVY + '">CUBIC</div>')
+      + '<div style="text-align:right;font-size:7.5pt;line-height:1.5;color:' + MUTED + '">'
+      + '<div style="font-size:8pt;font-weight:600;color:' + NAVY + ';letter-spacing:.02em;white-space:nowrap;margin-bottom:2px">' + esc(c.coName) + '</div>'
+      + '<div>' + (c.coAbn ? 'ABN ' + esc(c.coAbn) + (c.coAddr ? ' &nbsp;&middot;&nbsp; ' : '') : '') + esc(c.coAddr) + '</div>'
+      + (c.coContact ? '<div>' + esc(c.coContact) + '</div>' : '') + '</div></div>'
+      + '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:24px;margin-bottom:14px">'
+      + '<div><h1 style="font-size:18pt;font-weight:700;letter-spacing:-.01em;margin-bottom:3px">' + esc(c.docTitle) + '</h1>'
+      + '<div style="font-size:9pt;letter-spacing:.14em;text-transform:uppercase;color:' + MUTED + ';font-weight:600">' + esc(c.projName) + '</div>'
+      + (c.client ? '<div style="font-size:8pt;color:' + MUTED + ';margin-top:2px">' + esc(c.client) + (c.address ? ' &nbsp;&middot;&nbsp; ' + esc(c.address) : '') + '</div>' : '')
+      + '</div>'
+      + '<div style="display:flex;gap:0;border:1px solid ' + LINE + '">'
+      + (c.freqLabel ? '<div style="padding:6px 14px;border-right:1px solid ' + LINE + '"><div style="font-size:7pt;letter-spacing:.1em;text-transform:uppercase;color:' + MUTED + ';font-weight:600">Frequency</div><div style="font-size:9.5pt;font-weight:600">' + esc(c.freqLabel) + '</div></div>' : '')
+      + '<div style="padding:6px 14px"><div style="font-size:7pt;letter-spacing:.1em;text-transform:uppercase;color:' + MUTED + ';font-weight:600">Data date</div>'
+      + '<div style="font-size:9.5pt;font-weight:600">' + esc(c.dataDate) + '</div></div></div></div>'
+      + '<h2 style="font-size:10pt;font-weight:700;color:' + NAVY + ';text-transform:uppercase;letter-spacing:.08em;margin-bottom:7px">Cost breakdown by code</h2>'
+      + '<table style="margin-bottom:14px"><thead><tr>' + th + '</tr></thead><tbody>' + body + totRow + '</tbody></table>'
+      + '<div class="ftr"><div style="display:flex;align-items:center">'
+      + '<svg viewBox="0 0 88 88" width="13" height="13" aria-label="CPMS" style="display:inline-block;vertical-align:-2px;margin-right:5px;flex:0 0 auto"><rect width="88" height="88" rx="3" fill="#14232E"></rect><path d="M22 24h44v10H32v20h34v10H22z" fill="#FFFFFF"></path><rect x="22" y="24" width="44" height="4" fill="#FF6A13"></rect></svg>'
+      + '<strong style="color:#14232E;letter-spacing:.02em">CPMS</strong>&nbsp;&middot;&nbsp;' + esc(c.docTitle) + ' &nbsp;&middot;&nbsp; ' + esc(c.projName) + ' &nbsp;&middot;&nbsp; Commercial in confidence</div>'
+      + '<div>Data date ' + esc(c.dataDate) + '</div></div>'
+      + '</div></body></html>';
+    this._openPrintDoc(html, 'report');
+  }
   exportReportExcel() { const p = this.proj(this.state.pid); if (!p) return; const m = this._reportModel(p); const q = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"'; const title = (this._reportSettings(p).title);
     const lines = []; lines.push([q(p.name + ' — ' + title), q(m.freq + ' · as at ' + this.fmtDate(this.todayLocal()))].join(','));
     lines.push(m.sel.map(c => q(c.label)).join(','));
@@ -5666,7 +5737,10 @@ class Component extends DCLogic {
     const footer = () => {
       if (!opts.footer) return;
       d.line(M, d.H - M - 16, R, d.H - M - 16, { color: BORD, lw: 0.5 });
-      d.text(opts.footer, M, d.H - M - 6, { size: 7.5, color: MUT });
+      const ms = 8.5;
+      this._drawCpmsMark(d, M, d.H - M - 14, ms);
+      d.text('CPMS', M + ms + 4, d.H - M - 6, { size: 7.5, bold: true, color: [0.078, 0.137, 0.180] });
+      d.text('  -  ' + opts.footer, M + ms + 4 + d.width('CPMS', 7.5, true), d.H - M - 6, { size: 7.5, color: MUT });
       d.text('Page ' + pageNo, R, d.H - M - 6, { size: 7.5, align: 'right', color: MUT });
     };
     const startPage = () => { pageNo++; d.page(); y = M; };
@@ -6041,7 +6115,11 @@ class Component extends DCLogic {
     let y = M, pageNo = 0;
     const footer = () => {
       d.line(M, d.H - M - 16, R, d.H - M - 16, { color: BORD, lw: 0.5 });
-      d.text('Variation Order  -  Ref ' + c.ref + '  -  Rev 0', M, d.H - M - 6, { size: 7.5, color: MUT });
+      const ms = 8.5;
+      this._drawCpmsMark(d, M, d.H - M - 14, ms);
+      d.text('CPMS', M + ms + 4, d.H - M - 6, { size: 7.5, bold: true, color: [0.078, 0.137, 0.180] });
+      d.text('  -  Variation Order  -  Ref ' + c.ref + '  -  Rev 0',
+        M + ms + 4 + d.width('CPMS', 7.5, true), d.H - M - 6, { size: 7.5, color: MUT });
       d.text('Commercial in confidence', d.W / 2, d.H - M - 6, { size: 7.5, align: 'center', color: MUT });
       d.text(c.projName + '  -  page ' + pageNo, R, d.H - M - 6, { size: 7.5, align: 'right', color: MUT });
     };
@@ -7545,7 +7623,15 @@ class Component extends DCLogic {
     const m = c.m, money = n => this.money(n), fdate = iso => (iso ? this.fmtDate(iso) : '');
     const dash = v => (v && String(v).trim()) ? String(v) : '-';
     let y = M, pageNo = 0;
-    const footer = () => d.text('Tax Invoice / Payment Claim  -  Ref ' + m.no + '  -  ' + c.projName + '  -  page ' + pageNo, d.W / 2, d.H - 26, { size: 7, align: 'center', color: MUT });
+    const footer = () => {
+      const ms = 8;
+      const label = 'Tax Invoice / Payment Claim  -  Ref ' + m.no + '  -  ' + c.projName + '  -  page ' + pageNo;
+      const wLabel = d.width('CPMS  -  ' + label, 7, false);
+      const x0 = (d.W - (ms + 4 + wLabel)) / 2;
+      this._drawCpmsMark(d, x0, d.H - 33, ms);
+      d.text('CPMS', x0 + ms + 4, d.H - 26, { size: 7, bold: true, color: [0.078, 0.137, 0.180] });
+      d.text('  -  ' + label, x0 + ms + 4 + d.width('CPMS', 7, true), d.H - 26, { size: 7, color: MUT });
+    };
     const startPage = () => { pageNo++; d.page(); y = M; };
     const need = h => { if (y + h > d.H - M - 24) { footer(); startPage(); } };
 
@@ -8800,6 +8886,18 @@ class Component extends DCLogic {
     });
   }
   // ---- Cost report as a real landscape PDF -------------------------------------
+  // The CPMS mark, drawn from the same geometry as assets/cpms-mark-primary.svg
+  // (an 88x88 artboard) so it stays sharp at any size.
+  _drawCpmsMark(d, x, y, size) {
+    const k = size / 88;
+    const DARK = [0.078, 0.137, 0.180], ORANGE = [1, 0.416, 0.075], WHITE = [1, 1, 1];
+    d.rect(x, y, size, size, { fill: DARK });
+    // the C: a top bar, a left column and a bottom bar
+    d.rect(x + 22 * k, y + 24 * k, 44 * k, 10 * k, { fill: WHITE });
+    d.rect(x + 22 * k, y + 24 * k, 10 * k, 40 * k, { fill: WHITE });
+    d.rect(x + 22 * k, y + 54 * k, 44 * k, 10 * k, { fill: WHITE });
+    d.rect(x + 22 * k, y + 24 * k, 44 * k, 4 * k, { fill: ORANGE });
+  }
   _costReportPdfContext(p) {
     const co = this.state.company || {};
     const addr = [co.street, co.city, co.state, co.zip]
@@ -8827,7 +8925,12 @@ class Component extends DCLogic {
 
     const footer = () => {
       d.line(M, d.H - M - 14, R, d.H - M - 14, { color: BORD, lw: 0.5 });
-      d.text('Cost Report  -  ' + c.projName + '  -  Commercial in confidence', M, d.H - M - 5, { size: 7, color: MUT });
+      // the system mark, then the document's own identity
+      const ms = 8.5, my = d.H - M - 12.5;
+      this._drawCpmsMark(d, M, my, ms);
+      d.text('CPMS', M + ms + 4, d.H - M - 5, { size: 7, bold: true, color: [0.078, 0.137, 0.180] });
+      d.text('  -  ' + (c.docTitle || 'Cost Report') + '  -  ' + c.projName + '  -  Commercial in confidence',
+        M + ms + 4 + d.width('CPMS', 7, true), d.H - M - 5, { size: 7, color: MUT });
       d.text('Data date ' + c.dataDate + '   -   Page ' + pageNo, R, d.H - M - 5, { size: 7, align: 'right', color: MUT });
     };
     const newPage = () => { if (pageNo) footer(); pageNo++; d.page(); y = M; };
@@ -8873,8 +8976,9 @@ class Component extends DCLogic {
     d.text(c.dataDate, R - ddW + 8, y + 23, { size: 9, bold: true });
     y += 46;
 
-    // ---- KPI band ----
+    // ---- KPI band (only where the document carries one) ----
     const T = c.T;
+    if (c.showKpi !== false) {
     const pctOf = v => T.current > 0 ? (Math.round(v / T.current * 1000) / 10) + '% of budget' : '';
     const varNote = T.varc === 0 ? 'On budget' : (T.varc > 0 ? this.money(T.varc) + ' under' : this.money(Math.abs(T.varc)) + ' over');
     const cards = [
@@ -8893,7 +8997,8 @@ class Component extends DCLogic {
       d.text(cd[1], x + 7, y + 27, { size: 12, bold: true, color: cd[3] || undefined });
       if (cd[2]) d.text(cd[2], x + 7, y + 36, { size: 6.2, color: MUT });
     });
-    y += cardH + 16;
+      y += cardH + 16;
+    }
 
     // ---- breakdown ----
     d.text('COST BREAKDOWN BY CODE', M, y + 8, { size: 8.5, bold: true, color: NAVY });
@@ -8939,7 +9044,8 @@ class Component extends DCLogic {
     });
     y += 18 + 16;
 
-    // ---- summary by category and commentary, side by side ----
+    // ---- summary by category and commentary, side by side (only where present) ----
+    if (!c.cats || !c.cats.length) { footer(); return; }
     const leftW = CW * 0.53, rightX = M + leftW + 14, rightW = CW - leftW - 14;
     if (!room(120)) newPage();
     const blockTop = y;
@@ -8991,6 +9097,131 @@ class Component extends DCLogic {
 
     y = Math.max(ly, ry);
     footer();
+  }
+  // ---- Report Design: the configurable cost report, same house style ------------
+  _reportDesignContext(p) {
+    const co = this.state.company || {};
+    const addr = [co.street, co.city, co.state, co.zip]
+      .map(x => String(x || '').trim().replace(/,$/, '')).filter(Boolean).join(', ');
+    const contact = [co.phone, co.accountsEmail, co.website].map(x => String(x || '').trim()).filter(Boolean).join('  -  ');
+    const rm = this._reportModel(p);
+    const lines = rm.lines || [];
+    // the picked columns, in the picked order, described the way the writer expects
+    const meta = rm.sel.map(col => ({
+      id: col.key, label: col.label, align: col.align === 'right' ? 'right' : 'left',
+      num: !!col.num, signed: !!col.signed, w: this._num(col.width) || (col.key === 'desc' ? 220 : (col.num ? 122 : 110)),
+    }));
+    const cell = (col, l) => col.num ? col.num(l) : col.text(l);
+    const rows = lines.map(l => rm.sel.map(col => cell(col, l)));
+    let labelled = false;
+    const total = rm.sel.map(col => {
+      if (col.num) return lines.reduce((a, l) => a + col.num(l), 0);
+      if (col.key === 'pct') {
+        const bac = lines.reduce((a, l) => a + this.lineCurrent(l, p), 0);
+        const act = lines.reduce((a, l) => a + this.lineActual(l, p), 0);
+        // one decimal on the total, as the template shows it; rows stay whole numbers
+        return bac > 0 ? (Math.round(act / bac * 1000) / 10) + '%' : '\u2014';
+      }
+      if (!labelled) { labelled = true; return 'Project totals'; }
+      return '';
+    });
+    const T = lines.reduce((a, l) => {
+      a.current += this.lineCurrent(l, p); a.com += this.lineCommitted(l, p);
+      a.act += this.lineActual(l, p); a.eac += this.lineForecast(l, p);
+      a.varc += this.lineVariance(l, p); return a;
+    }, { current: 0, com: 0, act: 0, eac: 0, varc: 0 });
+    return {
+      m: { meta, rows, total }, T,
+      showKpi: false, cats: null, notes: null,        // this template carries neither
+      // resolved exactly as the Report Design header resolves it, so the two agree
+      docTitle: (() => {
+        const freq = { weekly: 'Weekly', fortnightly: 'Fortnightly', monthly: 'Monthly' }[rm.freq] || '';
+        const live = this.state.reportTitle;
+        if (live != null && String(live).trim()) return String(live).trim();
+        const saved = String(this._reportSettings(p).title || '').trim();
+        return saved || ((freq ? freq + ' ' : '') + 'cost report');
+      })(),
+      freqLabel: { weekly: 'Weekly', fortnightly: 'Fortnightly', monthly: 'Monthly' }[rm.freq] || '',
+      coName: (co.name || 'Cubic Construction Management').toUpperCase(),
+      coAbn: this._abn(), coAddr: addr, coContact: contact,
+      projName: p.name || '', client: p.client || '', address: p.address || '', code: p.code || '',
+      dataDate: new Date().toLocaleDateString('en-AU', { year: 'numeric', month: 'long', day: 'numeric' }),
+    };
+  }
+  reportPdfName() {
+    const p = this.proj(this.state.pid);
+    const slug = String((p && (p.code || p.name)) || 'project').replace(/[^A-Za-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    return 'Cost-Report_' + slug + '.pdf';
+  }
+  reportPdfBlob() {
+    const p = this.proj(this.state.pid); if (!p) return Promise.resolve(null);
+    const c = this._reportDesignContext(p);
+    return this._pdfLogo()
+      .then(logo => this._pdfBuild(d => this._layoutCostReportPdf(d, c, logo), { landscape: true }))
+      .catch(() => null);
+  }
+  downloadReportPdf() {
+    const name = this.reportPdfName();
+    this.reportPdfBlob().then(blob => {
+      if (!blob) { alert('Could not build the report PDF.'); return; }
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = name; a.style.display = 'none';
+      document.body.appendChild(a); a.click();
+      setTimeout(() => { try { a.remove(); URL.revokeObjectURL(url); } catch (e) {} }, 200);
+    });
+  }
+  // The same document as a formatted workbook.
+  exportReportWorkbook() {
+    const p = this.proj(this.state.pid); if (!p) return;
+    const c = this._reportDesignContext(p);
+    const S = this._XS, meta = c.m.meta;
+    const N = Math.max(meta.length, 4);
+    const A = i => String.fromCharCode(65 + i);
+    const R = [], merges = [], heights = {};
+    const push = cells => { R.push(cells); return R.length; };
+    const mg = (r, c1, c2) => { if (c2 > c1) merges.push(A(c1) + r + ':' + A(c2) + r); };
+    const pad = (cells, style) => { const o = cells.slice(); while (o.length < N) o.push(style ? { v: '', s: style } : null); return o; };
+    const banner = (txt, style) => { const r = push(pad([{ v: txt, s: style }])); mg(r, 0, N - 1); return r; };
+    const mn = v => Math.round(this._num(v) * 100) / 100;
+    const pctNum = v => { const m = String(v == null ? '' : v).match(/-?\d+/); return m ? Number(m[0]) : null; };
+
+    let r = banner(c.coName, S.title); heights[r] = 24;
+    banner((c.coAbn ? 'ABN ' + c.coAbn + '   \u00b7   ' : '') + c.coAddr, S.small);
+    if (c.coContact) banner(c.coContact, S.small);
+    push([]);
+    r = banner(String(c.docTitle).toUpperCase(), S.title); heights[r] = 22;
+    banner(c.projName, S.label);
+    const sub = [c.client, c.address].filter(Boolean).join('   \u00b7   ');
+    if (sub) banner(sub, S.small);
+    banner((c.freqLabel ? c.freqLabel + '   \u00b7   ' : '') + 'Data date ' + c.dataDate, S.small);
+    push([]);
+
+    banner('COST BREAKDOWN BY CODE', S.head);
+    push(pad(meta.map(col => ({ v: col.label, s: S.th })), S.th));
+    c.m.rows.forEach(row => push(pad(meta.map((col, i) => {
+      const v = row[i];
+      if (col.id === 'pct') { const n = pctNum(v); return n == null ? { v: String(v), s: S.val } : { n, s: S.pct }; }
+      if (typeof v === 'number') return { n: mn(v), s: S.money };
+      return { v: String(v == null ? '' : v), s: col.id === 'desc' ? S.valWrap : S.val };
+    }))));
+    push(pad(meta.map((col, i) => {
+      const v = c.m.total[i];
+      if (col.id === 'pct') { const n = pctNum(v); return n == null ? { v: String(v), s: S.sub } : { n, s: S.sub }; }
+      if (typeof v === 'number') return { n: mn(v), s: S.subMoney };
+      return { v: String(v == null ? '' : v), s: S.sub };
+    }), S.sub));
+
+    push([]);
+    banner('CPMS \u00b7 Cobra Project Management  \u2014  ' + c.projName + '  \u00b7  Commercial in confidence', S.note);
+
+    const widths = meta.map(col => col.id === 'desc' ? 46 : (col.id === 'code' ? 12 : 16));
+    while (widths.length < N) widths.push(16);
+    const slug = String(p.code || p.name || 'project').replace(/[^A-Za-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    this._xlsxDownload({
+      filename: 'Cost-Report_' + slug + '.xlsx', sheet: 'Cost report',
+      rows: R, cols: widths, merges, heights, orientation: 'landscape',
+    });
   }
   costReportPdfName() {
     const p = this.proj(this.state.pid);
@@ -9879,7 +10110,9 @@ class Component extends DCLogic {
         cells: m.sel.map(c => { if (c.num) { const n = c.num(l); return { v: c.signed ? this.signed(n) : this.money(n), align: c.align, color: c.varc ? this.varColor(n) : '#0f1720', mono: true, style: _cw(c) }; } return { v: c.text(l), align: c.align, color: '#0f1720', mono: false, style: _cw(c) }; }) }));
       let placed = false; const totalCells = m.sel.map(c => { if (c.num) { const s = m.lines.reduce((a, l) => a + c.num(l), 0); return { v: c.signed ? this.signed(s) : this.money(s), align: c.align, color: c.varc ? this.varColor(s) : '#0f1720', mono: true, style: _cw(c) }; } const lbl = !placed ? 'TOTAL' : ''; placed = true; return { v: lbl, align: c.align, color: '#0f1720', mono: false, style: _cw(c) }; });
       const freqLabel = { weekly: 'Weekly', fortnightly: 'Fortnightly', monthly: 'Monthly' }[m.freq];
-      const title = S.reportTitle != null ? S.reportTitle : (freqLabel + ' cost report');
+      // the box being edited wins; otherwise the saved title, and only then the default
+      const savedTitle = String(this._reportSettings(p).title || '').trim();
+      const title = S.reportTitle != null ? S.reportTitle : (savedTitle || (freqLabel + ' cost report'));
       const today = this.todayLocal(); let nextIso;
       if (m.freq === 'weekly') nextIso = this.addCalendarDays(today, 7); else if (m.freq === 'fortnightly') nextIso = this.addCalendarDays(today, 14); else { const dp = today.split('-').map(Number); const nd = new Date(dp[0], dp[1], dp[2]); const pad = x => (x < 10 ? '0' : '') + x; nextIso = nd.getFullYear() + '-' + pad(nd.getMonth() + 1) + '-' + pad(nd.getDate()); }
       const r = this.rollup(p);
@@ -9893,7 +10126,8 @@ class Component extends DCLogic {
         colMenuOpen: !!S.reportColMenu, onToggleColMenu: () => this.toggleReportColMenu(), onCloseColMenu: () => this.closeReportColMenu(),
         onResetCols: () => this.resetReportCols(), canReorder: this.can('financial', 'edit'),
         onTitle: e => this.setReportTitle(e.target.value),
-        onExportPdf: () => this.exportReportPdf(), onExportExcel: () => this.exportReportExcel(), onSendEmail: () => this.openReportEmail(),
+        onExportPdf: () => this.exportReportPdf(), onExportExcel: () => this.exportReportWorkbook(),
+        onDownloadPdf: () => this.downloadReportPdf(), onSendEmail: () => this.openReportEmail(),
       };
     }
 
