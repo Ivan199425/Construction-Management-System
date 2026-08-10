@@ -5785,7 +5785,7 @@ class Component extends DCLogic {
       ref: cm.ref || 'DRAFT', status: this.agrLabel(a.status),
       date: (a.signedAt || a.sentAt) ? String(a.signedAt || a.sentAt).slice(0, 10) : this.todayLocal(),
       coName: (co.name || '').trim() || 'Cubic Construction Management',
-      coAbn: (co.abn || '').trim() || '32 161 357 142',
+      coAbn: this._abn() || '32 161 357 142',
       coAddr: [co.street, co.city, co.state, co.zip].map(x => String(x == null ? '' : x).trim().replace(/^,+|,+$/g, '').trim()).filter(Boolean).join(', '),
       coContact: [co.phone, (this._accountsEmail && this._accountsEmail()) || '', co.website].filter(Boolean).join('  -  '),
       subName: cm.vendor || '', subAbn: vendor.abn || '', subRep: vendor.rep || '', subEmail: vendor.email || '',
@@ -6027,7 +6027,7 @@ class Component extends DCLogic {
       custCompany: doc.to || '', custName: doc.attention || '',
       meName: me.name || '', meTitle: me.title || '', today: this.todayLocal(),
       coName: (co.name || '').trim() || 'Cubic Construction Management',
-      coAbn: (co.abn || '').trim() || '32 161 357 142',
+      coAbn: this._abn() || '32 161 357 142',
       coAddr: [co.street, co.city, co.state, co.zip].map(x => String(x == null ? '' : x).trim().replace(/^,+|,+$/g, '').trim()).filter(Boolean).join(', '),
       coContact: [co.phone, (this._accountsEmail && this._accountsEmail()) || '', co.website].filter(Boolean).join('  -  '),
     };
@@ -6274,7 +6274,7 @@ class Component extends DCLogic {
     const money = n => esc(this.money(n));
     const co = this.state.company || {};
     const coName = (co.name || '').trim() || 'Cubic Construction Management';
-    const coAbn = (co.abn || '').trim() || '32 161 357 142';
+    const coAbn = this._abn() || '32 161 357 142';
     const coAddr = [co.street, co.city, co.state, co.zip].map(x => String(x == null ? '' : x).trim().replace(/^,+|,+$/g, '').trim()).filter(Boolean).join(', ');
     const acct = (this._accountsEmail && this._accountsEmail()) || 'accounts@cubiccm.com';
     const coContact = [co.phone, acct, co.website].filter(Boolean).map(esc).join(' &nbsp;&middot;&nbsp; ');
@@ -6603,7 +6603,7 @@ class Component extends DCLogic {
     // Head Contractor block — from Settings → Company profile, falling back to the CCM letterhead
     const co = this.state.company || {};
     const coName = (co.name || '').trim() || 'Cubic Construction Management';
-    const coAbn = (co.abn || '').trim() || '32 161 357 142';
+    const coAbn = this._abn() || '32 161 357 142';
     const coAddr = [co.street, co.city, co.state, co.zip].map(x => String(x == null ? '' : x).trim().replace(/^,+|,+$/g, '').trim()).filter(Boolean).join(', ') || 'Unit 3, 5 Bessemer Street, Blacktown NSW 2148';
     const me = this.currentUser() || {};
     // Trade package: prefer the cost-code description, else the vendor's trade type
@@ -7269,7 +7269,7 @@ class Component extends DCLogic {
     const S = this._XS;
     const co = this.state.company || {};
     const coName = (co.name || '').trim() || 'Cubic Construction Management';
-    const coAbn = (co.abn || '').trim() || '32 161 357 142';
+    const coAbn = this._abn() || '32 161 357 142';
     const coAddr = [co.street, co.city, co.state, co.zip].map(x => String(x == null ? '' : x).trim().replace(/^,+|,+$/g, '').trim()).filter(Boolean).join(', ') || 'Unit 3, 5 Bessemer Street, Blacktown NSW 2148';
     const acct = (this._accountsEmail && this._accountsEmail()) || 'accounts@cubiccm.com';
     const cust = (p.customers && p.customers[0]) || null;
@@ -7529,7 +7529,7 @@ class Component extends DCLogic {
     return {
       m, pay: this._paymentDetails(),
       coName: (co.name || '').trim() || 'Cubic Construction Management',
-      coAbn: (co.abn || '').trim() || '32 161 357 142',
+      coAbn: this._abn() || '32 161 357 142',
       coAddr: [co.street, co.city, co.state, co.zip].map(x => String(x == null ? '' : x).trim().replace(/^,+|,+$/g, '').trim()).filter(Boolean).join(', '),
       coContact: [co.phone, (this._accountsEmail && this._accountsEmail()) || '', co.website].filter(Boolean).join('  -  '),
       custCompany: (cust && (cust.company || cust.name)) || p.client || '', custAbn: (cust && cust.abn) || '',
@@ -7769,7 +7769,7 @@ class Component extends DCLogic {
     const dt = iso => iso ? esc(this.fmtDate(iso)) : blank;
     const co = this.state.company || {};
     const coName = (co.name || '').trim() || 'Cubic Construction Management';
-    const coAbn = (co.abn || '').trim() || '32 161 357 142';
+    const coAbn = this._abn() || '32 161 357 142';
     const coAddr = [co.street, co.city, co.state, co.zip].map(x => String(x == null ? '' : x).trim().replace(/^,+|,+$/g, '').trim()).filter(Boolean).join(', ') || 'Unit 3, 5 Bessemer Street, Blacktown NSW 2148';
     const cust = (p.customers && p.customers[0]) || null;
     const pm = ((p.team || []).find(t => /project\s*manager/i.test(t.role || '')) || (p.team || [])[0] || null);
@@ -7988,6 +7988,14 @@ class Component extends DCLogic {
   attachBillInvoice(id, e) { const f = (e.target && e.target.files && e.target.files[0]); if (!f) return; if (e.target) e.target.value = ''; this.setBillField(id, 'invoice', f.name); this._sbUploadFile(f, 'bills').then(url => { if (url) { this.setBillField(id, 'invoiceUrl', url); this.setBillField(id, 'invoiceType', f.type || ''); } }); }
   viewBillInvoice(id) { const p = this.proj(this.state.pid); const b = p && (p.bills || []).find(x => x.id === id); if (b && b.invoiceUrl) this.openAttachment({ name: b.invoice || 'invoice', url: b.invoiceUrl, type: b.invoiceType || '' }); }
   // Bills are forwarded to accounts for payment — the accountant always gets it, Gordon is always copied.
+  // An ABN reads as 11 digits grouped 2-3-3-3. Format for display only; whatever was
+  // typed into Settings is what stays stored.
+  _abn() {
+    const raw = String((this.state.company || {}).abn || '').trim();
+    const d = raw.replace(/\D/g, '');
+    if (d.length !== 11) return raw;
+    return d.slice(0, 2) + ' ' + d.slice(2, 5) + ' ' + d.slice(5, 8) + ' ' + d.slice(8);
+  }
   _accountsEmail() { const co = this.state.company || {}; return (co.accountsEmail || '').trim() || 'accounts@cubiccm.com'; }
   _billStandardRecipients() { const seen = {}, out = []; [this._accountsEmail(), 'gordon@cubiccm.com'].forEach(e => { if (e && !seen[e]) { seen[e] = 1; out.push(e); } }); return out; }
   openBillSend(id) {
@@ -8801,7 +8809,7 @@ class Component extends DCLogic {
     return {
       m, T: m.T,
       coName: (co.name || 'Cubic Construction Management').toUpperCase(),
-      coAbn: co.abn || '', coAddr: addr, coContact: contact,
+      coAbn: this._abn(), coAddr: addr, coContact: contact,
       projName: p.name || '', client: p.client || '', address: p.address || '', code: p.code || '',
       dataDate: new Date().toLocaleDateString('en-AU', { year: 'numeric', month: 'long', day: 'numeric' }),
       cats: this._costReportCategories(p),
@@ -9200,7 +9208,7 @@ class Component extends DCLogic {
               : '<div style="font-weight:800;color:' + NAVY + '">CUBIC</div>')
       + '<div style="text-align:right;font-size:7.5pt;line-height:1.5;color:' + MUTED + '">'
       + '<div style="font-size:8pt;font-weight:600;color:' + NAVY + ';letter-spacing:.02em;white-space:nowrap;margin-bottom:2px">' + esc((co.name || 'Cubic Construction Management').toUpperCase()) + '</div>'
-      + '<div>' + (co.abn ? 'ABN ' + esc(co.abn) + (addr ? ' &nbsp;&middot;&nbsp; ' : '') : '') + esc(addr) + '</div>'
+      + '<div>' + (co.abn ? 'ABN ' + esc(this._abn()) + (addr ? ' &nbsp;&middot;&nbsp; ' : '') : '') + esc(addr) + '</div>'
       + '<div>' + contact + '</div></div></div>'
 
       + '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:24px;margin-bottom:14px">'
