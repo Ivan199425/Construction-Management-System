@@ -3,8 +3,8 @@
   "configurations": [
     {
       "name": "Cubic PM (static server)",
-      "runtimeExecutable": "py",
-      "runtimeArgs": ["-m", "http.server", "8080"],
+      "runtimeExecutable": "node",
+      "runtimeArgs": [".claude/static-server.cjs", "8080"],
       "port": 8080
     }
   ]
