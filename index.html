@@ -3503,7 +3503,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
             </div>
           </sc-if>
 
-          <div style="font-size:11.5px;color:#8894a2;line-height:1.55;border-top:1px solid #eef1f4;padding-top:11px">Want this to send automatically, with attachments and no extra clicks? Deploy the <strong style="color:#6b7787">send-email</strong> function (see <span class="mono">supabase/functions/send-email</span>) — the app will use it as soon as it's live.</div>
+          <div style="font-size:11.5px;color:#8894a2;line-height:1.55;border-top:1px solid #eef1f4;padding-top:11px">Want this to send automatically, with attachments and no extra clicks? Deploy the <strong style="color:#6b7787">resend-email</strong> function (see <span class="mono">supabase/functions/resend-email</span>) — the app will use it as soon as it's live.</div>
         </div>
         <div style="padding:14px 22px;border-top:1px solid #eef1f4;display:flex;justify-content:space-between;align-items:center;gap:10px;flex:0 0 auto">
           <button onClick="{{ mailHandoffV.onCopy }}" style="border:1px solid #cfd8e2;background:#fff;color:#4a5765;border-radius:8px;padding:9px 14px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="border-color:#2b59c3;color:#2b59c3">{{ mailHandoffV.copyLabel }}</button>
@@ -4733,6 +4733,16 @@ class Component extends DCLogic {
   // payload: { to:[], subject, text, attachments:[{name,url}] } → resolves { ok, via }
   // Tries the server function first; if it isn't deployed, hands the composed email to the user
   // (Gmail / Outlook web / mail app / copy) instead of silently doing nothing.
+  // The mail function fetches each attachment by URL with no credentials of its own, so a
+  // private document has to be signed first or it is silently dropped from the email.
+  _signPayloadAttachments(payload) {
+    const atts = (payload && payload.attachments) || [];
+    if (!atts.length) return Promise.resolve(payload);
+    return Promise.all(atts.map(a => this._sbSignedUrl(a.url, 3600)
+      .then(url => Object.assign({}, a, { url }))
+      .catch(() => a)))
+      .then(signed => Object.assign({}, payload, { attachments: signed }));
+  }
   _sendEmailNow(payload) {
     const c = this._SB;
     const handoff = () => { this.setState({ mailHandoff: payload }); return Promise.resolve({ ok: false, via: 'handoff' }); };
@@ -4740,9 +4750,11 @@ class Component extends DCLogic {
     // Edge Functions verify a real user JWT — the publishable key is rejected, so send the session token.
     const sess = this.state.session;
     const headers = { 'Content-Type': 'application/json', apikey: c.key, Authorization: 'Bearer ' + ((sess && sess.access_token) || c.key) };
-    return fetch(c.url + '/functions/v1/' + (c.emailFn || 'send-email'), {
-      method: 'POST', headers, body: JSON.stringify(payload),
-    }).then(r => (r.ok ? { ok: true, via: 'server' } : handoff())).catch(() => handoff());
+    return this._signPayloadAttachments(payload).then(signedPayload =>
+      fetch(c.url + '/functions/v1/' + (c.emailFn || 'resend-email'), {
+        method: 'POST', headers, body: JSON.stringify(signedPayload),
+      }).then(r => (r.ok ? { ok: true, via: 'server' } : handoff())).catch(() => handoff())
+    ).catch(() => handoff());
   }
   closeMailHandoff() { this.setState({ mailHandoff: null, mailCopied: false }); }
   openComposeIn(which) {

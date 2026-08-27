@@ -14,7 +14,7 @@
 //       supabase secrets set RESEND_API_KEY=re_xxxxxxxx
 //       supabase secrets set MAIL_FROM="CUBIC Construction Management <no-reply@cubiccm.com>"
 // 3. Deploy:
-//       supabase functions deploy resend-email
+//       supabase functions deploy resend-email --no-verify-jwt
 //
 // Request body: { to: string[], subject: string, text: string,
 //                 attachments?: { name: string, url: string }[] }
@@ -38,7 +38,23 @@ Deno.serve(async (req: Request) => {
   const from = Deno.env.get('MAIL_FROM') || 'onboarding@resend.dev';
 
   // Only signed-in users of this app may send.
-  if (!req.headers.get('Authorization')) return json({ error: 'Not authorised' }, 401);
+  //
+  // Deploy this function with --no-verify-jwt. This project signs its tokens
+  // asymmetrically and the platform gateway rejects them before the function ever runs
+  // (UNAUTHORIZED_ASYMMETRIC_JWT), which is why mail silently fell back to a mail-client
+  // handoff. The check therefore happens here, by asking the auth server to validate the
+  // token - it does so whatever the token is signed with. Without this the function would
+  // be an open mail relay.
+  const token = (req.headers.get('Authorization') || '').replace(/^Bearers+/i, '');
+  if (!token) return json({ error: 'Not authorised' }, 401);
+  const SB_URL = Deno.env.get('SUPABASE_URL');
+  const SB_KEY = Deno.env.get('SUPABASE_ANON_KEY') || Deno.env.get('SUPABASE_PUBLISHABLE_KEY') || '';
+  if (SB_URL) {
+    const who = await fetch(SB_URL + '/auth/v1/user', {
+      headers: { apikey: SB_KEY, Authorization: 'Bearer ' + token },
+    });
+    if (!who.ok) return json({ error: 'Not authorised' }, 401);
+  }
 
   let payload: { to?: string[]; subject?: string; text?: string; attachments?: { name: string; url: string }[] };
   try { payload = await req.json(); } catch { return json({ error: 'Invalid JSON' }, 400); }
