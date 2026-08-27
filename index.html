@@ -27,8 +27,13 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
   /* Column boundaries. Without a visible edge the resize grip is invisible and unfindable. */
   .colhdr > *{position:relative}
   .colhdr > * + *::before{content:'';position:absolute;left:-5px;top:-5px;bottom:-5px;width:1px;background:#dfe5ed}
-  .colhdr.dark > * + *::before{background:rgba(255,255,255,.22)}
-  th.rcol + th.rcol{border-left:1px solid #e6ebf1}
+  .colhdr.dark > * + *::before{background:rgba(255,255,255,.40)}
+  /* House table header: navy bar, white caps, white column separators - the same
+     header the letterhead templates use, so app and documents read as one system. */
+  .colhdr.dark .rsz::after{background:rgba(255,255,255,.45)}
+  .colhdr.dark .rsz:hover{background:rgba(255,255,255,.16)}
+  .colhdr.dark .rsz:hover::after{background:#fff;width:2px;margin-left:-1px}
+  th.rcol + th.rcol{border-left:1px solid rgba(255,255,255,.40)}
   .rsz::after{content:'';position:absolute;left:50%;top:5px;bottom:5px;width:1px;margin-left:-0.5px;background:#c7d0dc}
   .rsz:hover{background:rgba(43,89,195,.10);border-radius:3px}
   .rsz:hover::after{background:#2b59c3;width:2px;margin-left:-1px}
@@ -308,7 +313,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
           <div style="background:#fff;border:1px solid #e4e8ee;border-radius:12px;overflow:hidden">
             <div style="overflow-x:auto">
               <div style="min-width:900px">
-                <div class="colhdr" style="display:grid;grid-template-columns:2.1fr 1.3fr 96px 1fr 1fr 1fr 1fr 1fr;padding:11px 18px;background:#fafbfc;border-bottom:1px solid #e4e8ee;font-size:11px;font-weight:600;letter-spacing:.4px;color:#8894a2;text-transform:uppercase">
+                <div class="colhdr dark" style="display:grid;grid-template-columns:2.1fr 1.3fr 96px 1fr 1fr 1fr 1fr 1fr;padding:11px 18px;background:#2A3580;border-bottom:1px solid #e4e8ee;font-size:11px;font-weight:600;letter-spacing:.4px;color:#fff;text-transform:uppercase">
                   <div>Project</div><div>Client</div><div>Status</div>
                   <div style="text-align:right">Contract</div><div style="text-align:right">Committed</div><div style="text-align:right">Actual</div><div style="text-align:right">Forecast</div><div style="text-align:right">Variance</div>
                 </div>
@@ -631,7 +636,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
               </div>
               <sc-if value="{{ settingsV.templates.has }}" hint-placeholder-val="{{ true }}">
                 <div style="overflow-x:auto"><div style="min-width:880px">
-                  <div class="colhdr" style="display:grid;grid-template-columns:1fr 200px 1fr 74px 96px 92px;gap:10px;padding:11px 16px;background:#fafbfc;border-bottom:1px solid #e4e8ee;font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#8894a2;text-transform:uppercase">
+                  <div class="colhdr dark" style="display:grid;grid-template-columns:1fr 200px 1fr 74px 96px 92px;gap:10px;padding:11px 16px;background:#2A3580;border-bottom:1px solid #e4e8ee;font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#fff;text-transform:uppercase">
                     <div>File name</div><div>Used for</div><div>Note</div><div style="text-align:right">Size</div><div>Added</div><div></div>
                   </div>
                   <sc-for list="{{ settingsV.templates.rows }}" as="t" hint-placeholder-count="3">
@@ -689,7 +694,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
           </div>
           <div style="background:#fff;border:1px solid #e4e8ee;border-radius:12px;overflow:hidden">
             <div style="overflow-x:auto"><div style="min-width:1040px">
-              <div class="colhdr" style="display:grid;grid-template-columns:1.2fr 1.5fr 150px 1.3fr 100px 96px 172px;padding:11px 16px;background:#fafbfc;border-bottom:1px solid #e4e8ee;font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#8894a2;text-transform:uppercase;gap:10px">
+              <div class="colhdr dark" style="display:grid;grid-template-columns:1.2fr 1.5fr 150px 1.3fr 100px 96px 172px;padding:11px 16px;background:#2A3580;border-bottom:1px solid #e4e8ee;font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#fff;text-transform:uppercase;gap:10px">
                 <div>Name</div><div>Email</div><div>Role</div><div>Projects</div><div>Last login</div><div style="text-align:center">Status</div><div style="text-align:right">Actions</div>
               </div>
               <sc-for list="{{ usersV.rows }}" as="u" hint-placeholder-count="6">
@@ -722,7 +727,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
           </div>
           <div style="background:#fff;border:1px solid #e4e8ee;border-radius:12px;overflow:hidden">
             <div style="overflow-x:auto"><div style="min-width:1180px">
-              <div class="colhdr" style="display:grid;grid-template-columns:120px 1.4fr 1.1fr 130px 1.4fr 1.6fr 150px 42px;padding:11px 16px;background:#fafbfc;border-bottom:1px solid #e4e8ee;font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#8894a2;text-transform:uppercase;gap:10px">
+              <div class="colhdr dark" style="display:grid;grid-template-columns:120px 1.4fr 1.1fr 130px 1.4fr 1.6fr 150px 42px;padding:11px 16px;background:#2A3580;border-bottom:1px solid #e4e8ee;font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#fff;text-transform:uppercase;gap:10px">
                 <div>Type</div><div>Company</div><div>Representative</div><div>Contact</div><div>Email</div><div>Address</div><div style="text-align:right">Billed / activity</div><div></div>
               </div>
               <sc-for list="{{ vendorRows }}" as="r" hint-placeholder-count="5">
@@ -875,7 +880,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
           </div>
           <div style="background:#fff;border:1px solid #e4e8ee;border-radius:12px;overflow:hidden">
             <div style="overflow-x:auto"><div style="min-width:820px">
-              <div class="colhdr" style="display:grid;grid-template-columns:92px 2.2fr 1.1fr 90px 116px 150px;padding:11px 18px;background:#fafbfc;border-bottom:1px solid #e4e8ee;font-size:11px;font-weight:600;letter-spacing:.4px;color:#8894a2;text-transform:uppercase">
+              <div class="colhdr dark" style="display:grid;grid-template-columns:92px 2.2fr 1.1fr 90px 116px 150px;padding:11px 18px;background:#2A3580;border-bottom:1px solid #e4e8ee;font-size:11px;font-weight:600;letter-spacing:.4px;color:#fff;text-transform:uppercase">
                 <div>Ref</div><div>Description</div><div style="text-align:right">Value impact</div><div style="text-align:right">Time</div><div style="text-align:center">Status</div><div style="text-align:right">Action</div>
               </div>
               <sc-for list="{{ contractVarRows }}" as="v" hint-placeholder-count="4">
@@ -998,7 +1003,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
           </div>
           <div style="background:#fff;border:1px solid #e4e8ee;border-radius:12px;overflow:hidden">
             <div style="overflow-x:auto"><div style="min-width:2140px">
-              <div class="colhdr" style="display:grid;grid-template-columns:104px 1.3fr 84px .9fr .9fr 56px .9fr 116px 124px 62px 96px 96px 92px 188px 100px 82px 34px;padding:11px 16px;background:#fafbfc;border-bottom:1px solid #e4e8ee;font-size:10px;font-weight:600;letter-spacing:.3px;color:#8894a2;text-transform:uppercase;gap:9px">
+              <div class="colhdr dark" style="display:grid;grid-template-columns:104px 1.3fr 84px .9fr .9fr 56px .9fr 116px 124px 62px 96px 96px 92px 188px 100px 82px 34px;padding:11px 16px;background:#2A3580;border-bottom:1px solid #e4e8ee;font-size:10px;font-weight:600;letter-spacing:.3px;color:#fff;text-transform:uppercase;gap:9px">
                 <div>Claim #</div><div>Subcontract</div><div>Period</div><div style="text-align:right">This claim</div><div style="text-align:right">To date</div><div style="text-align:right">Tax %</div><div style="text-align:right">Total</div><div style="text-align:right">Agreed</div><div style="text-align:right">Outstanding</div><div style="text-align:right">% sub</div><div>Submitted</div><div>Pmt due</div><div>Status</div><div style="text-align:center">Assessment</div><div>Invoice</div><div>Send</div><div></div>
               </div>
               <sc-for list="{{ claimRows }}" as="r" hint-placeholder-count="3">
@@ -1143,7 +1148,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
           </sc-if>
           <div style="background:#fff;border:1px solid #e4e8ee;border-radius:12px;overflow:hidden">
             <div style="overflow-x:auto"><div style="min-width:{{ budgetMinWidth }}">
-              <div class="colhdr" style="display:grid;grid-template-columns:{{ budgetColTemplate }};padding:11px 16px;background:#fafbfc;border-bottom:1px solid #e4e8ee;font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#8894a2;text-transform:uppercase;gap:8px">
+              <div class="colhdr dark" style="display:grid;grid-template-columns:{{ budgetColTemplate }};padding:11px 16px;background:#2A3580;border-bottom:1px solid #e4e8ee;font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#fff;text-transform:uppercase;gap:8px">
                 <sc-for list="{{ budgetHeaderCols }}" as="h" hint-placeholder-count="12"><div style="position:relative;text-align:{{ h.align }};overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><span onClick="{{ h.onSort }}" title="Sort by this column" style="cursor:{{ h.cursor }};color:{{ h.labelColor }};user-select:none">{{ h.label }}{{ h.sortArrow }}</span><div onMouseDown="{{ h.onDown }}" class="rsz" title="Drag to resize this column" style="position:absolute;top:-11px;bottom:-11px;right:-9px;width:14px;cursor:col-resize;z-index:3" style-hover="background:rgba(43,89,195,.3)"></div></div></sc-for>
               </div>
               <sc-for list="{{ costLineRows }}" as="r" hint-placeholder-count="6">
@@ -1244,7 +1249,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
             <div style="background:#fff;border:1px solid #e4e8ee;border-radius:12px;overflow:hidden;margin-top:16px">
               <div style="padding:13px 16px;border-bottom:1px solid #eef1f4;background:#fafbfc;font-size:13px;font-weight:600;color:#0f1720">Pricing — cost + markup <span style="font-weight:400;color:#a4afba;font-size:11.5px">· edit the markup % for this project (defaults from Settings → Financial)</span></div>
               <div style="overflow-x:auto"><div style="min-width:600px">
-                <div class="colhdr" style="display:grid;grid-template-columns:1.3fr 90px 1fr 1fr 1fr;gap:10px;padding:9px 16px;background:#fafbfc;border-bottom:1px solid #e4e8ee;font-size:10px;font-weight:600;letter-spacing:.3px;color:#8894a2;text-transform:uppercase">
+                <div class="colhdr dark" style="display:grid;grid-template-columns:1.3fr 90px 1fr 1fr 1fr;gap:10px;padding:9px 16px;background:#2A3580;border-bottom:1px solid #e4e8ee;font-size:10px;font-weight:600;letter-spacing:.3px;color:#fff;text-transform:uppercase">
                   <div>Category</div><div style="text-align:right">Markup</div><div style="text-align:right">Cost</div><div style="text-align:right">Markup $</div><div style="text-align:right">Contract</div>
                 </div>
                 <sc-for list="{{ markupSummary.rows }}" as="r" hint-placeholder-count="5">
@@ -1290,7 +1295,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
           <sc-if value="{{ budgetVarHas }}" hint-placeholder-val="{{ true }}">
             <div style="background:#fff;border:1px solid #e4e8ee;border-radius:12px;overflow:hidden">
               <div style="overflow-x:auto"><div style="min-width:1560px">
-                <div class="colhdr" style="display:grid;grid-template-columns:84px 1.2fr 116px 132px 74px 132px 100px 168px 176px 104px;padding:11px 16px;background:#fafbfc;border-bottom:1px solid #e4e8ee;font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#8894a2;text-transform:uppercase;gap:10px">
+                <div class="colhdr dark" style="display:grid;grid-template-columns:84px 1.2fr 116px 132px 74px 132px 100px 168px 176px 104px;padding:11px 16px;background:#2A3580;border-bottom:1px solid #e4e8ee;font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#fff;text-transform:uppercase;gap:10px">
                   <div>Variation</div><div>Description</div><div style="text-align:right">Budget</div><div>Start date</div><div style="text-align:right">Duration</div><div>Finish date</div><div style="text-align:center">Status</div><div>Linked cost code</div><div>Client response</div><div style="text-align:right;position:sticky;right:0;background:#fafbfc;padding-left:6px">Actions</div>
                 </div>
                 <sc-for list="{{ budgetVarRows }}" as="v" hint-placeholder-count="3">
@@ -1365,7 +1370,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
 
           <div style="background:#fff;border:1px solid #e4e8ee;border-radius:12px;overflow:hidden">
             <div style="overflow-x:auto"><div style="min-width:1040px">
-              <div class="colhdr" style="display:grid;grid-template-columns:42px 100px 1.4fr 130px 96px 150px 150px 104px;padding:11px 16px;background:#fafbfc;border-bottom:1px solid #e4e8ee;font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#8894a2;text-transform:uppercase;gap:10px">
+              <div class="colhdr dark" style="display:grid;grid-template-columns:42px 100px 1.4fr 130px 96px 150px 150px 104px;padding:11px 16px;background:#2A3580;border-bottom:1px solid #e4e8ee;font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#fff;text-transform:uppercase;gap:10px">
                 <div></div><div>Cost code</div><div>Description</div><div style="text-align:right">Approved budget</div><div style="text-align:center">Progress %</div><div style="text-align:right">Previously invoiced</div><div style="text-align:right">This claim</div><div style="text-align:right">Outstanding %</div>
               </div>
               <sc-for list="{{ invoiceV.rows }}" as="r" hint-placeholder-count="6">
@@ -1407,7 +1412,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
             <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:8px"><div style="font-size:13px;font-weight:600;color:#0f1720">Invoice register <span style="font-weight:500;color:#8894a2;font-size:12px">· {{ invoiceV.ledgerCount }} issued</span></div><div style="font-size:12px;color:#8894a2">Next to be issued: <strong class="mono" style="color:#2b59c3">{{ invoiceV.invoiceNo }}</strong></div></div>
             <div style="background:#fff;border:1px solid #e4e8ee;border-radius:12px;overflow:hidden">
               <div style="overflow-x:auto"><div style="min-width:820px">
-                <div class="colhdr" style="display:grid;grid-template-columns:110px 120px 120px 150px 110px 1fr 140px;padding:11px 16px;background:#fafbfc;border-bottom:1px solid #e4e8ee;font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#8894a2;text-transform:uppercase;gap:10px">
+                <div class="colhdr dark" style="display:grid;grid-template-columns:110px 120px 120px 150px 110px 1fr 140px;padding:11px 16px;background:#2A3580;border-bottom:1px solid #e4e8ee;font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#fff;text-transform:uppercase;gap:10px">
                   <div>Invoice</div><div>Date</div><div>Due date</div><div style="text-align:right">Amount</div><div style="text-align:center">Status</div><div style="text-align:right">Payment</div><div></div>
                 </div>
                 <sc-for list="{{ invoiceV.ledger }}" as="iv" hint-placeholder-count="1">
@@ -1450,7 +1455,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
           </div>
           <div style="background:#fff;border:1px solid #e4e8ee;border-radius:12px;overflow:hidden">
             <div style="overflow-x:auto"><div style="min-width:1980px">
-              <div class="colhdr" style="display:grid;grid-template-columns:112px 1.1fr 1.1fr 1.1fr 1fr 104px 104px .85fr 58px .85fr 100px 156px 96px 40px;padding:11px 16px;background:#fafbfc;border-bottom:1px solid #e4e8ee;font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#8894a2;text-transform:uppercase;gap:9px">
+              <div class="colhdr dark" style="display:grid;grid-template-columns:112px 1.1fr 1.1fr 1.1fr 1fr 104px 104px .85fr 58px .85fr 100px 156px 96px 40px;padding:11px 16px;background:#2A3580;border-bottom:1px solid #e4e8ee;font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#fff;text-transform:uppercase;gap:9px">
                 <div>Bill #</div><div>Vendor</div><div>Commitment</div><div>Cost code</div><div>Description</div><div>Bill date</div><div>Due date</div><div style="text-align:right">Amount</div><div style="text-align:right">Tax %</div><div style="text-align:right">Total</div><div>Invoice</div><div>Payment</div><div>Send</div><div></div>
               </div>
               <sc-for list="{{ billRows }}" as="r" hint-placeholder-count="5">
@@ -1598,7 +1603,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
           </div>
           <div style="background:#fff;border:1px solid #e4e8ee;border-radius:12px;overflow:hidden">
             <div style="overflow-x:auto"><div style="min-width:2200px">
-              <div class="colhdr" style="display:grid;grid-template-columns:44px 104px 200px 116px 120px 88px 160px 150px 300px 118px 128px 136px 128px 150px 150px 36px;padding:11px 14px;background:#fafbfc;border-bottom:1px solid #e4e8ee;font-size:10px;font-weight:600;letter-spacing:.3px;color:#8894a2;text-transform:uppercase;gap:8px">
+              <div class="colhdr dark" style="display:grid;grid-template-columns:44px 104px 200px 116px 120px 88px 160px 150px 300px 118px 128px 136px 128px 150px 150px 36px;padding:11px 14px;background:#2A3580;border-bottom:1px solid #e4e8ee;font-size:10px;font-weight:600;letter-spacing:.3px;color:#fff;text-transform:uppercase;gap:8px">
                 <div>#</div><div>Ref</div><div>Title</div><div>Status</div><div>Severity</div><div>Priority</div><div>Assignee</div><div>Location</div><div>Defect &amp; rectification note</div><div>Raised</div><div>Rectify by</div><div>Creator</div><div>Closed by</div><div>Date closed</div><div>Trade</div><div></div>
               </div>
               <sc-for list="{{ defectRows }}" as="r" hint-placeholder-count="4">
@@ -1671,7 +1676,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
           <sc-if value="{{ documentsV.rfiHasRows }}" hint-placeholder-val="{{ false }}">
             <div style="background:#fff;border:1px solid #e4e8ee;border-radius:12px;overflow:hidden">
               <div style="overflow-x:auto"><div style="min-width:1080px">
-                <div class="colhdr" style="display:grid;grid-template-columns:26px 96px 1.35fr 150px 118px 118px 116px 96px;padding:11px 16px;background:#fafbfc;border-bottom:1px solid #e4e8ee;font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#8894a2;text-transform:uppercase;gap:10px">
+                <div class="colhdr dark" style="display:grid;grid-template-columns:26px 96px 1.35fr 150px 118px 118px 116px 96px;padding:11px 16px;background:#2A3580;border-bottom:1px solid #e4e8ee;font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#fff;text-transform:uppercase;gap:10px">
                   <div></div><div>RFI #</div><div>Subject</div><div>Submitted by</div><div>Date sent</div><div>Due date</div><div style="text-align:center">Status</div><div></div>
                 </div>
                 <sc-for list="{{ documentsV.rfiRows }}" as="r" hint-placeholder-count="3">
@@ -1768,7 +1773,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
           <sc-if value="{{ documentsV.permitHasRows }}" hint-placeholder-val="{{ false }}">
             <div style="background:#fff;border:1px solid #e4e8ee;border-radius:12px;overflow:hidden">
               <div style="overflow-x:auto"><div style="min-width:760px">
-                <div class="colhdr" style="display:grid;grid-template-columns:104px 1.6fr 200px 128px 40px;padding:11px 16px;background:#fafbfc;border-bottom:1px solid #e4e8ee;font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#8894a2;text-transform:uppercase;gap:10px">
+                <div class="colhdr dark" style="display:grid;grid-template-columns:104px 1.6fr 200px 128px 40px;padding:11px 16px;background:#2A3580;border-bottom:1px solid #e4e8ee;font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#fff;text-transform:uppercase;gap:10px">
                   <div>Ref</div><div>Permit</div><div>Authority</div><div>Issued</div><div></div>
                 </div>
                 <sc-for list="{{ documentsV.permitRows }}" as="d" hint-placeholder-count="2">
@@ -1802,7 +1807,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
           <sc-if value="{{ documentsV.drawingHasRows }}" hint-placeholder-val="{{ false }}">
             <div style="background:#fff;border:1px solid #e4e8ee;border-radius:12px;overflow:hidden">
               <div style="overflow-x:auto"><div style="min-width:860px">
-                <div class="colhdr" style="display:grid;grid-template-columns:104px 1.5fr 150px 82px 118px 128px 40px;padding:11px 16px;background:#fafbfc;border-bottom:1px solid #e4e8ee;font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#8894a2;text-transform:uppercase;gap:10px">
+                <div class="colhdr dark" style="display:grid;grid-template-columns:104px 1.5fr 150px 82px 118px 128px 40px;padding:11px 16px;background:#2A3580;border-bottom:1px solid #e4e8ee;font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#fff;text-transform:uppercase;gap:10px">
                   <div>Ref</div><div>Drawing title</div><div>Discipline</div><div style="text-align:center">Rev</div><div>Date</div><div style="text-align:center">Status</div><div></div>
                 </div>
                 <sc-for list="{{ documentsV.drawingRows }}" as="d" hint-placeholder-count="2">
@@ -1838,7 +1843,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
           <sc-if value="{{ documentsV.meetingHasRows }}" hint-placeholder-val="{{ false }}">
             <div style="background:#fff;border:1px solid #e4e8ee;border-radius:12px;overflow:hidden">
               <div style="overflow-x:auto"><div style="min-width:1040px">
-                <div class="colhdr" style="display:grid;grid-template-columns:34px 92px 1.4fr 120px 150px 96px 118px 150px;padding:11px 16px;background:#fafbfc;border-bottom:1px solid #e4e8ee;font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#8894a2;text-transform:uppercase;gap:10px">
+                <div class="colhdr dark" style="display:grid;grid-template-columns:34px 92px 1.4fr 120px 150px 96px 118px 150px;padding:11px 16px;background:#2A3580;border-bottom:1px solid #e4e8ee;font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#fff;text-transform:uppercase;gap:10px">
                   <div></div><div>Ref</div><div>Meeting</div><div>Date · time</div><div>Chair</div><div style="text-align:center">Priority</div><div style="text-align:center">Status</div><div style="text-align:right">Actions</div>
                 </div>
                 <sc-for list="{{ documentsV.meetingRows }}" as="m" hint-placeholder-count="1">
@@ -1911,7 +1916,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                           </div>
                           <sc-if value="{{ m.hasActions }}" hint-placeholder-val="{{ true }}">
                             <div style="background:#fff;border:1px solid #e4e8ee;border-radius:10px;overflow:hidden">
-                              <div class="colhdr" style="display:grid;grid-template-columns:24px 1.8fr 150px 118px 1.2fr 34px;gap:8px;padding:8px 12px;background:#fafbfc;border-bottom:1px solid #e4e8ee;font-size:10px;font-weight:600;letter-spacing:.3px;color:#8894a2;text-transform:uppercase">
+                              <div class="colhdr dark" style="display:grid;grid-template-columns:24px 1.8fr 150px 118px 1.2fr 34px;gap:8px;padding:8px 12px;background:#2A3580;border-bottom:1px solid #e4e8ee;font-size:10px;font-weight:600;letter-spacing:.3px;color:#fff;text-transform:uppercase">
                                 <div>#</div><div>Action / conclusion</div><div>Responsible</div><div>Deadline</div><div>Special notes</div><div></div>
                               </div>
                               <sc-for list="{{ m.actionRows }}" as="a" hint-placeholder-count="2">
@@ -1944,7 +1949,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
           <sc-if value="{{ documentsV.showGenericTable }}" hint-placeholder-val="{{ true }}">
             <div style="background:#fff;border:1px solid #e4e8ee;border-radius:12px;overflow:hidden">
               <div style="overflow-x:auto"><div style="min-width:1120px">
-                <div class="colhdr" style="display:grid;grid-template-columns:104px 1.4fr 156px 118px 118px 96px 128px 40px;padding:11px 16px;background:#fafbfc;border-bottom:1px solid #e4e8ee;font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#8894a2;text-transform:uppercase;gap:10px">
+                <div class="colhdr dark" style="display:grid;grid-template-columns:104px 1.4fr 156px 118px 118px 96px 128px 40px;padding:11px 16px;background:#2A3580;border-bottom:1px solid #e4e8ee;font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#fff;text-transform:uppercase;gap:10px">
                   <div>Ref</div><div>{{ documentsV.titleLabel }}</div><div>{{ documentsV.partyLabel }}</div><div>{{ documentsV.dateLabel }}</div><div>{{ documentsV.dueLabel }}</div><div>Priority</div><div style="text-align:center">Status</div><div></div>
                 </div>
                 <sc-for list="{{ documentsV.rows }}" as="d" hint-placeholder-count="4">
@@ -1993,7 +1998,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
           <sc-if value="{{ eotV.hasRows }}" hint-placeholder-val="{{ true }}">
             <div style="background:#fff;border:1px solid #e4e8ee;border-radius:12px;overflow:hidden">
               <div style="overflow-x:auto"><div style="min-width:1340px">
-                <div class="colhdr" style="display:grid;grid-template-columns:82px 1.1fr 158px 118px 66px 66px 108px 168px 96px;padding:11px 16px;background:#fafbfc;border-bottom:1px solid #e4e8ee;font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#8894a2;text-transform:uppercase;gap:10px">
+                <div class="colhdr dark" style="display:grid;grid-template-columns:82px 1.1fr 158px 118px 66px 66px 108px 168px 96px;padding:11px 16px;background:#2A3580;border-bottom:1px solid #e4e8ee;font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#fff;text-transform:uppercase;gap:10px">
                   <div>EOT</div><div>Delay event</div><div>Cause</div><div>Start date</div><div style="text-align:right">Claimed</div><div style="text-align:right">Granted</div><div style="text-align:center">Status</div><div>Client response</div><div style="text-align:right">Actions</div>
                 </div>
                 <sc-for list="{{ eotV.rows }}" as="e" hint-placeholder-count="3">
@@ -2036,7 +2041,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
           <sc-if value="{{ eotV.hasVarTime }}" hint-placeholder-val="{{ true }}">
             <div style="font-size:13px;font-weight:600;color:#0f1720;margin:24px 0 8px">Programme impact from approved variations</div>
             <div style="background:#fff;border:1px solid #e4e8ee;border-radius:12px;overflow:hidden">
-              <div class="colhdr" style="display:grid;grid-template-columns:110px 1fr 120px;padding:10px 16px;background:#fafbfc;border-bottom:1px solid #e4e8ee;font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#8894a2;text-transform:uppercase;gap:10px"><div>Variation</div><div>Description</div><div style="text-align:right">Time impact</div></div>
+              <div class="colhdr dark" style="display:grid;grid-template-columns:110px 1fr 120px;padding:10px 16px;background:#2A3580;border-bottom:1px solid #e4e8ee;font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#fff;text-transform:uppercase;gap:10px"><div>Variation</div><div>Description</div><div style="text-align:right">Time impact</div></div>
               <sc-for list="{{ eotV.varTime }}" as="v" hint-placeholder-count="1">
                 <div style="display:grid;grid-template-columns:110px 1fr 120px;padding:9px 16px;border-bottom:1px solid #eef1f4;align-items:center;gap:10px">
                   <div class="mono" style="font-size:12px;font-weight:600;color:#0f1720">{{ v.ref }}</div>
@@ -2320,8 +2325,8 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                 <div style="overflow-x:auto">
                   <table style="width:100%;border-collapse:collapse;min-width:520px">
                     <thead><tr>
-                      <th style="width:46px;padding:9px 0 9px 10px;background:#fafbfc;border-bottom:1px solid #e4e8ee"></th>
-                      <sc-for list="{{ reportV.previewCols }}" as="c" hint-placeholder-count="8"><th class="rcol" style="position:relative;text-align:{{ c.align }};{{ c.style }};padding:9px 14px;background:#fafbfc;border-bottom:1px solid #e4e8ee;font-size:9.5px;font-weight:600;letter-spacing:.3px;color:#8894a2;text-transform:uppercase;white-space:nowrap">{{ c.label }}<div onPointerDown="{{ c.onResize }}" class="rsz" title="Drag to resize this column" style="position:absolute;top:0;bottom:0;right:-7px;width:14px;cursor:col-resize;touch-action:none;user-select:none;z-index:2"></div></th></sc-for>
+                      <th style="width:46px;padding:9px 0 9px 10px;background:#2A3580;border-bottom:1px solid #e4e8ee"></th>
+                      <sc-for list="{{ reportV.previewCols }}" as="c" hint-placeholder-count="8"><th class="rcol" style="position:relative;text-align:{{ c.align }};{{ c.style }};padding:9px 14px;background:#2A3580;border-bottom:1px solid #e4e8ee;font-size:9.5px;font-weight:600;letter-spacing:.3px;color:#fff;text-transform:uppercase;white-space:nowrap">{{ c.label }}<div onPointerDown="{{ c.onResize }}" class="rsz" title="Drag to resize this column" style="position:absolute;top:0;bottom:0;right:-7px;width:14px;cursor:col-resize;touch-action:none;user-select:none;z-index:2"></div></th></sc-for>
                     </tr></thead>
                     <tbody>
                       <sc-for list="{{ reportV.rows }}" as="r" hint-placeholder-count="6"><tr data-line-id="{{ r.id }}" style-hover="background:#f9fafc">
@@ -2466,13 +2471,13 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                 <sc-if value="{{ scheduleV.todayIn }}" hint-placeholder-val="{{ false }}"><span style="font-size:11.5px;font-weight:700;color:#dc2626;white-space:nowrap">▼ Today · {{ scheduleV.todayLabel }}</span></sc-if>
               </div>
               <div style="overflow-x:auto"><div style="min-width:{{ scheduleV.ganttMinWidth }}">
-                <div style="display:flex;border-bottom:1px solid #e4e8ee;background:#fafbfc">
-                  <div style="width:{{ scheduleV.leftW }};flex:0 0 {{ scheduleV.leftW }};display:grid;grid-template-columns:32px 168px 80px 80px 40px 68px;align-items:end;font-size:9.5px;font-weight:700;letter-spacing:.2px;color:#8894a2;text-transform:uppercase;padding-bottom:6px">
+                <div style="display:flex;border-bottom:1px solid #e4e8ee;background:#2A3580">
+                  <div style="width:{{ scheduleV.leftW }};flex:0 0 {{ scheduleV.leftW }};display:grid;grid-template-columns:32px 168px 80px 80px 40px 68px;align-items:end;font-size:9.5px;font-weight:700;letter-spacing:.2px;color:#fff;text-transform:uppercase;padding-bottom:6px">
                     <div style="text-align:center">ID</div><div style="padding-left:6px">Task name</div><div style="padding-left:4px">Start</div><div style="padding-left:4px">Finish</div><div style="text-align:center">Dur</div><div style="padding-left:6px">% comp</div>
                   </div>
                   <div style="flex:1;position:relative;height:46px">
-                    <sc-for list="{{ scheduleV.monthBands }}" as="m" hint-placeholder-count="6"><div style="position:absolute;left:{{ m.left }}%;width:{{ m.width }}%;top:0;height:23px;border-left:1px solid #e4e8ee;box-sizing:border-box;display:flex;align-items:center;padding-left:6px;font-size:10.5px;font-weight:600;color:#5b6672;white-space:nowrap;overflow:hidden">{{ m.label }}</div></sc-for>
-                    <sc-for list="{{ scheduleV.weekTicks }}" as="w" hint-placeholder-count="14"><div style="position:absolute;left:{{ w.grid }}%;top:23px;bottom:0;width:0;border-left:1px solid #f0f2f5"></div><sc-if value="{{ w.showLabel }}" hint-placeholder-val="{{ true }}"><span style="position:absolute;left:{{ w.mid }}%;top:28px;transform:translateX(-50%);font-size:8.5px;color:#a4afba;white-space:nowrap">{{ w.label }}</span></sc-if></sc-for>
+                    <sc-for list="{{ scheduleV.monthBands }}" as="m" hint-placeholder-count="6"><div style="position:absolute;left:{{ m.left }}%;width:{{ m.width }}%;top:0;height:23px;border-left:1px solid rgba(255,255,255,.30);box-sizing:border-box;display:flex;align-items:center;padding-left:6px;font-size:10.5px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden">{{ m.label }}</div></sc-for>
+                    <sc-for list="{{ scheduleV.weekTicks }}" as="w" hint-placeholder-count="14"><div style="position:absolute;left:{{ w.grid }}%;top:23px;bottom:0;width:0;border-left:1px solid rgba(255,255,255,.16)"></div><sc-if value="{{ w.showLabel }}" hint-placeholder-val="{{ true }}"><span style="position:absolute;left:{{ w.mid }}%;top:28px;transform:translateX(-50%);font-size:8.5px;color:rgba(255,255,255,.78);white-space:nowrap">{{ w.label }}</span></sc-if></sc-for>
                     <sc-if value="{{ scheduleV.todayIn }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;left:{{ scheduleV.todayPct }}%;top:0;bottom:0;width:0;border-left:1.5px solid #dc2626;z-index:3"></div></sc-if>
                   </div>
                 </div>
@@ -2512,7 +2517,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
             <div style="font-size:13px;font-weight:600;color:#0f1720;margin:2px 0 8px">Activity register <span style="font-weight:500;color:#8894a2;font-size:12px">— set <strong style="color:#6b7787">Start</strong> + <strong style="color:#6b7787">Duration</strong> (working days) and <strong style="color:#6b7787">Finish</strong> auto-fills, skipping weekends per Settings → Defaults</span></div>
             <div style="background:#fff;border:1px solid #e4e8ee;border-radius:12px;overflow:hidden">
               <div style="overflow-x:auto"><div style="min-width:1180px">
-                <div class="colhdr" style="display:grid;grid-template-columns:36px 1.5fr 116px 116px 58px 132px 132px 118px 108px 54px 30px;gap:9px;padding:10px 16px;background:#fafbfc;border-bottom:1px solid #e4e8ee;font-size:10px;font-weight:600;letter-spacing:.3px;color:#8894a2;text-transform:uppercase">
+                <div class="colhdr dark" style="display:grid;grid-template-columns:36px 1.5fr 116px 116px 58px 132px 132px 118px 108px 54px 30px;gap:9px;padding:10px 16px;background:#2A3580;border-bottom:1px solid #e4e8ee;font-size:10px;font-weight:600;letter-spacing:.3px;color:#fff;text-transform:uppercase">
                   <div style="text-align:center">#</div><div>Activity</div><div>Start</div><div>Finish</div><div style="text-align:center">Dur</div><div>% complete</div><div>Budget line</div><div style="text-align:center">Status</div><div>Predecessors</div><div style="text-align:center">Crit</div><div></div>
                 </div>
                 <sc-for list="{{ scheduleV.rows }}" as="r" hint-placeholder-count="6">
@@ -2679,7 +2684,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
               <button onClick="{{ contactsV.onAddCustomer }}" style="border:1px solid #2b59c3;background:#fff;color:#2b59c3;border-radius:7px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="background:#f2f6fd">＋ Add customer</button>
             </div>
             <sc-if value="{{ contactsV.hasCustomers }}" hint-placeholder-val="{{ true }}">
-              <div style="display:grid;grid-template-columns:42px 1.2fr 1.2fr 148px 1.6fr 88px;gap:10px;padding:8px 16px;border-bottom:1px solid #eef1f4;font-size:10px;font-weight:600;letter-spacing:.3px;color:#8894a2;text-transform:uppercase">
+              <div style="display:grid;grid-template-columns:42px 1.2fr 1.2fr 148px 1.6fr 88px;gap:10px;padding:8px 16px;background:#2A3580;border-bottom:1px solid #eef1f4;font-size:10px;font-weight:600;letter-spacing:.3px;color:#fff;text-transform:uppercase" class="colhdr dark">
                 <div></div><div>Name</div><div>Company</div><div>Mobile</div><div>Email</div><div style="text-align:right">Quick</div>
               </div>
               <sc-for list="{{ contactsV.customers }}" as="c" hint-placeholder-count="1">
@@ -2707,7 +2712,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
               <button onClick="{{ contactsV.onAddRep }}" style="border:1px solid #2b59c3;background:#fff;color:#2b59c3;border-radius:7px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="background:#f2f6fd">＋ Add representative</button>
             </div>
             <sc-if value="{{ contactsV.hasReps }}" hint-placeholder-val="{{ true }}">
-              <div style="display:grid;grid-template-columns:42px 1.2fr 1.2fr 148px 1.6fr 88px;gap:10px;padding:8px 16px;border-bottom:1px solid #eef1f4;font-size:10px;font-weight:600;letter-spacing:.3px;color:#8894a2;text-transform:uppercase">
+              <div style="display:grid;grid-template-columns:42px 1.2fr 1.2fr 148px 1.6fr 88px;gap:10px;padding:8px 16px;background:#2A3580;border-bottom:1px solid #eef1f4;font-size:10px;font-weight:600;letter-spacing:.3px;color:#fff;text-transform:uppercase" class="colhdr dark">
                 <div></div><div>Name</div><div>Role</div><div>Phone</div><div>Email</div><div style="text-align:right">Quick</div>
               </div>
               <sc-for list="{{ contactsV.reps }}" as="c" hint-placeholder-count="2">
@@ -2735,7 +2740,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
               <button onClick="{{ contactsV.onAddTeam }}" style="border:1px solid #2b59c3;background:#fff;color:#2b59c3;border-radius:7px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="background:#f2f6fd">＋ Add team member</button>
             </div>
             <sc-if value="{{ contactsV.hasTeam }}" hint-placeholder-val="{{ true }}">
-              <div style="display:grid;grid-template-columns:42px 1.2fr 1.2fr 148px 1.6fr 88px;gap:10px;padding:8px 16px;border-bottom:1px solid #eef1f4;font-size:10px;font-weight:600;letter-spacing:.3px;color:#8894a2;text-transform:uppercase">
+              <div style="display:grid;grid-template-columns:42px 1.2fr 1.2fr 148px 1.6fr 88px;gap:10px;padding:8px 16px;background:#2A3580;border-bottom:1px solid #eef1f4;font-size:10px;font-weight:600;letter-spacing:.3px;color:#fff;text-transform:uppercase" class="colhdr dark">
                 <div></div><div>Name</div><div>Role</div><div>Phone</div><div>Email</div><div style="text-align:right">Quick</div>
               </div>
               <sc-for list="{{ contactsV.team }}" as="c" hint-placeholder-count="3">
@@ -2763,7 +2768,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
               <button onClick="{{ contactsV.onGoVendors }}" style="border:1px solid #cfd8e2;background:#fff;color:#4a5765;border-radius:7px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="border-color:#2b59c3;color:#2b59c3">Vendor directory ↗</button>
             </div>
             <sc-if value="{{ contactsV.hasSubs }}" hint-placeholder-val="{{ true }}">
-              <div style="display:grid;grid-template-columns:42px 1.5fr 1.5fr 148px 1.6fr 60px;gap:10px;padding:8px 16px;border-bottom:1px solid #eef1f4;font-size:10px;font-weight:600;letter-spacing:.3px;color:#8894a2;text-transform:uppercase">
+              <div style="display:grid;grid-template-columns:42px 1.5fr 1.5fr 148px 1.6fr 60px;gap:10px;padding:8px 16px;background:#2A3580;border-bottom:1px solid #eef1f4;font-size:10px;font-weight:600;letter-spacing:.3px;color:#fff;text-transform:uppercase" class="colhdr dark">
                 <div></div><div>Company</div><div>Engaged via</div><div>Phone</div><div>Rep &amp; email</div><div style="text-align:right">Quick</div>
               </div>
               <sc-for list="{{ contactsV.subs }}" as="c" hint-placeholder-count="3">
@@ -3017,7 +3022,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
               </div>
               <div style="margin-bottom:12px"><div style="font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:#8894a2;margin-bottom:3px">Submitted to</div><div style="font-size:12.5px;font-weight:600;color:#0f1720">{{ eotSendV.submittedTo }}</div></div>
               <div style="border:1px solid #eef1f4;border-radius:8px;overflow:hidden;margin-bottom:12px">
-                <div class="colhdr dark" style="display:grid;grid-template-columns:1fr 110px;background:#0f1a24;color:#fff;font-size:9px;text-transform:uppercase;letter-spacing:.4px;padding:7px 10px;gap:8px"><div>Delay event &amp; cause</div><div style="text-align:right">Claimed</div></div>
+                <div class="colhdr dark" style="display:grid;grid-template-columns:1fr 110px;background:#2A3580;color:#fff;font-size:9px;text-transform:uppercase;letter-spacing:.4px;padding:7px 10px;gap:8px"><div>Delay event &amp; cause</div><div style="text-align:right">Claimed</div></div>
                 <div style="display:grid;grid-template-columns:1fr 110px;padding:9px 10px;gap:8px;align-items:center"><div><div style="font-size:12px;color:#0f1720">{{ eotSendV.title }}</div><div style="font-size:10.5px;color:#8894a2;margin-top:2px">{{ eotSendV.cause }} · from {{ eotSendV.startDate }}</div></div><div class="mono" style="text-align:right;font-size:12.5px;font-weight:600;color:#b45309">{{ eotSendV.claimedDays }} d</div></div>
               </div>
               <div style="display:flex;gap:10px">
@@ -10861,7 +10866,7 @@ class Component extends DCLogic {
       budgetHeaderCols = _visCols.map(c => {
         const active = sortCol === c.id; const sortable = !!_sortableCols[c.id];
         return { id: c.id, label: c.label, align: c.align, onDown: e => this.colResizeDown(c.id, e),
-          sortable, sortArrow: active ? (sortDir === 'asc' ? ' ▲' : ' ▼') : '', labelColor: active ? '#2b59c3' : '#8894a2',
+          sortable, sortArrow: active ? (sortDir === 'asc' ? ' ▲' : ' ▼') : '', labelColor: '#fff',
           cursor: sortable ? 'pointer' : 'default', onSort: sortable ? () => this.sortBudget(c.id) : (() => {}) };
       });
       // totals row: one cell per visible column, in order (money totals + a single total label in the first non-money column)
