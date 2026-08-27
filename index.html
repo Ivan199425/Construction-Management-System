@@ -702,7 +702,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                   <div style="font-size:12.5px;font-weight:600;color:#0f1720;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ u.name }}<sc-if value="{{ u.external }}" hint-placeholder-val="{{ false }}"><span style="font-size:8.5px;font-weight:700;color:#b45309;background:#fbf1e3;border-radius:8px;padding:1px 6px;margin-left:6px">EXT</span></sc-if></div>
                   <div style="font-size:12px;color:#2b59c3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ u.email }}</div>
                   <div style="font-size:11.5px;color:#0f1720;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ u.roleLabel }}</div>
-                  <div style="font-size:11.5px;color:#6b7787;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="{{ u.projectNames }}">{{ u.projectNames }}</div>
+                  <div style="font-size:11.5px;color:#0f1720;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="{{ u.projectNames }}">{{ u.projectNames }}</div>
                   <div class="mono" style="font-size:10.5px;color:#8894a2">{{ u.lastLogin }}</div>
                   <div style="text-align:center"><span style="display:inline-block;font-size:10px;font-weight:700;color:{{ u.statusColor }};background:{{ u.statusBg }};border-radius:12px;padding:2px 9px">{{ u.statusLabel }}</span></div>
                   <div style="display:flex;align-items:center;justify-content:flex-end;gap:5px">
@@ -888,7 +888,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                   <div class="mono" style="font-weight:500;color:#0f1720">{{ v.ref }}</div>
                   <div style="color:#0f1720">{{ v.desc }}</div>
                   <div class="mono" style="text-align:right;font-weight:600;color:{{ v.valColor }}">{{ v.value }}</div>
-                  <div class="mono" style="text-align:right;color:#6b7787">{{ v.time }}</div>
+                  <div class="mono" style="text-align:right;color:#0f1720">{{ v.time }}</div>
                   <div style="text-align:center"><span style="font-size:11px;font-weight:600;padding:2px 9px;border-radius:16px;background:{{ v.statusBg }};color:{{ v.statusColor }}">{{ v.statusLabel }}</span></div>
                   <div style="text-align:right">
                     <sc-if value="{{ v.canDecide }}" hint-placeholder-val="{{ true }}">
@@ -926,7 +926,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                 <div onClick="{{ c.onToggle }}" style="display:grid;grid-template-columns:26px 2fr 1.2fr 1fr 116px 1.1fr;padding:15px 18px;align-items:center;cursor:pointer;gap:8px" style-hover="background:#f8fafc">
                   <div style="color:#a4afba;font-size:12px;transform:{{ c.caret }};transition:transform .15s">▶</div>
                   <div><div style="font-weight:600;color:#0f1720;font-size:14px">{{ c.vendor }}</div><div class="mono" style="font-size:11px;color:#8894a2">{{ c.ref }} · {{ c.typeLabel }}</div></div>
-                  <div style="font-size:12.5px;color:#6b7787">{{ c.scope }}</div>
+                  <div style="font-size:12.5px;color:#0f1720">{{ c.scope }}</div>
                   <div style="font-size:12px;color:#8894a2">{{ c.dates }}</div>
                   <div><span style="font-size:11px;font-weight:600;padding:2px 9px;border-radius:16px;background:{{ c.statusBg }};color:{{ c.statusColor }}">{{ c.statusLabel }}</span></div>
                   <div style="text-align:right"><div class="mono" style="font-size:16px;font-weight:600;color:#0f1720">{{ c.current }}</div><div style="font-size:11px;color:#8894a2">committed</div></div>
@@ -1018,10 +1018,10 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                   <div><input value="{{ r.toDate }}" onInput="{{ r.onToDate }}" class="mono" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 8px;font-size:12.5px;text-align:right;font-family:'IBM Plex Mono',monospace;color:#0f1720;background:#fff;margin-top:1px" style-focus="border-color:#2b59c3;outline:none"><sc-if value="{{ r.toDateDiffers }}" hint-placeholder-val="{{ false }}"><div class="mono" title="Claims on this subcontract add up to more than the figure typed here — this is the amount used for Outstanding and % sub" style="font-size:9px;text-align:right;color:#b45309;margin-top:2px">using {{ r.toDateEffective }}</div></sc-if></div>
                   <input value="{{ r.taxRate }}" onInput="{{ r.onTax }}" title="Tax %" class="mono" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 5px;font-size:12px;text-align:right;font-family:'IBM Plex Mono',monospace;color:#0f1720;background:#fff;margin-top:1px" style-focus="border-color:#2b59c3;outline:none">
                   <div class="mono" style="text-align:right;font-size:12px;font-weight:600;color:#0f1720;padding-top:7px" title="Certified/claimed incl. tax">{{ r.total }}</div>
-                  <div class="mono" style="text-align:right;font-size:11.5px;color:#6b7787;padding-top:7px" title="Agreed subcontract value">{{ r.agreed }}</div>
+                  <div class="mono" style="text-align:right;font-size:11.5px;color:#0f1720;padding-top:7px" title="Agreed subcontract value">{{ r.agreed }}</div>
                   <div class="mono" style="text-align:right;font-size:11.5px;font-weight:600;color:{{ r.outstandingColor }};padding-top:7px" title="Agreed value less claimed to-date">{{ r.outstanding }}</div>
-                  <div class="mono" style="text-align:right;font-size:12px;color:#6b7787;padding-top:7px">{{ r.pctToDate }}</div>
-                  <div class="mono" style="font-size:11px;color:#6b7787">{{ r.submitted }}</div>
+                  <div class="mono" style="text-align:right;font-size:12px;color:#0f1720;padding-top:7px">{{ r.pctToDate }}</div>
+                  <div class="mono" style="font-size:11px;color:#0f1720">{{ r.submitted }}</div>
                   <div class="mono" style="font-size:11px;color:{{ r.payDueColor }}">{{ r.paymentDue }}</div>
                   <div><span style="font-size:10.5px;font-weight:600;padding:2px 8px;border-radius:16px;background:{{ r.statusBg }};color:{{ r.statusColor }}">{{ r.statusLabel }}</span><sc-if value="{{ r.hasPaidOn }}" hint-placeholder-val="{{ false }}"><div class="mono" title="Date this claim was marked paid" style="font-size:9px;color:#15803d;margin-top:2px">✓ paid {{ r.paidOn }}</div></sc-if></div>
                   <div style="text-align:center">
@@ -1559,7 +1559,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                       <div style="width:{{ b.openW }};background:#202124"></div>
                       <div style="width:{{ b.closedW }};background:#9aa8b6"></div>
                     </div>
-                    <div class="mono" style="width:26px;text-align:right;font-size:11px;color:#6b7787;flex:0 0 auto">{{ b.total }}</div>
+                    <div class="mono" style="width:26px;text-align:right;font-size:11px;color:#0f1720;flex:0 0 auto">{{ b.total }}</div>
                   </div>
                 </sc-for>
               </div>
@@ -1621,7 +1621,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                   <input value="{{ r.location }}" onInput="{{ r.onLocation }}" placeholder="Location" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 8px;font-size:11.5px;font-family:inherit;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none">
                   <div style="display:flex;flex-direction:column;gap:5px">
                     <textarea value="{{ r.desc }}" onInput="{{ r.onDesc }}" placeholder="Describe the defect" rows="2" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 8px;font-size:11.5px;font-family:inherit;color:#0f1720;background:#fff;resize:vertical;line-height:1.4" style-focus="border-color:#2b59c3;outline:none"></textarea>
-                    <input value="{{ r.notes }}" onInput="{{ r.onNotes }}" placeholder="＋ Rectification note…" style="width:100%;border:1px solid #eef1f4;border-radius:6px;padding:5px 8px;font-size:11px;font-family:inherit;color:#6b7787;background:#fafbfc" style-focus="border-color:#2b59c3;outline:none;background:#fff">
+                    <input value="{{ r.notes }}" onInput="{{ r.onNotes }}" placeholder="＋ Rectification note…" style="width:100%;border:1px solid #eef1f4;border-radius:6px;padding:5px 8px;font-size:11px;font-family:inherit;color:#0f1720;background:#fafbfc" style-focus="border-color:#2b59c3;outline:none;background:#fff">
                     <div style="display:flex;flex-wrap:wrap;gap:5px;align-items:center">
                       <sc-for list="{{ r.photos }}" as="ph" hint-placeholder-count="0">
                         <span style="position:relative;display:inline-block;line-height:0">
@@ -1794,7 +1794,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                         <label style="display:inline-flex;align-items:center;gap:6px;border:1px dashed #cfd8e2;background:#fff;color:#2b59c3;border-radius:8px;padding:7px 12px;font-size:12px;font-weight:600;cursor:pointer" style-hover="border-color:#2b59c3;background:#f2f6fd">＋ Attach document<input type="file" multiple="multiple" accept=".pdf,image/*,application/pdf,.xls,.xlsx,.doc,.docx" onChange="{{ d.onAddDoc }}" style="display:none"></label>
                       </div>
                     </div>
-                    <input value="{{ d.notes }}" onInput="{{ d.onNotes }}" placeholder="＋ Note…" style="width:100%;margin-top:8px;border:1px solid #eef1f4;border-radius:6px;padding:5px 8px;font-size:11px;font-family:inherit;color:#6b7787;background:#fafbfc" style-focus="border-color:#2b59c3;outline:none;background:#fff">
+                    <input value="{{ d.notes }}" onInput="{{ d.onNotes }}" placeholder="＋ Note…" style="width:100%;margin-top:8px;border:1px solid #eef1f4;border-radius:6px;padding:5px 8px;font-size:11px;font-family:inherit;color:#0f1720;background:#fafbfc" style-focus="border-color:#2b59c3;outline:none;background:#fff">
                   </div>
                 </sc-for>
               </div></div>
@@ -1830,7 +1830,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                         <label style="display:inline-flex;align-items:center;gap:6px;border:1px dashed #cfd8e2;background:#fff;color:#2b59c3;border-radius:8px;padding:7px 12px;font-size:12px;font-weight:600;cursor:pointer" style-hover="border-color:#2b59c3;background:#f2f6fd">＋ Add drawing<input type="file" multiple="multiple" accept=".pdf,image/*,application/pdf,.dwg,.dxf" onChange="{{ d.onAddDoc }}" style="display:none"></label>
                       </div>
                     </div>
-                    <input value="{{ d.notes }}" onInput="{{ d.onNotes }}" placeholder="＋ Note…" style="width:100%;margin-top:8px;border:1px solid #eef1f4;border-radius:6px;padding:5px 8px;font-size:11px;font-family:inherit;color:#6b7787;background:#fafbfc" style-focus="border-color:#2b59c3;outline:none;background:#fff">
+                    <input value="{{ d.notes }}" onInput="{{ d.onNotes }}" placeholder="＋ Note…" style="width:100%;margin-top:8px;border:1px solid #eef1f4;border-radius:6px;padding:5px 8px;font-size:11px;font-family:inherit;color:#0f1720;background:#fafbfc" style-focus="border-color:#2b59c3;outline:none;background:#fff">
                   </div>
                 </sc-for>
               </div></div>
@@ -1925,7 +1925,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                                   <input value="{{ a.text }}" onInput="{{ a.onText }}" placeholder="Action item / decision / conclusion" style="width:100%;border:1px solid #eef1f4;border-radius:6px;padding:6px 8px;font-size:12px;font-family:inherit;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none">
                                   <select value="{{ a.owner }}" onChange="{{ a.onOwner }}" title="Responsible person" style="width:100%;border:1px solid #eef1f4;border-radius:6px;padding:6px 6px;font-size:11px;font-family:inherit;color:#0f1720;background:#fff;cursor:pointer" style-focus="border-color:#2b59c3;outline:none"><sc-for list="{{ a.ownerOptions }}" as="o" hint-placeholder-count="6"><option value="{{ o.v }}">{{ o.label }}</option></sc-for></select>
                                   <input value="{{ a.due }}" onInput="{{ a.onDue }}" type="date" class="mono" style="width:100%;border:1px solid #eef1f4;border-radius:6px;padding:6px 6px;font-size:10.5px;font-family:'IBM Plex Mono',monospace;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none">
-                                  <input value="{{ a.notes }}" onInput="{{ a.onNotes }}" placeholder="Notes" style="width:100%;border:1px solid #eef1f4;border-radius:6px;padding:6px 8px;font-size:11.5px;font-family:inherit;color:#6b7787;background:#fff" style-focus="border-color:#2b59c3;outline:none">
+                                  <input value="{{ a.notes }}" onInput="{{ a.onNotes }}" placeholder="Notes" style="width:100%;border:1px solid #eef1f4;border-radius:6px;padding:6px 8px;font-size:11.5px;font-family:inherit;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none">
                                   <button onClick="{{ a.onDelete }}" title="Delete action" style="border:0;background:transparent;color:#c0c8d1;cursor:pointer;font-size:13px;padding:2px;line-height:1" style-hover="color:#b91c1c">✕</button>
                                 </div>
                               </sc-for>
@@ -1970,7 +1970,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                       <select value="{{ d.status }}" onChange="{{ d.onStatus }}" style="width:100%;border:1px solid {{ d.statusColor }};border-radius:14px;padding:4px 8px;font-size:10.5px;font-weight:600;font-family:inherit;color:{{ d.statusColor }};background:{{ d.statusBg }};cursor:pointer" style-focus="outline:none"><sc-for list="{{ d.statusOptions }}" as="o" hint-placeholder-count="3"><option value="{{ o.v }}">{{ o.label }}</option></sc-for></select>
                       <button onClick="{{ d.onDelete }}" title="Delete" style="border:0;background:transparent;color:#c0c8d1;cursor:pointer;font-size:13px;padding:2px;line-height:1" style-hover="color:#b91c1c">✕</button>
                     </div>
-                    <input value="{{ d.notes }}" onInput="{{ d.onNotes }}" placeholder="＋ Note…" style="width:100%;margin-top:6px;border:1px solid #eef1f4;border-radius:6px;padding:5px 8px;font-size:11px;font-family:inherit;color:#6b7787;background:#fafbfc" style-focus="border-color:#2b59c3;outline:none;background:#fff">
+                    <input value="{{ d.notes }}" onInput="{{ d.onNotes }}" placeholder="＋ Note…" style="width:100%;margin-top:6px;border:1px solid #eef1f4;border-radius:6px;padding:5px 8px;font-size:11px;font-family:inherit;color:#0f1720;background:#fafbfc" style-focus="border-color:#2b59c3;outline:none;background:#fff">
                   </div>
                 </sc-for>
               </div></div>
@@ -2028,7 +2028,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                         <button onClick="{{ e.onDelete }}" title="Delete EOT" style="border:0;background:transparent;color:#c0c8d1;cursor:pointer;font-size:13px;padding:2px;line-height:1" style-hover="color:#b91c1c">✕</button>
                       </div>
                     </div>
-                    <input value="{{ e.notes }}" onInput="{{ e.onNotes }}" placeholder="＋ Assessment note / basis of claim…" style="width:100%;margin-top:6px;border:1px solid #eef1f4;border-radius:6px;padding:5px 8px;font-size:11px;font-family:inherit;color:#6b7787;background:#fafbfc" style-focus="border-color:#2b59c3;outline:none;background:#fff">
+                    <input value="{{ e.notes }}" onInput="{{ e.onNotes }}" placeholder="＋ Assessment note / basis of claim…" style="width:100%;margin-top:6px;border:1px solid #eef1f4;border-radius:6px;padding:5px 8px;font-size:11px;font-family:inherit;color:#0f1720;background:#fafbfc" style-focus="border-color:#2b59c3;outline:none;background:#fff">
                   </div>
                 </sc-for>
               </div></div>
