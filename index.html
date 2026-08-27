@@ -1014,8 +1014,8 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                     <sc-for list="{{ r.commitmentOptions }}" as="o" hint-placeholder-count="2"><option value="{{ o.id }}">{{ o.label }}</option></sc-for>
                   </select>
                   <input value="{{ r.period }}" onInput="{{ r.onPeriod }}" placeholder="YYYY-MM" class="mono" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 6px;font-size:11.5px;font-family:'IBM Plex Mono',monospace;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none">
-                  <input value="{{ r.thisClaim }}" onInput="{{ r.onThis }}" class="mono" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 8px;font-size:12.5px;text-align:right;font-family:'IBM Plex Mono',monospace;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none">
-                  <div><input value="{{ r.toDate }}" onInput="{{ r.onToDate }}" class="mono" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 8px;font-size:12.5px;text-align:right;font-family:'IBM Plex Mono',monospace;color:#0f1720;background:#fff;margin-top:1px" style-focus="border-color:#2b59c3;outline:none"><sc-if value="{{ r.toDateDiffers }}" hint-placeholder-val="{{ false }}"><div class="mono" title="Claims on this subcontract add up to more than the figure typed here — this is the amount used for Outstanding and % sub" style="font-size:9px;text-align:right;color:#b45309;margin-top:2px">using {{ r.toDateEffective }}</div></sc-if></div>
+                  <input value="{{ r.thisClaim }}" onInput="{{ r.onThis }}" onFocus="{{ r.onThisFocus }}" onBlur="{{ r.onCellBlur }}" class="mono" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 8px;font-size:12.5px;text-align:right;font-family:'IBM Plex Mono',monospace;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none">
+                  <div><input value="{{ r.toDate }}" onInput="{{ r.onToDate }}" onFocus="{{ r.onToDateFocus }}" onBlur="{{ r.onCellBlur }}" class="mono" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 8px;font-size:12.5px;text-align:right;font-family:'IBM Plex Mono',monospace;color:#0f1720;background:#fff;margin-top:1px" style-focus="border-color:#2b59c3;outline:none"><sc-if value="{{ r.toDateDiffers }}" hint-placeholder-val="{{ false }}"><div class="mono" title="Claims on this subcontract add up to more than the figure typed here — this is the amount used for Outstanding and % sub" style="font-size:9px;text-align:right;color:#b45309;margin-top:2px">using {{ r.toDateEffective }}</div></sc-if></div>
                   <input value="{{ r.taxRate }}" onInput="{{ r.onTax }}" title="Tax %" class="mono" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 5px;font-size:12px;text-align:right;font-family:'IBM Plex Mono',monospace;color:#0f1720;background:#fff;margin-top:1px" style-focus="border-color:#2b59c3;outline:none">
                   <div class="mono" style="text-align:right;font-size:12px;font-weight:600;color:#0f1720;padding-top:7px" title="Certified/claimed incl. tax">{{ r.total }}</div>
                   <div class="mono" style="text-align:right;font-size:11.5px;color:#0f1720;padding-top:7px" title="Agreed subcontract value">{{ r.agreed }}</div>
@@ -1302,7 +1302,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                   <div style="display:grid;grid-template-columns:84px 1.2fr 116px 132px 74px 132px 100px 168px 176px 104px;padding:9px 16px;border-bottom:1px solid #eef1f4;align-items:center;gap:10px" style-hover="background:#f9fafc">
                     <div class="mono" style="font-size:12px;font-weight:600;color:#0f1720">{{ v.ref }}</div>
                     <input value="{{ v.desc }}" onInput="{{ v.onDesc }}" placeholder="Describe the variation" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 8px;font-size:12px;font-family:inherit;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none">
-                    <div><input value="{{ v.valueInput }}" onInput="{{ v.onValue }}" inputmode="decimal" placeholder="0.00" title="Budget impact in dollars — you can type 3,400 or $3,400.00" class="mono" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 8px;font-size:12px;text-align:right;font-family:'IBM Plex Mono',monospace;color:{{ v.valColor }};background:#fff" style-focus="border-color:#2b59c3;outline:none"><sc-if value="{{ v.hasValue }}" hint-placeholder-val="{{ true }}"><div class="mono" style="font-size:10px;font-weight:600;text-align:right;color:{{ v.valColor }};margin-top:3px">{{ v.valueFmt }}</div></sc-if></div>
+                    <div><input value="{{ v.valueInput }}" onInput="{{ v.onValue }}" onFocus="{{ v.onValueFocus }}" onBlur="{{ v.onValueBlur }}" inputmode="decimal" placeholder="0.00" title="Budget impact in dollars — you can type 3,400 or $3,400.00" class="mono" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 8px;font-size:12px;text-align:right;font-family:'IBM Plex Mono',monospace;color:{{ v.valColor }};background:#fff" style-focus="border-color:#2b59c3;outline:none"><sc-if value="{{ v.hasValue }}" hint-placeholder-val="{{ true }}"><div class="mono" style="font-size:10px;font-weight:600;text-align:right;color:{{ v.valColor }};margin-top:3px">{{ v.valueFmt }}</div></sc-if></div>
                     <input value="{{ v.startDate }}" onInput="{{ v.onStart }}" type="date" title="Start date" class="mono" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 6px;font-size:10.5px;font-family:'IBM Plex Mono',monospace;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none">
                     <div style="display:flex;align-items:center;justify-content:flex-end;gap:2px"><input value="{{ v.timeInput }}" onInput="{{ v.onTime }}" type="number" placeholder="0" title="Duration in working days" class="mono" style="width:44px;border:1px solid #e4e8ee;border-radius:6px;padding:6px 5px;font-size:12px;text-align:right;font-family:'IBM Plex Mono',monospace;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none"><span style="font-size:10.5px;color:#8894a2">d</span></div>
                     <div class="mono" style="font-size:11px;color:#0f1720">{{ v.finishDate }}<sc-if value="{{ v.hasFinish }}" hint-placeholder-val="{{ true }}"><span style="display:block;font-size:8.5px;color:#8894a2">working days</span></sc-if></div>
@@ -1480,17 +1480,17 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                   <input value="{{ r.desc }}" onInput="{{ r.onDesc }}" placeholder="Description" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 9px;font-size:12.5px;font-family:inherit;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none">
                   <input value="{{ r.billDate }}" onInput="{{ r.onBillDate }}" type="date" class="mono" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 8px;font-size:11px;font-family:'IBM Plex Mono',monospace;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none">
                   <input value="{{ r.dueDate }}" onInput="{{ r.onDueDate }}" type="date" class="mono" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 8px;font-size:11px;font-family:'IBM Plex Mono',monospace;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none">
-                  <input value="{{ r.amount }}" onInput="{{ r.onAmount }}" class="mono" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 8px;font-size:12.5px;text-align:right;font-family:'IBM Plex Mono',monospace;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none">
+                  <input value="{{ r.amount }}" onInput="{{ r.onAmount }}" onFocus="{{ r.onAmountFocus }}" onBlur="{{ r.onCellBlur }}" class="mono" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 8px;font-size:12.5px;text-align:right;font-family:'IBM Plex Mono',monospace;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none">
                   <input value="{{ r.taxRate }}" onInput="{{ r.onTax }}" class="mono" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 6px;font-size:12.5px;text-align:right;font-family:'IBM Plex Mono',monospace;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none">
                   <div class="mono" style="text-align:right;font-weight:600;font-size:12.5px;color:#0f1720">{{ r.total }}</div>
                   <div style="display:flex;align-items:center;gap:3px;margin-top:1px"><sc-if value="{{ r.hasInvoiceFile }}" hint-placeholder-val="{{ false }}"><button onClick="{{ r.onViewInvoice }}" title="View invoice" style="border:1px solid #cfd8e2;background:#fff;color:#2b59c3;border-radius:6px;padding:6px 7px;font-size:10.5px;font-weight:700;cursor:pointer;flex:0 0 auto" style-hover="border-color:#2b59c3">👁</button></sc-if><label title="Attach the vendor invoice (PDF/image)" style="display:flex;align-items:center;gap:4px;border:1px dashed #cfd8e2;background:#fff;color:#6b7787;border-radius:6px;padding:6px 7px;font-size:10.5px;font-weight:600;cursor:pointer;overflow:hidden" style-hover="border-color:#2b59c3;color:#2b59c3"><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.invoiceLabel }}</span><input type="file" accept="application/pdf,image/*" onChange="{{ r.onAttachInvoice }}" style="display:none"></label></div>
                   <div style="display:flex;flex-direction:column;gap:3px">
                     <span style="align-self:flex-start;font-size:10px;font-weight:600;padding:1px 8px;border-radius:12px;background:{{ r.statusBg }};color:{{ r.statusColor }}">{{ r.statusLabel }}</span><sc-if value="{{ r.hasPaidOn }}" hint-placeholder-val="{{ false }}"><span class="mono" title="Date this bill was marked paid" style="font-size:9px;color:#15803d;margin-top:2px">✓ {{ r.paidOn }}</span></sc-if>
                     <div style="display:flex;gap:4px;align-items:center">
-                      <input value="{{ r.paid }}" onInput="{{ r.onPaid }}" title="Amount paid to date" class="mono" style="flex:1;min-width:0;border:1px solid #e4e8ee;border-radius:6px;padding:4px 6px;font-size:11px;text-align:right;font-family:'IBM Plex Mono',monospace;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none">
+                      <input value="{{ r.paid }}" onInput="{{ r.onPaid }}" onFocus="{{ r.onPaidFocus }}" onBlur="{{ r.onCellBlur }}" readOnly="{{ r.paidLocked }}" title="{{ r.paidTitle }}" class="mono" style="flex:1;min-width:0;border:1px solid #e4e8ee;border-radius:6px;padding:4px 6px;font-size:11px;text-align:right;font-family:'IBM Plex Mono',monospace;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none">
                       <button onClick="{{ r.onPayFull }}" title="Record payment in full" style="border:1px solid #bfe3cc;background:#e9f6ee;color:#15803d;border-radius:5px;padding:4px 7px;font-size:10.5px;font-weight:600;cursor:pointer;font-family:inherit">Pay</button><button onClick="{{ r.onAddPayment }}" title="Add a payment with method, date, cheque no., notes and attachments" style="border:1px solid #cdddf8;background:#f2f6fd;color:#2b59c3;border-radius:5px;padding:4px 7px;font-size:10.5px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap">＋ Pmt</button>
                     </div>
-                    <span style="font-size:9.5px;color:{{ r.outstandingColor }}">Outstanding {{ r.outstanding }}</span>
+                    <span style="font-size:9.5px;color:{{ r.outstandingColor }}">Outstanding {{ r.outstanding }}</span><sc-if value="{{ r.hasPayments }}" hint-placeholder-val="{{ false }}"><button onClick="{{ r.onViewPayments }}" title="View the payments recorded against this bill" style="align-self:flex-start;border:0;background:transparent;color:#2b59c3;padding:0;font-size:9.5px;font-weight:600;cursor:pointer;font-family:inherit;text-decoration:underline">{{ r.paymentsLabel }} &#9656;</button></sc-if>
                     <sc-if value="{{ r.overdue }}" hint-placeholder-val="{{ false }}"><span style="font-size:9px;font-weight:700;letter-spacing:.3px;color:#b91c1c">⚠ OVERDUE</span></sc-if>
                   </div>
                   <div style="display:flex;flex-direction:column;gap:3px;margin-top:1px">
@@ -3584,11 +3584,67 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
   </sc-if>
 
   <!-- ADD PAYMENT -->
+  <!-- PAYMENTS RECORDED AGAINST A BILL (read-only) -->
+  <sc-if value="{{ paymentsViewV.open }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ paymentsViewV.onClose }}" style="position:fixed;inset:0;background:rgba(15,23,32,.5);display:flex;align-items:center;justify-content:center;z-index:66;padding:24px;animation:fadeUp .15s ease">
+      <div onClick="{{ stop }}" style="background:#fff;border-radius:14px;width:620px;max-width:96vw;max-height:92vh;box-shadow:0 24px 60px rgba(15,23,32,.3);overflow:hidden;display:flex;flex-direction:column">
+        <div style="padding:18px 22px;border-bottom:1px solid #eef1f4;display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex:0 0 auto">
+          <div><div style="font-size:17px;font-weight:600;color:#0f1720">Payment details</div><div style="font-size:12.5px;color:#8894a2;margin-top:2px">{{ paymentsViewV.billLabel }} · {{ paymentsViewV.countLabel }}</div></div>
+          <button onClick="{{ paymentsViewV.onClose }}" style="border:0;background:transparent;color:#8894a2;cursor:pointer;font-size:20px;line-height:1">✕</button>
+        </div>
+        <div style="padding:18px 22px;display:flex;flex-direction:column;gap:12px;overflow-y:auto;flex:1 1 auto">
+          <div style="display:flex;gap:18px;background:#f7f9fb;border:1px solid #e4e8ee;border-radius:9px;padding:10px 13px;font-size:12px">
+            <span><span style="color:#8894a2">Bill total</span> <span class="mono" style="font-weight:600;color:#0f1720">{{ paymentsViewV.billTotal }}</span></span>
+            <span><span style="color:#8894a2">Paid</span> <span class="mono" style="font-weight:600;color:#15803d">{{ paymentsViewV.paidTotal }}</span></span>
+            <span><span style="color:#8894a2">Outstanding</span> <span class="mono" style="font-weight:700;color:#b45309">{{ paymentsViewV.outstanding }}</span></span>
+          </div>
+          <sc-if value="{{ paymentsViewV.none }}" hint-placeholder-val="{{ false }}"><div style="padding:18px;text-align:center;color:#8894a2;font-size:12.5px">No payments recorded yet.</div></sc-if>
+          <sc-for list="{{ paymentsViewV.rows }}" as="pv" hint-placeholder-count="2">
+            <div style="border:1px solid #e4e8ee;border-radius:10px;padding:13px 15px">
+              <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:9px">
+                <div style="font-size:13.5px;font-weight:600;color:#0f1720">{{ pv.title }}</div>
+                <div class="mono" style="font-size:15px;font-weight:700;color:#0f1720">{{ pv.amount }}</div>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;font-size:11.5px">
+                <div><div style="color:#8894a2;font-size:10px;text-transform:uppercase;letter-spacing:.3px;font-weight:700;margin-bottom:2px">Method</div><div style="color:#0f1720">{{ pv.method }}</div></div>
+                <div><div style="color:#8894a2;font-size:10px;text-transform:uppercase;letter-spacing:.3px;font-weight:700;margin-bottom:2px">Date paid</div><div class="mono" style="color:#0f1720">{{ pv.datePaid }}</div></div>
+                <div><div style="color:#8894a2;font-size:10px;text-transform:uppercase;letter-spacing:.3px;font-weight:700;margin-bottom:2px">Cheque #</div><div class="mono" style="color:#0f1720">{{ pv.chequeNo }}</div></div>
+                <div><div style="color:#8894a2;font-size:10px;text-transform:uppercase;letter-spacing:.3px;font-weight:700;margin-bottom:2px">Claim #</div><div class="mono" style="color:#0f1720">{{ pv.claimNo }}</div></div>
+              </div>
+              <sc-if value="{{ pv.hasNotes }}" hint-placeholder-val="{{ false }}"><div style="margin-top:9px;font-size:12px;color:#0f1720;background:#f7f9fb;border-radius:7px;padding:8px 10px;line-height:1.5">{{ pv.notes }}</div></sc-if>
+              <sc-if value="{{ pv.hasAttachments }}" hint-placeholder-val="{{ false }}">
+                <div style="margin-top:9px;display:flex;flex-wrap:wrap;gap:6px">
+                  <sc-for list="{{ pv.attachments }}" as="pa" hint-placeholder-count="2"><button onClick="{{ pa.onOpen }}" title="Open this attachment" style="border:1px solid #cdddf8;background:#f2f6fd;color:#2b59c3;border-radius:6px;padding:4px 9px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">{{ pa.name }}</button></sc-for>
+                </div>
+              </sc-if>
+              <div style="margin-top:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+                <div style="flex:1;min-width:0;font-size:10.5px;color:#8894a2">Recorded by {{ pv.recordedBy }}<sc-if value="{{ pv.edited }}" hint-placeholder-val="{{ false }}"><span style="display:block">{{ pv.editedNote }}</span></sc-if></div>
+                <sc-if value="{{ pv.notConfirming }}" hint-placeholder-val="{{ true }}">
+                  <button onClick="{{ pv.onEdit }}" title="Change this payment" style="border:1px solid #cdddf8;background:#f2f6fd;color:#2b59c3;border-radius:6px;padding:5px 12px;font-size:11.5px;font-weight:600;cursor:pointer;font-family:inherit">Edit</button>
+                  <button onClick="{{ pv.onAskRemove }}" title="Remove this payment" style="border:1px solid #efd0d0;background:#fff;color:#b91c1c;border-radius:6px;padding:5px 12px;font-size:11.5px;font-weight:600;cursor:pointer;font-family:inherit">Remove</button>
+                </sc-if>
+                <sc-if value="{{ pv.confirming }}" hint-placeholder-val="{{ false }}">
+                  <span style="font-size:11.5px;color:#b91c1c;font-weight:600">Remove this payment?</span>
+                  <button onClick="{{ pv.onRemove }}" style="border:0;background:#b91c1c;color:#fff;border-radius:6px;padding:5px 12px;font-size:11.5px;font-weight:600;cursor:pointer;font-family:inherit">Remove</button>
+                  <button onClick="{{ pv.onCancelRemove }}" style="border:1px solid #cfd8e2;background:#fff;color:#4a5765;border-radius:6px;padding:5px 12px;font-size:11.5px;font-weight:600;cursor:pointer;font-family:inherit">Cancel</button>
+                </sc-if>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+        <div style="padding:15px 22px;border-top:1px solid #eef1f4;display:flex;justify-content:flex-end;flex:0 0 auto">
+          <button onClick="{{ paymentsViewV.onAddAnother }}" title="Record another payment against this bill" style="margin-right:auto;border:1px solid #cdddf8;background:#f2f6fd;color:#2b59c3;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Add another payment</button>
+          <button onClick="{{ paymentsViewV.onClose }}" style="border:1px solid #cfd8e2;background:#fff;color:#4a5765;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Close</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
   <sc-if value="{{ paymentModalV.open }}" hint-placeholder-val="{{ false }}">
     <div onClick="{{ paymentModalV.onClose }}" style="position:fixed;inset:0;background:rgba(15,23,32,.5);display:flex;align-items:center;justify-content:center;z-index:65;padding:24px;animation:fadeUp .15s ease">
       <div onClick="{{ stop }}" style="background:#fff;border-radius:14px;width:560px;max-width:96vw;max-height:92vh;box-shadow:0 24px 60px rgba(15,23,32,.3);overflow:hidden;display:flex;flex-direction:column">
         <div style="padding:18px 22px;border-bottom:1px solid #eef1f4;display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex:0 0 auto">
-          <div><div style="font-size:17px;font-weight:600;color:#0f1720">Add payment</div><div style="font-size:12.5px;color:#8894a2;margin-top:2px">{{ paymentModalV.billLabel }}</div></div>
+          <div><div style="font-size:17px;font-weight:600;color:#0f1720">{{ paymentModalV.title }}</div><div style="font-size:12.5px;color:#8894a2;margin-top:2px">{{ paymentModalV.billLabel }}</div></div>
           <button onClick="{{ paymentModalV.onClose }}" style="border:0;background:transparent;color:#8894a2;cursor:pointer;font-size:20px;line-height:1">✕</button>
         </div>
         <div style="padding:18px 22px;display:flex;flex-direction:column;gap:14px;overflow-y:auto;flex:1 1 auto">
@@ -3617,7 +3673,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
           </div>
 
           <div style="display:flex;gap:12px">
-            <div style="flex:1"><label style="font-size:12px;font-weight:600;color:#4a5765;display:block;margin-bottom:5px">Amount</label><input value="{{ paymentModalV.amount }}" onInput="{{ paymentModalV.onAmount }}" placeholder="0.00" class="mono" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:'IBM Plex Mono',monospace" style-focus="border-color:#2b59c3;outline:none"></div>
+            <div style="flex:1"><label style="font-size:12px;font-weight:600;color:#4a5765;display:block;margin-bottom:5px">Amount</label><span style="position:relative;display:block"><span style="position:absolute;left:11px;top:50%;transform:translateY(-50%);font-size:12px;color:#0f1720;pointer-events:none">$</span><input value="{{ paymentModalV.amount }}" onInput="{{ paymentModalV.onAmount }}" placeholder="0.00" class="mono" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px 9px 22px;font-size:13px;font-family:'IBM Plex Mono',monospace" style-focus="border-color:#2b59c3;outline:none"></span></div>
             <div style="flex:1"><label style="font-size:12px;font-weight:600;color:#4a5765;display:block;margin-bottom:5px">Date paid</label><input value="{{ paymentModalV.datePaid }}" onInput="{{ paymentModalV.onDatePaid }}" type="date" class="mono" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:'IBM Plex Mono',monospace" style-focus="border-color:#2b59c3;outline:none"></div>
           </div>
 
@@ -3645,7 +3701,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
         </div>
         <div style="padding:15px 22px;border-top:1px solid #eef1f4;display:flex;justify-content:flex-end;gap:10px;flex:0 0 auto">
           <button onClick="{{ paymentModalV.onClose }}" style="border:1px solid #cfd8e2;background:#fff;color:#4a5765;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Cancel</button>
-          <button onClick="{{ paymentModalV.onSave }}" disabled="{{ paymentModalV.cannotSave }}" style="border:0;background:{{ paymentModalV.saveBg }};color:#fff;border-radius:8px;padding:9px 24px;font-size:13px;font-weight:600;cursor:{{ paymentModalV.saveCursor }};font-family:inherit">Add</button>
+          <button onClick="{{ paymentModalV.onSave }}" disabled="{{ paymentModalV.cannotSave }}" style="border:0;background:{{ paymentModalV.saveBg }};color:#fff;border-radius:8px;padding:9px 24px;font-size:13px;font-weight:600;cursor:{{ paymentModalV.saveCursor }};font-family:inherit">{{ paymentModalV.saveLabel }}</button>
         </div>
       </div>
     </div>
@@ -3958,6 +4014,8 @@ class Component extends DCLogic {
       projectModal: null,
       projectForm: { name: '', code: '', client: '', projectType: 'Residential', address: '', gstRate: '10' },
       projectFormError: '',
+      paymentsView: null,
+      payConfirm: "",
       budgetColW: this._loadBudgetColW(),
       budgetColOrder: this._loadBudgetColOrder(),
       budgetColHidden: this._loadBudgetColHidden(),
@@ -4470,8 +4528,31 @@ class Component extends DCLogic {
     const n = parseFloat(String(v == null ? '' : v).replace(/[^0-9.\-]/g, ''));
     return isFinite(n) ? n : 0;
   }
-  billTotal(b) { const amt = this._num(b.amount); return amt + amt * this._num(b.taxRate) / 100; }
-  commitmentBilled(cmId, p) { const proj = p || this.proj(this.state.pid) || {}; return (proj.bills || []).filter(b => b.commitmentId === cmId).reduce((s, b) => s + this.billTotal(b), 0); }
+  // Money is held to cents. Binary floating point cannot represent most of them, so any
+  // computed amount is rounded before it is stored or compared, or it drifts into
+  // values like 893.3979999999999 that then show up in an editable field.
+  _r2(n) { const v = Number(n); return isFinite(v) ? Math.round((v + Number.EPSILON) * 100) / 100 : 0; }
+  // An editable money cell reads as money when idle and as a plain number while it is
+  // being typed into, keyed off editCell the way the budget columns already work.
+  // Blank stays blank - an empty claim must not read as $0.00.
+  _mdisp(key, raw) {
+    if ((this.state.editCell || "") === key) return String(raw == null ? "" : raw);
+    if (raw === null || raw === undefined || raw === "") return "";
+    return this.money(this._r2(Number(raw) || 0));
+  }
+  billTotal(b) { const amt = this._num(b.amount); return this._r2(amt + amt * this._num(b.taxRate) / 100); }
+  // Payment records are the source of truth once any exist: paid is their sum, so the
+  // figures always reconcile with the list. A bill settled before records existed keeps
+  // whatever was entered by hand.
+  billPaidRecords(b) { return (b && b.payments) || []; }
+  billPaid(b) {
+    const recs = this.billPaidRecords(b);
+    if (!recs.length) return this._r2(this._num(b && b.paid));
+    return this._r2(Math.min(this.billTotal(b), recs.reduce((a, r) => a + this._num(r.amount), 0)));
+  }
+  billOutstanding(b) { return this._r2(Math.max(0, this.billTotal(b) - this.billPaid(b))); }
+  billStatusFor(b) { const t = this.billTotal(b), pd = this.billPaid(b); return pd <= 0 ? "unpaid" : (pd + 0.005 >= t ? "paid" : "partial"); }
+  commitmentBilled(cmId, p) { const proj = p || this.proj(this.state.pid) || {}; return this._r2((proj.bills || []).filter(b => b.commitmentId === cmId).reduce((s, b) => s + this.billTotal(b), 0)); }
   canIssue() { return this.state.role === 'PM' || this.state.role === 'Admin'; }
   // ===== Authentication & RBAC (Phase 1) =====
   roleList() { return [
@@ -6843,7 +6924,7 @@ class Component extends DCLogic {
     const cum = (p.claims || [])
       .filter(c => c.commitmentId === x.commitmentId && key(c) <= mineKey)
       .reduce((a, c) => a + this.claimNet(c), 0);
-    return Math.max(entered, cum, mine);
+    return this._r2(Math.max(entered, cum, mine));
   }
   claimTax(x) { return this.claimNet(x) * this.claimTaxRate(x) / 100; }
   claimTotal(x) { return this.claimNet(x) + this.claimTax(x); }
@@ -8048,18 +8129,37 @@ class Component extends DCLogic {
     return (rec && rec.paidAt) ? rec.paidAt : this.todayLocal();
   }
   recordBillPayment(id, amount) {
+    const me = this.currentUser() || {};
     this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, bills: (p.bills || []).map(x => {
       if (x.id !== id) return x;
-      const tot = this.billTotal(x); const add = amount == null ? (tot - this._num(x.paid)) : this._num(amount);
-      const paid = Math.max(0, Math.min(tot, this._num(x.paid) + add));
-      const status = paid <= 0 ? 'unpaid' : (paid + 0.005 >= tot ? 'paid' : 'partial');
-      return { ...x, paid, status, paidAt: this._paidStamp(x, status) };
+      const tot = this.billTotal(x);
+      const add = this._r2(amount == null ? this.billOutstanding(x) : this._num(amount));
+      if (add <= 0) return x;
+      const rec = { id: "pay" + Date.now().toString(36), no: this.nextSeqRef((p.bills || []).reduce((a, b) => a.concat(b.payments || []), []), "no", "PAY-", 4),
+        method: "", amount: add, datePaid: this.todayLocal(), claimId: "", claimNo: "", chequeNo: "",
+        notes: "Recorded as paid in full", attachments: [], by: me.name || me.email || "", at: this.now() };
+      const nextPaid = recs => this._r2(Math.min(tot, (recs || []).reduce((a, r) => a + this._num(r.amount), 0)));
+      const list = [...(x.payments || []), rec];
+      const paid = nextPaid(list);
+      const status = paid <= 0 ? "unpaid" : (paid + 0.005 >= tot ? "paid" : "partial");
+      return { ...x, payments: list, paid, status, paidAt: this._paidStamp(x, status) };
     }) }) }));
   }
   // ---- Payment record (accounts/Gordon capture the detail of a payment against a bill) ----
   paymentMethods() { return ['EFT / Bank transfer', 'BPAY', 'Cheque', 'Credit card', 'Direct debit', 'Cash', 'Other']; }
-  openPaymentModal(billId) {
+  openPaymentModal(billId, payId) {
     const p = this.proj(this.state.pid); const b = (p.bills || []).find(x => x.id === billId); if (!b) return;
+    const existing = payId ? (b.payments || []).find(r => r.id === payId) : null;
+    if (existing) {
+      this.setState({ paymentModal: { billId, payId }, paymentForm: {
+        claimId: existing.claimId || "", paymentNo: existing.no || "", method: existing.method || "",
+        amount: String(existing.amount == null ? "" : existing.amount),
+        datePaid: existing.datePaid || "", claimNo: existing.claimNo || "", chequeNo: existing.chequeNo || "",
+        notes: existing.notes || "",
+        attachments: (existing.attachments || []).map(a => ({ id: a.id, name: a.name, url: a.url })),
+      } });
+      return;
+    }
     const outstanding = Math.max(0, this.billTotal(b) - this._num(b.paid));
     const claim = (p.claims || []).find(c => c.id === b.claimId);
     this.setState({ paymentModal: { billId }, paymentForm: {
@@ -8088,20 +8188,52 @@ class Component extends DCLogic {
     });
   }
   removePaymentAttachment(aid) { this.setState(s => (s.paymentForm ? { paymentForm: { ...s.paymentForm, attachments: (s.paymentForm.attachments || []).filter(a => a.id !== aid) } } : {})); }
+  // A payment already carries method, date, cheque no., claim, notes and attachments.
+  // These open a read-only view of what was recorded against one bill.
+  openPaymentsView(billId) { this.setState({ paymentsView: billId, payConfirm: "" }); }
+  askRemovePayment(payId) { this.setState({ payConfirm: payId }); }
+  cancelRemovePayment() { this.setState({ payConfirm: "" }); }
+  removePayment(billId, payId) {
+    this.setState(s => ({ payConfirm: "", projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, bills: (p.bills || []).map(x => {
+      if (x.id !== billId) return x;
+      const tot = this.billTotal(x);
+      const nextPaid = recs => this._r2(Math.min(tot, (recs || []).reduce((a, r) => a + this._num(r.amount), 0)));
+      const list = (x.payments || []).filter(r => r.id !== payId);
+      const paid = nextPaid(list);
+      const status = paid <= 0 ? "unpaid" : (paid + 0.005 >= tot ? "paid" : "partial");
+      return { ...x, payments: list, paid, status, paidAt: status === "paid" ? x.paidAt : "" };
+    }) }) }));
+  }
+  closePaymentsView() { this.setState({ paymentsView: null, payConfirm: "" }); }
   savePayment() {
     const pm = this.state.paymentModal, f = this.state.paymentForm; if (!pm || !f) return;
-    const amt = this._num(f.amount); if (amt <= 0) return;
+    const amt = this._r2(this._num(f.amount)); if (amt <= 0) return;
     const me = this.currentUser() || {};
     const rec = { id: 'pay' + Date.now().toString(36), no: f.paymentNo || '', method: f.method || '', amount: amt,
       datePaid: f.datePaid || '', claimId: f.claimId || '', claimNo: f.claimNo || '', chequeNo: f.chequeNo || '',
       notes: f.notes || '', attachments: (f.attachments || []).filter(a => !a.uploading).map(a => ({ id: a.id, name: a.name, url: a.url })),
       by: me.name || me.email || '', at: this.now() };
+    if (pm.payId) {
+      this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, bills: (p.bills || []).map(x => {
+        if (x.id !== pm.billId) return x;
+        const tot = this.billTotal(x);
+        const nextPaid = recs => this._r2(Math.min(tot, (recs || []).reduce((a, r) => a + this._num(r.amount), 0)));
+        const list = (x.payments || []).map(r => r.id !== pm.payId ? r
+          : { ...rec, id: r.id, by: r.by, at: r.at, editedBy: me.name || me.email || "", editedAt: this.now() });
+        const paid = nextPaid(list);
+        const status = paid <= 0 ? "unpaid" : (paid + 0.005 >= tot ? "paid" : "partial");
+        return { ...x, payments: list, paid, status, paidAt: status === "paid" ? (rec.datePaid || this.todayLocal()) : "" };
+      }) }), paymentModal: null, paymentForm: null }));
+      return;
+    }
     this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, bills: (p.bills || []).map(x => {
       if (x.id !== pm.billId) return x;
       const tot = this.billTotal(x);
-      const paid = Math.max(0, Math.min(tot, this._num(x.paid) + amt));
-      const status = paid <= 0 ? 'unpaid' : (paid + 0.005 >= tot ? 'paid' : 'partial');
-      return { ...x, payments: [...(x.payments || []), rec], paid, status, paidAt: status === 'paid' ? (rec.datePaid || this.todayLocal()) : '' };
+      const nextPaid = recs => this._r2(Math.min(tot, (recs || []).reduce((a, r) => a + this._num(r.amount), 0)));
+      const list = [...(x.payments || []), rec];
+      const paid = nextPaid(list);
+      const status = paid <= 0 ? "unpaid" : (paid + 0.005 >= tot ? "paid" : "partial");
+      return { ...x, payments: list, paid, status, paidAt: status === "paid" ? (rec.datePaid || this.todayLocal()) : "" };
     }) }), paymentModal: null, paymentForm: null }));
   }
   attachBillInvoice(id, e) { const f = (e.target && e.target.files && e.target.files[0]); if (!f) return; if (e.target) e.target.value = ''; this.setBillField(id, 'invoice', f.name); this._sbUploadFile(f, 'bills').then(url => { if (url) { this.setBillField(id, 'invoiceUrl', url); this.setBillField(id, 'invoiceType', f.type || ''); } }); }
@@ -11097,7 +11229,7 @@ class Component extends DCLogic {
         const _su = this.currentUser(); const _sb = _su && _su.role === 'Superintendent' && this._num(v.value) !== 0;
         const canRespond = (v.status === 'submitted' || v.status === 'info') && this.can('variations', 'approve') && !_sb;
         return {
-          ref: v.ref, desc: v.desc || '', valueInput: String(v.value == null ? '' : v.value),
+          ref: v.ref, desc: v.desc || '', valueInput: this._mdisp(v.id + ":value", v.value), onValueFocus: () => this.startEdit(v.id + ":value"), onValueBlur: () => this.endEdit(),
           valColor: this._num(v.value) < 0 ? '#b91c1c' : '#0f1720',
           valueFmt: this.money(this._num(v.value)), hasValue: String(v.value == null ? '' : v.value).trim() !== '',
           timeInput: String(v.time == null ? '' : v.time), hasTime: timeDays !== 0, timeLabel: (timeDays > 0 ? '+' : '') + timeDays + 'd',
@@ -11168,7 +11300,7 @@ class Component extends DCLogic {
         const net = this.claimNet(x);
         const outstanding = cur - claimedToDate;
         return { id: x.id, claimNo: x.claimNo, commitmentId: x.commitmentId, commitmentOptions, period: x.period,
-          thisClaim: x.thisClaim, toDate: x.toDate, subValue: this.money(cur), pctToDate,
+          thisClaim: this._mdisp(x.id + ":thisClaim", x.thisClaim), toDate: this._mdisp(x.id + ":toDate", x.toDate), onThisFocus: () => this.startEdit(x.id + ":thisClaim"), onToDateFocus: () => this.startEdit(x.id + ":toDate"), onCellBlur: () => this.endEdit(), subValue: this.money(cur), pctToDate,
           toDateEffective: this.money(claimedToDate), toDateDiffers: claimedToDate > this._num(x.toDate) + 0.005,
           taxRate: (x.taxRate == null || String(x.taxRate).trim() === '') ? 10 : x.taxRate,
           taxAmt: this.money(net * taxR / 100), total: this.money(net * (1 + taxR / 100)),
@@ -11211,22 +11343,30 @@ class Component extends DCLogic {
       billSearchV = { value: S.search.bills || '', has: !!_bq, shown: bills.length, total: _billAll, onInput: e => this.setSearch('bills', e.target.value) };
       billRows = bills.map(x => {
         const amt = this._num(x.amount), tax = amt * this._num(x.taxRate) / 100, tot = amt + tax;
-        const paid = Math.max(0, Math.min(tot, this._num(x.paid))), outstanding = tot - paid;
-        const status = paid <= 0 ? 'unpaid' : (paid + 0.005 >= tot ? 'paid' : 'partial');
+        const paid = this.billPaid(x), outstanding = this._r2(tot - paid);
+        const status = this.billStatusFor(x);
+        const paidLocked = this.billPaidRecords(x).length > 0;
         const psm = this.statusMeta(status);
         const overdue = status !== 'paid' && x.dueDate && x.dueDate < today;
-        return { id: x.id, billNo: x.billNo, vendorId: x.vendorId, code: x.code, desc: x.desc, amount: x.amount, taxRate: x.taxRate, billDate: x.billDate, dueDate: x.dueDate,
+        return { id: x.id, billNo: x.billNo, vendorId: x.vendorId, code: x.code, desc: x.desc, amount: this._mdisp(x.id + ":amount", x.amount), onAmountFocus: () => this.startEdit(x.id + ":amount"), onCellBlur: () => this.endEdit(), taxRate: x.taxRate, billDate: x.billDate, dueDate: x.dueDate,
           coded: !!x.code, hasVendor: !!x.vendorId, vendorOptions, codeCatalog, codeGroups: this.costCodeGroups(), tax: this.money(tax), total: this.money(tot),
           vendorBorder: x.vendorId ? '#e4e8ee' : '#e6c9a3', vendorBg: x.vendorId ? '#fff' : '#fdf6ec',
           codeBorder: x.code ? '#e4e8ee' : '#e6c9a3', codeBg: x.code ? '#fff' : '#fdf6ec',
           status, statusLabel: psm.label, statusColor: psm.color, statusBg: psm.bg, overdue, fromClaim: !!x.fromClaim,
-          paid: x.paid == null ? 0 : x.paid, paidLabel: this.money(paid), outstanding: this.money(outstanding), outstandingColor: outstanding > 0.005 ? '#b45309' : '#15803d', fullyPaid: outstanding <= 0.005,
+          paid: this._mdisp(x.id + ":paid", paid),
+          onPaidFocus: () => { if (!paidLocked) this.startEdit(x.id + ":paid"); },
+          paidLocked, paidTitle: paidLocked
+            ? "Paid is the total of the recorded payments - open the payments list to change them"
+            : "Amount paid to date", paidLabel: this.money(paid), outstanding: this.money(outstanding), outstandingColor: outstanding > 0.005 ? '#b45309' : '#15803d', fullyPaid: outstanding <= 0.005,
           paidOn: (() => { const ps = (x.payments || []).filter(q => q.datePaid).sort((a, b) => String(b.datePaid).localeCompare(String(a.datePaid))); const d = (ps[0] && ps[0].datePaid) || x.paidAt || ''; return d ? this.fmtDate(d) : ''; })(),
           hasPaidOn: status === 'paid' && !!(((x.payments || []).find(q => q.datePaid) || {}).datePaid || x.paidAt),
           payCount: String((x.payments || []).length), hasPayments: (x.payments || []).length > 0,
           invoice: x.invoice || '', hasInvoice: !!x.invoice, invoiceLabel: x.invoice ? x.invoice : '＋ Invoice', hasInvoiceFile: !!x.invoiceUrl, onViewInvoice: () => this.viewBillInvoice(x.id), sent: !!x.sentAt, sentAt: x.sentAt || '',
           commitmentId: x.commitmentId || '', commitmentOptions,
           onPaid: e => this.setBillPaid(x.id, e.target.value), onPayFull: () => this.recordBillPayment(x.id, null), onAddPayment: () => this.openPaymentModal(x.id),
+          onViewPayments: () => this.openPaymentsView(x.id),
+          hasPayments: (x.payments || []).length > 0,
+          paymentsLabel: (x.payments || []).length === 1 ? "1 payment" : (x.payments || []).length + " payments",
           onAttachInvoice: e => this.attachBillInvoice(x.id, e), onSend: () => this.openBillSend(x.id),
           onCommitment: e => this.setBillField(x.id, 'commitmentId', e.target.value),
           onBillNo: e => this.setBillField(x.id, 'billNo', e.target.value),
@@ -11452,6 +11592,46 @@ class Component extends DCLogic {
     }
 
     // add-payment popup (accounts / Gordon record the detail of a payment)
+    let paymentsViewV = { open: false, rows: [] };
+    if (S.paymentsView) {
+      const pvBill = (p.bills || []).find(b => b.id === S.paymentsView);
+      if (pvBill) {
+        const pvVen = (S.vendors || []).find(v => v.id === pvBill.vendorId);
+        const pvTot = this.billTotal(pvBill), pvPaid = this.billPaid(pvBill);
+        const pvList = pvBill.payments || [];
+        paymentsViewV = {
+          open: true,
+          billLabel: (pvBill.billNo || "Bill") + " - " + ((pvVen && pvVen.company) || pvBill.vendor || ""),
+          billTotal: this.money(pvTot), paidTotal: this.money(pvPaid),
+          outstanding: this.money(this.billOutstanding(pvBill)),
+          countLabel: pvList.length === 1 ? "1 payment recorded" : pvList.length + " payments recorded",
+          none: pvList.length === 0,
+          rows: pvList.map((r, i) => ({
+            title: r.no || ("Payment " + (i + 1)),
+            amount: this.money(this._num(r.amount)),
+            method: r.method || "—",
+            datePaid: r.datePaid ? this.fmtDate(r.datePaid) : "—",
+            chequeNo: r.chequeNo || "—",
+            claimNo: r.claimNo || "—",
+            hasNotes: !!r.notes, notes: r.notes || "",
+            recordedBy: (r.by || "unknown") + (r.at ? " · " + this.fmtDate(String(r.at).slice(0, 10)) : ""),
+            hasAttachments: (r.attachments || []).length > 0,
+            attachments: (r.attachments || []).map(a => ({ name: a.name,
+              onOpen: () => this.openAttachment({ name: a.name, url: a.url, type: "" }) })),
+            edited: !!r.editedAt,
+            editedNote: r.editedAt ? ("edited by " + (r.editedBy || "unknown") + " · " + this.fmtDate(String(r.editedAt).slice(0, 10))) : "",
+            confirming: (S.payConfirm || "") === r.id,
+            notConfirming: (S.payConfirm || "") !== r.id,
+            onEdit: () => this.openPaymentModal(pvBill.id, r.id),
+            onAskRemove: () => this.askRemovePayment(r.id),
+            onCancelRemove: () => this.cancelRemovePayment(),
+            onRemove: () => this.removePayment(pvBill.id, r.id),
+          })),
+          onClose: () => this.closePaymentsView(),
+          onAddAnother: () => { this.closePaymentsView(); this.openPaymentModal(pvBill.id); },
+        };
+      }
+    }
     let paymentModalV = { open: false };
     if (S.paymentModal && S.paymentForm) {
       const f = S.paymentForm;
@@ -11463,6 +11643,8 @@ class Component extends DCLogic {
           statusText: a.uploading ? 'uploading…' : 'attached', onRemove: () => this.removePaymentAttachment(a.id) }));
         paymentModalV = {
           open: true,
+          title: S.paymentModal.payId ? "Edit payment" : "Add payment",
+          saveLabel: S.paymentModal.payId ? "Save" : "Add",
           billLabel: (bill.billNo || 'Bill') + ' · ' + ((ven && ven.company) || bill.vendor || ''),
           billTotal: this.money(tot), alreadyPaid: this.money(already), outstanding: this.money(Math.max(0, tot - already)),
           claimOptions: (p.claims || []).map(c => ({ id: c.id, label: (c.claimNo || 'Claim') + ' · ' + this.money(this._num(c.thisClaim)) + (c.period ? ' · ' + c.period : '') })),
@@ -11871,7 +12053,7 @@ class Component extends DCLogic {
         { key: 'variations', label: 'Variations', active: S.commitTab === 'variations', onClick: () => this.setState({ commitTab: 'variations' }) },
         { key: 'invoices', label: 'Invoices', active: S.commitTab === 'invoices', onClick: () => this.setState({ commitTab: 'invoices' }) },
       ].map(t => ({ ...t, fg2: t.active ? '#0f1720' : '#8894a2', underline: t.active ? '#2b59c3' : 'transparent' })),
-      billRows, billTotals, billSearchV, onAddBill: () => this.addBill(),
+      billRows, billTotals, billSearchV, paymentsViewV, onAddBill: () => this.addBill(),
       vendorModal: S.vendorModal ? { open: true, ...S.vendorForm } : { open: false },
       onVendorType: (e) => this.setVendorForm('type', e.target.value), onVendorCompany: (e) => this.setVendorForm('company', e.target.value),
       onVendorRep: (e) => this.setVendorForm('rep', e.target.value), onVendorPhone: (e) => this.setVendorForm('phone', e.target.value),
