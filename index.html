@@ -4909,6 +4909,9 @@ class Component extends DCLogic {
   }
   // A private object needs a short-lived signed link before anything can open it.
   // Anything else - a public URL, a data: or blob: URL - is handed back untouched.
+  _sbIsPrivateDoc(url) {
+    return /\/storage\/v1\/object\/(?:public\/)?documents\//.test(String(url || ""));
+  }
   _sbSignedUrl(url, expiresIn) {
     const c = this._SB;
     const m = String(url || "").match(/\/storage\/v1\/object\/(?:public\/|sign\/)?documents\/([^?]+)/);
@@ -5780,15 +5783,12 @@ class Component extends DCLogic {
     try { const parts = raw.split(','); const mime = (parts[0].match(/data:([^;]+)/) || [])[1] || type || 'application/octet-stream'; const bin = atob(parts[1] || ''); const arr = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i); return { url: URL.createObjectURL(new Blob([arr], { type: mime })), mime }; } catch (err) { return { url: raw, mime: type || '' }; }
   }
   _showGalleryItem(items, index) { const dv = this.state.docViewer; if (dv && dv.curUrl && String(dv.curUrl).indexOf('blob:') === 0) { try { URL.revokeObjectURL(dv.curUrl); } catch (e) {} } const n = items.length; if (!n) return; const i = ((index % n) + n) % n; const it = items[i]; const dec = this._decodeBlob(it.url, it.type); const kind = /pdf/i.test(dec.mime) ? 'pdf' : (/^image\//i.test(dec.mime) ? 'image' : 'other');
-    this.setState({ docViewer: { items, index: i, curUrl: dec.url, curKind: kind, curName: it.name || 'document' } });
-    // A private document opens only through a signed link. The viewer is shown straight
-    // away and the link swapped in when it arrives, so nothing waits on the network.
-    this._sbSignedUrl(dec.url).then(signed => {
-      if (!signed || signed === dec.url) return;
-      this.setState(st => (st.docViewer && st.docViewer.index === i && st.docViewer.curUrl === dec.url)
-        ? { docViewer: Object.assign({}, st.docViewer, { curUrl: signed }) }
-        : {});
-    });
+    const show = u => this.setState({ docViewer: { items, index: i, curUrl: u, curKind: kind, curName: it.name || 'document' } });
+    // A private document is signed before the viewer is told about it. Showing the raw
+    // URL first would make the browser fetch something it cannot read - a refused request
+    // and an error flash on every open. Public files need no round trip, so they show now.
+    if (this._sbIsPrivateDoc(dec.url)) this._sbSignedUrl(dec.url).then(signed => show(signed || dec.url));
+    else show(dec.url);
   }
   openGallery(items, index) { if (!items || !items.length) return; this._showGalleryItem(items, index || 0); }
   openAttachment(att) { if (!att || !att.url) return; this.openGallery([{ name: att.name, url: att.url, type: att.type }], 0); }
