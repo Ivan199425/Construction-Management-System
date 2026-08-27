@@ -45,7 +45,8 @@ Deno.serve(async (req: Request) => {
   // handoff. The check therefore happens here, by asking the auth server to validate the
   // token - it does so whatever the token is signed with. Without this the function would
   // be an open mail relay.
-  const token = (req.headers.get('Authorization') || '').replace(/^Bearers+/i, '');
+  const authz = req.headers.get('Authorization') || '';
+  const token = authz.slice(0, 7).toLowerCase() === 'bearer ' ? authz.slice(7) : authz;
   if (!token) return json({ error: 'Not authorised' }, 401);
   const SB_URL = Deno.env.get('SUPABASE_URL');
   const SB_KEY = Deno.env.get('SUPABASE_ANON_KEY') || Deno.env.get('SUPABASE_PUBLISHABLE_KEY') || '';
