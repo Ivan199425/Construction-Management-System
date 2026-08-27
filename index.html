@@ -1149,7 +1149,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
           <div style="background:#fff;border:1px solid #e4e8ee;border-radius:12px;overflow:hidden">
             <div style="overflow-x:auto"><div style="min-width:{{ budgetMinWidth }}">
               <div class="colhdr dark" style="display:grid;grid-template-columns:{{ budgetColTemplate }};padding:11px 16px;background:#2A3580;border-bottom:1px solid #e4e8ee;font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#fff;text-transform:uppercase;gap:8px">
-                <sc-for list="{{ budgetHeaderCols }}" as="h" hint-placeholder-count="12"><div style="position:relative;text-align:{{ h.align }};overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><span onClick="{{ h.onSort }}" title="Sort by this column" style="cursor:{{ h.cursor }};color:{{ h.labelColor }};user-select:none">{{ h.label }}{{ h.sortArrow }}</span><div onMouseDown="{{ h.onDown }}" class="rsz" title="Drag to resize this column" style="position:absolute;top:-11px;bottom:-11px;right:-9px;width:14px;cursor:col-resize;z-index:3" style-hover="background:rgba(43,89,195,.3)"></div></div></sc-for>
+                <sc-for list="{{ budgetHeaderCols }}" as="h" hint-placeholder-count="12"><div style="position:relative;text-align:{{ h.align }}"><span onClick="{{ h.onSort }}" title="Sort by this column" style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:{{ h.cursor }};color:{{ h.labelColor }};user-select:none">{{ h.label }}{{ h.sortArrow }}</span><div onMouseDown="{{ h.onDown }}" class="rsz" title="Drag to resize this column" style="position:absolute;top:-11px;bottom:-11px;right:-9px;width:14px;cursor:col-resize;z-index:3" style-hover="background:rgba(43,89,195,.3)"></div></div></sc-for>
               </div>
               <sc-for list="{{ costLineRows }}" as="r" hint-placeholder-count="6">
                 <div data-line-id="{{ r.id }}" style="display:grid;grid-template-columns:{{ budgetColTemplate }};padding:8px 16px;border-bottom:1px solid #eef1f4;align-items:center;gap:8px" style-hover="background:#f9fafc">
@@ -4008,6 +4008,7 @@ class Component extends DCLogic {
   }
 
   componentDidMount() {
+    this._colResizeInit();
     // Phase 1: pull the SHARED cost-code catalogue from Supabase (server = source of truth).
     // If the server has none yet, seed it from whatever this browser already holds.
     this._gateCatalog('cost_codes', serverData => {
@@ -4092,6 +4093,7 @@ class Component extends DCLogic {
   }
   componentDidUpdate() {
     this._initSigEditor(); // populate the signature editor once when it appears
+    this._colResizeScan(); // keep every table's column-width hook attached
     // Auto-sync any project change to Supabase so every user sees the same data (debounced, logged-in only).
     if (!this._projLoaded) return; // don't save until the initial shared load has settled (avoids clobbering it)
     if (this.state.projects !== this._lastSavedProjects) {
@@ -8340,6 +8342,89 @@ class Component extends DCLogic {
     const move = ev => { const w = Math.max(46, Math.round(startW + (ev.clientX - startX))); this.setState(s => ({ budgetColW: { ...(s.budgetColW || {}), [id]: w } })); };
     const up = () => { document.removeEventListener('mousemove', move); document.removeEventListener('mouseup', up); this._saveBudgetColW(this.state.budgetColW); };
     document.addEventListener('mousemove', move); document.addEventListener('mouseup', up);
+  }
+  /* ---- Adjustable columns, every table ------------------------------------------
+     Each table header carries .colhdr and its rows are siblings sharing the same
+     grid-template-columns, so widths go through one generated stylesheet keyed by a
+     per-table class: a row re-render cannot clobber them, and no table markup has to
+     change. Drag a column boundary to resize, double-click one to reset that table.
+     The budget table is skipped, it has its own column manager. */
+  _tblColLoad() { try { if (typeof localStorage === 'undefined') return {}; const o = JSON.parse(localStorage.getItem('cubicTableColW') || '{}'); return (o && typeof o === 'object') ? o : {}; } catch (e) { return {}; } }
+  _tblColSave() { try { if (typeof localStorage !== 'undefined') localStorage.setItem('cubicTableColW', JSON.stringify(this._tblColW || {})); } catch (e) {} }
+  _tblColSelf(hdr) { return !!(hdr && hdr.querySelector('.rsz')); } // header that resizes itself
+  _tblColId(hdr) {
+    const k = Array.prototype.map.call(hdr.children, c => (c.textContent || '').trim().toLowerCase().replace(/[^a-z0-9%]/g, '').slice(0, 10)).join('|');
+    if (!k.split('|').join('')) return null;
+    let h = 0; for (let i = 0; i < k.length; i++) h = (h * 31 + k.charCodeAt(i)) | 0;
+    return 'crt' + (h >>> 0).toString(36);
+  }
+  _tblColPaint() {
+    if (!this._tblColSheet) return;
+    const w = this._tblColW || {};
+    this._tblColSheet.textContent = Object.keys(w).map(id => '.' + id + ' > * { grid-template-columns:' + w[id] + ' !important }').join('');
+  }
+  _colResizeScan() {
+    if (typeof document === 'undefined' || !this._tblColOn) return;
+    document.querySelectorAll('.colhdr').forEach(hdr => {
+      if (this._tblColSelf(hdr)) return;
+      const p = hdr.parentElement; if (!p) return;
+      const id = this._tblColId(hdr); if (!id) return;
+      if (!p.classList.contains(id)) p.classList.add(id);
+    });
+  }
+  _colResizeInit() {
+    if (this._tblColOn || typeof document === 'undefined') return;
+    this._tblColOn = true;
+    this._tblColW = this._tblColLoad();
+    this._tblColSheet = document.createElement('style');
+    this._tblColSheet.id = 'cr-widths';
+    document.head.appendChild(this._tblColSheet);
+    this._tblColPaint();
+    const EDGE = 5;
+    const hdrAt = t => (t && t.closest) ? t.closest('.colhdr') : null;
+    const boundary = (hdr, x) => {
+      const kids = hdr.children;
+      for (let i = 0; i < kids.length - 1; i++) if (Math.abs(x - kids[i].getBoundingClientRect().right) <= EDGE) return i;
+      return -1;
+    };
+    document.addEventListener('mousemove', e => {
+      const d = this._crDrag;
+      if (d) {
+        const w = d.widths.slice();
+        w[d.i] = Math.max(46, Math.round(d.startW + (e.clientX - d.startX)));
+        const last = w.length - 1;
+        this._tblColW[d.id] = w.map((v, k) => k === last ? 'minmax(' + Math.round(v) + 'px,1fr)' : Math.round(v) + 'px').join(' ');
+        this._tblColPaint();
+        return;
+      }
+      const hdr = hdrAt(e.target);
+      if (!hdr || this._tblColSelf(hdr)) return;
+      hdr.style.cursor = boundary(hdr, e.clientX) >= 0 ? 'col-resize' : '';
+    });
+    document.addEventListener('mousedown', e => {
+      const hdr = hdrAt(e.target);
+      if (!hdr || this._tblColSelf(hdr)) return;
+      const i = boundary(hdr, e.clientX); if (i < 0) return;
+      const id = this._tblColId(hdr); if (!id) return;
+      e.preventDefault();
+      const widths = Array.prototype.map.call(hdr.children, c => c.getBoundingClientRect().width);
+      this._crDrag = { id, i, startX: e.clientX, widths, startW: widths[i] };
+      document.body.style.userSelect = 'none';
+    });
+    document.addEventListener('mouseup', () => {
+      if (!this._crDrag) return;
+      this._crDrag = null;
+      document.body.style.userSelect = '';
+      this._tblColSave();
+    });
+    document.addEventListener('dblclick', e => {
+      const hdr = hdrAt(e.target);
+      if (!hdr || this._tblColSelf(hdr)) return;
+      if (boundary(hdr, e.clientX) < 0) return;
+      const id = this._tblColId(hdr); if (!id) return;
+      delete this._tblColW[id];
+      this._tblColPaint(); this._tblColSave();
+    });
   }
   resetBudgetCols() { this._saveBudgetColW({}); this._saveBudgetColOrder([]); this._saveBudgetColHidden({}); this.setState({ budgetColW: {}, budgetColOrder: null, budgetColHidden: {} }); }
   toggleBudgetColMenu() { this.setState(s => ({ budgetColMenu: !s.budgetColMenu })); }
