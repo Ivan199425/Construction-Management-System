@@ -4145,13 +4145,32 @@ class Component extends DCLogic {
     // Phase 2: restore/validate the logged-in session against Supabase.
     const sess = this.state.session;
     if (sess && sess.profile) {
-      if (sess.refresh_token) this._sbAuthRefresh(sess.refresh_token).then(res => {
-        if (res.ok && res.body && res.body.access_token) { const ns = Object.assign({}, this.state.session, { access_token: res.body.access_token, refresh_token: res.body.refresh_token }); this._saveAuth(ns); this.setState({ session: ns }); }
-      });
-      this._sbFetchProfileByEmail(sess.profile.email, sess.access_token).then(prof => {
-        if (!prof || prof.status !== 'active') { this._saveAuth(null); this.setState({ session: null, users: [], auth: { view: 'login', email: '', password: '', newPassword: '', error: '', notice: prof ? 'Your account is ' + prof.status + '.' : '', busy: false } }); }
-        else { const ns = Object.assign({}, this.state.session, { profile: prof }); this._saveAuth(ns); this.setState({ session: ns, role: prof.role }); this._loadProfilesIntoState(); }
-      });
+      // Refresh before reading, and read with the token the refresh returned: with RLS on an
+      // hour-old access token would be rejected, and a rejected read looks like a missing
+      // profile - which used to sign the user out and wipe their saved session.
+      const restoreSession = async () => {
+        let tok = sess.access_token;
+        if (sess.refresh_token) {
+          const res = await this._sbAuthRefresh(sess.refresh_token);
+          if (res && res.ok && res.body && res.body.access_token) {
+            tok = res.body.access_token;
+            const ns = Object.assign({}, this.state.session, { access_token: res.body.access_token, refresh_token: res.body.refresh_token });
+            this._saveAuth(ns); this.setState({ session: ns });
+          }
+        }
+        const out = await this._sbFetchProfileResult(sess.profile.email, tok);
+        if (!out.ok) return; // no answer from the server: keep the session rather than signing someone out
+        const prof = out.profile;
+        if (!prof || prof.status !== "active") {
+          this._saveAuth(null);
+          this.setState({ session: null, users: [], auth: { view: "login", email: "", password: "", newPassword: "", error: "", notice: prof ? "Your account is " + prof.status + "." : "", busy: false } });
+          return;
+        }
+        const ns = Object.assign({}, this.state.session, { profile: prof });
+        this._saveAuth(ns); this.setState({ session: ns, role: prof.role });
+        this._loadProfilesIntoState();
+      };
+      restoreSession();
     }
     // Phase 3: pull the SHARED project data (financial, bills, subcontracts, variations, claims, invoices, etc.).
     this._projLoaded = false;
@@ -4893,10 +4912,20 @@ class Component extends DCLogic {
     if (!row) return null;
     return { id: row.id, auth_id: row.auth_id || null, email: row.email || '', name: row.name || '', role: row.role || 'Field', status: row.status || 'invited', external: !!row.external, projectIds: Array.isArray(row.project_ids) ? row.project_ids : [], phone: row.phone || '', title: row.title || '', signature: row.signature || '', photoUrl: row.photo_url || '' };
   }
-  _sbFetchProfileByEmail(email, tok) {
-    const c = this._SB; if (!c || !email) return Promise.resolve(null);
+  // { ok, profile }. ok is false when the request never got an answer - denied, offline,
+  // server error. profile is null when the server answered and holds no such row. Callers
+  // that sign someone out must check ok first, or a dropped request logs people out.
+  _sbFetchProfileResult(email, tok) {
+    const c = this._SB;
+    if (!c || !email) return Promise.resolve({ ok: false, profile: null });
     return fetch(c.url + '/rest/v1/profiles?select=*&email=eq.' + encodeURIComponent((email || '').toLowerCase()), { headers: this._sbUserHeaders(null, tok) })
-      .then(r => r.ok ? r.json() : null).then(rows => (rows && rows[0]) ? this._mapProfile(rows[0]) : null).catch(() => null);
+      .then(r => r.ok
+        ? r.json().then(rows => ({ ok: true, profile: (rows && rows[0]) ? this._mapProfile(rows[0]) : null }), () => ({ ok: false, profile: null }))
+        : { ok: false, profile: null })
+      .catch(() => ({ ok: false, profile: null }));
+  }
+  _sbFetchProfileByEmail(email, tok) {
+    return this._sbFetchProfileResult(email, tok).then(r => r.profile);
   }
   _sbListProfiles() {
     const c = this._SB; if (!c) return Promise.resolve([]);
