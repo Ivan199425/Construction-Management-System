@@ -477,13 +477,14 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
               <div style="padding:13px 16px;border-bottom:1px solid #eef1f4;background:#fafbfc;font-size:13px;font-weight:600;color:#0f1720">Your profile <span style="font-weight:400;color:#a4afba;font-size:11.5px">· {{ settingsV.myDetails.roleLabel }}</span></div>
               <div style="padding:18px 16px">
                 <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px">
-                  <div style="width:74px;height:74px;flex:0 0 auto;border-radius:50%;overflow:hidden;border:1px solid #e4e8ee;background:#eef1f5;display:flex;align-items:center;justify-content:center">
+                  <div onClick="{{ settingsV.myDetails.onViewPhoto }}" title="{{ settingsV.myDetails.photoTitle }}" style="width:74px;height:74px;flex:0 0 auto;border-radius:50%;overflow:hidden;border:1px solid #e4e8ee;background:#eef1f5;display:flex;align-items:center;justify-content:center;cursor:{{ settingsV.myDetails.photoCursor }}" style-hover="border-color:#2b59c3">
                     <sc-if value="{{ settingsV.myDetails.hasPhoto }}" hint-placeholder-val="{{ false }}"><img src="{{ settingsV.myDetails.photoUrl }}" alt="Profile photo" style="width:100%;height:100%;object-fit:cover;display:block"></sc-if>
                     <sc-if value="{{ settingsV.myDetails.noPhoto }}" hint-placeholder-val="{{ true }}"><span style="font-size:24px;font-weight:700;color:#8894a2">{{ settingsV.myDetails.initials }}</span></sc-if>
                   </div>
                   <div>
                     <label style="display:inline-flex;align-items:center;gap:6px;border:1px solid #cfd8e2;background:#fff;color:#0f1720;border-radius:8px;padding:8px 14px;font-size:12.5px;font-weight:600;cursor:pointer" style-hover="border-color:#2b59c3;color:#2b59c3">⬆ Upload photo<input type="file" accept="image/*" onChange="{{ settingsV.myDetails.onPhoto }}" style="display:none"></label>
-                    <div style="font-size:11px;color:#8894a2;margin-top:8px;max-width:280px;line-height:1.5">A square image works best.</div>
+                    <div style="font-size:11px;color:#8894a2;margin-top:8px;max-width:320px;line-height:1.5">A square image works best. The picture is stored exactly as picked, at full resolution - click the circle to view it full size.</div>
+                    <sc-if value="{{ settingsV.myDetails.hasPhotoMeta }}" hint-placeholder-val="{{ false }}"><div class="mono" style="font-size:11px;color:#15803d;margin-top:6px">{{ settingsV.myDetails.photoMeta }}</div></sc-if>
                   </div>
                 </div>
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
@@ -4027,6 +4028,7 @@ class Component extends DCLogic {
       projectForm: { name: '', code: '', client: '', projectType: 'Residential', address: '', gstRate: '10' },
       projectFormError: '',
       paymentsView: null,
+      photoMeta: "",
       billSort: "newest",
       billVendor: "",
       payConfirm: "",
@@ -8941,7 +8943,39 @@ class Component extends DCLogic {
     if (this._myTimer) clearTimeout(this._myTimer);
     this._myTimer = setTimeout(() => { const p = this.state.session && this.state.session.profile; if (p) this._sbUpdateProfile(p.id, { name: p.name, phone: p.phone, title: p.title, signature: p.signature, photoUrl: p.photoUrl }).then(() => this._setSave('profile', 'saved')); else this._setSave('profile', 'saved'); }, 500);
   }
-  uploadMyPhoto(e) { const f = e.target && e.target.files && e.target.files[0]; if (e.target) e.target.value = ''; if (!f) return; this._sbUploadFile(f, 'avatars').then(url => { if (url) this.setMyProfileField('photoUrl', url); }); }
+  // Pixel size of the picked file, so the upload can say what it stored.
+  _imageMeta(file) {
+    return new Promise(res => {
+      try {
+        const u = URL.createObjectURL(file);
+        const img = new Image();
+        img.onload = () => { res({ w: img.naturalWidth, h: img.naturalHeight }); URL.revokeObjectURL(u); };
+        img.onerror = () => { res(null); URL.revokeObjectURL(u); };
+        img.src = u;
+      } catch (err) { res(null); }
+    });
+  }
+  _fileSizeLabel(n) {
+    const b = Number(n) || 0;
+    if (b >= 1048576) return (b / 1048576).toFixed(1) + " MB";
+    if (b >= 1024) return Math.round(b / 1024) + " KB";
+    return b + " bytes";
+  }
+  uploadMyPhoto(e) {
+    const f = e.target && e.target.files && e.target.files[0];
+    if (e.target) e.target.value = "";
+    if (!f) return;
+    this.setState({ photoMeta: "uploading…" });
+    this._imageMeta(f).then(m => {
+      const size = this._fileSizeLabel(f.size);
+      // the file is uploaded exactly as picked - no downscale, no recompression
+      this._sbUploadFile(f, "avatars").then(url => {
+        if (!url) { this.setState({ photoMeta: "upload failed" }); return; }
+        this.setState({ photoMeta: (m ? m.w + " × " + m.h + " · " : "") + size + " · stored at full resolution" });
+        this.setMyProfileField("photoUrl", url);
+      });
+    });
+  }
   setMyPwField(k, v) { this.setState(s => ({ myPw: Object.assign({}, s.myPw || {}, { [k]: v, msg: '', ok: false }) })); }
   async changeMyPassword() {
     const f = this.state.myPw || {}; const np = f.new || '', cf = f.confirm || '';
@@ -11968,6 +12002,10 @@ class Component extends DCLogic {
       const myDetailsV = {
         name: meP.name || '', email: meP.email || '', phone: meP.phone || '', title: meP.title || '',
         roleLabel: this.roleLabel(meP.role || ''), photoUrl: meP.photoUrl || '', hasPhoto: !!meP.photoUrl, noPhoto: !meP.photoUrl, initials: initOf(meP.name || meP.email),
+        photoMeta: S.photoMeta || "", hasPhotoMeta: !!(S.photoMeta),
+        photoCursor: meP.photoUrl ? "pointer" : "default",
+        photoTitle: meP.photoUrl ? "Click to view the photo at full resolution" : "No photo yet",
+        onViewPhoto: () => { if (meP.photoUrl) this.openGallery([{ name: (meP.name || "Profile") + " photo", url: meP.photoUrl, type: "image/*" }], 0); },
         sigWords: String((sigText.trim().match(/\S+/g) || []).length), sigChars: String(sigText.replace(/\n/g, '').length),
         sigColors: sigColorList.map(c => ({ c, onDown: e => e.preventDefault(), onClick: () => this.sigExec('foreColor', c) })),
         onSigInput: e => this.onSigInput(e), onSigBtnDown: e => e.preventDefault(),
