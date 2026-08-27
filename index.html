@@ -41,6 +41,12 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
   #sigEditor:focus{outline:none}
   #sigEditor a{color:#2b59c3}
   #sigEditor ul,#sigEditor ol{padding-left:22px;margin:4px 0}
+  /* Wide screens: the page shell fills the window rather than centring a fixed column,
+     so wide tables (budget, schedule, defects) show their columns instead of scrolling. */
+  .cpms-shell{width:100%}
+  .cpms-dash2{display:grid;gap:16px;align-items:start}
+  .cpms-dash2 > *{min-width:0}
+  @media (min-width:1500px){.cpms-dash2{grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr)}}
 </style>
 </helmet>
 <div style="display:flex;height:100vh;overflow:hidden">
@@ -255,7 +261,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
       </div>
     </header>
     <div style="flex:1;overflow-y:auto;padding:28px 32px 60px">
-      <div style="max-width:1240px;margin:0 auto" key="{{ animKey }}">
+      <div class="cpms-shell" style="max-width:none;margin:0" key="{{ animKey }}">
 
         <!-- PAGE TITLE -->
         <div style="display:flex;align-items:flex-start;gap:16px;margin-bottom:22px">
@@ -743,13 +749,14 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
 
         <!-- ============ PROJECT DASHBOARD ============ -->
         <sc-if value="{{ showDashboard }}" hint-placeholder-val="{{ true }}">
+          <div class="cpms-dash2">
           <div style="background:#fff;border:1px solid #e4e8ee;border-radius:12px;padding:20px">
             <div style="font-size:12px;font-weight:600;letter-spacing:.4px;color:#8894a2;text-transform:uppercase;margin-bottom:10px">Project description</div>
             <textarea value="{{ projDescription }}" onInput="{{ onDescInput }}" rows="3" placeholder="Describe the project scope, structure and key characteristics…" style="width:100%;border:1px solid #e4e8ee;border-radius:8px;padding:11px 13px;font-size:13.5px;font-family:inherit;color:#0f1720;line-height:1.6;resize:vertical" style-focus="border-color:#2b59c3;outline:none"></textarea>
           </div>
 
           <sc-if value="{{ scheduleSummary.show }}" hint-placeholder-val="{{ false }}">
-            <div style="background:#fff;border:1px solid #e4e8ee;border-radius:12px;padding:18px 20px;margin-top:16px">
+            <div style="background:#fff;border:1px solid #e4e8ee;border-radius:12px;padding:18px 20px">
               <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:10px;flex-wrap:wrap">
                 <div style="font-size:12px;font-weight:600;letter-spacing:.4px;color:#8894a2;text-transform:uppercase">🗓 Schedule — as at {{ scheduleSummary.todayLabel }}</div>
                 <div style="display:flex;align-items:center;gap:12px">
@@ -788,6 +795,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
               </div>
             </div>
           </sc-if>
+          </div>
 
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px">
             <div style="background:#fff;border:1px solid #e4e8ee;border-radius:12px;padding:20px">
@@ -5732,7 +5740,7 @@ class Component extends DCLogic {
   _pdfFromHtml(d, html, opts) {
     opts = opts || {};
     const M = opts.margin == null ? 42 : opts.margin, R = d.W - M, CW = R - M;
-    const NAVY = [0.165, 0.208, 0.502], GREY = [0.957, 0.961, 0.973], BORD = [0.788, 0.804, 0.839], MUT = [0.431, 0.455, 0.502];
+    const NAVY = [0.165, 0.208, 0.502], GREY = [0.957, 0.961, 0.973], BORD = [0.788, 0.804, 0.839], MUT = [0.431, 0.455, 0.502], WHITE = [1, 1, 1];
     let y = M, pageNo = 0;
     const footer = () => {
       if (!opts.footer) return;
@@ -5777,6 +5785,22 @@ class Component extends DCLogic {
         if (!tds.length) return;
         // a cell painted with the light fill is a label; the rest share what is left
         const isLabel = td => /F4F5F8/i.test(td.getAttribute('style') || '');
+        // A <th> is coloured by a stylesheet rule rather than an inline style, so read the
+        // heading from the tag and any other fill from the cell's own declaration.
+        const hexRgb = v => {
+          const m = String(v || '').match(/#([0-9a-fA-F]{6})/);
+          if (!m) return null;
+          const n = parseInt(m[1], 16);
+          return [((n >> 16) & 255) / 255, ((n >> 8) & 255) / 255, (n & 255) / 255];
+        };
+        const bgOf = td => {
+          if (td.tagName === 'TH') return NAVY;
+          const m = (td.getAttribute('style') || '').match(/background(?:-color)?\s*:\s*([^;]+)/i);
+          return m ? hexRgb(m[1]) : null;
+        };
+        const darkFill = c => !!c && (0.299 * c[0] + 0.587 * c[1] + 0.114 * c[2]) < 0.55;
+        const boldOf = td => td.tagName === 'TH' || isLabel(td)
+          || /font-weight\s*:\s*(bold|[6-9]00)/i.test(td.getAttribute('style') || '');
         const labelW = 132;
         const labels = tds.filter(isLabel).length;
         const others = tds.length - labels;
@@ -5784,16 +5808,18 @@ class Component extends DCLogic {
         const widths = tds.map(td => isLabel(td) ? labelW : (others ? freeW / others : freeW));
         const cellLines = tds.map((td, i) => {
           const out = [];
-          String(txt(td) || ' ').split(NL).forEach(seg => { d.wrap(seg || ' ', 8.5, isLabel(td), widths[i] - 12).forEach(ln => out.push(ln)); });
+          String(txt(td) || ' ').split(NL).forEach(seg => { d.wrap(seg || ' ', 8.5, boldOf(td), widths[i] - 12).forEach(ln => out.push(ln)); });
           return out;
         });
         const h = Math.max(...cellLines.map(l => l.length)) * 11 + 9;
         need(h);
         let x = M;
         tds.forEach((td, i) => {
-          if (isLabel(td)) d.rect(x, y, widths[i], h, { fill: GREY });
-          d.rect(x, y, widths[i], h, { stroke: BORD, lw: 0.5 });
-          cellLines[i].forEach((ln, k) => d.text(ln, x + 6, y + 12 + k * 11, { size: 8.5, bold: isLabel(td) }));
+          const bg = bgOf(td) || (isLabel(td) ? GREY : null);
+          if (bg) d.rect(x, y, widths[i], h, { fill: bg });
+          d.rect(x, y, widths[i], h, { stroke: bg && darkFill(bg) ? bg : BORD, lw: 0.5 });
+          const ink = darkFill(bg) ? WHITE : undefined;
+          cellLines[i].forEach((ln, k) => d.text(ln, x + 6, y + 12 + k * 11, { size: 8.5, bold: boldOf(td), color: ink }));
           x += widths[i];
         });
         y += h;
