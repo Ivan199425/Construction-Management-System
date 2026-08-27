@@ -1376,14 +1376,14 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
               <sc-for list="{{ invoiceV.rows }}" as="r" hint-placeholder-count="6">
                 <div style="display:grid;grid-template-columns:42px 100px 1.4fr 130px 96px 150px 150px 104px;padding:9px 16px;border-bottom:1px solid #eef1f4;align-items:center;gap:10px;opacity:{{ r.rowOpacity }}" style-hover="background:#f9fafc">
                   <button onClick="{{ r.onSelect }}" title="Include in invoice" style="width:18px;height:18px;border-radius:5px;border:1.5px solid {{ r.checkBorder }};background:{{ r.checkBg }};color:#fff;font-size:11px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0">{{ r.checkMark }}</button>
-                  <div class="mono" style="font-size:12px;color:#4a5765">{{ r.code }}</div>
+                  <div class="mono" style="font-size:12px;color:#0f1720">{{ r.code }}</div>
                   <div style="font-size:12.5px;color:#0f1720">{{ r.desc }}</div>
-                  <div class="mono" style="font-size:12.5px;color:#4a5765;text-align:right">{{ r.budget }}</div>
+                  <div class="mono" style="font-size:12.5px;color:#0f1720;text-align:right">{{ r.budget }}</div>
                   <div style="display:flex;align-items:center;justify-content:center;gap:3px">
                     <input value="{{ r.pct }}" onInput="{{ r.onPct }}" type="number" placeholder="0" class="mono" style="width:54px;border:1px solid #e4e8ee;border-radius:6px;padding:6px 6px;font-size:12.5px;text-align:right;font-family:'IBM Plex Mono',monospace;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none">
                     <span style="font-size:11px;color:#8894a2">%</span>
                   </div>
-                  <div style="text-align:right"><div class="mono" style="font-size:12px;color:#6b7787">{{ r.prevInvoiced }}</div><div style="font-size:10px;color:#a4afba">{{ r.prevPct }} of budget</div></div>
+                  <div style="text-align:right"><div class="mono" style="font-size:12px;color:#0f1720">{{ r.prevInvoiced }}</div><div style="font-size:10px;color:#6b7787">{{ r.prevPct }} of budget</div></div>
                   <div class="mono" style="font-size:13px;font-weight:600;color:#0f1720;text-align:right">{{ r.thisClaim }}</div>
                   <div class="mono" style="font-size:12.5px;color:#b45309;text-align:right">{{ r.outstandingPct }}</div>
                 </div>
@@ -10227,7 +10227,7 @@ class Component extends DCLogic {
           thisClaim: this.money(thisClaim), thisClaimZero: thisClaim <= 0,
           outstandingPct: Math.round(outPct) + '%',
           selected, checkMark: selected ? '✓' : '', checkBg: selected ? '#2b59c3' : '#fff', checkBorder: selected ? '#2b59c3' : '#cfd8e2',
-          rowOpacity: selected ? '1' : '.45',
+          rowOpacity: selected ? '1' : '.9',
           onPct: e => this.setClientProgress(l.code, e.target.value),
           onSelect: () => this.toggleClientSelect(l.code),
         };
