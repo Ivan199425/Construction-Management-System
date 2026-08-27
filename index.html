@@ -4083,6 +4083,14 @@ class Component extends DCLogic {
 
   componentDidMount() {
     this._colResizeInit();
+    this._loadSharedData();
+    this._startAutosave(); // 30s sweep: flush/retry anything still pending
+    this._restoreSession();
+  }
+  // Everything shared with the rest of the team. Called at mount and again after a
+  // successful sign-in: with RLS on, the mount-time call is denied while logged out,
+  // and without a retry the app would sit on its demo seed.
+  _loadSharedData() {
     // Phase 1: pull the SHARED cost-code catalogue from Supabase (server = source of truth).
     // If the server has none yet, seed it from whatever this browser already holds.
     this._gateCatalog('cost_codes', serverData => {
@@ -4141,7 +4149,10 @@ class Component extends DCLogic {
       return null;
     });
     this._initSigEditor();
-    this._startAutosave(); // 30s sweep: flush/retry anything still pending
+    // Phase 3: the SHARED project data (bills, subcontracts, variations, claims, invoices).
+    this._loadProjects();
+  }
+  _restoreSession() {
     // Phase 2: restore/validate the logged-in session against Supabase.
     const sess = this.state.session;
     if (sess && sess.profile) {
@@ -4172,7 +4183,8 @@ class Component extends DCLogic {
       };
       restoreSession();
     }
-    // Phase 3: pull the SHARED project data (financial, bills, subcontracts, variations, claims, invoices, etc.).
+  }
+  _loadProjects() {
     this._projLoaded = false;
     this._lastSavedProjects = this.state.projects;
     this._sbLoadCatalog('projects').then(res => {
@@ -4989,6 +5001,7 @@ class Component extends DCLogic {
     this._saveAuth(sess);
     this.setState({ session: sess, role: prof.role, view: 'portfolio', auth: { view: 'login', email: '', password: '', newPassword: '', error: '', notice: '', busy: false } });
     this._loadProfilesIntoState();
+    this._loadSharedData(); // anything denied while signed out is now readable
   }
   async doActivate() {
     const a = this.state.auth || {}; const email = (a.email || '').trim().toLowerCase(); const pw = a.newPassword || '';
