@@ -4887,18 +4887,45 @@ class Component extends DCLogic {
     }).then(r => r.ok).catch(() => false);
   }
   // ===== Supabase Storage (Phase 3b): upload a file, return its public URL (base64 fallback) =====
+  // Folders whose contents are commercially sensitive. These go to the private bucket.
+  _sbPrivateFolders() {
+    return ["agreements", "bills", "claims", "contracts", "docs", "eot",
+            "invoices", "payments", "quotes", "variations", "schedule"];
+  }
+  _sbBucketFor(folder) {
+    return this._sbPrivateFolders().indexOf(String(folder || "")) >= 0 ? "documents" : "attachments";
+  }
+  // A private object needs a short-lived signed link before anything can open it.
+  // Anything else - a public URL, a data: or blob: URL - is handed back untouched.
+  _sbSignedUrl(url, expiresIn) {
+    const c = this._SB;
+    const m = String(url || "").match(/\/storage\/v1\/object\/(?:public\/|sign\/)?documents\/([^?]+)/);
+    if (!c || !c.url || !m || typeof fetch === "undefined") return Promise.resolve(url);
+    return fetch(c.url + "/storage/v1/object/sign/documents/" + m[1], {
+      method: "POST",
+      headers: this._sbUserHeaders({ "Content-Type": "application/json" }),
+      body: JSON.stringify({ expiresIn: expiresIn || 3600 }),
+    }).then(r => (r.ok ? r.json() : null))
+      .then(b => (b && b.signedURL) ? c.url + "/storage/v1" + b.signedURL : url)
+      .catch(() => url);
+  }
   _sbUploadFile(file, folder) {
     const readB64 = () => new Promise(res => { try { const r = new FileReader(); r.onload = ev => res(ev.target.result); r.onerror = () => res(null); r.readAsDataURL(file); } catch (e) { res(null); } });
     const c = this._SB;
     if (!c || !c.url || !c.key || !file || typeof fetch === 'undefined') return readB64();
     const clean = (file.name || 'file').replace(/[^a-zA-Z0-9._-]/g, '_').slice(-64);
+    const bucket = this._sbBucketFor(folder);
     const path = (folder || 'files') + '/' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8) + '_' + clean;
     const s = this.state.session; const auth = (s && s.access_token) ? s.access_token : c.key;
-    return fetch(c.url + '/storage/v1/object/attachments/' + path, {
+    return fetch(c.url + '/storage/v1/object/' + bucket + '/' + path, {
       method: 'POST',
       headers: { apikey: c.key, Authorization: 'Bearer ' + auth, 'Content-Type': file.type || 'application/octet-stream', 'x-upsert': 'true' },
       body: file
-    }).then(r => r.ok ? (c.url + '/storage/v1/object/public/attachments/' + path) : readB64()).catch(() => readB64());
+    }).then(r => r.ok
+      ? (bucket === 'documents'
+          ? (c.url + '/storage/v1/object/' + bucket + '/' + path)
+          : (c.url + '/storage/v1/object/public/' + bucket + '/' + path))
+      : readB64()).catch(() => readB64());
   }
   // ===== Supabase Auth + profiles (Phase 2) =====
   _sbAuthSignIn(email, password) {
@@ -5740,7 +5767,17 @@ class Component extends DCLogic {
     }
     try { const parts = raw.split(','); const mime = (parts[0].match(/data:([^;]+)/) || [])[1] || type || 'application/octet-stream'; const bin = atob(parts[1] || ''); const arr = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i); return { url: URL.createObjectURL(new Blob([arr], { type: mime })), mime }; } catch (err) { return { url: raw, mime: type || '' }; }
   }
-  _showGalleryItem(items, index) { const dv = this.state.docViewer; if (dv && dv.curUrl && String(dv.curUrl).indexOf('blob:') === 0) { try { URL.revokeObjectURL(dv.curUrl); } catch (e) {} } const n = items.length; if (!n) return; const i = ((index % n) + n) % n; const it = items[i]; const dec = this._decodeBlob(it.url, it.type); const kind = /pdf/i.test(dec.mime) ? 'pdf' : (/^image\//i.test(dec.mime) ? 'image' : 'other'); this.setState({ docViewer: { items, index: i, curUrl: dec.url, curKind: kind, curName: it.name || 'document' } }); }
+  _showGalleryItem(items, index) { const dv = this.state.docViewer; if (dv && dv.curUrl && String(dv.curUrl).indexOf('blob:') === 0) { try { URL.revokeObjectURL(dv.curUrl); } catch (e) {} } const n = items.length; if (!n) return; const i = ((index % n) + n) % n; const it = items[i]; const dec = this._decodeBlob(it.url, it.type); const kind = /pdf/i.test(dec.mime) ? 'pdf' : (/^image\//i.test(dec.mime) ? 'image' : 'other');
+    this.setState({ docViewer: { items, index: i, curUrl: dec.url, curKind: kind, curName: it.name || 'document' } });
+    // A private document opens only through a signed link. The viewer is shown straight
+    // away and the link swapped in when it arrives, so nothing waits on the network.
+    this._sbSignedUrl(dec.url).then(signed => {
+      if (!signed || signed === dec.url) return;
+      this.setState(st => (st.docViewer && st.docViewer.index === i && st.docViewer.curUrl === dec.url)
+        ? { docViewer: Object.assign({}, st.docViewer, { curUrl: signed }) }
+        : {});
+    });
+  }
   openGallery(items, index) { if (!items || !items.length) return; this._showGalleryItem(items, index || 0); }
   openAttachment(att) { if (!att || !att.url) return; this.openGallery([{ name: att.name, url: att.url, type: att.type }], 0); }
   docViewerNav(dir) { const dv = this.state.docViewer; if (!dv || !dv.items) return; this._showGalleryItem(dv.items, dv.index + dir); }
