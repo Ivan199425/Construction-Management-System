@@ -4148,7 +4148,7 @@ class Component extends DCLogic {
       if (sess.refresh_token) this._sbAuthRefresh(sess.refresh_token).then(res => {
         if (res.ok && res.body && res.body.access_token) { const ns = Object.assign({}, this.state.session, { access_token: res.body.access_token, refresh_token: res.body.refresh_token }); this._saveAuth(ns); this.setState({ session: ns }); }
       });
-      this._sbFetchProfileByEmail(sess.profile.email).then(prof => {
+      this._sbFetchProfileByEmail(sess.profile.email, sess.access_token).then(prof => {
         if (!prof || prof.status !== 'active') { this._saveAuth(null); this.setState({ session: null, users: [], auth: { view: 'login', email: '', password: '', newPassword: '', error: '', notice: prof ? 'Your account is ' + prof.status + '.' : '', busy: false } }); }
         else { const ns = Object.assign({}, this.state.session, { profile: prof }); this._saveAuth(ns); this.setState({ session: ns, role: prof.role }); this._loadProfilesIntoState(); }
       });
@@ -4156,14 +4156,22 @@ class Component extends DCLogic {
     // Phase 3: pull the SHARED project data (financial, bills, subcontracts, variations, claims, invoices, etc.).
     this._projLoaded = false;
     this._lastSavedProjects = this.state.projects;
-    this._sbLoadCatalog('projects').then(serverProjects => {
+    this._sbLoadCatalog('projects').then(res => {
+      if (!res || !res.ok) {
+        // The shared load never answered. Leave autosave disarmed: this browser is holding
+        // whatever it had locally and saving that would overwrite everyone else.
+        this._setSave('projects', 'error');
+        this._applyDeepLink();
+        return;
+      }
+      const serverProjects = res.data;
       if (Array.isArray(serverProjects) && serverProjects.length) {
         this._lastSavedProjects = serverProjects;
         this.setState({ projects: serverProjects });
       }
       this._projLoaded = true;
       this._applyDeepLink(); // ?project=&bill=/&claim= → open that record
-    }).catch(() => { this._projLoaded = true; });
+    }).catch(() => { this._setSave('projects', 'error'); });
   }
   componentDidUpdate() {
     this._initSigEditor(); // populate the signature editor once when it appears
@@ -4801,9 +4809,10 @@ class Component extends DCLogic {
     this._catReadyMap = this._catReadyMap || {};
     this._catReadyMap[key] = new Promise(res => {
       const done = () => { this._catLoadedMap[key] = true; res(); };
-      this._sbLoadCatalog(key).then(data => {
+      this._sbLoadCatalog(key).then(res => {
+        if (!res || !res.ok) { done(); return; } // read failed: do not seed the server from local
         let patch = null;
-        try { patch = mapper(data); } catch (e) { patch = null; }
+        try { patch = mapper(res.data); } catch (e) { patch = null; }
         if (patch) this.setState(patch, done); else done();   // resolve only once state is committed
       }).catch(done);
     });
@@ -4815,19 +4824,34 @@ class Component extends DCLogic {
     const pending = this._catReadyMap && this._catReadyMap[key];
     if (pending) pending.then(fn, fn); else fn();
   }
+  // Auth endpoints (sign in, sign up, refresh) expect the anon key, not a user token.
   _sbHeaders(extra) { const c = this._SB || {}; return Object.assign({ apikey: c.key, Authorization: 'Bearer ' + c.key }, extra || {}); }
+  // Data endpoints carry the signed-in user's token so Row Level Security can see who
+  // is asking. tok is passed explicitly by the login and session-restore paths, which
+  // hold a token before it has reached state.
+  _sbUserHeaders(extra, tok) {
+    const c = this._SB || {};
+    const sess = this.state && this.state.session;
+    const bearer = tok || (sess && sess.access_token) || c.key;
+    return Object.assign({ apikey: c.key, Authorization: 'Bearer ' + bearer }, extra || {});
+  }
+  // Resolves { ok, data }. ok is false when the request never got an answer - denied by
+  // Row Level Security, offline, server error. data is null when the server answered but
+  // holds no row yet. Callers must not treat the first case as an empty server.
   _sbLoadCatalog(key) {
-    const c = this._SB; if (!c || !c.url || !c.key || typeof fetch === 'undefined') return Promise.resolve(null);
-    return fetch(c.url + '/rest/v1/app_catalog?select=data&key=eq.' + encodeURIComponent(key), { headers: this._sbHeaders() })
-      .then(r => r.ok ? r.json() : null)
-      .then(rows => (rows && rows[0]) ? rows[0].data : null)
-      .catch(() => null);
+    const c = this._SB;
+    if (!c || !c.url || !c.key || typeof fetch === 'undefined') return Promise.resolve({ ok: false, data: null });
+    return fetch(c.url + '/rest/v1/app_catalog?select=data&key=eq.' + encodeURIComponent(key), { headers: this._sbUserHeaders() })
+      .then(r => r.ok
+        ? r.json().then(rows => ({ ok: true, data: (rows && rows[0]) ? rows[0].data : null }), () => ({ ok: false, data: null }))
+        : { ok: false, data: null })
+      .catch(() => ({ ok: false, data: null }));
   }
   _sbSaveCatalog(key, data) {
     const c = this._SB; if (!c || !c.url || !c.key || typeof fetch === 'undefined') return Promise.resolve(false);
     return fetch(c.url + '/rest/v1/app_catalog', {
       method: 'POST',
-      headers: this._sbHeaders({ 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates,return=minimal' }),
+      headers: this._sbUserHeaders({ 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates,return=minimal' }),
       body: JSON.stringify([{ key, data, updated_at: new Date().toISOString() }])
     }).then(r => r.ok).catch(() => false);
   }
@@ -4869,29 +4893,29 @@ class Component extends DCLogic {
     if (!row) return null;
     return { id: row.id, auth_id: row.auth_id || null, email: row.email || '', name: row.name || '', role: row.role || 'Field', status: row.status || 'invited', external: !!row.external, projectIds: Array.isArray(row.project_ids) ? row.project_ids : [], phone: row.phone || '', title: row.title || '', signature: row.signature || '', photoUrl: row.photo_url || '' };
   }
-  _sbFetchProfileByEmail(email) {
+  _sbFetchProfileByEmail(email, tok) {
     const c = this._SB; if (!c || !email) return Promise.resolve(null);
-    return fetch(c.url + '/rest/v1/profiles?select=*&email=eq.' + encodeURIComponent((email || '').toLowerCase()), { headers: this._sbHeaders() })
+    return fetch(c.url + '/rest/v1/profiles?select=*&email=eq.' + encodeURIComponent((email || '').toLowerCase()), { headers: this._sbUserHeaders(null, tok) })
       .then(r => r.ok ? r.json() : null).then(rows => (rows && rows[0]) ? this._mapProfile(rows[0]) : null).catch(() => null);
   }
   _sbListProfiles() {
     const c = this._SB; if (!c) return Promise.resolve([]);
-    return fetch(c.url + '/rest/v1/profiles?select=*&order=created_at.asc', { headers: this._sbHeaders() })
+    return fetch(c.url + '/rest/v1/profiles?select=*&order=created_at.asc', { headers: this._sbUserHeaders() })
       .then(r => r.ok ? r.json() : []).then(rows => (rows || []).map(x => this._mapProfile(x))).catch(() => []);
   }
   _sbInsertProfile(p) {
     const c = this._SB; if (!c) return Promise.resolve(null);
-    return fetch(c.url + '/rest/v1/profiles', { method: 'POST', headers: this._sbHeaders({ 'Content-Type': 'application/json', Prefer: 'return=representation' }), body: JSON.stringify([{ email: (p.email || '').toLowerCase(), name: p.name || '', role: p.role || 'Field', status: p.status || 'invited', external: !!p.external, project_ids: p.projectIds || [] }]) })
+    return fetch(c.url + '/rest/v1/profiles', { method: 'POST', headers: this._sbUserHeaders({ 'Content-Type': 'application/json', Prefer: 'return=representation' }), body: JSON.stringify([{ email: (p.email || '').toLowerCase(), name: p.name || '', role: p.role || 'Field', status: p.status || 'invited', external: !!p.external, project_ids: p.projectIds || [] }]) })
       .then(r => r.ok ? r.json() : null).then(rows => (rows && rows[0]) ? this._mapProfile(rows[0]) : null).catch(() => null);
   }
   _sbUpdateProfile(id, patch) {
     const c = this._SB; if (!c) return Promise.resolve(false);
     const body = {}; if ('name' in patch) body.name = patch.name; if ('role' in patch) body.role = patch.role; if ('status' in patch) body.status = patch.status; if ('external' in patch) body.external = !!patch.external; if ('projectIds' in patch) body.project_ids = patch.projectIds; if ('phone' in patch) body.phone = patch.phone; if ('title' in patch) body.title = patch.title; if ('signature' in patch) body.signature = patch.signature; if ('photoUrl' in patch) body.photo_url = patch.photoUrl;
-    return fetch(c.url + '/rest/v1/profiles?id=eq.' + encodeURIComponent(id), { method: 'PATCH', headers: this._sbHeaders({ 'Content-Type': 'application/json', Prefer: 'return=minimal' }), body: JSON.stringify(body) }).then(r => r.ok).catch(() => false);
+    return fetch(c.url + '/rest/v1/profiles?id=eq.' + encodeURIComponent(id), { method: 'PATCH', headers: this._sbUserHeaders({ 'Content-Type': 'application/json', Prefer: 'return=minimal' }), body: JSON.stringify(body) }).then(r => r.ok).catch(() => false);
   }
   _sbDeleteProfile(id) {
     const c = this._SB; if (!c) return Promise.resolve(false);
-    return fetch(c.url + '/rest/v1/profiles?id=eq.' + encodeURIComponent(id), { method: 'DELETE', headers: this._sbHeaders() }).then(r => r.ok).catch(() => false);
+    return fetch(c.url + '/rest/v1/profiles?id=eq.' + encodeURIComponent(id), { method: 'DELETE', headers: this._sbUserHeaders() }).then(r => r.ok).catch(() => false);
   }
   _loadAuth() {
     try { if (typeof localStorage === 'undefined') return null; const raw = localStorage.getItem('cubicAuth'); if (!raw) return null; const s = JSON.parse(raw); return (s && s.profile) ? s : null; } catch (e) { return null; }
@@ -4929,7 +4953,7 @@ class Component extends DCLogic {
       this.setState(s => ({ auth: { ...s.auth, busy: false, error: err } })); return;
     }
     const tok = res.body;
-    const prof = await this._sbFetchProfileByEmail(email);
+    const prof = await this._sbFetchProfileByEmail(email, tok && tok.access_token);
     if (!prof) { this.setState(s => ({ auth: { ...s.auth, busy: false, error: 'No access profile found for this account. Contact your administrator.' } })); return; }
     if (prof.status !== 'active') { this.setState(s => ({ auth: { ...s.auth, busy: false, error: 'This account is ' + prof.status + '. Contact your administrator.' } })); return; }
     const sess = { access_token: tok.access_token, refresh_token: tok.refresh_token, profile: prof };
@@ -4950,8 +4974,8 @@ class Component extends DCLogic {
     }
     const tok = res.body;
     await new Promise(r => setTimeout(r, 500));
-    let prof = await this._sbFetchProfileByEmail(email);
-    if (!prof) { await new Promise(r => setTimeout(r, 700)); prof = await this._sbFetchProfileByEmail(email); }
+    let prof = await this._sbFetchProfileByEmail(email, tok && tok.access_token);
+    if (!prof) { await new Promise(r => setTimeout(r, 700)); prof = await this._sbFetchProfileByEmail(email, tok && tok.access_token); }
     if (prof && prof.status === 'deactivated') { this.setState(s => ({ auth: { ...s.auth, busy: false, error: 'This account has been deactivated. Contact your administrator.' } })); return; }
     if (!tok || !tok.access_token) { this.setState(s => ({ auth: { view: 'login', email: email, password: '', newPassword: '', error: '', notice: 'Account activated — please log in.', busy: false } })); return; }
     const sess = { access_token: tok.access_token, refresh_token: tok.refresh_token, profile: prof || { email, name: '', role: 'Field', status: 'active', external: false, projectIds: [] } };
