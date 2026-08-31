@@ -1812,6 +1812,10 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
               </div>
               <sc-for list="{{ costLineRows }}" as="r" hint-placeholder-count="6">
                 <div data-line-id="{{ r.id }}" style="display:grid;grid-template-columns:{{ budgetColTemplate }};padding:8px 16px;border-bottom:1px solid #eef1f4;align-items:center;gap:8px" style-hover="background:#f9fafc">
+                  <select value="{{ r.parentCode }}" onChange="{{ r.onParentSelect }}" title="Parent section. Pick one and the code list beside it narrows to that section." style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 5px;font-size:12px;font-family:'IBM Plex Mono',monospace;color:#4a5765;background:#fff;cursor:pointer;{{ r.bc.parentCode }}" style-focus="border-color:#2b59c3;outline:none">
+                    <option value="">Section…</option>
+                    <sc-for list="{{ r.parentOptions }}" as="pp" hint-placeholder-count="3"><option value="{{ pp.code }}">{{ pp.label }}</option></sc-for>
+                  </select>
                   <select value="{{ r.code }}" onChange="{{ r.onCodeSelect }}" title="Select a saved cost code" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 5px;font-size:12px;font-family:'IBM Plex Mono',monospace;color:#0f1720;background:#fff;cursor:pointer;{{ r.bc.code }}" style-focus="border-color:#2b59c3;outline:none">
                     <option value="">Select code…</option>
                     <sc-for list="{{ r.codeGroups }}" as="grp" hint-placeholder-count="3"><optgroup label="{{ grp.label }}"><sc-for list="{{ grp.options }}" as="o" hint-placeholder-count="3"><option value="{{ o.code }}">{{ o.label }}</option></sc-for></optgroup></sc-for>
@@ -8456,6 +8460,60 @@ class Component extends DCLogic {
     this.setState({ apPrompt: null, apScreen: 'inbox', apOpen: '' });
   }
 
+  // Where a child code is set the parent follows from it through the shared catalogue, so the
+  // two can never disagree and nothing has to be typed on a project that already has codes.
+  // Where there is no child code yet, the parent is whatever was picked — choosing it first is
+  // how you narrow a 250-code list down to one section before choosing within it.
+  lineParent(l) {
+    const code = String((l && l.code) == null ? '' : l.code).trim();
+    if (code) {
+      const meta = this.costCodeCatalog().find(c => c.code === code);
+      const pc = (meta && meta.parentCode) || (code.split(/[-.]/)[0] || '');
+      const pd = (meta && meta.parentDesc) || '';
+      return { code: pc, desc: pd, label: pc ? (pc + (pd ? ' — ' + pd : '')) : '', derived: true };
+    }
+    const picked = String((l && l.parentCode) == null ? '' : l.parentCode).trim();
+    if (!picked) return { code: '', desc: '', label: '', derived: false };
+    const par = this.costCodeCatalog().find(c => c.parentCode === picked);
+    const pd = (par && par.parentDesc) || '';
+    return { code: picked, desc: pd, label: picked + (pd ? ' — ' + pd : ''), derived: false };
+  }
+  // Every parent section in the catalogue, for the parent dropdown.
+  parentCodeOptions() {
+    const out = [], seen = {};
+    this.costCodeCatalog().forEach(c => {
+      const pc = (c.parentCode || '').trim(); if (!pc || seen[pc]) return;
+      seen[pc] = 1;
+      out.push({ code: pc, label: pc + (c.parentDesc ? ' · ' + c.parentDesc : '') });
+    });
+    return out;
+  }
+  // Once a section is picked on a line that has no code yet, only that section is offered,
+  // which is the point of choosing the parent first. A line that already carries a code keeps
+  // the whole list, so no code that used to be reachable from here stops being reachable.
+  lineChildGroups(l) {
+    const all = this.costCodeGroups();
+    if (l && l.code) return all;
+    const picked = String((l && l.parentCode) == null ? '' : l.parentCode).trim();
+    if (!picked) return all;
+    const hit = all.filter(g => g.key === picked);
+    return hit.length ? hit : all;
+  }
+  // Picking a parent that the current child does not belong to clears the child, rather than
+  // leaving a line claiming to be in two sections at once.
+  setLineParent(lineId, parentCode) {
+    if (!this.can('financial', 'edit')) return;
+    const v = String(parentCode || '').trim();
+    this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : Object.assign({}, p, {
+      costLines: (p.costLines || []).map(l => {
+        if (l.id !== lineId) return l;
+        const cur = this.lineParent({ code: l.code }).code;
+        const keepsChild = !v || !l.code || cur === v;
+        return Object.assign({}, l, { parentCode: v }, keepsChild ? {} : { code: '' });
+      }),
+    })) }));
+  }
+
   // Only the cost codes this project actually carries, grouped and labelled from the shared
   // catalogue. The full catalogue belongs on the Budget, where a code is chosen to bring onto
   // the project; anywhere a cost is being assigned, offering a code the project does not have
@@ -11195,11 +11253,23 @@ class Component extends DCLogic {
   startEdit(key) { this.setState({ editCell: key }); }
   endEdit() { this.setState({ editCell: '' }); }
   // ----- Budget: resizable columns (widths persisted per browser, across projects) -----
-  _budgetColDefs() { return [{ id: 'code', label: 'Code', align: 'left', w: 96 }, { id: 'desc', label: 'Description', align: 'left', w: 220 }, { id: 'cat', label: 'Category', align: 'left', w: 128 }, { id: 'orig', label: 'Budgeted', align: 'right', w: 122 }, { id: 'adj', label: 'Approved change', align: 'right', w: 130 }, { id: 'committed', label: 'Committed', align: 'right', w: 150 }, { id: 'actual', label: 'Actual', align: 'right', w: 122 }, { id: 'prog', label: '% complete', align: 'right', w: 104 }, { id: 'cpi', label: 'CPI', align: 'right', w: 84 }, { id: 'ftc', label: 'FTC', align: 'right', w: 118 }, { id: 'eac', label: 'Est. at completion', align: 'right', w: 138 }, { id: 'variance', label: 'Variance', align: 'right', w: 122 }, { id: 'pct', label: '% spent', align: 'right', w: 96 }, { id: 'del', label: '', align: 'left', w: 42 }]; }
+  _budgetColDefs() { return [{ id: 'parentCode', label: 'Parent code', align: 'left', w: 130 }, { id: 'code', label: 'Child code', align: 'left', w: 96 }, { id: 'desc', label: 'Description', align: 'left', w: 220 }, { id: 'cat', label: 'Category', align: 'left', w: 128 }, { id: 'orig', label: 'Budgeted', align: 'right', w: 122 }, { id: 'adj', label: 'Approved change', align: 'right', w: 130 }, { id: 'committed', label: 'Committed', align: 'right', w: 150 }, { id: 'actual', label: 'Actual', align: 'right', w: 122 }, { id: 'prog', label: '% complete', align: 'right', w: 104 }, { id: 'cpi', label: 'CPI', align: 'right', w: 84 }, { id: 'ftc', label: 'FTC', align: 'right', w: 118 }, { id: 'eac', label: 'Est. at completion', align: 'right', w: 138 }, { id: 'variance', label: 'Variance', align: 'right', w: 122 }, { id: 'pct', label: '% spent', align: 'right', w: 96 }, { id: 'del', label: '', align: 'left', w: 42 }]; }
   _loadBudgetColW() { try { if (typeof localStorage === 'undefined') return {}; const raw = localStorage.getItem('cubicBudgetColW'); const o = raw ? JSON.parse(raw) : {}; return (o && typeof o === 'object') ? o : {}; } catch (e) { return {}; } }
   _saveBudgetColW(obj) { try { if (typeof localStorage !== 'undefined') localStorage.setItem('cubicBudgetColW', JSON.stringify(obj || {})); } catch (e) {} }
   _colW(id) { const o = this.state.budgetColW || {}; if (o[id] != null) return o[id]; const d = this._budgetColDefs().find(c => c.id === id); return d ? d.w : 100; }
-  _loadBudgetColOrder() { try { if (typeof localStorage === 'undefined') return null; const raw = localStorage.getItem('cubicBudgetColOrder'); const a = raw ? JSON.parse(raw) : null; return Array.isArray(a) ? a : null; } catch (e) { return null; } }
+  _loadBudgetColOrder() { try { if (typeof localStorage === 'undefined') return null; const raw = localStorage.getItem('cubicBudgetColOrder'); const a = raw ? JSON.parse(raw) : null; return Array.isArray(a) ? this._migrateColOrder(a) : null; } catch (e) { return null; } }
+  // A column order saved before a column existed does not mention it, and the merge appends
+  // anything it has not seen to the far right — nowhere near the column it belongs beside.
+  // Put each newcomer where it was meant to go instead. Safe to run on every load.
+  _migrateColOrder(a) {
+    const out = a.slice();
+    if (!out.length) return out;
+    if (out.indexOf('parentCode') < 0) {
+      const i = out.indexOf('code');
+      if (i < 0) out.unshift('parentCode'); else out.splice(i, 0, 'parentCode');
+    }
+    return out;
+  }
   _saveBudgetColOrder(a) { try { if (typeof localStorage !== 'undefined') localStorage.setItem('cubicBudgetColOrder', JSON.stringify(Array.isArray(a) ? a : [])); } catch (e) {} }
   _loadBudgetColHidden() { try { if (typeof localStorage === 'undefined') return {}; const raw = localStorage.getItem('cubicBudgetColHidden'); const o = raw ? JSON.parse(raw) : {}; return (o && typeof o === 'object') ? o : {}; } catch (e) { return {}; } }
   _saveBudgetColHidden(o) { try { if (typeof localStorage !== 'undefined') localStorage.setItem('cubicBudgetColHidden', JSON.stringify(o || {})); } catch (e) {} }
@@ -12268,7 +12338,10 @@ class Component extends DCLogic {
   // The report mirrors the Budget tab: the columns you have showing, in your order, at
   // your widths. Passing defs lets a caller ask for a specific set instead.
   costMatrix(p, defsOverride) {
+    // Anything the table shows should survive being exported; a column with no entry here is
+    // silently dropped from the CSV and the PDF.
     const val = {
+      parentCode: l => this.lineParent(l).code,
       code: l => l.code,
       desc: l => l.desc,
       cat: l => this.catLabel(l.cat),
@@ -13782,6 +13855,10 @@ class Component extends DCLogic {
     if (showCost) {
       const commitmentOptions = p.commitments.map(cm => ({ id: cm.id, label: cm.ref + ' — ' + cm.vendor }));
       const codeCatalog = this.costCodeOptions();
+      // One catalogue walk for the whole table: costCodeCatalog() scans every project.
+      const _pcMap = new Map(this.costCodeCatalog().map(c => [c.code, c.parentCode || '']));
+      const _parentOf = l => { const c = String((l && l.code) == null ? '' : l.code).trim(); if (c) { const pc = _pcMap.get(c); if (pc) return pc; const i = c.indexOf('-'); return i > 0 ? c.slice(0, i) : ''; } return String((l && l.parentCode) == null ? '' : l.parentCode).trim(); };
+      const _parentOptions = this.parentCodeOptions();
       const vlistAll = (p.contract && p.contract.variations) || [];
       const ec = S.editCell || '';
       const md = (id, field, raw) => (ec === id + ':' + field) ? String(raw == null ? '' : raw) : this.money(Number(raw) || 0);
@@ -13798,6 +13875,7 @@ class Component extends DCLogic {
         const catOrder = { preliminaries: 0, labor: 1, materials: 2, subcontractor: 3, equipment: 4, other: 5 };
         const keyOf = l => {
           switch (sortCol) {
+            case 'parentCode': return _parentOf(l);
             case 'desc': return (l.desc || '').toLowerCase();
             case 'cat': return catOrder[l.cat] == null ? 99 : catOrder[l.cat];
             case 'orig': return Number(l.orig) || 0;
@@ -13848,7 +13926,9 @@ class Component extends DCLogic {
           onLink: e => this.setLineField(l.id, 'commitmentId', e.target.value),
           current: this.money(this.lineCurrent(l, p)), eac: this.money(this.lineForecast(l, p)), variance: this.signed(variance), varColor: this.varColor(variance),
           pct: (() => { const v = this.linePctSpent(l, p); return v == null ? '—' : v + '%'; })(),
-          codeCatalog, codeGroups: this.costCodeGroups(), onCodeSelect: e => this.onCodeSelect(l.id, e.target.value),
+          parentCode: _parentOf(l), parentOptions: _parentOptions,
+          onParentSelect: e => this.setLineParent(l.id, e.target.value),
+          codeCatalog, codeGroups: this.lineChildGroups(l), onCodeSelect: e => this.onCodeSelect(l.id, e.target.value),
           onCode: e => this.setLineField(l.id, 'code', e.target.value),
           onDesc: e => this.setLineField(l.id, 'desc', e.target.value),
           onCat: e => this.setLineField(l.id, 'cat', e.target.value),
@@ -13895,7 +13975,7 @@ class Component extends DCLogic {
         estCost: this.money(mkTotCost), markupAmt: this.money(mkMarkupTot), markupPct: mkMarkupPct.toFixed(1) + '%', subTotal: this.money(mkTotSell), gstRate: String(gstR), gst: this.money(mkGst), grandTotal: this.money(mkGrand), profit: this.money(mkMarkupTot), profitPct: mkMargin.toFixed(1) + '%' };
       budgetColTemplate = _visCols.map(c => this._colW(c.id) + 'px').join(' ');
       budgetMinWidth = (_visCols.reduce((a, c) => a + this._colW(c.id), 0) + Math.max(0, _visCols.length - 1) * 8 + 32) + 'px';
-      const _sortableCols = { code: 1, desc: 1, cat: 1, orig: 1, adj: 1, committed: 1, actual: 1, ftc: 1, eac: 1, variance: 1, pct: 1 };
+      const _sortableCols = { parentCode: 1, code: 1, desc: 1, cat: 1, orig: 1, adj: 1, committed: 1, actual: 1, ftc: 1, eac: 1, variance: 1, pct: 1 };
       budgetHeaderCols = _visCols.map(c => {
         const active = sortCol === c.id; const sortable = !!_sortableCols[c.id];
         return { id: c.id, label: c.label, align: c.align, onDown: e => this.colResizeDown(c.id, e),
