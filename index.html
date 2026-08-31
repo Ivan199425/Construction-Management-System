@@ -1022,6 +1022,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                       <div class="mono" style="font-size:11.5px;font-weight:600;color:#2b59c3">{{ r.ref }}</div>
                       <sc-if value="{{ r.fromEmail }}" hint-placeholder-val="{{ false }}"><span title="Captured from an email" style="font-size:8.5px;font-weight:700;letter-spacing:.3px;color:#6b7787">✉ EMAIL</span></sc-if>
                       <sc-if value="{{ r.isForward }}" hint-placeholder-val="{{ false }}"><span title="{{ r.forwardNote }}" style="display:block;font-size:8.5px;font-weight:700;letter-spacing:.3px;color:#2b59c3">↪ FORWARDED</span></sc-if>
+                      <sc-if value="{{ r.inBills }}" hint-placeholder-val="{{ false }}"><span title="{{ r.inBillsNote }}" style="display:inline-block;margin-top:2px;font-size:8.5px;font-weight:700;letter-spacing:.3px;color:#b91c1c;background:#fbeef0;border-radius:4px;padding:1px 5px">⚠ IN BILLS</span></sc-if>
                     </div>
                     <div class="mono" style="font-size:11.5px;color:#4a5765">{{ r.when }}<span style="color:#a4afba"> {{ r.time }}</span></div>
                     <div style="min-width:0">
@@ -7831,6 +7832,23 @@ class Component extends DCLogic {
     if (inv.currency && inv.currency !== 'AUD') out.push({ key: 'fx', block: true, ok: false, text: 'This looks like a foreign-currency invoice. All values are stored in AUD — handle manually.' });
     const dup = this.apDuplicateOf(inv);
     if (dup) out.push({ key: 'dup', block: true, ok: false, text: 'Same supplier and invoice number as ' + (dup.ref || dup.invoiceNo) + ' received ' + this.fmtDate(this._apDay(dup.createdAt)) + '.' });
+    const already = this.apExistingBills(inv);
+    if (already.length) {
+      const tot = this._r2(already.reduce((s, x) => s + this.billTotal(x.bill), 0));
+      const codes = already.map(x => x.bill.code).filter(Boolean).join(', ');
+      const where = 'Bills on ' + already[0].project + ' — ' + already.length
+        + (already.length === 1 ? ' line' : ' lines') + ' totalling ' + this.money(tot)
+        + (codes ? ' against ' + codes : '');
+      // Once this invoice has posted its own bill the two are both in the cost report, which is
+      // a live double count rather than something still to be prevented. Say which it is.
+      const posted = ['coded', 'sent', 'paid'].indexOf(inv.status) >= 0;
+      out.push({ key: 'inbills', block: true, ok: false,
+        text: posted
+          ? ('Invoice ' + inv.invoiceNo + ' is ALSO entered by hand in ' + where
+             + '. Both are in the cost report, so this money is counted twice — void this invoice or delete the hand-entered bill.')
+          : ('Invoice ' + inv.invoiceNo + ' is already entered by hand in ' + where
+             + '. Approving this one would post the same money a second time.') });
+    }
     const cm = this.apCommitment(inv);
     if (cm) {
       const bal = this.apCommitmentBalance(inv);
@@ -7852,6 +7870,24 @@ class Component extends DCLogic {
     this._apCommit(id, { ack }, 'Warning acknowledged', key);
   }
 
+  // Everything invoiced before this module existed was typed straight into Bills, and the
+  // supplier's own number was usually put in the Bill # field. Finding it there means the money
+  // is already on the project: approving would post it a second time. One invoice can be several
+  // bill lines, because a split across cost codes is one line each.
+  apExistingBills(inv) {
+    const num = String((inv && inv.invoiceNo) || '').trim().toLowerCase();
+    if (!num) return [];
+    const out = [];
+    (this.state.projects || []).forEach(p => {
+      (p.bills || []).forEach(b => {
+        if (b.apId === inv.id) return; // the lines this invoice posted itself are not a duplicate
+        const asBillNo = String(b.billNo || '').trim().toLowerCase();
+        const asInvoice = String(b.invoice || '').trim().toLowerCase();
+        if (asBillNo === num || asInvoice === num) out.push({ pid: p.id, project: p.name, bill: b });
+      });
+    });
+    return out;
+  }
   apDuplicateOf(inv) {
     if (!inv || !inv.invoiceNo) return null;
     const key = String(inv.invoiceNo).trim().toLowerCase();
@@ -14656,6 +14692,8 @@ class Component extends DCLogic {
             fromEmail: !!(x.source && x.source.kind === 'email'),
             isForward: !!(x.source && x.source.forwardedBy),
             forwardNote: (() => { const u = this.apUserByEmail((x.source && x.source.forwardedBy) || ''); return 'Forwarded by ' + ((u && u.name) || (x.source && x.source.forwardedBy) || ''); })(),
+            inBills: this.apExistingBills(x).length > 0,
+            inBillsNote: (() => { const e = this.apExistingBills(x); return e.length ? ('Already entered in Bills on ' + e[0].project + ' — ' + e.length + (e.length === 1 ? ' line' : ' lines')) : ''; })(),
             sel, selStyle: _chk(sel), selTick: sel ? '✓' : '', onSel: () => this.toggleApSel(x.id), canPick,
             onOpen: () => (x.status === 'approved' ? this.openApAlloc(x.id) : this.openApReview(x.id)),
             openLabel: x.status === 'approved' ? 'Code ›' : (this.apLocked(x) ? 'View ›' : 'Review ›'),
