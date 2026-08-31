@@ -3886,6 +3886,12 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                 <sc-for list="{{ apSendV.to }}" as="e" hint-placeholder-count="2"><span style="display:inline-flex;align-items:center;gap:7px;background:#f2f6fd;border:1px solid #cdddf8;border-radius:15px;padding:4px 11px;font-size:12px;color:#2b59c3">{{ e.v }}<button onClick="{{ e.onRemove }}" style="border:0;background:transparent;color:#8fa8d8;cursor:pointer;font-size:13px;padding:0;line-height:1">✕</button></span></sc-for>
               </div>
             </sc-if>
+            <sc-if value="{{ apSendV.hasToPicks }}" hint-placeholder-val="{{ true }}">
+              <select value="" onChange="{{ apSendV.onPickTo }}" title="Pick someone instead of typing the address" style="width:100%;margin-bottom:7px;border:1px solid #cfd8e2;border-radius:8px;padding:8px 11px;font-size:12.5px;font-family:inherit;color:#4a5765;background:#fff;cursor:pointer" style-focus="border-color:#2b59c3;outline:none">
+                <option value="">＋ Add an accountant or a user — type to search…</option>
+                <sc-for list="{{ apSendV.toPicks }}" as="g" hint-placeholder-count="2"><optgroup label="{{ g.label }}"><sc-for list="{{ g.options }}" as="o" hint-placeholder-count="4"><option value="{{ o.v }}">{{ o.label }}</option></sc-for></optgroup></sc-for>
+              </select>
+            </sc-if>
             <div style="display:flex;gap:7px">
               <input value="{{ apSendV.newTo }}" onInput="{{ apSendV.onNewTo }}" placeholder="accounts@youraccountant.com.au" style="flex:1;min-width:0;border:1px solid #cfd8e2;border-radius:8px;padding:8px 11px;font-size:12.5px;font-family:inherit;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none">
               <button onClick="{{ apSendV.onAddTo }}" style="border:1px solid #cfd8e2;background:#fff;color:#4a5765;border-radius:8px;padding:8px 14px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit">Add</button>
@@ -3897,6 +3903,12 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
               <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:7px">
                 <sc-for list="{{ apSendV.cc }}" as="e" hint-placeholder-count="1"><span style="display:inline-flex;align-items:center;gap:7px;background:#eef1f5;border:1px solid #dfe4ea;border-radius:15px;padding:4px 11px;font-size:12px;color:#4a5765">{{ e.v }}<button onClick="{{ e.onRemove }}" style="border:0;background:transparent;color:#a4afba;cursor:pointer;font-size:13px;padding:0;line-height:1">✕</button></span></sc-for>
               </div>
+            </sc-if>
+            <sc-if value="{{ apSendV.hasCcPicks }}" hint-placeholder-val="{{ true }}">
+              <select value="" onChange="{{ apSendV.onPickCc }}" title="Pick someone instead of typing the address" style="width:100%;margin-bottom:7px;border:1px solid #cfd8e2;border-radius:8px;padding:8px 11px;font-size:12.5px;font-family:inherit;color:#4a5765;background:#fff;cursor:pointer" style-focus="border-color:#2b59c3;outline:none">
+                <option value="">＋ Add a user — type to search…</option>
+                <sc-for list="{{ apSendV.ccPicks }}" as="g" hint-placeholder-count="2"><optgroup label="{{ g.label }}"><sc-for list="{{ g.options }}" as="o" hint-placeholder-count="4"><option value="{{ o.v }}">{{ o.label }}</option></sc-for></optgroup></sc-for>
+              </select>
             </sc-if>
             <div style="display:flex;gap:7px">
               <input value="{{ apSendV.newCc }}" onInput="{{ apSendV.onNewCc }}" placeholder="name@cubiccm.com" style="flex:1;min-width:0;border:1px solid #cfd8e2;border-radius:8px;padding:8px 11px;font-size:12.5px;font-family:inherit;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none">
@@ -8628,6 +8640,17 @@ class Component extends DCLogic {
       const e = String(st[key] || '').trim(); if (!e) return {};
       const next = (st[list] || []).indexOf(e) >= 0 ? st[list] : (st[list] || []).concat([e]);
       return { apSend: Object.assign({}, st, { [list]: next, [key]: '' }) };
+    });
+  }
+  // Picked from the list rather than typed. The address is already known to be well formed,
+  // so it goes straight on without passing through the free-text box.
+  addApSendPick(which, email) {
+    const e = this._apAddr(email); if (!e) return;
+    this.setState(s => {
+      const st = s.apSend; if (!st) return {};
+      const list = st[which] || [];
+      if (list.indexOf(e) >= 0) return {};
+      return { apSend: Object.assign({}, st, { [which]: list.concat([e]) }) };
     });
   }
   removeApSendTo(which, email) { this.setState(s => ({ apSend: Object.assign({}, s.apSend, { [which]: (s.apSend[which] || []).filter(x => x !== email) }) })); }
@@ -14946,11 +14969,30 @@ class Component extends DCLogic {
       const st = S.apSend;
       const inv = this.apInv(st.id);
       if (inv) {
+        // Everyone worth sending to, grouped, minus whoever is already on the line.
+        const _apPicks = which => {
+          const ex = (st[which] || []).map(e => this._apAddr(e));
+          const groups = [];
+          const accts = (this.apSettings().accountantTo || []).map(e => this._apAddr(e))
+            .filter(e => e && ex.indexOf(e) < 0);
+          if (accts.length) groups.push({ label: 'Accountant', options: accts.map(e => ({ v: e, label: e })) });
+          const team = (S.users || []).filter(u => u.status === 'active' && u.email)
+            .map(u => ({ v: this._apAddr(u.email), label: (u.name || u.email) + '  ·  ' + this.roleLabel(u.role) + (u.external ? '  (external)' : '') + '  ·  ' + this._apAddr(u.email) }))
+            .filter(o => o.v && ex.indexOf(o.v) < 0)
+            .sort((a, b) => a.label.localeCompare(b.label));
+          if (team.length) groups.push({ label: 'Users', options: team });
+          return groups;
+        };
+        const _apToPicks = _apPicks('to'), _apCcPicks = _apPicks('cc');
         apSendV = {
           open: true,
           to: (st.to || []).map(e => ({ v: e, onRemove: () => this.removeApSendTo('to', e) })),
           cc: (st.cc || []).map(e => ({ v: e, onRemove: () => this.removeApSendTo('cc', e) })),
           hasTo: (st.to || []).length > 0, hasCc: (st.cc || []).length > 0,
+          toPicks: _apToPicks, hasToPicks: _apToPicks.length > 0,
+          onPickTo: e => { const v = e.target.value; e.target.value = ''; this.addApSendPick('to', v); },
+          ccPicks: _apCcPicks, hasCcPicks: _apCcPicks.length > 0,
+          onPickCc: e => { const v = e.target.value; e.target.value = ''; this.addApSendPick('cc', v); },
           newTo: st.newTo || '', onNewTo: e => this.setApSendField('newTo', e.target.value), onAddTo: () => this.addApSendTo('to'),
           newCc: st.newCc || '', onNewCc: e => this.setApSendField('newCc', e.target.value), onAddCc: () => this.addApSendTo('cc'),
           subject: st.subject || '', onSubject: e => this.setApSendField('subject', e.target.value),
