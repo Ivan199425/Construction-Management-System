@@ -7753,7 +7753,7 @@ class Component extends DCLogic {
       subtotal: 0, gst: 0, total: 0, currency: 'AUD',
       pid: '', matchRule: '', matchConf: 0, commitmentId: '', assignedTo: '',
       alloc: [], attachments: [],
-      source: { kind: 'upload', from: '', to: '', receivedAt: new Date().toISOString(), subject: '', body: '', messageId: '' },
+      source: { kind: 'upload', from: '', to: '', cc: '', senderAddress: '', forwardedBy: '', via: '', receivedAt: new Date().toISOString(), subject: '', body: '', messageId: '' },
       extract: { ok: false, engine: '', text: '', conf: {} },
       ack: {}, overrides: {},
       approvedBy: '', approvedAt: '', rejectedBy: '', rejectedAt: '', rejectReason: '', rejectNote: '',
@@ -7930,12 +7930,47 @@ class Component extends DCLogic {
   removeApInternalSender(v) { this.setApSetting('internalSenders', (this.apSettings().internalSenders || []).filter(x => x !== v)); }
   removeApInternalDomain(v) { this.setApSetting('internalDomains', (this.apSettings().internalDomains || []).filter(x => x !== v)); }
 
+  // Accounting software emails on the supplier's behalf from its own domain, so the envelope
+  // sender names the software and nothing else. The supplier is elsewhere in the message.
+  apBillingPlatforms() {
+    return ['xero.com', 'intuit.com', 'quickbooks.com', 'myob.com', 'myob.com.au', 'freshbooks.com',
+            'waveapps.com', 'zoho.com', 'sage.com', 'invoice2go.com', 'bill.com', 'squareup.com',
+            'stripe.com', 'rounded.com.au', 'quickfee.com', 'reckon.com'];
+  }
+  apIsPlatform(addr) {
+    const d = (this._apAddr(addr).split('@')[1] || '');
+    if (!d) return false;
+    return this.apBillingPlatforms().some(p => d === p || d.slice(-(p.length + 1)) === ('.' + p));
+  }
+  // "Invoice #INV-0365 from Bin and Gone QLD Unit Trust is due" — the software puts the
+  // supplier in the subject, which beats guessing at the letterhead.
+  apSupplierFromSubject(subject) {
+    const s = String(subject || '').replace(/\s{2,}/g, ' ').trim();
+    if (!/invoice|statement|bill/i.test(s)) return '';
+    let m = s.match(/\bfrom\s+(.+?)\s+(?:for|is due|due|to)\b/i);
+    if (!m) m = s.match(/\bfrom\s+([^,;]{3,60}?)\s*$/i);
+    if (!m) return '';
+    return m[1].replace(/\s{2,}/g, ' ').replace(/[.,;:]+$/, '').trim();
+  }
+
   // Given a parsed email, decide who actually sent the invoice and who passed it along.
   apOriginalSender(mail) {
     const envelope = this._apAddr(mail && mail.from);
-    if (!envelope || !this.apIsInternal(envelope)) return { address: envelope, forwardedBy: '' };
+    if (!envelope) return { address: '', forwardedBy: '', via: '' };
+    // Sent by accounting software: the supplier is on Reply-To, or among the other
+    // recipients, since these tools copy the supplier on what they send out.
+    if (this.apIsPlatform(envelope)) {
+      const pool = [(mail && mail.replyTo) || '', (mail && mail.cc) || '', (mail && mail.to) || ''].join(' ');
+      const all = pool.match(/[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}/g) || [];
+      for (let i = 0; i < all.length; i++) {
+        const a = all[i].toLowerCase();
+        if (!this.apIsInternal(a) && !this.apIsPlatform(a)) return { address: a, forwardedBy: '', via: envelope };
+      }
+      return { address: '', forwardedBy: '', via: envelope };
+    }
+    if (!this.apIsInternal(envelope)) return { address: envelope, forwardedBy: '', via: '' };
     const reply = this._apAddr(mail && mail.replyTo);
-    if (reply && !this.apIsInternal(reply)) return { address: reply, forwardedBy: envelope };
+    if (reply && !this.apIsInternal(reply)) return { address: reply, forwardedBy: envelope, via: '' };
     // Gmail, Outlook and Apple Mail all quote the original headers; the first From: in the body
     // that is not one of ours is the supplier.
     const body = String((mail && mail.body) || '');
@@ -7943,14 +7978,14 @@ class Component extends DCLogic {
     let m;
     while ((m = re.exec(body))) {
       const a = this._apAddr(m[1]);
-      if (a && !this.apIsInternal(a)) return { address: a, forwardedBy: envelope };
+      if (a && !this.apIsInternal(a) && !this.apIsPlatform(a)) return { address: a, forwardedBy: envelope, via: '' };
     }
     const all = body.match(/[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}/g) || [];
     for (let i = 0; i < all.length; i++) {
       const a = all[i].toLowerCase();
-      if (!this.apIsInternal(a)) return { address: a, forwardedBy: envelope };
+      if (!this.apIsInternal(a) && !this.apIsPlatform(a)) return { address: a, forwardedBy: envelope, via: '' };
     }
-    return { address: '', forwardedBy: envelope };
+    return { address: '', forwardedBy: envelope, via: '' };
   }
   apUserByEmail(addr) {
     const e = this._apAddr(addr); if (!e) return null;
@@ -8138,7 +8173,7 @@ class Component extends DCLogic {
       const who = this.apOriginalSender(mail);
       const source = {
         kind: 'email', from: mail.from, to: mail.to,
-        senderAddress: who.address, forwardedBy: who.forwardedBy,
+        senderAddress: who.address, forwardedBy: who.forwardedBy, via: who.via || '',
         receivedAt: mail.date ? (new Date(mail.date).toString() !== 'Invalid Date' ? new Date(mail.date).toISOString() : new Date().toISOString()) : new Date().toISOString(),
         subject: mail.subject, body: mail.body, messageId: mail.messageId,
       };
@@ -8188,7 +8223,14 @@ class Component extends DCLogic {
     inv.gst = f.gst != null ? f.gst : 0;
     inv.total = f.total != null ? f.total : 0;
     if (f.currency === 'FOREIGN') inv.currency = 'FOREIGN';
-    const v = this.apMatchVendor(f, (inv.source && inv.source.senderAddress) || '');
+    // Accounting software names the supplier in the subject line, which is worth more than
+    // anything guessed off the letterhead.
+    const fromSubject = this.apSupplierFromSubject((inv.source && inv.source.subject) || '');
+    if (fromSubject) {
+      inv.supplierName = fromSubject;
+      inv.extract.conf = Object.assign({}, inv.extract.conf, { supplierName: 0.9 });
+    }
+    const v = this.apMatchVendor({ abn: f.abn, supplierName: inv.supplierName }, (inv.source && inv.source.senderAddress) || '');
     if (v) inv.vendorId = v.id;
     // A missing due date is taken from the supplier's payment terms, defaulting to 30 days.
     if (!inv.dueDate && inv.invoiceDate) {
@@ -9020,6 +9062,7 @@ class Component extends DCLogic {
       // the quoted body for it.
       replyTo: this._apDecodeWords(head['reply-to'] || ''),
       to: this._apDecodeWords(head.to || ''),
+      cc: this._apDecodeWords(head.cc || ''),
       subject: this._apDecodeWords(head.subject || ''),
       date: head.date || '',
       messageId: (head['message-id'] || '').trim(),
