@@ -671,7 +671,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                   <div style="font-size:11px;font-weight:700;letter-spacing:.5px;color:#8894a2;text-transform:uppercase">Unallocated invoices — who clears them</div>
                   <button onClick="{{ settingsV.ingestion.onGoRoles }}" style="border:1px solid #cfd8e2;background:#fff;color:#4a5765;border-radius:8px;padding:6px 13px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap" style-hover="border-color:#2b59c3;color:#2b59c3">Roles &amp; permissions ↗</button>
                 </div>
-                <div style="font-size:12px;color:#8894a2;line-height:1.6;margin-bottom:12px">Set in <strong style="color:#6b7787">Users &amp; access → Roles &amp; permissions</strong>, on the <strong style="color:#6b7787">Allocate Unassigned Invoices</strong> row. Anyone whose role carries it can give a project to an invoice that arrived without one, and an unmatched invoice is handed to one of them — it shows on their <strong style="color:#6b7787">On me</strong> tab. Whoever forwarded it keeps it if they hold the right; otherwise it goes to the first of them.</div>
+                <div style="font-size:12px;color:#8894a2;line-height:1.6;margin-bottom:12px">Set on the <strong style="color:#6b7787">Allocate Unassigned Invoices</strong> row of <strong style="color:#6b7787">Settings → Roles &amp; permissions</strong>. Anyone whose role carries it can give a project to an invoice that arrived without one, and an unmatched invoice is handed to one of them — it shows on their <strong style="color:#6b7787">On me</strong> tab. Whoever forwarded it keeps it if they hold the right; otherwise it goes to the first of them.</div>
                 <sc-if value="{{ settingsV.ingestion.hasAllocRoles }}" hint-placeholder-val="{{ true }}">
                   <div style="font-size:11px;font-weight:600;color:#4a5765;margin-bottom:6px">Roles that can allocate</div>
                   <div style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:12px">
@@ -7660,7 +7660,7 @@ class Component extends DCLogic {
       // in this list is treated that way; every user account counts automatically.
       internalSenders: [], internalDomains: [],
       // An invoice with no project belongs to somebody until it has one. Who that can be is
-      // set in Users & access, not here.
+      // set on the Roles & permissions tab, not here.
       notifyUnallocated: true,
       confidence: 80,
       accountantTo: [], ccApprover: true, ccExtra: [],
@@ -7948,7 +7948,7 @@ class Component extends DCLogic {
   // These are the people who get it; if none are named, it falls to whoever is signed in, so a
   // record is never left ownerless.
   // Everyone whose role carries the right to place an invoice, taken straight from the
-  // permissions matrix. Change who that is in Users & access and this follows.
+  // permissions matrix. Change who that is on the Roles & permissions tab and this follows.
   apCanAllocate(role) { return this.permLevel(role, 'apAllocate') >= 2; }
   apAllocators() {
     return (this.state.users || []).filter(u => u.status === 'active' && !u.external && u.email && this.apCanAllocate(u.role));
@@ -8238,7 +8238,7 @@ class Component extends DCLogic {
     const inv = this.apInv(id); if (!inv) return;
     const u = this.currentUser();
     if (inv.status === 'unallocated' && u && !this.apCanAllocate(u.role)) {
-      this.setState({ apNotice: 'Your role cannot place an unallocated invoice. Ask an administrator, or have the right added in Users & access.' });
+      this.setState({ apNotice: 'Your role cannot place an unallocated invoice. An administrator can grant it on the Allocate Unassigned Invoices row of Settings → Roles & permissions.' });
       return;
     }
     this.setApField(id, 'pid', pid);
