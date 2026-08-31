@@ -8456,18 +8456,34 @@ class Component extends DCLogic {
     this.setState({ apPrompt: null, apScreen: 'inbox', apOpen: '' });
   }
 
-  // The project's own cost codes, grouped by section — the same list the Bills tab offers.
-  apCodeGroups(pid) {
-    const p = this.proj(pid); if (!p) return [];
-    const gs = [], byKey = {};
-    (p.costLines || []).forEach(l => {
-      const code = String(l.code || '').trim(); if (!code) return;
-      const head = code.split(/[-.]/)[0];
-      if (!byKey[head]) { byKey[head] = { key: head, label: 'Section ' + head, options: [] }; gs.push(byKey[head]); }
-      byKey[head].options.push({ code, label: code + (l.desc ? ' — ' + l.desc : '') });
+  // Only the cost codes this project actually carries, grouped and labelled from the shared
+  // catalogue. The full catalogue belongs on the Budget, where a code is chosen to bring onto
+  // the project; anywhere a cost is being assigned, offering a code the project does not have
+  // invites coding to a line that does not exist.
+  projectCodeGroups(pid) {
+    const p = this.proj(pid);
+    const lines = (p && p.costLines) || [];
+    const cat = this.costCodeCatalog();
+    const byCode = {}; cat.forEach(c => { byCode[c.code] = c; });
+    const gs = [], byKey = {}, seen = {};
+    lines.forEach(l => {
+      const code = String(l.code == null ? '' : l.code).trim();
+      if (!code || seen[code]) return;
+      seen[code] = 1;
+      const meta = byCode[code];
+      const head = (meta && meta.parentCode) || code.split(/[-.]/)[0];
+      const label = (meta && meta.parentCode)
+        ? (meta.parentCode + (meta.parentDesc ? ' · ' + meta.parentDesc : ''))
+        : ('Section ' + head);
+      if (!byKey[head]) { byKey[head] = { key: head, label, options: [] }; gs.push(byKey[head]); }
+      const name = (meta && meta.name) || l.desc || '';
+      byKey[head].options.push({ code, label: code + (name ? ' — ' + name : '') });
     });
-    return gs;
+    // A project with no budget lines yet would otherwise offer nothing at all, leaving no way
+    // to code anything until somebody builds the budget.
+    return gs.length ? gs : this.costCodeGroups();
   }
+  apCodeGroups(pid) { return this.projectCodeGroups(pid); }
   // Coding straight from the review screen, the way a bill is coded. One code covers the whole
   // invoice; splitting it across several is what the allocation screen is for.
   apQuickCode(id, field, val) {
@@ -14183,7 +14199,7 @@ class Component extends DCLogic {
         const psm = this.statusMeta(status);
         const overdue = status !== 'paid' && x.dueDate && x.dueDate < today;
         return { id: x.id, billNo: x.billNo, vendorId: x.vendorId, code: x.code, desc: x.desc, amount: this._mdisp(x.id + ":amount", x.amount), onAmountFocus: () => this.startEdit(x.id + ":amount"), onCellBlur: () => this.endEdit(), taxRate: x.taxRate, billDate: x.billDate, dueDate: x.dueDate,
-          coded: !!x.code, hasVendor: !!x.vendorId, fromAp: !!x.fromAp, vendorOptions, codeCatalog, codeGroups: this.costCodeGroups(), tax: this.money(tax), total: this.money(tot),
+          coded: !!x.code, hasVendor: !!x.vendorId, fromAp: !!x.fromAp, vendorOptions, codeCatalog, codeGroups: this.projectCodeGroups(S.pid), tax: this.money(tax), total: this.money(tot),
           vendorBorder: x.vendorId ? '#e4e8ee' : '#e6c9a3', vendorBg: x.vendorId ? '#fff' : '#fdf6ec',
           codeBorder: x.code ? '#e4e8ee' : '#e6c9a3', codeBg: x.code ? '#fff' : '#fdf6ec',
           status, statusLabel: psm.label, statusColor: psm.color, statusBg: psm.bg, overdue, fromClaim: !!x.fromClaim,
