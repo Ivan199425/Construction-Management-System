@@ -635,6 +635,36 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                 </div>
               </div>
 
+              <!-- who counts as us -->
+              <div style="background:#fff;border:1px solid #e4e8ee;border-radius:12px;padding:16px 18px">
+                <div style="font-size:11px;font-weight:700;letter-spacing:.5px;color:#8894a2;text-transform:uppercase;margin-bottom:4px">Recognised senders — our own people</div>
+                <div style="font-size:12px;color:#8894a2;line-height:1.6;margin-bottom:12px">Most invoices are forwarded on by someone here rather than sent by the supplier. Mail from any of these is read as a forward: the supplier is taken from the quoted message behind it, and the forwarder is recorded on the invoice.</div>
+                <sc-if value="{{ settingsV.ingestion.hasInternalDomains }}" hint-placeholder-val="{{ true }}">
+                  <div style="font-size:11px;font-weight:600;color:#4a5765;margin-bottom:6px">Our domains</div>
+                  <div style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:12px">
+                    <sc-for list="{{ settingsV.ingestion.internalDomains }}" as="d" hint-placeholder-count="1">
+                      <span class="mono" style="display:inline-flex;align-items:center;gap:7px;background:#e7eefc;border:1px solid #cdddf8;border-radius:16px;padding:5px 12px;font-size:12px;color:#2b59c3">{{ d.v }}<sc-if value="{{ d.manual }}" hint-placeholder-val="{{ false }}"><button onClick="{{ d.onRemove }}" style="border:0;background:transparent;color:#8fa8d8;cursor:pointer;font-size:13px;padding:0;line-height:1">✕</button></sc-if></span>
+                    </sc-for>
+                  </div>
+                </sc-if>
+                <sc-if value="{{ settingsV.ingestion.hasInternalAuto }}" hint-placeholder-val="{{ true }}">
+                  <div style="font-size:11px;font-weight:600;color:#4a5765;margin-bottom:6px">From the user accounts <span style="font-weight:400;color:#a4afba">· kept in step automatically, external accounts excluded</span></div>
+                  <div style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:12px">
+                    <sc-for list="{{ settingsV.ingestion.internalAuto }}" as="a" hint-placeholder-count="3"><span class="mono" style="background:#eef1f5;border:1px solid #dfe4ea;border-radius:16px;padding:5px 12px;font-size:12px;color:#4a5765">{{ a.v }}</span></sc-for>
+                  </div>
+                </sc-if>
+                <sc-if value="{{ settingsV.ingestion.hasInternalManual }}" hint-placeholder-val="{{ false }}">
+                  <div style="font-size:11px;font-weight:600;color:#4a5765;margin-bottom:6px">Added by hand</div>
+                  <div style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:12px">
+                    <sc-for list="{{ settingsV.ingestion.internalManual }}" as="a" hint-placeholder-count="2"><span class="mono" style="display:inline-flex;align-items:center;gap:7px;background:#f2f6fd;border:1px solid #cdddf8;border-radius:16px;padding:5px 12px;font-size:12px;color:#2b59c3">{{ a.v }}<button onClick="{{ a.onRemove }}" style="border:0;background:transparent;color:#8fa8d8;cursor:pointer;font-size:13px;padding:0;line-height:1">✕</button></span></sc-for>
+                  </div>
+                </sc-if>
+                <div style="display:flex;gap:8px">
+                  <input value="{{ settingsV.ingestion.newInternal }}" onInput="{{ settingsV.ingestion.onNewInternal }}" placeholder="gordon@cubiccm.com — or @cubiccm.com for a whole domain" style="flex:1;min-width:0;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:inherit;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none">
+                  <button onClick="{{ settingsV.ingestion.onAddInternal }}" style="border:1px solid #cfd8e2;background:#fff;color:#4a5765;border-radius:8px;padding:9px 16px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="border-color:#2b59c3;color:#2b59c3">Add</button>
+                </div>
+              </div>
+
               <!-- accountant routing -->
               <div style="background:#fff;border:1px solid #e4e8ee;border-radius:12px;padding:16px 18px">
                 <div style="font-size:11px;font-weight:700;letter-spacing:.5px;color:#8894a2;text-transform:uppercase;margin-bottom:12px">Accountant routing</div>
@@ -964,6 +994,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                     <div>
                       <div class="mono" style="font-size:11.5px;font-weight:600;color:#2b59c3">{{ r.ref }}</div>
                       <sc-if value="{{ r.fromEmail }}" hint-placeholder-val="{{ false }}"><span title="Captured from an email" style="font-size:8.5px;font-weight:700;letter-spacing:.3px;color:#6b7787">✉ EMAIL</span></sc-if>
+                      <sc-if value="{{ r.isForward }}" hint-placeholder-val="{{ false }}"><span title="{{ r.forwardNote }}" style="display:block;font-size:8.5px;font-weight:700;letter-spacing:.3px;color:#2b59c3">↪ FORWARDED</span></sc-if>
                     </div>
                     <div class="mono" style="font-size:11.5px;color:#4a5765">{{ r.when }}<span style="color:#a4afba"> {{ r.time }}</span></div>
                     <div style="min-width:0">
@@ -1075,6 +1106,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                         <div style="font-size:10.5px;font-weight:700;letter-spacing:.4px;color:#8894a2;text-transform:uppercase">Source email</div>
                         <div style="font-size:12px;color:#0f1720;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ apReviewV.source.from }}</div>
                         <div style="font-size:11px;color:#8894a2">{{ apReviewV.source.when }} · {{ apReviewV.source.subject }}</div>
+                        <sc-if value="{{ apReviewV.source.isForward }}" hint-placeholder-val="{{ false }}"><div style="font-size:10.5px;color:#2b59c3;margin-top:3px">↪ Forwarded by <strong>{{ apReviewV.source.forwardedByName }}</strong> · supplier read as <span class="mono">{{ apReviewV.source.senderAddress }}</span></div></sc-if>
                       </div>
                       <sc-if value="{{ apReviewV.source.hasBody }}" hint-placeholder-val="{{ true }}"><button onClick="{{ apReviewV.source.onToggle }}" style="border:1px solid #cfd8e2;background:#fff;color:#2b59c3;border-radius:7px;padding:5px 11px;font-size:11.5px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap" style-hover="background:#f2f6fd">{{ apReviewV.source.toggleLabel }}</button></sc-if>
                     </div>
@@ -7574,9 +7606,13 @@ class Component extends DCLogic {
         { key: 'po', label: 'PO or commitment number found in subject, body or document', on: true },
         { key: 'project', label: 'Project number or name found in subject or body', on: true },
         { key: 'sole', label: 'Supplier is committed to exactly one active project', on: true },
-        { key: 'sender', label: 'Sender email address mapped to a project', on: false },
+        { key: 'forwarder', label: 'Forwarded by a team member who works on exactly one active project', on: true },
+        { key: 'sender', label: 'Supplier email address mapped to a project', on: false },
       ],
       senderMap: [],
+      // Mail from our own people is a forward, not a supplier. Anything on these domains or
+      // in this list is treated that way; every user account counts automatically.
+      internalSenders: [], internalDomains: [],
       confidence: 80,
       accountantTo: [], ccApprover: true, ccExtra: [],
       subjectTemplate: '{Supplier} - {Project} - Invoice {InvoiceNo} - {Total}',
@@ -7778,6 +7814,86 @@ class Component extends DCLogic {
     return this._r2(this.lineCurrent(line, p) - committed);
   }
 
+  // ---- who is us, and who is the supplier ------------------------------------------------------
+  // Most invoices do not arrive from the supplier. Somebody here receives one and forwards it on,
+  // so the envelope says gordon@cubiccm.com and the supplier is buried in the quoted header inside
+  // the message. Matching on the envelope would tie every forwarded invoice to the wrong party, so
+  // an address we recognise as our own is read as a forwarder and the real sender dug out behind it.
+  _apAddr(s) { const m = String(s || '').match(/[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}/); return m ? m[0].toLowerCase() : ''; }
+  // Every user account is one of ours, except the external ones — an architect or a client
+  // superintendent has a login but is not the office.
+  apInternalSenders() {
+    const cfg = this.apSettings();
+    const out = [];
+    const add = e => { const a = this._apAddr(e); if (a && out.indexOf(a) < 0) out.push(a); };
+    (this.state.users || []).forEach(u => { if (!u.external) add(u.email); });
+    const me = this.currentUser(); if (me && !me.external) add(me.email);
+    add(cfg.mailbox);
+    (cfg.internalSenders || []).forEach(add);
+    return out;
+  }
+  // The whole company domain counts, so a colleague who has never logged in is still recognised.
+  apInternalDomains() {
+    const cfg = this.apSettings();
+    const out = [];
+    const add = d => { const x = String(d || '').toLowerCase().replace(/^@/, '').trim(); if (x && x.indexOf('.') > 0 && out.indexOf(x) < 0) out.push(x); };
+    add(String(cfg.mailbox || '').split('@')[1]);
+    const me = this.currentUser(); if (me && !me.external) add(String(me.email || '').split('@')[1]);
+    (cfg.internalDomains || []).forEach(add);
+    return out;
+  }
+  apIsInternal(addr) {
+    const e = this._apAddr(addr);
+    if (!e) return false;
+    if (this.apInternalSenders().indexOf(e) >= 0) return true;
+    return this.apInternalDomains().indexOf(e.split('@')[1] || '') >= 0;
+  }
+  addApInternalSender(v) {
+    const raw = String(v || '').trim(); if (!raw) return;
+    // "@cubiccm.com" or "cubiccm.com" adds a whole domain; anything else is one address.
+    if (raw.indexOf('@') <= 0) {
+      const d = raw.replace(/^@/, '').toLowerCase();
+      if (d.indexOf('.') <= 0) return;
+      const list = (this.apSettings().internalDomains || []).slice();
+      if (list.indexOf(d) < 0) list.push(d);
+      this.setApSetting('internalDomains', list);
+      return;
+    }
+    const a = this._apAddr(raw); if (!a) return;
+    const list = (this.apSettings().internalSenders || []).slice();
+    if (list.indexOf(a) < 0) list.push(a);
+    this.setApSetting('internalSenders', list);
+  }
+  removeApInternalSender(v) { this.setApSetting('internalSenders', (this.apSettings().internalSenders || []).filter(x => x !== v)); }
+  removeApInternalDomain(v) { this.setApSetting('internalDomains', (this.apSettings().internalDomains || []).filter(x => x !== v)); }
+
+  // Given a parsed email, decide who actually sent the invoice and who passed it along.
+  apOriginalSender(mail) {
+    const envelope = this._apAddr(mail && mail.from);
+    if (!envelope || !this.apIsInternal(envelope)) return { address: envelope, forwardedBy: '' };
+    const reply = this._apAddr(mail && mail.replyTo);
+    if (reply && !this.apIsInternal(reply)) return { address: reply, forwardedBy: envelope };
+    // Gmail, Outlook and Apple Mail all quote the original headers; the first From: in the body
+    // that is not one of ours is the supplier.
+    const body = String((mail && mail.body) || '');
+    const re = /^[ \t>]*From\s*:\s*(.+)$/gim;
+    let m;
+    while ((m = re.exec(body))) {
+      const a = this._apAddr(m[1]);
+      if (a && !this.apIsInternal(a)) return { address: a, forwardedBy: envelope };
+    }
+    const all = body.match(/[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}/g) || [];
+    for (let i = 0; i < all.length; i++) {
+      const a = all[i].toLowerCase();
+      if (!this.apIsInternal(a)) return { address: a, forwardedBy: envelope };
+    }
+    return { address: '', forwardedBy: envelope };
+  }
+  apUserByEmail(addr) {
+    const e = this._apAddr(addr); if (!e) return null;
+    return (this.state.users || []).find(u => this._apAddr(u.email) === e) || null;
+  }
+
   // ---- project matching ------------------------------------------------------------------------
   // Rules run in the order the administrator set, first match wins, and anything that scores
   // below the threshold lands in Unallocated rather than guessing (BR-4.17, BR-4.18).
@@ -7808,20 +7924,39 @@ class Component extends DCLogic {
         const hits = projects.filter(p => (p.commitments || []).some(cm => cm.vendor && v && cm.vendor === v.company) || (p.bills || []).some(b => b.vendorId === inv.vendorId));
         if (hits.length === 1) return { pid: hits[0].id, rule: 'Supplier is committed to one active project only', conf: 80, commitmentId: '' };
       }
+      // Whoever forwarded it works here. If they are on exactly one live project, that is
+      // almost certainly the one the invoice belongs to.
+      if (r.key === 'forwarder' && inv.source && inv.source.forwardedBy) {
+        const who = this.apUserByEmail(inv.source.forwardedBy);
+        if (who) {
+          const theirs = projects.filter(p => (who.projectIds || []).indexOf(p.id) >= 0);
+          if (theirs.length === 1) return { pid: theirs[0].id, rule: 'Forwarded by ' + (who.name || inv.source.forwardedBy), conf: 82, commitmentId: '' };
+        }
+      }
       if (r.key === 'sender') {
-        const from = String((inv.source && inv.source.from) || '').toLowerCase();
-        const map = (cfg.senderMap || []).find(m => m.email && from.indexOf(String(m.email).toLowerCase()) >= 0);
-        if (map && map.pid) return { pid: map.pid, rule: 'Sender address mapping', conf: 85, commitmentId: '' };
+        const from = this._apAddr((inv.source && inv.source.senderAddress) || (inv.source && inv.source.from) || '');
+        const map = (cfg.senderMap || []).find(m => m.email && from && from.indexOf(String(m.email).toLowerCase()) >= 0);
+        if (map && map.pid) return { pid: map.pid, rule: 'Supplier address mapping', conf: 85, commitmentId: '' };
       }
     }
     return { pid: '', rule: '', conf: 0, commitmentId: '' };
   }
   // Matching the supplier is separate from matching the project: ABN is decisive, the name is a
   // fallback, and an unmatched supplier is left for the reviewer to create in the Directory.
-  apMatchVendor(fields) {
+  // ABN is decisive; then the address the invoice actually came from, which is the one thing a
+  // document cannot misprint; then the name.
+  apMatchVendor(fields, senderAddr) {
     const vendors = this.state.vendors || [];
     const abn = String(fields.abn || '').replace(/\D/g, '');
     if (abn) { const byAbn = vendors.find(v => String(v.abn || '').replace(/\D/g, '') === abn); if (byAbn) return byAbn; }
+    const from = this._apAddr(senderAddr);
+    if (from && !this.apIsInternal(from)) {
+      const byMail = vendors.find(v => this._apAddr(v.email) === from);
+      if (byMail) return byMail;
+      const dom = from.split('@')[1];
+      const byDom = vendors.find(v => { const d = this._apAddr(v.email).split('@')[1]; return !!d && d === dom; });
+      if (byDom) return byDom;
+    }
     const name = String(fields.supplierName || '').toLowerCase().replace(/[^a-z0-9]/g, '');
     if (name.length >= 4) {
       const exact = vendors.find(v => String(v.company || '').toLowerCase().replace(/[^a-z0-9]/g, '') === name);
@@ -7858,7 +7993,15 @@ class Component extends DCLogic {
       // Statements, quotes and delivery dockets are not invoices; the email is still kept, but
       // only the attachments that read like an invoice become records (BR-4.03, BR-4.05).
       const useful = docs.filter(a => !/^(signature|logo|image00\d)/i.test(a.name));
-      const source = { kind: 'email', from: mail.from, to: mail.to, receivedAt: mail.date ? (new Date(mail.date).toString() !== 'Invalid Date' ? new Date(mail.date).toISOString() : new Date().toISOString()) : new Date().toISOString(), subject: mail.subject, body: mail.body, messageId: mail.messageId };
+      // Who really sent it, and who passed it on. Everything downstream — the supplier match,
+      // the project rules, the query reply — uses the supplier's address, never the colleague's.
+      const who = this.apOriginalSender(mail);
+      const source = {
+        kind: 'email', from: mail.from, to: mail.to,
+        senderAddress: who.address, forwardedBy: who.forwardedBy,
+        receivedAt: mail.date ? (new Date(mail.date).toString() !== 'Invalid Date' ? new Date(mail.date).toISOString() : new Date().toISOString()) : new Date().toISOString(),
+        subject: mail.subject, body: mail.body, messageId: mail.messageId,
+      };
       if (!useful.length) {
         const inv = this.apBlank();
         inv.source = source;
@@ -7905,7 +8048,7 @@ class Component extends DCLogic {
     inv.gst = f.gst != null ? f.gst : 0;
     inv.total = f.total != null ? f.total : 0;
     if (f.currency === 'FOREIGN') inv.currency = 'FOREIGN';
-    const v = this.apMatchVendor(f);
+    const v = this.apMatchVendor(f, (inv.source && inv.source.senderAddress) || '');
     if (v) inv.vendorId = v.id;
     // A missing due date is taken from the supplier's payment terms, defaulting to 30 days.
     if (!inv.dueDate && inv.invoiceDate) {
@@ -7998,7 +8141,8 @@ class Component extends DCLogic {
     this._apCommit(id, { status: 'query', queryNote: note || '', queryAt: new Date().toISOString() }, 'Query raised', note || '');
     if (emailSupplier) {
       const v = this.apVendor(inv);
-      const to = [(v && v.email) || (inv.source && String(inv.source.from || '').match(/[^<>\s]+@[^<>\s]+/) || [''])[0]].filter(Boolean);
+      // The query goes to the supplier, never to the colleague who forwarded the invoice.
+      const to = [(v && v.email) || (inv.source && inv.source.senderAddress) || ''].filter(Boolean);
       if (to.length) {
         this._sendEmailNow({
           to, subject: 'Query — invoice ' + (inv.invoiceNo || '') + (inv.source && inv.source.subject ? ' (re: ' + inv.source.subject + ')' : ''),
@@ -8689,6 +8833,9 @@ class Component extends DCLogic {
     const body = sep < 0 ? '' : text.slice(sep).replace(/^\r?\n\r?\n/, '');
     const out = {
       from: this._apDecodeWords(head.from || ''),
+      // A forward often carries the original sender on Reply-To, which beats digging through
+      // the quoted body for it.
+      replyTo: this._apDecodeWords(head['reply-to'] || ''),
       to: this._apDecodeWords(head.to || ''),
       subject: this._apDecodeWords(head.subject || ''),
       date: head.date || '',
@@ -14169,6 +14316,8 @@ class Component extends DCLogic {
             hasMatchNote: !!x.matchRule && !!x.pid,
             hasDoc: (x.attachments || []).length > 0, onDoc: () => this.openApDoc(x),
             fromEmail: !!(x.source && x.source.kind === 'email'),
+            isForward: !!(x.source && x.source.forwardedBy),
+            forwardNote: (() => { const u = this.apUserByEmail((x.source && x.source.forwardedBy) || ''); return 'Forwarded by ' + ((u && u.name) || (x.source && x.source.forwardedBy) || ''); })(),
             sel, selStyle: _chk(sel), selTick: sel ? '✓' : '', onSel: () => this.toggleApSel(x.id), canPick,
             onOpen: () => (x.status === 'approved' ? this.openApAlloc(x.id) : this.openApReview(x.id)),
             openLabel: x.status === 'approved' ? 'Code ›' : (this.apLocked(x) ? 'View ›' : 'Review ›'),
@@ -14265,6 +14414,10 @@ class Component extends DCLogic {
           source: {
             isEmail: !!(x.source && x.source.kind === 'email'),
             from: (x.source && x.source.from) || '',
+            senderAddress: (x.source && x.source.senderAddress) || '',
+            forwardedBy: (x.source && x.source.forwardedBy) || '',
+            isForward: !!(x.source && x.source.forwardedBy),
+            forwardedByName: (() => { const u = this.apUserByEmail((x.source && x.source.forwardedBy) || ''); return (u && u.name) || (x.source && x.source.forwardedBy) || ''; })(),
             when: (x.source && x.source.receivedAt) ? this.fmtDate(this._apDay(x.source.receivedAt)) : '',
             subject: (x.source && x.source.subject) || '',
             body: (x.source && x.source.body) || '',
@@ -14654,6 +14807,16 @@ class Component extends DCLogic {
         })),
         hasSenderMaps: _apS.senderMap.length > 0,
         onAddSenderMap: () => this.addApSenderMap(),
+
+        // Who counts as us rather than a supplier.
+        internalAuto: this.apInternalSenders().filter(e => (_apS.internalSenders || []).indexOf(e) < 0).map(e => ({ v: e })),
+        hasInternalAuto: this.apInternalSenders().filter(e => (_apS.internalSenders || []).indexOf(e) < 0).length > 0,
+        internalDomains: this.apInternalDomains().map(d => ({ v: '@' + d, raw: d, manual: (_apS.internalDomains || []).indexOf(d) >= 0, onRemove: () => this.removeApInternalDomain(d) })),
+        hasInternalDomains: this.apInternalDomains().length > 0,
+        internalManual: (_apS.internalSenders || []).map(e => ({ v: e, onRemove: () => this.removeApInternalSender(e) })),
+        hasInternalManual: (_apS.internalSenders || []).length > 0,
+        newInternal: S.apNewInternal || '', onNewInternal: e => this.setState({ apNewInternal: e.target.value }),
+        onAddInternal: () => { this.addApInternalSender(S.apNewInternal); this.setState({ apNewInternal: '' }); },
 
         // Accountant routing.
         accountants: (_apS.accountantTo || []).map(e => ({ v: e, onRemove: () => this.removeApAccountant(e) })),
