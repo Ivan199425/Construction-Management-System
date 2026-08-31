@@ -9210,8 +9210,12 @@ class Component extends DCLogic {
     // "Cubic Constructions Pty Ltd" and "Cubic Built" are all recognised as the customer.
     const _me = String((((this.state || {}).company) || {}).name || '').toLowerCase().replace(/[^a-z0-9 ]/g, ' ').trim().split(/\s+/)[0] || '';
     const _isUs = s => _me.length >= 4 && String(s).toLowerCase().replace(/[^a-z0-9]/g, '').indexOf(_me) >= 0;
-    const _junk = s => /^(tax invoice|invoice|payment advice|description|quantity|unit price|amount|reference|total|subtotal|gst|abn|date|page|australia)$/i.test(s)
-      || /^[\d\s.,$%-]+$/.test(s) || /@|^www\.|^https?:/i.test(s);
+    const _junk = s => /^(tax invoice|invoice|payment advice|description|quantity|unit price|amount|reference|total|subtotal|gst|abn|date|page|australia|terms|invoice to|bill to|product & services|hours|rate)$/i.test(s)
+      || /^(thank you|thanks|please|remittance|payment|kind regards|regards)\b/i.test(s)
+      || /^[\d\s.,$%+()-]+$/.test(s) || /@|^www\.|^https?:/i.test(s);
+    // Address and telephone lines sit between the letterhead and the ABN; neither is a name.
+    const _addressy = s => /\b(street|st|road|rd|avenue|ave|place|pl|drive|dr|lane|ln|court|ct|parade|pde|crescent|cres|highway|hwy|unit|suite|level|po box|nsw|vic|qld|wa|sa|tas|nt|act)\b/i.test(s)
+      || /\b\d{4}\b\s*$/.test(s) || /^[\d\s+()-]{8,}$/.test(s);
     // The name often sits directly under the ABN, so a joined pair can start with the number.
     const _clean = s => String(s)
       .replace(/^(?:bill\s*to|sold\s*to|supplier|vendor|company|name|to|from)\s*[:.]\s*/i, '')
@@ -9227,8 +9231,18 @@ class Component extends DCLogic {
     const _ok = s => s.length > 3 && s.length < 70 && !_isUs(s) && !_junk(s);
     let sup = _cands.find(x => /(pty\.?\s*ltd|p\/l\b|\blimited\b|\bltd\b|unit trust|\bllc\b|\binc\b)/i.test(x) && _ok(x));
     if (sup) { f.supplierName = sup; conf.supplierName = 0.8; }
-    else {
-      sup = _lines.find(x => _ok(x) && !/invoice|tax|abn|date|page|phone|email/i.test(x));
+    if (!f.supplierName) {
+      // No legal suffix anywhere — plenty of trades just print their trading name. On an
+      // Australian invoice the ABN sits under the letterhead, so the first line above it that is
+      // not an address or a phone number is the name.
+      const abnAt = _lines.findIndex(x => /a\.?b\.?n\.?/i.test(x) || /\b(?:\d[ ]?){10}\d\b/.test(x));
+      for (let i = abnAt - 1; i >= 0 && abnAt > 0; i--) {
+        const c = _clean(_lines[i]);
+        if (_ok(c) && !_addressy(c)) { f.supplierName = c; conf.supplierName = 0.75; break; }
+      }
+    }
+    if (!f.supplierName) {
+      sup = _lines.map(_clean).find(x => _ok(x) && !_addressy(x) && !/invoice|tax|abn|date|page|phone|email/i.test(x));
       if (sup) { f.supplierName = sup; conf.supplierName = 0.5; }
     }
 
