@@ -8630,7 +8630,7 @@ class Component extends DCLogic {
     const inv = this.apBlank();
     inv.extract = { ok: false, engine: 'manual', text: '', conf: {} };
     if (pid) { inv.pid = pid; inv.status = 'in_review'; inv.matchRule = 'Created by hand'; inv.matchConf = 100; }
-    else inv.status = 'unallocated';
+    else { inv.status = 'unallocated'; inv.assignedTo = this.apOwnerFor(inv); }
     inv.audit = [{ at: new Date().toISOString(), by: (this.currentUser() || {}).name || '', action: 'Created by hand', detail: '' }];
     this._apAdd([inv]);
     this.setState({ view: 'apinbox', apScreen: 'review', apOpen: inv.id, apDocUrl: '', apDocKind: '', apEmailOpen: false, anim: this.state.anim + 1 });
