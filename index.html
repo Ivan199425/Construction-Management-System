@@ -4300,7 +4300,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
       <div onClick="{{ stop }}" style="background:#fff;border-radius:14px;width:600px;max-width:96vw;max-height:92vh;box-shadow:0 24px 60px rgba(15,23,32,.3);overflow:hidden;display:flex;flex-direction:column">
         <div style="padding:18px 22px;border-bottom:1px solid #eef1f4;flex:0 0 auto">
           <div style="font-size:16px;font-weight:600;color:#0f1720">Finish sending — choose your email</div>
-          <div style="font-size:12.5px;color:#8894a2;margin-top:2px">Your email is ready for {{ mailHandoffV.recipientCount }} recipient(s). Pick where to open it — everything is pre-filled.</div>
+          <div style="font-size:12.5px;color:#8894a2;margin-top:2px">Your email is ready for {{ mailHandoffV.recipientCount }} recipient(s). Pick where to open it — everything is pre-filled.</div><sc-if value="{{ mailHandoffV.hasCc }}" hint-placeholder-val="{{ false }}"><div style="font-size:12px;color:#8894a2;margin-top:3px">Cc: <span style="color:#4a5765">{{ mailHandoffV.ccText }}</span></div></sc-if>
         </div>
         <div style="padding:18px 22px;display:flex;flex-direction:column;gap:14px;overflow-y:auto;flex:1 1 auto">
           <div style="display:flex;gap:10px;flex-wrap:wrap">
@@ -4323,7 +4323,12 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
             </div>
           </sc-if>
 
-          <div style="font-size:11.5px;color:#8894a2;line-height:1.55;border-top:1px solid #eef1f4;padding-top:11px">Want this to send automatically, with attachments and no extra clicks? Deploy the <strong style="color:#6b7787">resend-email</strong> function (see <span class="mono">supabase/functions/resend-email</span>) — the app will use it as soon as it's live.</div>
+          <sc-if value="{{ mailHandoffV.hasReason }}" hint-placeholder-val="{{ true }}">
+            <div style="border-top:1px solid #eef1f4;padding-top:11px">
+              <div style="font-size:12px;font-weight:600;color:#b91c1c;margin-bottom:4px">Automatic sending was refused</div>
+              <div style="font-size:12px;color:#4a5765;line-height:1.55">{{ mailHandoffV.reason }}</div>
+            </div>
+          </sc-if>
         </div>
         <div style="padding:14px 22px;border-top:1px solid #eef1f4;display:flex;justify-content:space-between;align-items:center;gap:10px;flex:0 0 auto">
           <button onClick="{{ mailHandoffV.onCopy }}" style="border:1px solid #cfd8e2;background:#fff;color:#4a5765;border-radius:8px;padding:9px 14px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="border-color:#2b59c3;color:#2b59c3">{{ mailHandoffV.copyLabel }}</button>
@@ -5555,12 +5560,15 @@ class Component extends DCLogic {
     } catch (e) {}
   }
   // Web-mail compose links — these work with no desktop mail app installed.
-  _composeUrls(to, subject, body) {
-    const e = encodeURIComponent, list = (to || []).join(',');
+  // Cc used to be dropped the moment the send fell back to a mail client, so the people
+  // deliberately copied in quietly stopped being copied in.
+  _composeUrls(to, subject, body, cc) {
+    const e = encodeURIComponent, list = (to || []).join(','), ccList = (cc || []).join(',');
+    const ccQ = ccList ? ('&cc=' + e(ccList)) : '';
     return {
-      gmail: 'https://mail.google.com/mail/?view=cm&fs=1&to=' + e(list) + '&su=' + e(subject || '') + '&body=' + e(body || ''),
-      outlook: 'https://outlook.office.com/mail/deeplink/compose?to=' + e(list) + '&subject=' + e(subject || '') + '&body=' + e(body || ''),
-      mailto: this._mailtoUrl(to, subject, body),
+      gmail: 'https://mail.google.com/mail/?view=cm&fs=1&to=' + e(list) + ccQ + '&su=' + e(subject || '') + '&body=' + e(body || ''),
+      outlook: 'https://outlook.office.com/mail/deeplink/compose?to=' + e(list) + ccQ + '&subject=' + e(subject || '') + '&body=' + e(body || ''),
+      mailto: this._mailtoUrl(to, subject, body) + (ccList ? ((this._mailtoUrl(to, subject, body).indexOf('?') >= 0 ? '&' : '?') + 'cc=' + e(ccList)) : ''),
     };
   }
   // payload: { to:[], subject, text, attachments:[{name,url}] } → resolves { ok, via }
@@ -5576,9 +5584,20 @@ class Component extends DCLogic {
       .catch(() => a)))
       .then(signed => Object.assign({}, payload, { attachments: signed }));
   }
+  // What the server said, unwrapped far enough to be worth reading. The provider's own
+  // objection arrives as JSON inside a JSON string, and it is the only part that tells
+  // anyone what to actually do about it.
+  _mailFailReason(status, body) {
+    let detail = '';
+    try { const b = JSON.parse(body || '{}'); detail = b.detail || b.error || ''; } catch (e) { detail = String(body || ''); }
+    try { const d = JSON.parse(detail); if (d && d.message) detail = d.message; } catch (e) {}
+    if (status === 404) return 'The send-mail function is not deployed on the server yet.';
+    if (status === 401) return 'The server would not accept this session as authorised to send.';
+    return detail || ('The server answered ' + status + ' without saying why.');
+  }
   _sendEmailNow(payload) {
     const c = this._SB;
-    const handoff = () => { this.setState({ mailHandoff: payload }); return Promise.resolve({ ok: false, via: 'handoff' }); };
+    const handoff = reason => { this.setState({ mailHandoff: Object.assign({}, payload, { reason: reason || '' }) }); return Promise.resolve({ ok: false, via: 'handoff' }); };
     if (!c || !c.url || typeof fetch === 'undefined') return handoff();
     // Edge Functions verify a real user JWT — the publishable key is rejected, so send the session token.
     const sess = this.state.session;
@@ -5586,13 +5605,16 @@ class Component extends DCLogic {
     return this._signPayloadAttachments(payload).then(signedPayload =>
       fetch(c.url + '/functions/v1/' + (c.emailFn || 'resend-email'), {
         method: 'POST', headers, body: JSON.stringify(signedPayload),
-      }).then(r => (r.ok ? { ok: true, via: 'server' } : handoff())).catch(() => handoff())
-    ).catch(() => handoff());
+      }).then(r => {
+        if (r.ok) return { ok: true, via: 'server' };
+        return r.text().then(t => handoff(this._mailFailReason(r.status, t)), () => handoff(''));
+      }).catch(() => handoff('The server could not be reached.'))
+    ).catch(() => handoff(''));
   }
   closeMailHandoff() { this.setState({ mailHandoff: null, mailCopied: false }); }
   openComposeIn(which) {
     const m = this.state.mailHandoff; if (!m) return;
-    const u = this._composeUrls(m.to, m.subject, m.text);
+    const u = this._composeUrls(m.to, m.subject, m.text, m.cc);
     if (which === 'mailto') { this._openMailClient(m.to, m.subject, m.text); return; }
     try { window.open(u[which], '_blank'); } catch (e) {}
   }
@@ -14346,7 +14368,9 @@ class Component extends DCLogic {
       const atts = (m.attachments || []).map(a => ({ name: a.name, url: a.url, onOpen: () => { try { window.open(a.url, '_blank'); } catch (e) {} } }));
       mailHandoffV = {
         open: true, toText: (m.to || []).join(', '), subject: m.subject || '', body: m.text || '',
+        ccText: (m.cc || []).join(', '), hasCc: (m.cc || []).length > 0,
         recipientCount: String((m.to || []).length),
+        hasReason: !!m.reason, reason: m.reason || '',
         attachments: atts, hasAttachments: atts.length > 0, noAttachments: atts.length === 0,
         copied: !!S.mailCopied, copyLabel: S.mailCopied ? '✓ Copied' : '⧉ Copy email text',
         onGmail: () => this.openComposeIn('gmail'), onOutlook: () => this.openComposeIn('outlook'),

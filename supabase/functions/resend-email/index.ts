@@ -16,7 +16,7 @@
 // 3. Deploy:
 //       supabase functions deploy resend-email --no-verify-jwt
 //
-// Request body: { to: string[], subject: string, text: string,
+// Request body: { to: string[], cc?: string[], subject: string, text: string,
 //                 attachments?: { name: string, url: string }[] }
 // ---------------------------------------------------------------------------
 
@@ -57,11 +57,13 @@ Deno.serve(async (req: Request) => {
     if (!who.ok) return json({ error: 'Not authorised' }, 401);
   }
 
-  let payload: { to?: string[]; subject?: string; text?: string; attachments?: { name: string; url: string }[] };
+  let payload: { to?: string[]; cc?: string[]; subject?: string; text?: string; attachments?: { name: string; url: string }[] };
   try { payload = await req.json(); } catch { return json({ error: 'Invalid JSON' }, 400); }
 
   const to = (payload.to || []).filter(Boolean);
   if (!to.length) return json({ error: 'No recipients' }, 400);
+  // Anyone deliberately copied in was being dropped here: the app sends cc, this never read it.
+  const cc = (payload.cc || []).filter(Boolean);
 
   // Pull each attachment and inline it as base64 so the recipient gets the real file.
   const attachments: { filename: string; content: string }[] = [];
@@ -84,10 +86,10 @@ Deno.serve(async (req: Request) => {
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: { Authorization: 'Bearer ' + apiKey, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ from, to, subject: payload.subject || '(no subject)', text, html, attachments }),
+    body: JSON.stringify(Object.assign({ from, to, subject: payload.subject || '(no subject)', text, html, attachments }, cc.length ? { cc } : {})),
   });
 
   const body = await res.text();
   if (!res.ok) return json({ error: 'Mail provider rejected the send', detail: body }, 502);
-  return json({ ok: true, sent: to.length, attachments: attachments.length, provider: body });
+  return json({ ok: true, sent: to.length, cc: cc.length, attachments: attachments.length, provider: body });
 });
