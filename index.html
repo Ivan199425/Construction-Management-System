@@ -8675,15 +8675,27 @@ class Component extends DCLogic {
   // text layer at all and returns '' — the caller treats that as "needs manual entry".
   _apLatin1(u8) { let s = ''; const N = u8.length; for (let i = 0; i < N; i += 8192) s += String.fromCharCode.apply(null, u8.subarray(i, Math.min(N, i + 8192))); return s; }
 
+  // DecompressionStream refuses a stream with anything after the compressed data, and the PDF
+  // spec has writers put an end-of-line before "endstream" — so the raw span between the two
+  // keywords fails on most real files. /Length sizes it exactly; the trimmed retry covers the
+  // writers that get /Length wrong.
   _apInflate(bytes) {
     if (typeof DecompressionStream === 'undefined' || typeof Response === 'undefined') return Promise.resolve(null);
-    const tryFmt = fmt => {
+    const run = (b, fmt) => {
+      if (!b || !b.length) return Promise.resolve(null);
       try {
-        const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream(fmt));
+        const stream = new Blob([b]).stream().pipeThrough(new DecompressionStream(fmt));
         return new Response(stream).arrayBuffer().then(ab => new Uint8Array(ab)).catch(() => null);
       } catch (e) { return Promise.resolve(null); }
     };
-    return tryFmt('deflate').then(r => r || tryFmt('deflate-raw'));
+    let trimmed = bytes;
+    while (trimmed.length && (trimmed[trimmed.length - 1] === 10 || trimmed[trimmed.length - 1] === 13)) {
+      trimmed = trimmed.subarray(0, trimmed.length - 1);
+    }
+    return run(bytes, 'deflate')
+      .then(r => r || (trimmed.length !== bytes.length ? run(trimmed, 'deflate') : null))
+      .then(r => r || run(bytes, 'deflate-raw'))
+      .then(r => r || (trimmed.length !== bytes.length ? run(trimmed, 'deflate-raw') : null));
   }
 
   // Split the file into numbered objects. Only the dictionary text and the byte span of any
@@ -8695,23 +8707,49 @@ class Component extends DCLogic {
     while ((m = re.exec(raw))) {
       const num = Number(m[1]);
       const start = m.index + m[0].length;
-      const end = raw.indexOf('endobj', start);
-      if (end < 0) continue;
-      const body = raw.slice(start, end);
-      const sIdx = body.indexOf('stream');
-      let dict = body, dataFrom = -1, dataTo = -1;
-      if (sIdx >= 0) {
-        dict = body.slice(0, sIdx);
-        let p = start + sIdx + 6;
+      // The dictionary ends at whichever comes first, the stream keyword or endobj. Looking for
+      // endobj alone is unsafe: compressed bytes can spell it, and the object would be cut short.
+      const sIdx = raw.indexOf('stream', start);
+      const eIdx = raw.indexOf('endobj', start);
+      const hasStream = sIdx >= 0 && (eIdx < 0 || sIdx < eIdx);
+      let dict, dataFrom = -1, dataTo = -1;
+      if (hasStream) {
+        dict = raw.slice(start, sIdx);
+        let p = sIdx + 6;
         if (raw.charCodeAt(p) === 13) p++;
         if (raw.charCodeAt(p) === 10) p++;
-        const eIdx = raw.indexOf('endstream', p);
-        dataFrom = p; dataTo = eIdx < 0 ? end : eIdx;
+        dataFrom = p;
+        // /Length is the only reliable end of the data. Falling back to the endstream keyword
+        // means the end-of-line before it is read as part of the compressed stream.
+        // It is written either as a number or as a reference to an object holding one —
+        // "/Length 16 0 R" — and reading that as the number 16 truncates the stream to nothing.
+        const lm = dict.match(/\/Length\s+(\d+)(?:\s+(\d+)\s+R)?/);
+        let declared = 0;
+        if (lm && lm[2] == null) declared = Number(lm[1]);
+        else if (lm) {
+          const lr = new RegExp('(?:^|[^0-9])' + lm[1] + '\\s+\\d+\\s+obj\\b\\s*(\\d+)').exec(raw);
+          declared = lr ? Number(lr[1]) : 0;
+        }
+        const closing = raw.indexOf('endstream', declared > 0 ? p + declared : p);
+        dataTo = declared > 0 ? p + declared : (closing < 0 ? raw.length : closing);
+        // Skip the payload so binary bytes cannot be read as the next object header.
+        re.lastIndex = closing >= 0 ? closing : dataTo;
+      } else {
+        dict = raw.slice(start, eIdx < 0 ? raw.length : eIdx);
+        if (eIdx >= 0) re.lastIndex = eIdx;
       }
       objs[num] = { dict, dataFrom, dataTo };
-      re.lastIndex = end;
     }
     return objs;
+  }
+
+  // A dictionary entry is either written out in place or held in another object. Following the
+  // reference blindly is wrong for an inline dictionary, whose own contents contain references.
+  _apResolve(objs, val) {
+    const s = String(val == null ? '' : val).trim();
+    if (!s || s.charAt(0) === '<' || s.charAt(0) === '[') return s;
+    const n = this._apRef(s);
+    return (n != null && objs[n]) ? objs[n].dict : s;
   }
 
   _apRef(s) { const m = String(s || '').match(/(\d+)\s+\d+\s+R/); return m ? Number(m[1]) : null; }
@@ -8738,8 +8776,8 @@ class Component extends DCLogic {
   }
 
   _apStreamBytes(u8, obj) {
-    if (!obj || obj.dataFrom < 0) return null;
-    return u8.subarray(obj.dataFrom, obj.dataTo);
+    if (!obj || obj.dataFrom < 0 || obj.dataTo <= obj.dataFrom) return null;
+    return u8.subarray(obj.dataFrom, Math.min(obj.dataTo, u8.length));
   }
 
   _apObjText(u8, raw, objs, num) {
@@ -8790,10 +8828,7 @@ class Component extends DCLogic {
 
   // Every font a page can use, with its code→character map and whether its codes are two bytes.
   _apPageFonts(u8, raw, objs, resDict) {
-    const fontsDict = this._apDictGet(resDict, 'Font');
-    let dict = fontsDict;
-    const ref = this._apRef(fontsDict);
-    if (ref != null && objs[ref]) dict = objs[ref].dict;
+    const dict = this._apResolve(objs, this._apDictGet(resDict, 'Font'));
     const out = {};
     const jobs = [];
     const re = /\/([A-Za-z0-9#+._-]+)\s+(\d+)\s+\d+\s+R/g;
@@ -8909,9 +8944,7 @@ class Component extends DCLogic {
       pages.sort((a, b) => a - b);
       const readPage = pnum => {
         const po = objs[pnum];
-        let resTxt = this._apDictGet(po.dict, 'Resources');
-        const rRef = this._apRef(resTxt);
-        if (rRef != null && objs[rRef]) resTxt = objs[rRef].dict;
+        const resTxt = this._apResolve(objs, this._apDictGet(po.dict, 'Resources'));
         return this._apPageFonts(u8, raw, objs, resTxt).then(fonts => {
           const contents = this._apDictGet(po.dict, 'Contents');
           const refs = (String(contents).match(/(\d+)\s+\d+\s+R/g) || []).map(s => Number(s.match(/\d+/)[0]));
@@ -9069,14 +9102,22 @@ class Component extends DCLogic {
       if (ok.length) { f.abn = ok[0]; conf.abn = 0.7; }
     }
 
-    grab(/(?:tax\s+)?invoice\s*(?:no\.?|number|#|ref(?:erence)?)?\s*[:#]?\s*([A-Z][A-Z0-9]*[\-\/]?\d[A-Z0-9\-\/]*)/i, 'invoiceNo', 0.85);
-    if (!f.invoiceNo) grab(/\binvoice\b[^\n]{0,24}?\b([A-Z0-9][A-Z0-9\-\/]{3,20})\b/i, 'invoiceNo', 0.55);
+    // An invoice puts its label and its value on separate lines as often as not, so the label
+    // has to be explicit — matching "Invoice" alone reads the word "Date" off "Invoice Date".
+    const _notLabel = v => !/^(date|number|no|to|from|total|amount|due|ref|reference|invoice|tax|page|abn|gst|box|paid|balance)$/i.test(String(v).trim());
+    grab(/invoice\s*(?:no\.?|number|#)\s*[:#]?\s*([A-Za-z0-9][A-Za-z0-9\-\/]{2,24})/i, 'invoiceNo', 0.85, m => (_notLabel(m[1]) ? m[1] : null));
+    if (!f.invoiceNo) grab(/(?:tax\s+)?invoice\s*[:#]?\s*([A-Z][A-Z0-9]*[\-\/]?\d[A-Z0-9\-\/]*)/i, 'invoiceNo', 0.75, m => (_notLabel(m[1]) ? m[1] : null));
+    if (!f.invoiceNo) grab(/\binvoice\b[^\n]{0,24}?\b([A-Z0-9][A-Z0-9\-\/]{2,20}\d[A-Z0-9\-\/]*)\b/i, 'invoiceNo', 0.55, m => (_notLabel(m[1]) ? m[1] : null));
 
     grab(/(?:invoice\s*date|date\s*of\s*issue|issue\s*date|dated)\s*[:#]?\s*([^\n]{6,24})/i, 'invoiceDate', 0.85, m => this._apDate(m[1]));
     if (!f.invoiceDate) grab(/\bdate\b\s*[:#]?\s*([^\n]{6,24})/i, 'invoiceDate', 0.6, m => this._apDate(m[1]));
     grab(/(?:due\s*date|payment\s*due|due\s*by|pay\s*by)\s*[:#]?\s*([^\n]{6,24})/i, 'dueDate', 0.85, m => this._apDate(m[1]));
+    // Some invoices lay labels and values out in columns, so the date does not follow its own
+    // label in the extracted order. Widening the search to the words around "due" catches those.
+    if (!f.dueDate) grab(/\bdue\b[\s\S]{0,70}?(\d{1,2}[\/\-.]\d{1,2}[\/\-.]\d{2,4}|\d{1,2}\s+[A-Za-z]{3,9}\s+\d{2,4})/i, 'dueDate', 0.6, m => this._apDate(m[1]));
 
-    grab(/(?:\bP\.?O\.?\b|purchase\s*order|order\s*(?:no\.?|number)|your\s*(?:ref|order))\s*[:#]?\s*([A-Z0-9][A-Z0-9\-\/]{2,24})/i, 'poRef', 0.8);
+    // "PO Box" is a postal address, not a purchase order, and it appears on most letterheads.
+    grab(/(?:\bP\.?O\.?\b(?!\s*box)|purchase\s*order|order\s*(?:no\.?|number)|your\s*(?:ref|order))\s*[:#]?\s*([A-Z0-9][A-Z0-9\-\/]{2,24})/i, 'poRef', 0.8, m => (/^box$/i.test(m[1]) ? null : m[1]));
 
     grab(/(?:total\s*(?:amount\s*)?(?:incl?(?:uding)?[^\n]{0,12}gst|due|payable)|amount\s*due|balance\s*due|total\s*\(inc[^\)]*\))\s*[:#]?\s*\$?\s*([\d,]+\.\d{2})/i, 'total', 0.9, m => this._apMoney(m[1]));
     grab(/(?:sub\s*-?\s*total|total\s*ex(?:cl?(?:uding)?)?[^\n]{0,12}gst|net\s*(?:amount|total))\s*[:#]?\s*\$?\s*([\d,]+\.\d{2})/i, 'subtotal', 0.85, m => this._apMoney(m[1]));
@@ -9096,12 +9137,37 @@ class Component extends DCLogic {
     grab(/\bBSB\b\s*[:#]?\s*(\d{3}\s*-?\s*\d{3})/i, 'bsb', 0.85, m => m[1].replace(/\s/g, ''));
     grab(/\b(?:account|acct|a\/c)\s*(?:no\.?|number|#)?\s*[:#]?\s*(\d[\d\s]{5,12}\d)/i, 'acct', 0.75, m => m[1].replace(/\s/g, ''));
 
-    // The supplier is whichever of the first lines reads like a company name. The Directory match
-    // that follows is what actually decides the supplier (BR-4.43); this is only the starting point.
-    const head = t.split('\n').slice(0, 14).map(x => x.trim()).filter(Boolean);
-    let sup = head.find(x => /(pty\.?\s*ltd|p\/l\b|limited|\bltd\b|\bllc\b|\binc\b)/i.test(x) && x.length < 70);
-    if (!sup) sup = head.find(x => x.length > 3 && x.length < 60 && !/invoice|tax|abn|date|page|phone|email|www|http/i.test(x));
-    if (sup) { f.supplierName = sup.replace(/\s{2,}/g, ' ').trim(); conf.supplierName = /pty|ltd|limited/i.test(sup) ? 0.8 : 0.5; }
+    // The supplier is whichever of the first lines reads like a company name. Two things make
+    // that harder than it sounds on a real invoice: the bill-to block — us — usually sits ABOVE
+    // the supplier's own name, and a long name wraps across two lines, so pairs of adjacent
+    // lines are considered as well as single ones. The Directory match that follows is what
+    // actually decides the supplier (BR-4.43); this is only the starting point.
+    const _lines = t.split('\n').slice(0, 26).map(x => x.replace(/\s{2,}/g, ' ').trim()).filter(Boolean);
+    // Our own trading name, reduced to its first distinctive word, so "Cubic Construction",
+    // "Cubic Constructions Pty Ltd" and "Cubic Built" are all recognised as the customer.
+    const _me = String((((this.state || {}).company) || {}).name || '').toLowerCase().replace(/[^a-z0-9 ]/g, ' ').trim().split(/\s+/)[0] || '';
+    const _isUs = s => _me.length >= 4 && String(s).toLowerCase().replace(/[^a-z0-9]/g, '').indexOf(_me) >= 0;
+    const _junk = s => /^(tax invoice|invoice|payment advice|description|quantity|unit price|amount|reference|total|subtotal|gst|abn|date|page|australia)$/i.test(s)
+      || /^[\d\s.,$%-]+$/.test(s) || /@|^www\.|^https?:/i.test(s);
+    // The name often sits directly under the ABN, so a joined pair can start with the number.
+    const _clean = s => String(s)
+      .replace(/^(?:bill\s*to|sold\s*to|supplier|vendor|company|name|to|from)\s*[:.]\s*/i, '')
+      .replace(/^(?:a\.?b\.?n\.?\s*[:.]?\s*)?\d[\d ]{8,}\d[\s.:]*/i, '')
+      // A letterhead prints the ABN after the company name as often as before it.
+      .replace(/\s*a\.?b\.?n\.?\s*[:.]?\s*\d[\d ]{8,}\d\s*$/i, '')
+      .replace(/\s{2,}/g, ' ').trim();
+    const _cands = [];
+    _lines.forEach((ln, i) => {
+      _cands.push(_clean(ln));
+      if (_lines[i + 1]) _cands.push(_clean(ln + ' ' + _lines[i + 1]));
+    });
+    const _ok = s => s.length > 3 && s.length < 70 && !_isUs(s) && !_junk(s);
+    let sup = _cands.find(x => /(pty\.?\s*ltd|p\/l\b|\blimited\b|\bltd\b|unit trust|\bllc\b|\binc\b)/i.test(x) && _ok(x));
+    if (sup) { f.supplierName = sup; conf.supplierName = 0.8; }
+    else {
+      sup = _lines.find(x => _ok(x) && !/invoice|tax|abn|date|page|phone|email/i.test(x));
+      if (sup) { f.supplierName = sup; conf.supplierName = 0.5; }
+    }
 
     if (/\b(USD|EUR|GBP|NZD|US\$|€|£)\b/.test(t) && !/\bAUD\b/.test(t)) { f.currency = 'FOREIGN'; conf.currency = 0.5; }
     return { fields: f, conf };
