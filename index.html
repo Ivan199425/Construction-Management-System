@@ -589,6 +589,19 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                       <sc-for list="{{ settingsV.ingestion.folderOptions }}" as="o" hint-placeholder-count="3"><option value="{{ o.v }}">{{ o.label }}</option></sc-for>
                     </select>
                   </div>
+                  <div style="grid-column:1 / -1">
+                    <label style="font-size:11px;font-weight:600;color:#4a5765;display:block;margin-bottom:5px">What to collect</label>
+                    <select value="{{ settingsV.ingestion.collectScope }}" onChange="{{ settingsV.ingestion.onCollectScope }}" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:12.5px;font-family:inherit;color:#0f1720;background:#fff;cursor:pointer" style-focus="border-color:#2b59c3;outline:none">
+                      <sc-for list="{{ settingsV.ingestion.collectScopeOptions }}" as="o" hint-placeholder-count="3"><option value="{{ o.v }}">{{ o.label }}</option></sc-for>
+                    </select>
+                    <div style="font-size:11px;color:#8894a2;margin-top:6px;line-height:1.55">{{ settingsV.ingestion.collectScopeNote }}</div>
+                    <sc-if value="{{ settingsV.ingestion.hasSkipped }}" hint-placeholder-val="{{ false }}">
+                      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:6px">
+                        <div style="font-size:11px;color:#8894a2">Set aside so far: <strong style="color:#4a5765">{{ settingsV.ingestion.skippedCount }}</strong> — see the <strong style="color:#4a5765">Not collected</strong> tab on the Invoices screen.</div>
+                        <sc-if value="{{ settingsV.ingestion.canRecollect }}" hint-placeholder-val="{{ false }}"><button onClick="{{ settingsV.ingestion.onRecollect }}" title="Match them again against the projects as they stand now, and take back anything that fits" style="border:1px solid #cfd8e2;background:#fff;color:#4a5765;border-radius:7px;padding:5px 11px;font-size:11.5px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="border-color:#2b59c3;color:#2b59c3">Check them again</button></sc-if>
+                      </div>
+                    </sc-if>
+                  </div>
                   <div style="grid-column:1 / -1;display:flex;align-items:center;gap:9px">
                     <span onClick="{{ settingsV.ingestion.onRequireAttachment }}" style="{{ settingsV.ingestion.requireAttachmentStyle }};cursor:pointer">{{ settingsV.ingestion.requireAttachmentTick }}</span>
                     <span onClick="{{ settingsV.ingestion.onRequireAttachment }}" style="cursor:pointer;font-size:12.5px;color:#4a5765">Only consider mail carrying a PDF or image attachment</span>
@@ -1029,6 +1042,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                     <div style="min-width:0">
                       <div style="font-size:12.5px;font-weight:600;color:#0f1720;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.supplier }}</div>
                       <sc-if value="{{ r.hasWarn }}" hint-placeholder-val="{{ false }}"><div title="{{ r.warnText }}" style="font-size:10px;color:#b91c1c;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">⚠ {{ r.warnText }}</div></sc-if>
+                      <sc-if value="{{ r.notCollected }}" hint-placeholder-val="{{ false }}"><div title="{{ r.notCollectedReason }}" style="font-size:10px;color:#8894a2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.notCollectedReason }}</div></sc-if>
                     </div>
                     <div class="mono" style="font-size:11.5px;color:#0f1720;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.invoiceNo }}</div>
                     <div style="min-width:0">
@@ -1057,6 +1071,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                     </div>
                     <div style="display:flex;align-items:center;gap:5px;justify-content:flex-end">
                       <sc-if value="{{ r.hasDoc }}" hint-placeholder-val="{{ true }}"><button onClick="{{ r.onDoc }}" title="Open the original document" style="border:1px solid #cfd8e2;background:#fff;color:#2b59c3;border-radius:6px;padding:5px 7px;font-size:11px;cursor:pointer;flex:0 0 auto" style-hover="border-color:#2b59c3">👁</button></sc-if>
+                      <sc-if value="{{ r.canCollect }}" hint-placeholder-val="{{ false }}"><button onClick="{{ r.onCollect }}" title="{{ r.notCollectedReason }} Take it in anyway — it will be matched again and queued." style="border:1px solid #cfd8e2;background:#fff;color:#4a5765;border-radius:6px;padding:5px 9px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap" style-hover="border-color:#2b59c3;color:#2b59c3">Collect</button></sc-if>
                       <button onClick="{{ r.onOpen }}" style="border:1px solid #cdddf8;background:#f2f6fd;color:#2b59c3;border-radius:6px;padding:5px 9px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap" style-hover="background:#e8eefc">{{ r.openLabel }}</button>
                     </div>
                   </div>
@@ -1274,6 +1289,12 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                   <div style="margin:0 16px 14px;background:#f1ebfd;border:1px solid #ddd0f7;border-radius:9px;padding:10px 13px">
                     <div style="font-size:11.5px;color:#7c3aed;line-height:1.5">Query raised: {{ apReviewV.queryNote }}</div>
                     <button onClick="{{ apReviewV.onResolveQuery }}" style="margin-top:8px;border:1px solid #7c3aed;background:#fff;color:#7c3aed;border-radius:7px;padding:5px 12px;font-size:11.5px;font-weight:600;cursor:pointer;font-family:inherit">Query answered — back to review</button>
+                  </div>
+                </sc-if>
+                <sc-if value="{{ apReviewV.isNotCollected }}" hint-placeholder-val="{{ false }}">
+                  <div style="margin:0 16px 14px;background:#eef1f5;border:1px solid #dfe4ea;border-radius:9px;padding:10px 13px">
+                    <div style="font-size:11.5px;color:#4a5765;line-height:1.5">Not collected — {{ apReviewV.notCollectedNote }} It is kept here, excluded from every total, and nothing about it can be edited until it is collected.</div>
+                    <sc-if value="{{ apReviewV.canCollectHere }}" hint-placeholder-val="{{ false }}"><button onClick="{{ apReviewV.onCollectHere }}" style="margin-top:8px;border:1px solid #2b59c3;background:#fff;color:#2b59c3;border-radius:7px;padding:5px 12px;font-size:11.5px;font-weight:600;cursor:pointer;font-family:inherit">Collect it anyway</button></sc-if>
                   </div>
                 </sc-if>
                 <sc-if value="{{ apReviewV.isRejected }}" hint-placeholder-val="{{ false }}">
@@ -7684,6 +7705,7 @@ class Component extends DCLogic {
       { key: 'sent', label: 'Sent to accountant', color: '#2b59c3', bg: '#e7eefc', desc: 'Emailed for payment. Record is locked.' },
       { key: 'paid', label: 'Paid', color: '#15803d', bg: '#e6f4ea', desc: 'Payment confirmed.' },
       { key: 'void', label: 'Voided', color: '#6b7787', bg: '#eef1f5', desc: 'Created in error. Excluded from all reporting.' },
+      { key: 'not_collected', label: 'Not collected', color: '#6b7787', bg: '#eef1f5', desc: 'Arrived by email but did not belong to a project in this system. Kept, not queued.' },
     ];
   }
   // An ISO instant rendered as the calendar day it happened on HERE, not in UTC. Slicing the
@@ -7700,12 +7722,16 @@ class Component extends DCLogic {
   }
   apStatusMeta(s) { const m = this.apStatusList().find(x => x.key === s); return m || { key: s, label: s || '—', color: '#475569', bg: '#eef1f5', desc: '' }; }
   // Terminal states carry no money and never reach the cost report.
-  apCounts(s) { return s === 'rejected' || s === 'duplicate' || s === 'void'; }
+  apCounts(s) { return s === 'rejected' || s === 'duplicate' || s === 'void' || s === 'not_collected'; }
 
   apSettingsSeed() {
     return {
       provider: 'm365', mailbox: '', connected: false, pollMinutes: 5, folder: 'Inbox',
       requireAttachment: true, lastSync: '', failures: 0,
+      // How much of the mailbox is worth taking in. 'all' keeps every invoice that arrives;
+      // 'matched' keeps only what could be placed on a project here; 'active' narrows that
+      // to projects still running. Default 'all', because narrowing it is a decision.
+      collectScope: 'all',
       rules: [
         { key: 'po', label: 'PO or commitment number found in subject, body or document', on: true },
         { key: 'project', label: 'Project number or name found in subject or body', on: true },
@@ -7809,7 +7835,7 @@ class Component extends DCLogic {
       vendorId: '', supplierName: '', abn: '', bsb: '', acct: '',
       invoiceNo: '', invoiceDate: '', dueDate: '', poRef: '',
       subtotal: 0, gst: 0, total: 0, currency: 'AUD',
-      pid: '', matchRule: '', matchConf: 0, commitmentId: '', assignedTo: '',
+      pid: '', matchRule: '', matchConf: 0, commitmentId: '', assignedTo: '', notCollectedReason: '',
       alloc: [], attachments: [],
       source: { kind: 'upload', from: '', to: '', cc: '', senderAddress: '', forwardedBy: '', via: '', receivedAt: new Date().toISOString(), subject: '', body: '', messageId: '' },
       extract: { ok: false, engine: '', text: '', conf: {} },
@@ -7931,7 +7957,9 @@ class Component extends DCLogic {
     if (!inv || !inv.invoiceNo) return null;
     const key = String(inv.invoiceNo).trim().toLowerCase();
     const sup = String(inv.vendorId || inv.supplierName || '').trim().toLowerCase();
-    return this.apAll().find(x => x.id !== inv.id && !x.voided && x.status !== 'duplicate' && x.status !== 'rejected'
+    // A record we deliberately did not take in is not evidence that we already hold this
+    // invoice. Left in the pool it would stamp the real one, arriving later, as a duplicate.
+    return this.apAll().find(x => x.id !== inv.id && !x.voided && x.status !== 'duplicate' && x.status !== 'rejected' && x.status !== 'not_collected'
       && String(x.invoiceNo || '').trim().toLowerCase() === key
       && String(x.vendorId || x.supplierName || '').trim().toLowerCase() === sup) || null;
   }
@@ -8217,7 +8245,17 @@ class Component extends DCLogic {
       const records = [].concat.apply([], results).filter(Boolean);
       const mine = {}; records.forEach(r => { mine[r.id] = 1; });
       if (records.length) this._apAdd(records, () => this.apNotifyUnallocated((this.state.apInvoices || []).filter(x => mine[x.id])));
-      this.setState({ apBusy: 0, apScreen: 'inbox', apTab: records.some(r => r.status === 'unallocated') ? 'unallocated' : 'all' });
+      // Land wherever the answer is. If everything was set aside, saying so beats an empty inbox.
+      const _allSkipped = records.length > 0 && records.every(r => r.status === 'not_collected');
+      const _tab = records.some(r => r.status === 'unallocated') ? 'unallocated' : (_allSkipped ? 'not_collected' : 'all');
+      const _skipped = records.filter(r => r.status === 'not_collected').length;
+      const _notice = _skipped
+        ? (_skipped === records.length
+            ? (_skipped === 1 ? 'That invoice was not collected — it did not match a project here. It is on the Not collected tab, and Collect puts it back.'
+                              : 'None of those ' + _skipped + ' were collected — they did not match a project here. They are on the Not collected tab, and Collect puts any of them back.')
+            : _skipped + ' of ' + records.length + ' were not collected — they did not match a project here. See the Not collected tab.')
+        : '';
+      this.setState(Object.assign({ apBusy: 0, apScreen: 'inbox', apTab: _tab }, _notice ? { apNotice: _notice } : {}));
     }).catch(() => this.setState({ apBusy: 0 }));
   }
 
@@ -8226,27 +8264,43 @@ class Component extends DCLogic {
   apNotifyUnallocated(records) {
     const cfg = this.apSettings();
     const list = (records || []).filter(x => x && x.status === "unallocated");
-    if (!cfg.notifyUnallocated || !list.length) return Promise.resolve({ ok: false });
+    // Refusing an invoice quietly is worse than queueing it: nobody is watching a tab they
+    // have no reason to open. What was set aside rides along in the same message.
+    const skipped = (records || []).filter(x => x && x.status === 'not_collected');
+    if (!cfg.notifyUnallocated || (!list.length && !skipped.length)) return Promise.resolve({ ok: false });
     const to = this.apUnallocatedOwners();
     if (!to.length) return Promise.resolve({ ok: false });
     const lines = list.map(x => {
       const fw = (x.source && x.source.forwardedBy) ? ('  (forwarded by ' + this.apAssigneeName(x.source.forwardedBy) + ')') : '';
       return '  ' + (x.ref || '') + '   ' + this.apSupplierLabel(x) + '   ' + (x.invoiceNo || 'no invoice number') + '   ' + this.money(this.apTotal(x)) + fw;
     });
-    const n = list.length;
+    const n = list.length, s = skipped.length;
+    const skipLines = skipped.map(x => '  ' + (x.ref || '') + '   ' + this.apSupplierLabel(x) + '   ' + (x.invoiceNo || 'no invoice number') + '   ' + this.money(this.apTotal(x)));
+    const parts = [];
+    if (n) {
+      parts.push(n === 1 ? 'An invoice has arrived that could not be matched to a project.'
+                         : n + ' invoices have arrived that could not be matched to a project.');
+      parts.push('');
+      parts.push('Open Invoices and clear the Unallocated tab — assigning a project moves each one straight into review.');
+      parts.push('');
+      parts.push.apply(parts, lines);
+    }
+    if (s) {
+      if (n) parts.push('');
+      parts.push(s === 1 ? 'One more was not collected, because Invoice ingestion is set to take in only invoices for a project here:'
+                         : s + ' more were not collected, because Invoice ingestion is set to take in only invoices for a project here:');
+      parts.push('');
+      parts.push.apply(parts, skipLines);
+      parts.push('');
+      parts.push('Nothing has been deleted. They are on the Not collected tab, and Collect puts any of them back.');
+    }
+    const subj = n && s ? (n + ' invoice' + (n === 1 ? '' : 's') + ' waiting for a project, ' + s + ' not collected')
+               : (n ? n + ' supplier invoice' + (n === 1 ? '' : 's') + ' waiting for a project'
+                    : s + ' supplier invoice' + (s === 1 ? '' : 's') + ' not collected');
     return this._sendEmailNow({
       to,
-      subject: n + ' supplier invoice' + (n === 1 ? '' : 's') + ' waiting for a project',
-      text: [
-        n === 1 ? 'An invoice has arrived that could not be matched to a project.'
-                : n + ' invoices have arrived that could not be matched to a project.',
-        '',
-        'Open Invoices and clear the Unallocated tab — assigning a project moves each one straight into review.',
-        '',
-      ].concat(lines).concat([
-        '',
-        'Cubic PM System',
-      ]).join(String.fromCharCode(10)),
+      subject: subj,
+      text: parts.concat(['', 'Cubic PM System']).join(String.fromCharCode(10)),
       attachments: [],
     });
   }
@@ -8340,17 +8394,105 @@ class Component extends DCLogic {
       inv.matchRule = m.rule || ''; inv.matchConf = m.conf || 0;
       inv.assignedTo = this.apOwnerFor(inv);
     }
-    if (this.apDuplicateOf(inv)) { const d = this.apDuplicateOf(inv); inv.status = 'duplicate'; inv.duplicateOf = d.id; }
+    // Judged after the project match, because whether it is ours is exactly what the match
+    // answers. A duplicate of one of our own invoices is by definition ours, so the scope
+    // never has to be weighed against it.
+    const verdict = this.apCollectVerdict(inv, m);
+    if (!verdict.keep) {
+      inv.status = 'not_collected';
+      inv.notCollectedReason = verdict.reason;
+      // The match is discarded along with the invoice. A record that keeps a project id is
+      // still that project's work to every list keyed on it; the reason above says what was
+      // matched, and collecting it later runs the match again from scratch.
+      inv.pid = ''; inv.commitmentId = ''; inv.matchRule = ''; inv.matchConf = 0;
+      inv.assignedTo = '';
+    } else if (this.apDuplicateOf(inv)) { const d = this.apDuplicateOf(inv); inv.status = 'duplicate'; inv.duplicateOf = d.id; }
     inv.audit = [{ at: new Date().toISOString(), by: (this.currentUser() || {}).name || 'System', action: 'Captured', detail: (inv.source.kind === 'email' ? 'From email · ' + (inv.source.from || '') : 'Manual upload') + (inv.extract.ok ? ' · text extracted' : ' · no text layer, manual entry required') }];
+    if (inv.status === 'not_collected') inv.audit.push({ at: new Date().toISOString(), by: 'System', action: 'Not collected', detail: inv.notCollectedReason });
     return inv;
   }
 
+  // Whether an arriving invoice is one of ours. Only mail is judged: a file somebody chose and
+  // uploaded by hand is wanted by definition, and refusing it would be refusing the person.
+  // Nothing is discarded either way — a declined invoice is set aside where it can be seen and
+  // taken back, because the cost of wrongly binning a real invoice is far higher than the cost
+  // of a list nobody reads.
+  apCollectVerdict(inv, match) {
+    const scope = this.apSettings().collectScope || 'all';
+    if (scope === 'all') return { keep: true, reason: '' };
+    if (!inv || !inv.source || inv.source.kind !== 'email') return { keep: true, reason: '' };
+    // Nothing could be read from the document — a scan, a photograph, an attachment that
+    // would not decode. No rule had anything to work on, so failing to place it says nothing
+    // about whose invoice it is. Those go to a person, never to the bin.
+    if (!inv.extract || !inv.extract.ok) return { keep: true, reason: '' };
+    // The match as the rules found it, not as the threshold left it. Scoring below the
+    // confidence setting means 'do not file this automatically' — it has never meant 'this
+    // is not ours', and treating the two as one would refuse invoices the rules did place.
+    const m = match || { pid: inv.pid || '' };
+    if (!m.pid) return { keep: false, reason: 'No project in this system could be matched to it.' };
+    if (scope === 'open') {
+      const p = this.proj(m.pid);
+      // Only closed. A job on hold still draws standing plant, storage, security and
+      // retention, and refusing those would lose real cost on the jobs least watched.
+      if (p && p.status === 'closed') return { keep: false, reason: 'It belongs to ' + p.name + ', which is closed.' };
+    }
+    return { keep: true, reason: '' };
+  }
+  apNotCollected() { return this.apAll().filter(x => x.status === 'not_collected'); }
+  // Seeing the declined pile and being able to empty it are the same right, and it is one
+  // Ivan already configured: whoever may place an invoice that arrived without a project.
+  apCanCollect() {
+    const u = this.currentUser();
+    return !!u && this.can('apInvoices', 'edit') && this.apCanAllocate(u.role);
+  }
+  // Taking one back re-runs the placement it would have had on arrival, so a project added
+  // since it was declined is picked up rather than ignored.
+  // A refusal is a snapshot of the projects as they stood that morning. Set up the job a week
+  // later and the invoice that was refused is suddenly placeable, but nothing re-runs on its
+  // own — so this does, on demand, and reports what it managed to take back.
+  apRecollectAll() {
+    if (!this.apCanCollect()) return;
+    const pending = this.apNotCollected();
+    if (!pending.length) return;
+    const threshold = this._num(this.apSettings().confidence) || 80;
+    const takeable = pending.filter(inv => { const m = this.apMatchProject(inv); return m.pid && m.conf >= threshold; });
+    takeable.forEach(inv => this.apCollectAnyway(inv.id));
+    this.setState({ apNotice: takeable.length
+      ? (takeable.length === 1 ? 'One invoice now matches a project and has been collected.'
+                               : takeable.length + ' invoices now match a project and have been collected.')
+      : 'Checked ' + pending.length + ' — none of them matches a project in the system yet.' });
+  }
+  apCollectAnyway(id) {
+    if (!this.apCanCollect()) return;
+    const inv = this.apInv(id);
+    if (!inv || inv.status !== 'not_collected') return;
+    const m = this.apMatchProject(inv);
+    const threshold = this._num(this.apSettings().confidence) || 80;
+    const patch = { notCollectedReason: '' };
+    if (m.pid && m.conf >= threshold) {
+      patch.pid = m.pid; patch.matchRule = m.rule; patch.matchConf = m.conf;
+      if (m.commitmentId) patch.commitmentId = m.commitmentId;
+      patch.status = 'in_review';
+    } else {
+      patch.status = 'unallocated';
+      patch.assignedTo = this.apOwnerFor(inv);
+    }
+    const dup = this.apDuplicateOf(Object.assign({}, inv, patch));
+    if (dup) { patch.status = 'duplicate'; patch.duplicateOf = dup.id; }
+    const where = patch.pid ? this.apProjectLabel(patch) : 'no project matched — left unallocated';
+    this._apCommit(id, patch, 'Collected anyway', where);
+  }
+
   // ---- editing and the lifecycle ---------------------------------------------------------------
-  apLocked(inv) { return !!inv && (inv.status === 'sent' || inv.status === 'paid' || inv.voided); }
+  // Locked means every editor is shut: the project dropdown, the assignee, quick coding and
+  // the allocation save all read this. Without it a declined invoice could be coded and
+  // posted into the cost model — the one outcome the setting exists to prevent.
+  apLocked(inv) { return !!inv && (inv.status === 'sent' || inv.status === 'paid' || inv.status === 'not_collected' || inv.voided); }
   // Nobody approves their own paperwork (BR-4.25) — but only where the office is big enough
   // for that to mean something, which is what the separation-of-duties setting decides.
   apApproveBlockReason(inv) {
     if (!inv) return 'No invoice.';
+    if (inv.status === 'not_collected') return 'This invoice was not collected — it did not belong to a project here. Collect it first.';
     if (!this.can('apInvoices', 'approve')) return 'Your role cannot approve invoices.';
     const u = this.currentUser(); if (!u) return 'Not signed in.';
     if (this.apSettings().sod) {
@@ -8391,6 +8533,11 @@ class Component extends DCLogic {
   // Giving a project to an invoice that has none is the act this permission governs.
   apSetProject(id, pid) {
     const inv = this.apInv(id); if (!inv) return;
+    // Reachable from the bulk bar as well as the row, so the row being locked is not enough.
+    if (inv.status === 'not_collected') {
+      this.setState({ apNotice: 'That invoice was not collected. Use Collect on it first — it is matched again on the way back in.' });
+      return;
+    }
     const u = this.currentUser();
     if (inv.status === 'unallocated' && u && !this.apCanAllocate(u.role)) {
       this.setState({ apNotice: 'Your role cannot place an unallocated invoice. An administrator can grant it on the Allocate Unassigned Invoices row of Settings → Roles & permissions.' });
@@ -8901,7 +9048,13 @@ class Component extends DCLogic {
     const all = this.apAll();
     if (u.role === 'Admin' || u.role === 'Finance') return all;
     const mine = {}; (u.projectIds || []).forEach(id => { mine[id] = true; });
-    return all.filter(x => (x.pid && mine[x.pid]) || (!x.pid && this.can('apInvoices', 'edit')));
+    const canRescue = this.apCanCollect();
+    return all.filter(x => {
+      // Mail the system decided was not ours goes to the people who place unmatched invoices,
+      // and to nobody else. Showing it company-wide would defeat the point of declining it.
+      if (x.status === 'not_collected') return canRescue;
+      return (x.pid && mine[x.pid]) || (!x.pid && this.can('apInvoices', 'edit'));
+    });
   }
   apForProject(pid) { return this.apAll().filter(x => x.pid === pid && !x.voided); }
   // Approval sitting untouched past the configured limit is what the dashboard calls overdue.
@@ -8914,7 +9067,9 @@ class Component extends DCLogic {
   }
   apExportCsv() {
     const rows = [['Ref', 'Status', 'Supplier', 'ABN', 'Invoice no', 'Invoice date', 'Due date', 'Project', 'Cost codes', 'Subtotal', 'GST', 'Total', 'Approved by', 'Approved', 'Sent', 'Paid']];
-    this.apVisibleList().forEach(x => {
+    // What was never taken in does not belong in a finance export; a total summed over this
+    // file would otherwise include money the system was told to ignore.
+    this.apVisibleList().filter(x => x.status !== 'not_collected').forEach(x => {
       const p = this.proj(x.pid);
       rows.push([x.ref || '', this.apStatusMeta(x.status).label, this.apSupplierLabel(x), this.apAbnFormat(x.abn), x.invoiceNo || '',
         this.fmtDate(x.invoiceDate), this.fmtDate(x.dueDate), (p && p.name) || '', (x.alloc || []).map(a => a.code).join(' / '),
@@ -12783,10 +12938,14 @@ class Component extends DCLogic {
       const _apG = st => _apA.filter(x => x.status === st);
       const _apSum = list => list.reduce((t, x) => t + this.apTotal(x), 0);
       const _apQueue = _apA.filter(x => ['received', 'unallocated', 'in_review', 'query'].indexOf(x.status) >= 0);
+      // Counted beside the queue rather than inside it: these are waiting on a decision about
+      // the rule, not on anybody's work.
+      const _apNC = _apA.filter(x => x.status === 'not_collected');
       const _apLate = _apA.filter(x => this.apOverdueDays(x) >= (this._num(this.apSettings().overdueDays) || 7));
       kpis = [
         kpiCard('In the queue', String(_apQueue.length), 'waiting on someone', _apQueue.length ? '#b45309' : '#15803d'),
         kpiCard('Unallocated', String(_apG('unallocated').length), 'no project yet', _apG('unallocated').length ? '#b45309' : '#15803d'),
+        kpiCard('Not collected', String(_apNC.length), _apNC.length ? 'set aside — check them' : 'nothing turned away', _apNC.length ? '#b45309' : '#15803d'),
         kpiCard('Awaiting approval', String(_apG('in_review').length), this.apMoney(_apSum(_apG('in_review')))),
         kpiCard('Approval overdue', String(_apLate.length), _apLate.length ? 'past the review limit' : 'all within limit', _apLate.length ? '#b91c1c' : '#15803d'),
         kpiCard('With the accountant', String(_apG('sent').length), this.apMoney(_apSum(_apG('sent'))), '#1d4ed8'),
@@ -14781,13 +14940,14 @@ class Component extends DCLogic {
         })();
         // Tabs are filters and counters at once, so the size of the backlog is never hidden.
         const _apGroups = [
-          { key: 'all', label: 'All', match: x => !x.voided },
+          { key: 'all', label: 'All', match: x => !x.voided && x.status !== 'not_collected' },
           { key: 'unallocated', label: 'Unallocated', match: x => x.status === 'unallocated' },
           { key: 'mine', label: 'On me', match: x => _apMe && this._apAddr(x.assignedTo) === _apMe && !x.voided && ['sent', 'paid'].indexOf(x.status) < 0 },
           { key: 'in_review', label: 'In review', match: x => x.status === 'in_review' || x.status === 'query' },
           { key: 'approved', label: 'Approved', match: x => x.status === 'approved' || x.status === 'coded' },
           { key: 'sent', label: 'Sent', match: x => x.status === 'sent' || x.status === 'paid' },
           { key: 'closed', label: 'Closed', match: x => x.status === 'rejected' || x.status === 'duplicate' || x.voided },
+          { key: 'not_collected', label: 'Not collected', match: x => x.status === 'not_collected' },
         ];
         const _apTab = _apGroups.some(g => g.key === S.apTab) ? S.apTab : 'all';
         const _apActive = _apGroups.find(g => g.key === _apTab);
@@ -14818,7 +14978,7 @@ class Component extends DCLogic {
           const od = this.apOverdueDays(x);
           const warns = this.apWarnings(x).filter(w => w.block && !(x.ack || {})[w.key]);
           const sel = !!(S.apSel || {})[x.id];
-          const canPick = x.status !== 'sent' && x.status !== 'paid' && !x.voided;
+          const canPick = x.status !== 'sent' && x.status !== 'paid' && x.status !== 'not_collected' && !x.voided;
           return {
             id: x.id, ref: x.ref || '', when, time,
             supplier: this.apSupplierLabel(x), invoiceNo: x.invoiceNo || '—',
@@ -14841,6 +15001,10 @@ class Component extends DCLogic {
             sel, selStyle: _chk(sel), selTick: sel ? '✓' : '', onSel: () => this.toggleApSel(x.id), canPick,
             onOpen: () => (x.status === 'approved' ? this.openApAlloc(x.id) : this.openApReview(x.id)),
             openLabel: x.status === 'approved' ? 'Code ›' : (this.apLocked(x) ? 'View ›' : 'Review ›'),
+            notCollected: x.status === 'not_collected',
+            notCollectedReason: x.notCollectedReason || 'It did not match a project in this system.',
+            canCollect: x.status === 'not_collected' && this.apCanCollect(),
+            onCollect: () => this.apCollectAnyway(x.id),
             assignedTo: this._apAddr(x.assignedTo), assigneeName: this.apAssigneeName(x.assignedTo) || 'Nobody',
             assigneeOptions: _apOwnerOpts, onAssignee: e => this.setApAssignee(x.id, e.target.value),
             assigneeEditable: !this.apLocked(x), assigneeIsMe: !!_apMe && this._apAddr(x.assignedTo) === _apMe,
@@ -15008,6 +15172,10 @@ class Component extends DCLogic {
           onBack: () => this.apBack(),
           isQuery: x.status === 'query', onResolveQuery: () => this.apResolveQuery(x.id), queryNote: x.queryNote || '',
           isRejected: x.status === 'rejected', rejectNote: (x.rejectReason || '') + (x.rejectNote ? ' — ' + x.rejectNote : ''),
+          isNotCollected: x.status === 'not_collected',
+          notCollectedNote: x.notCollectedReason || 'It did not match a project in this system.',
+          canCollectHere: x.status === 'not_collected' && this.apCanCollect(),
+          onCollectHere: () => this.apCollectAnyway(x.id),
           isDuplicate: x.status === 'duplicate', onDupOverride: () => this.openApPrompt('dupoverride', x.id),
           canReinstate: this.can('admin', 'edit') && (x.status === 'rejected' || x.voided),
           onReinstate: () => this.openApPrompt('reinstate', x.id),
@@ -15338,6 +15506,20 @@ class Component extends DCLogic {
         pollOptions: [{ v: '1', label: 'Every minute' }, { v: '5', label: 'Every 5 minutes' }, { v: '15', label: 'Every 15 minutes' }, { v: '60', label: 'Hourly' }],
         folder: _apS.folder || 'Inbox', onFolder: e => this.setApSetting('folder', e.target.value),
         folderOptions: [{ v: 'Inbox', label: 'Inbox' }, { v: 'Invoices', label: 'Invoices' }, { v: 'AP', label: 'AP' }],
+        collectScope: _apS.collectScope || 'all',
+        onCollectScope: e => this.setApSetting('collectScope', e.target.value),
+        collectScopeOptions: [
+          { v: 'all', label: 'Everything that arrives' },
+          { v: 'matched', label: 'Only invoices for a project in this system' },
+          { v: 'open', label: 'Only invoices for a project that is not closed' },
+        ],
+        collectScopeNote: (_apS.collectScope === 'all' || !_apS.collectScope)
+          ? 'Every invoice is taken in. Anything that cannot be placed on a project waits under Unallocated.'
+          : 'Mail that cannot be placed on a project is set aside under Not collected instead of joining the queue — nothing is deleted, and one click takes any of it back. A PDF you drop in yourself is always kept; an email saved as .eml counts as mail and is judged the same way.',
+        skippedCount: String(this.apNotCollected().length),
+        onRecollect: () => this.apRecollectAll(),
+        canRecollect: this.apCanCollect(),
+        hasSkipped: this.apNotCollected().length > 0,
         requireAttachment: !!_apS.requireAttachment, onRequireAttachment: () => this.setApSetting('requireAttachment', !_apS.requireAttachment),
         requireAttachmentStyle: _apChk(!!_apS.requireAttachment), requireAttachmentTick: _apS.requireAttachment ? '✓' : '',
         lastSync: _apS.lastSync ? this.fmtDate(String(_apS.lastSync).slice(0, 10)) : 'never',
