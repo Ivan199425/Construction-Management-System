@@ -665,6 +665,33 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                 </div>
               </div>
 
+              <!-- where an unmatched invoice goes -->
+              <div style="background:#fff;border:1px solid #e4e8ee;border-radius:12px;padding:16px 18px">
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:4px">
+                  <div style="font-size:11px;font-weight:700;letter-spacing:.5px;color:#8894a2;text-transform:uppercase">Unallocated invoices — who clears them</div>
+                  <button onClick="{{ settingsV.ingestion.onGoRoles }}" style="border:1px solid #cfd8e2;background:#fff;color:#4a5765;border-radius:8px;padding:6px 13px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap" style-hover="border-color:#2b59c3;color:#2b59c3">Roles &amp; permissions ↗</button>
+                </div>
+                <div style="font-size:12px;color:#8894a2;line-height:1.6;margin-bottom:12px">Set in <strong style="color:#6b7787">Users &amp; access → Roles &amp; permissions</strong>, on the <strong style="color:#6b7787">Allocate Unassigned Invoices</strong> row. Anyone whose role carries it can give a project to an invoice that arrived without one, and an unmatched invoice is handed to one of them — it shows on their <strong style="color:#6b7787">On me</strong> tab. Whoever forwarded it keeps it if they hold the right; otherwise it goes to the first of them.</div>
+                <sc-if value="{{ settingsV.ingestion.hasAllocRoles }}" hint-placeholder-val="{{ true }}">
+                  <div style="font-size:11px;font-weight:600;color:#4a5765;margin-bottom:6px">Roles that can allocate</div>
+                  <div style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:12px">
+                    <sc-for list="{{ settingsV.ingestion.allocRoles }}" as="r" hint-placeholder-count="3"><span style="background:#e7eefc;border:1px solid #cdddf8;border-radius:16px;padding:5px 12px;font-size:12px;color:#2b59c3">{{ r.v }}</span></sc-for>
+                  </div>
+                </sc-if>
+                <sc-if value="{{ settingsV.ingestion.hasOwners }}" hint-placeholder-val="{{ true }}">
+                  <div style="font-size:11px;font-weight:600;color:#4a5765;margin-bottom:6px">Which means these people</div>
+                  <div style="display:flex;flex-wrap:wrap;gap:7px">
+                    <sc-for list="{{ settingsV.ingestion.owners }}" as="o" hint-placeholder-count="2">
+                      <span style="display:inline-flex;align-items:center;gap:8px;background:#f2f6fd;border:1px solid #cdddf8;border-radius:16px;padding:5px 12px;font-size:12px;color:#2b59c3">{{ o.label }}<span class="mono" style="color:#8fa8d8;font-size:11px">{{ o.v }}</span><span style="color:#8fa8d8;font-size:11px">{{ o.role }}</span></span>
+                    </sc-for>
+                  </div>
+                </sc-if>
+                <div style="display:flex;align-items:flex-start;gap:9px;margin-top:14px;padding-top:12px;border-top:1px solid #f2f4f7">
+                  <span onClick="{{ settingsV.ingestion.onNotifyUnallocated }}" style="{{ settingsV.ingestion.notifyUnallocatedStyle }};cursor:pointer">{{ settingsV.ingestion.notifyUnallocatedTick }}</span>
+                  <span onClick="{{ settingsV.ingestion.onNotifyUnallocated }}" style="cursor:pointer;font-size:12.5px;color:#4a5765;line-height:1.5">Email them when invoices arrive without a project — one message per batch, listing what needs placing.</span>
+                </div>
+              </div>
+
               <!-- accountant routing -->
               <div style="background:#fff;border:1px solid #e4e8ee;border-radius:12px;padding:16px 18px">
                 <div style="font-size:11px;font-weight:700;letter-spacing:.5px;color:#8894a2;text-transform:uppercase;margin-bottom:12px">Accountant routing</div>
@@ -984,12 +1011,12 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
             </div>
 
             <div style="background:#fff;border:1px solid #e4e8ee;border-radius:12px;overflow:hidden">
-              <div style="overflow-x:auto"><div style="min-width:1320px">
-                <div class="colhdr dark" style="display:grid;grid-template-columns:34px 96px 104px 1.2fr 120px 1.35fr 122px 150px 92px;padding:11px 16px;background:#2A3580;border-bottom:1px solid #e4e8ee;font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#fff;text-transform:uppercase;gap:10px">
-                  <div></div><div>Ref</div><div>Received</div><div>Supplier</div><div>Invoice</div><div>Project</div><div style="text-align:right">Amount</div><div>Status</div><div></div>
+              <div style="overflow-x:auto"><div style="min-width:1420px">
+                <div class="colhdr dark" style="display:grid;grid-template-columns:34px 96px 104px 1.15fr 116px 1.3fr 118px 138px 132px 92px;padding:11px 16px;background:#2A3580;border-bottom:1px solid #e4e8ee;font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#fff;text-transform:uppercase;gap:10px">
+                  <div></div><div>Ref</div><div>Received</div><div>Supplier</div><div>Invoice</div><div>Project</div><div style="text-align:right">Amount</div><div>Status</div><div>With</div><div></div>
                 </div>
                 <sc-for list="{{ apV.rows }}" as="r" hint-placeholder-count="5">
-                  <div style="display:grid;grid-template-columns:34px 96px 104px 1.2fr 120px 1.35fr 122px 150px 92px;padding:9px 16px;border-bottom:1px solid #eef1f4;align-items:center;gap:10px" style-hover="background:#f9fafc">
+                  <div style="display:grid;grid-template-columns:34px 96px 104px 1.15fr 116px 1.3fr 118px 138px 132px 92px;padding:9px 16px;border-bottom:1px solid #eef1f4;align-items:center;gap:10px" style-hover="background:#f9fafc">
                     <sc-if value="{{ r.canPick }}" hint-placeholder-val="{{ true }}"><span onClick="{{ r.onSel }}" title="Select for a bulk action" style="{{ r.selStyle }};cursor:pointer">{{ r.selTick }}</span></sc-if>
                     <div>
                       <div class="mono" style="font-size:11.5px;font-weight:600;color:#2b59c3">{{ r.ref }}</div>
@@ -1016,6 +1043,15 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                     <div style="display:flex;flex-direction:column;gap:3px;align-items:flex-start">
                       <span style="font-size:10px;font-weight:600;padding:2px 9px;border-radius:12px;background:{{ r.statusBg }};color:{{ r.statusColor }}">{{ r.statusLabel }}</span>
                       <sc-if value="{{ r.overdue }}" hint-placeholder-val="{{ false }}"><span style="font-size:9px;font-weight:700;letter-spacing:.3px;color:#b91c1c">⚠ {{ r.overdueLabel }}</span></sc-if>
+                    </div>
+                    <div style="min-width:0">
+                      <sc-if value="{{ r.assigneeEditable }}" hint-placeholder-val="{{ true }}">
+                        <select value="{{ r.assignedTo }}" onChange="{{ r.onAssignee }}" title="Who is clearing this one" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:5px 6px;font-size:11px;font-family:inherit;color:{{ r.assigneeColor }};background:#fff;cursor:pointer" style-focus="border-color:#2b59c3;outline:none">
+                          <option value="">— Nobody —</option>
+                          <sc-for list="{{ r.assigneeOptions }}" as="o" hint-placeholder-count="3"><option value="{{ o.v }}">{{ o.label }}</option></sc-for>
+                        </select>
+                      </sc-if>
+                      <sc-if value="{{ r.assigneeIsMe }}" hint-placeholder-val="{{ false }}"><span style="font-size:9px;font-weight:700;letter-spacing:.3px;color:#2b59c3">ON ME</span></sc-if>
                     </div>
                     <div style="display:flex;align-items:center;gap:5px;justify-content:flex-end">
                       <sc-if value="{{ r.hasDoc }}" hint-placeholder-val="{{ true }}"><button onClick="{{ r.onDoc }}" title="Open the original document" style="border:1px solid #cfd8e2;background:#fff;color:#2b59c3;border-radius:6px;padding:5px 7px;font-size:11px;cursor:pointer;flex:0 0 auto" style-hover="border-color:#2b59c3">👁</button></sc-if>
@@ -1193,6 +1229,15 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                     </select>
                     <div style="font-size:10.5px;color:#a4afba;margin-top:4px">{{ apReviewV.matchNote }}</div>
                   </div>
+                  <sc-if value="{{ apReviewV.showAssignee }}" hint-placeholder-val="{{ false }}">
+                    <div style="grid-column:1 / -1">
+                      <label style="font-size:11px;font-weight:600;color:#4a5765;display:block;margin-bottom:5px">With <span style="font-weight:400;color:#a4afba">· who is clearing this one while it has no project</span></label>
+                      <select value="{{ apReviewV.assignedTo }}" onChange="{{ apReviewV.onAssignee }}" style="width:100%;border:1px solid #e4e8ee;border-radius:7px;padding:8px 9px;font-size:12.5px;font-family:inherit;color:#0f1720;background:#fff;cursor:pointer" style-focus="border-color:#2b59c3;outline:none">
+                        <option value="">— Nobody —</option>
+                        <sc-for list="{{ apReviewV.assigneeOptions }}" as="o" hint-placeholder-count="3"><option value="{{ o.v }}">{{ o.label }}</option></sc-for>
+                      </select>
+                    </div>
+                  </sc-if>
                   <sc-if value="{{ apReviewV.hasProject }}" hint-placeholder-val="{{ true }}">
                     <div style="grid-column:1 / -1">
                       <label style="font-size:11px;font-weight:600;color:#4a5765;display:block;margin-bottom:5px">Commitment <span style="font-weight:400;color:#a4afba">· draws the invoice down against a subcontract or purchase order</span></label>
@@ -5403,6 +5448,7 @@ class Component extends DCLogic {
     P.bills = { _default: 1, PM: 2, Finance: 3, Admin: 2 };
     P.claims = { _default: 1, PM: 2, Finance: 3, Admin: 2 };
     P.apInvoices = { _default: 0, Admin: 3, Finance: 3, PM: 3, ContractAdmin: 2, Superintendent: 0, Student: 1 };
+    P.apAllocate = { _default: 0, Admin: 2, Finance: 2, PM: 2, ContractAdmin: 2 };
     P.admin = { _default: 0, Admin: 2 };
     return P; }
   _loadPerms() { const def = this._buildPerms(); try { if (typeof localStorage === 'undefined') return def; const raw = localStorage.getItem('cubicPerms'); if (!raw) return def; const saved = JSON.parse(raw); if (!saved || typeof saved !== 'object') return def; const out = {}; Object.keys(def).forEach(k => { out[k] = Object.assign({}, def[k], saved[k] || {}); }); Object.keys(saved).forEach(k => { if (!out[k]) out[k] = saved[k]; }); return out; } catch (e) { return def; } }
@@ -5770,7 +5816,7 @@ class Component extends DCLogic {
     { key: 'dashboard', label: 'Dashboard' }, { key: 'directory', label: 'Directory' }, { key: 'projectSetup', label: 'Project Setup' },
     { key: 'financial', label: 'Financial / Estimates' }, { key: 'agreements', label: 'Subcontractor & Vendor Agreements' }, { key: 'variations', label: 'SoV / Variations' },
     { key: 'documents', label: 'Document Management' }, { key: 'rfis', label: 'RFIs' }, { key: 'punchList', label: 'Punch List' }, { key: 'reporting', label: 'Reporting' },
-    { key: 'schedule', label: 'Schedule' }, { key: 'eot', label: 'EOT' }, { key: 'invoices', label: 'Invoices' }, { key: 'bills', label: 'Bills' }, { key: 'claims', label: 'Progress Claims' }, { key: 'apInvoices', label: 'Invoice Management (AP)' }, { key: 'admin', label: 'User Administration' },
+    { key: 'schedule', label: 'Schedule' }, { key: 'eot', label: 'EOT' }, { key: 'invoices', label: 'Invoices' }, { key: 'bills', label: 'Bills' }, { key: 'claims', label: 'Progress Claims' }, { key: 'apInvoices', label: 'Invoice Management (AP)' }, { key: 'apAllocate', label: 'Allocate Unassigned Invoices' }, { key: 'admin', label: 'User Administration' },
   ]; }
   permBadge(lv) { return lv >= 3 ? { t: 'Approve', s: 'A', c: '#15803d', bg: '#e6f4ea' } : lv === 2 ? { t: 'Edit', s: 'E', c: '#1d4ed8', bg: '#e7eefc' } : lv === 1 ? { t: 'View', s: 'V', c: '#6b7787', bg: '#eef1f5' } : { t: 'No access', s: '—', c: '#c0c8d1', bg: 'transparent' }; }
   currentUser() { const s = this.state.session; return (s && s.profile && s.profile.status === 'active') ? s.profile : null; }
@@ -7613,6 +7659,9 @@ class Component extends DCLogic {
       // Mail from our own people is a forward, not a supplier. Anything on these domains or
       // in this list is treated that way; every user account counts automatically.
       internalSenders: [], internalDomains: [],
+      // An invoice with no project belongs to somebody until it has one. Who that can be is
+      // set in Users & access, not here.
+      notifyUnallocated: true,
       confidence: 80,
       accountantTo: [], ccApprover: true, ccExtra: [],
       subjectTemplate: '{Supplier} - {Project} - Invoice {InvoiceNo} - {Total}',
@@ -7683,7 +7732,7 @@ class Component extends DCLogic {
   }
   // Refs are numbered against the list as it stands at the moment of the write, not as it stood
   // when the upload started — two people dropping files at once would otherwise collide.
-  _apAdd(records) {
+  _apAdd(records, done) {
     this._withCatalog('ap_invoices', () => this.setState(s => {
       const cur = s.apInvoices || [];
       let n = cur.reduce((mx, x) => { const m = String(x.ref || '').match(/^SI-(\d+)$/); return m ? Math.max(mx, Number(m[1])) : mx; }, 0);
@@ -7691,7 +7740,7 @@ class Component extends DCLogic {
       const list = cur.concat(stamped);
       this._saveApInvoices(list);
       return { apInvoices: list };
-    }));
+    }, () => { if (done) done(); }));
   }
 
   apBlank() {
@@ -7702,7 +7751,7 @@ class Component extends DCLogic {
       vendorId: '', supplierName: '', abn: '', bsb: '', acct: '',
       invoiceNo: '', invoiceDate: '', dueDate: '', poRef: '',
       subtotal: 0, gst: 0, total: 0, currency: 'AUD',
-      pid: '', matchRule: '', matchConf: 0, commitmentId: '',
+      pid: '', matchRule: '', matchConf: 0, commitmentId: '', assignedTo: '',
       alloc: [], attachments: [],
       source: { kind: 'upload', from: '', to: '', receivedAt: new Date().toISOString(), subject: '', body: '', messageId: '' },
       extract: { ok: false, engine: '', text: '', conf: {} },
@@ -7894,6 +7943,46 @@ class Component extends DCLogic {
     return (this.state.users || []).find(u => this._apAddr(u.email) === e) || null;
   }
 
+  // ---- who clears the unmatched ones -------------------------------------------------------
+  // An invoice nobody can place still has to reach somebody, or it sits in a tab no one opens.
+  // These are the people who get it; if none are named, it falls to whoever is signed in, so a
+  // record is never left ownerless.
+  // Everyone whose role carries the right to place an invoice, taken straight from the
+  // permissions matrix. Change who that is in Users & access and this follows.
+  apCanAllocate(role) { return this.permLevel(role, 'apAllocate') >= 2; }
+  apAllocators() {
+    return (this.state.users || []).filter(u => u.status === 'active' && !u.external && u.email && this.apCanAllocate(u.role));
+  }
+  apUnallocatedOwners() {
+    const list = this.apAllocators().map(u => this._apAddr(u.email)).filter(Boolean);
+    if (list.length) return list;
+    // Nobody holds the right yet: the invoice still needs an owner, so it falls to whoever
+    // captured it rather than to no one.
+    const me = this.currentUser();
+    const mine = me ? this._apAddr(me.email) : '';
+    return mine ? [mine] : [];
+  }
+  // Whoever forwarded it keeps it, if they are one of the owners — they already know what it is.
+  apOwnerFor(inv) {
+    const owners = this.apUnallocatedOwners();
+    if (!owners.length) return '';
+    const fw = this._apAddr((inv && inv.source && inv.source.forwardedBy) || '');
+    if (fw && owners.indexOf(fw) >= 0) return fw;
+    return owners[0];
+  }
+  apAssigneeName(addr) {
+    const e = this._apAddr(addr);
+    if (!e) return '';
+    const u = this.apUserByEmail(e);
+    return (u && u.name) || e;
+  }
+  setApAssignee(id, email) {
+    const inv = this.apInv(id); if (!inv || this.apLocked(inv)) return;
+    const e = email === '' ? '' : this._apAddr(email);
+    if (e === (inv.assignedTo || '')) return;
+    this._apCommit(id, { assignedTo: e }, 'Assigned', e ? this.apAssigneeName(e) : 'nobody');
+  }
+
   // ---- project matching ------------------------------------------------------------------------
   // Rules run in the order the administrator set, first match wins, and anything that scores
   // below the threshold lands in Unallocated rather than guessing (BR-4.17, BR-4.18).
@@ -7978,9 +8067,40 @@ class Component extends DCLogic {
     const jobs = files.map(file => (/\.eml$/i.test(file.name || '') ? this._apFromEml(file) : this._apFromFile(file, null)));
     Promise.all(jobs).then(results => {
       const records = [].concat.apply([], results).filter(Boolean);
-      if (records.length) this._apAdd(records);
+      const mine = {}; records.forEach(r => { mine[r.id] = 1; });
+      if (records.length) this._apAdd(records, () => this.apNotifyUnallocated((this.state.apInvoices || []).filter(x => mine[x.id])));
       this.setState({ apBusy: 0, apScreen: 'inbox', apTab: records.some(r => r.status === 'unallocated') ? 'unallocated' : 'all' });
     }).catch(() => this.setState({ apBusy: 0 }));
+  }
+
+  // One message per batch, listing what needs a project. A message per invoice would be noise
+  // on a morning where twenty arrive at once.
+  apNotifyUnallocated(records) {
+    const cfg = this.apSettings();
+    const list = (records || []).filter(x => x && x.status === "unallocated");
+    if (!cfg.notifyUnallocated || !list.length) return Promise.resolve({ ok: false });
+    const to = this.apUnallocatedOwners();
+    if (!to.length) return Promise.resolve({ ok: false });
+    const lines = list.map(x => {
+      const fw = (x.source && x.source.forwardedBy) ? ('  (forwarded by ' + this.apAssigneeName(x.source.forwardedBy) + ')') : '';
+      return '  ' + (x.ref || '') + '   ' + this.apSupplierLabel(x) + '   ' + (x.invoiceNo || 'no invoice number') + '   ' + this.money(this.apTotal(x)) + fw;
+    });
+    const n = list.length;
+    return this._sendEmailNow({
+      to,
+      subject: n + ' supplier invoice' + (n === 1 ? '' : 's') + ' waiting for a project',
+      text: [
+        n === 1 ? 'An invoice has arrived that could not be matched to a project.'
+                : n + ' invoices have arrived that could not be matched to a project.',
+        '',
+        'Open Invoices and clear the Unallocated tab — assigning a project moves each one straight into review.',
+        '',
+      ].concat(lines).concat([
+        '',
+        'Cubic PM System',
+      ]).join(String.fromCharCode(10)),
+      attachments: [],
+    });
   }
 
   _apReadBuffer(file) { return new Promise(res => { try { const r = new FileReader(); r.onload = e => res(e.target.result); r.onerror = () => res(null); r.readAsArrayBuffer(file); } catch (e) { res(null); } }); }
@@ -8063,6 +8183,7 @@ class Component extends DCLogic {
     } else {
       inv.status = 'unallocated';
       inv.matchRule = m.rule || ''; inv.matchConf = m.conf || 0;
+      inv.assignedTo = this.apOwnerFor(inv);
     }
     if (this.apDuplicateOf(inv)) { const d = this.apDuplicateOf(inv); inv.status = 'duplicate'; inv.duplicateOf = d.id; }
     inv.audit = [{ at: new Date().toISOString(), by: (this.currentUser() || {}).name || 'System', action: 'Captured', detail: (inv.source.kind === 'email' ? 'From email · ' + (inv.source.from || '') : 'Manual upload') + (inv.extract.ok ? ' · text extracted' : ' · no text layer, manual entry required') }];
@@ -8107,12 +8228,21 @@ class Component extends DCLogic {
       patch.alloc = []; patch.commitmentId = ''; patch.matchRule = 'Assigned by hand'; patch.matchConf = 100;
       if (val && (inv.status === 'unallocated' || inv.status === 'received')) patch.status = 'in_review';
       if (inv.status === 'coded') patch.status = 'approved';
-      if (!val) patch.status = 'unallocated';
+      if (!val) { patch.status = 'unallocated'; patch.assignedTo = inv.assignedTo || this.apOwnerFor(inv); }
     }
     if (['subtotal', 'gst', 'total'].indexOf(field) >= 0) patch[field] = this._num(val);
     this._apCommit(id, patch, 'Field edited', field + ': ' + (old == null || old === '' ? '(blank)' : old) + ' → ' + (val === '' ? '(blank)' : val));
   }
-  apSetProject(id, pid) { this.setApField(id, 'pid', pid); }
+  // Giving a project to an invoice that has none is the act this permission governs.
+  apSetProject(id, pid) {
+    const inv = this.apInv(id); if (!inv) return;
+    const u = this.currentUser();
+    if (inv.status === 'unallocated' && u && !this.apCanAllocate(u.role)) {
+      this.setState({ apNotice: 'Your role cannot place an unallocated invoice. Ask an administrator, or have the right added in Users & access.' });
+      return;
+    }
+    this.setApField(id, 'pid', pid);
+  }
   apSendToReview(id) {
     const inv = this.apInv(id); if (!inv) return;
     if (!inv.pid) return;
@@ -14262,10 +14392,19 @@ class Component extends DCLogic {
       // --- the inbox -----------------------------------------------------------------------------
       if (showApInbox) {
         const _apQ = this._q('ap');
+        const _apMe = this._apAddr((this.currentUser() || {}).email || '');
+        // Anyone who could be handed an unmatched invoice: the named owners plus the team.
+        const _apOwnerOpts = (() => {
+          const seen = {}, out = [];
+          this.apAllocators().forEach(u => { const e = this._apAddr(u.email); if (e && !seen[e]) { seen[e] = 1; out.push({ v: e, label: u.name || e }); } });
+          this.apUnallocatedOwners().forEach(e => { if (!seen[e]) { seen[e] = 1; out.push({ v: e, label: this.apAssigneeName(e) }); } });
+          return out;
+        })();
         // Tabs are filters and counters at once, so the size of the backlog is never hidden.
         const _apGroups = [
           { key: 'all', label: 'All', match: x => !x.voided },
           { key: 'unallocated', label: 'Unallocated', match: x => x.status === 'unallocated' },
+          { key: 'mine', label: 'On me', match: x => _apMe && this._apAddr(x.assignedTo) === _apMe && !x.voided && ['sent', 'paid'].indexOf(x.status) < 0 },
           { key: 'in_review', label: 'In review', match: x => x.status === 'in_review' || x.status === 'query' },
           { key: 'approved', label: 'Approved', match: x => x.status === 'approved' || x.status === 'coded' },
           { key: 'sent', label: 'Sent', match: x => x.status === 'sent' || x.status === 'paid' },
@@ -14321,6 +14460,10 @@ class Component extends DCLogic {
             sel, selStyle: _chk(sel), selTick: sel ? '✓' : '', onSel: () => this.toggleApSel(x.id), canPick,
             onOpen: () => (x.status === 'approved' ? this.openApAlloc(x.id) : this.openApReview(x.id)),
             openLabel: x.status === 'approved' ? 'Code ›' : (this.apLocked(x) ? 'View ›' : 'Review ›'),
+            assignedTo: this._apAddr(x.assignedTo), assigneeName: this.apAssigneeName(x.assignedTo) || 'Nobody',
+            assigneeOptions: _apOwnerOpts, onAssignee: e => this.setApAssignee(x.id, e.target.value),
+            assigneeEditable: !this.apLocked(x), assigneeIsMe: !!_apMe && this._apAddr(x.assignedTo) === _apMe,
+            assigneeColor: this._apAddr(x.assignedTo) ? '#0f1720' : '#b45309',
           };
         });
 
@@ -14448,6 +14591,15 @@ class Component extends DCLogic {
           pid: x.pid || '', projectOptions: _apProjOpts, onProject: e => this.apSetProject(x.id, e.target.value),
           projectBorder: x.pid ? '#e4e8ee' : '#eddcc0', projectBg: x.pid ? '#fff' : '#fbf1e3',
           matchNote: x.matchRule ? ('match: ' + x.matchRule + ' (' + x.matchConf + '%)') : 'no rule matched — assign the project by hand',
+          assignedTo: this._apAddr(x.assignedTo), assigneeName: this.apAssigneeName(x.assignedTo) || 'Nobody',
+          assigneeOptions: (() => {
+            const seen = {}, out = [];
+            this.apAllocators().forEach(u => { const e = this._apAddr(u.email); if (e && !seen[e]) { seen[e] = 1; out.push({ v: e, label: u.name || e }); } });
+            this.apUnallocatedOwners().forEach(e => { if (!seen[e]) { seen[e] = 1; out.push({ v: e, label: this.apAssigneeName(e) }); } });
+            return out;
+          })(),
+          onAssignee: e => this.setApAssignee(x.id, e.target.value),
+          showAssignee: x.status === 'unallocated' || x.status === 'query' || !!x.assignedTo,
           commitmentId: x.commitmentId || '', commitmentOptions: commitOptions,
           onCommitment: e => this.setApField(x.id, 'commitmentId', e.target.value),
           hasProject: !!x.pid,
@@ -14817,6 +14969,15 @@ class Component extends DCLogic {
         hasInternalManual: (_apS.internalSenders || []).length > 0,
         newInternal: S.apNewInternal || '', onNewInternal: e => this.setState({ apNewInternal: e.target.value }),
         onAddInternal: () => { this.addApInternalSender(S.apNewInternal); this.setState({ apNewInternal: '' }); },
+
+        // Where an invoice with no project goes — read from the permissions matrix, not set here.
+        owners: this.apAllocators().map(u => ({ v: this._apAddr(u.email), label: u.name || u.email, role: this.roleLabel(u.role) })),
+        hasOwners: this.apAllocators().length > 0,
+        allocRoles: this.roleList().filter(r => this.apCanAllocate(r.key)).map(r => ({ v: r.label })),
+        hasAllocRoles: this.roleList().filter(r => this.apCanAllocate(r.key)).length > 0,
+        onGoRoles: () => this.setSettingsTab('roles'),
+        notifyUnallocated: !!_apS.notifyUnallocated, onNotifyUnallocated: () => this.setApSetting('notifyUnallocated', !_apS.notifyUnallocated),
+        notifyUnallocatedStyle: _apChk(!!_apS.notifyUnallocated), notifyUnallocatedTick: _apS.notifyUnallocated ? '✓' : '',
 
         // Accountant routing.
         accountants: (_apS.accountantTo || []).map(e => ({ v: e, onRemove: () => this.removeApAccountant(e) })),
