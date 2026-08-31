@@ -638,7 +638,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
               <!-- who counts as us -->
               <div style="background:#fff;border:1px solid #e4e8ee;border-radius:12px;padding:16px 18px">
                 <div style="font-size:11px;font-weight:700;letter-spacing:.5px;color:#8894a2;text-transform:uppercase;margin-bottom:4px">Recognised senders — our own people</div>
-                <div style="font-size:12px;color:#8894a2;line-height:1.6;margin-bottom:12px">Most invoices are forwarded on by someone here rather than sent by the supplier. Mail from any of these is read as a forward: the supplier is taken from the quoted message behind it, and the forwarder is recorded on the invoice.</div>
+                <div style="font-size:12px;color:#8894a2;line-height:1.6;margin-bottom:12px">Most invoices are forwarded on by someone here rather than sent by the supplier. Mail from one of our own domains is read as a forward — the supplier is taken from the quoted message behind it and the forwarder is recorded on the invoice. <strong style="color:#6b7787">Every other address is treated as a supplier or subcontractor</strong>, including a personal address belonging to someone who works here.</div>
                 <sc-if value="{{ settingsV.ingestion.hasInternalDomains }}" hint-placeholder-val="{{ true }}">
                   <div style="font-size:11px;font-weight:600;color:#4a5765;margin-bottom:6px">Our domains</div>
                   <div style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:12px">
@@ -648,7 +648,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                   </div>
                 </sc-if>
                 <sc-if value="{{ settingsV.ingestion.hasInternalAuto }}" hint-placeholder-val="{{ true }}">
-                  <div style="font-size:11px;font-weight:600;color:#4a5765;margin-bottom:6px">From the user accounts <span style="font-weight:400;color:#a4afba">· kept in step automatically, external accounts excluded</span></div>
+                  <div style="font-size:11px;font-weight:600;color:#4a5765;margin-bottom:6px">User accounts on those domains <span style="font-weight:400;color:#a4afba">· kept in step automatically; external accounts, and any login on another domain, are excluded</span></div>
                   <div style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:12px">
                     <sc-for list="{{ settingsV.ingestion.internalAuto }}" as="a" hint-placeholder-count="3"><span class="mono" style="background:#eef1f5;border:1px solid #dfe4ea;border-radius:16px;padding:5px 12px;font-size:12px;color:#4a5765">{{ a.v }}</span></sc-for>
                   </div>
@@ -660,7 +660,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                   </div>
                 </sc-if>
                 <div style="display:flex;gap:8px">
-                  <input value="{{ settingsV.ingestion.newInternal }}" onInput="{{ settingsV.ingestion.onNewInternal }}" placeholder="gordon@cubiccm.com — or @cubiccm.com for a whole domain" style="flex:1;min-width:0;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:inherit;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none">
+                  <input value="{{ settingsV.ingestion.newInternal }}" onInput="{{ settingsV.ingestion.onNewInternal }}" placeholder="Add an exception — one address, or @domain.com for a whole domain" style="flex:1;min-width:0;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:inherit;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none">
                   <button onClick="{{ settingsV.ingestion.onAddInternal }}" style="border:1px solid #cfd8e2;background:#fff;color:#4a5765;border-radius:8px;padding:9px 16px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="border-color:#2b59c3;color:#2b59c3">Add</button>
                 </div>
               </div>
@@ -7869,26 +7869,40 @@ class Component extends DCLogic {
   // the message. Matching on the envelope would tie every forwarded invoice to the wrong party, so
   // an address we recognise as our own is read as a forwarder and the real sender dug out behind it.
   _apAddr(s) { const m = String(s || '').match(/[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}/); return m ? m[0].toLowerCase() : ''; }
-  // Every user account is one of ours, except the external ones — an architect or a client
-  // superintendent has a login but is not the office.
+  // Our own domain decides this, not who holds the account. A colleague writing from a
+  // personal address is, as far as an invoice is concerned, an outside sender — which is
+  // right: the supplier behind that mail still has to be read from the message itself.
+  // A genuine exception, an outsourced bookkeeper say, is named by hand in Settings.
   apInternalSenders() {
     const cfg = this.apSettings();
+    const doms = this.apInternalDomains();
     const out = [];
     const add = e => { const a = this._apAddr(e); if (a && out.indexOf(a) < 0) out.push(a); };
-    (this.state.users || []).forEach(u => { if (!u.external) add(u.email); });
-    const me = this.currentUser(); if (me && !me.external) add(me.email);
+    const ours = a => !!a && doms.indexOf(a.split('@')[1] || '') >= 0;
+    (this.state.users || []).forEach(u => { const a = this._apAddr(u.email); if (a && !u.external && ours(a)) add(a); });
+    const me = this.currentUser();
+    if (me && !me.external) { const a = this._apAddr(me.email); if (ours(a)) add(a); }
     add(cfg.mailbox);
     (cfg.internalSenders || []).forEach(add);
     return out;
   }
-  // The whole company domain counts, so a colleague who has never logged in is still recognised.
+  // Our domains, taken from what the company profile already knows about us, so a colleague
+  // who has never logged in is still recognised the moment they send something.
   apInternalDomains() {
     const cfg = this.apSettings();
+    const co = (this.state && this.state.company) || {};
     const out = [];
-    const add = d => { const x = String(d || '').toLowerCase().replace(/^@/, '').trim(); if (x && x.indexOf('.') > 0 && out.indexOf(x) < 0) out.push(x); };
+    const add = d => {
+      const x = String(d || '').toLowerCase().replace(/^https?:\/\//, '').replace(/^@/, '').replace(/^www\./, '').split('/')[0].trim();
+      if (x && x.indexOf('.') > 0 && out.indexOf(x) < 0) out.push(x);
+    };
     add(String(cfg.mailbox || '').split('@')[1]);
-    const me = this.currentUser(); if (me && !me.external) add(String(me.email || '').split('@')[1]);
+    add(String(co.accountsEmail || '').split('@')[1]);
+    add(co.website);
     (cfg.internalDomains || []).forEach(add);
+    // Nothing recorded yet: fall back to whoever is signed in, so forwards are still
+    // recognised before the company profile has been filled in.
+    if (!out.length) { const me = this.currentUser(); if (me && !me.external) add(String(me.email || '').split('@')[1]); }
     return out;
   }
   apIsInternal(addr) {
@@ -8042,9 +8056,15 @@ class Component extends DCLogic {
     if (from && !this.apIsInternal(from)) {
       const byMail = vendors.find(v => this._apAddr(v.email) === from);
       if (byMail) return byMail;
+      // Matching on the domain finds a new person at a supplier we already know. It must not be
+      // done on a free-mail domain: plenty of small suppliers bill from gmail, and one of them in
+      // the Directory would otherwise claim every invoice sent from any gmail address.
       const dom = from.split('@')[1];
-      const byDom = vendors.find(v => { const d = this._apAddr(v.email).split('@')[1]; return !!d && d === dom; });
-      if (byDom) return byDom;
+      const shared = ['gmail.com', 'googlemail.com', 'hotmail.com', 'hotmail.com.au', 'outlook.com', 'outlook.com.au', 'live.com', 'live.com.au', 'yahoo.com', 'yahoo.com.au', 'bigpond.com', 'bigpond.net.au', 'icloud.com', 'me.com', 'optusnet.com.au', 'tpg.com.au', 'iinet.net.au'];
+      if (dom && shared.indexOf(dom) < 0) {
+        const byDom = vendors.find(v => { const d = this._apAddr(v.email).split('@')[1]; return !!d && d === dom; });
+        if (byDom) return byDom;
+      }
     }
     const name = String(fields.supplierName || '').toLowerCase().replace(/[^a-z0-9]/g, '');
     if (name.length >= 4) {
