@@ -1165,6 +1165,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                     <select value="{{ apReviewV.vendorId }}" onChange="{{ apReviewV.onVendor }}" style="width:100%;border:1px solid {{ apReviewV.vendorBorder }};border-radius:7px;padding:8px 9px;font-size:12.5px;font-family:inherit;color:#0f1720;background:{{ apReviewV.vendorBg }};cursor:pointer" style-focus="border-color:#2b59c3;outline:none">
                       <option value="">— No supplier matched —</option>
                       <sc-for list="{{ apReviewV.vendorOptions }}" as="o" hint-placeholder-count="4"><option value="{{ o.id }}">{{ o.label }}</option></sc-for>
+                      <option value="__new__">＋ New supplier / subcontractor…</option>
                     </select>
                     <sc-if value="{{ apReviewV.hasSupplierRead }}" hint-placeholder-val="{{ false }}"><div style="font-size:11px;color:#b45309;margin-top:4px">Document reads “{{ apReviewV.supplierRead }}” — no Directory match. Add them in the Vendor directory to keep the accountant’s naming consistent.</div></sc-if>
                   </div>
@@ -1229,6 +1230,23 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                     </select>
                     <div style="font-size:10.5px;color:#a4afba;margin-top:4px">{{ apReviewV.matchNote }}</div>
                   </div>
+                  <sc-if value="{{ apReviewV.showCoding }}" hint-placeholder-val="{{ true }}">
+                    <div style="grid-column:1 / -1;height:1px;background:#eef1f4;margin:2px 0"></div>
+                    <div style="grid-column:1 / -1">
+                      <label style="font-size:11px;font-weight:600;color:#4a5765;display:block;margin-bottom:5px">Cost code <span style="font-weight:400;color:#a4afba">· approving posts a vendor bill against this code</span></label>
+                      <select value="{{ apReviewV.quickCode }}" onChange="{{ apReviewV.onQuickCode }}" style="width:100%;border:1px solid {{ apReviewV.quickCodeBorder }};border-radius:7px;padding:8px 9px;font-size:12.5px;font-family:inherit;color:#0f1720;background:{{ apReviewV.quickCodeBg }};cursor:pointer" style-focus="border-color:#2b59c3;outline:none">
+                        <option value="">— Unassigned —</option>
+                        <sc-for list="{{ apReviewV.codeGroups }}" as="grp" hint-placeholder-count="3"><optgroup label="{{ grp.label }}"><sc-for list="{{ grp.options }}" as="o" hint-placeholder-count="3"><option value="{{ o.code }}">{{ o.label }}</option></sc-for></optgroup></sc-for>
+                      </select>
+                    </div>
+                    <div style="grid-column:1 / -1">
+                      <label style="font-size:11px;font-weight:600;color:#4a5765;display:block;margin-bottom:5px">Description</label>
+                      <input value="{{ apReviewV.quickDesc }}" onInput="{{ apReviewV.onQuickDesc }}" placeholder="What this invoice covers" style="width:100%;border:1px solid #e4e8ee;border-radius:7px;padding:8px 9px;font-size:12.5px;font-family:inherit;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none">
+                      <sc-if value="{{ apReviewV.isSplit }}" hint-placeholder-val="{{ false }}">
+                        <div style="font-size:10.5px;color:#2b59c3;margin-top:5px">Split across several codes — {{ apReviewV.splitNote }}. Edit the split on the cost allocation screen.</div>
+                      </sc-if>
+                    </div>
+                  </sc-if>
                   <sc-if value="{{ apReviewV.showAssignee }}" hint-placeholder-val="{{ false }}">
                     <div style="grid-column:1 / -1">
                       <label style="font-size:11px;font-weight:600;color:#4a5765;display:block;margin-bottom:5px">With <span style="font-weight:400;color:#a4afba">· who is clearing this one while it has no project</span></label>
@@ -8367,6 +8385,44 @@ class Component extends DCLogic {
     this.setState({ apPrompt: null, apScreen: 'inbox', apOpen: '' });
   }
 
+  // The project's own cost codes, grouped by section — the same list the Bills tab offers.
+  apCodeGroups(pid) {
+    const p = this.proj(pid); if (!p) return [];
+    const gs = [], byKey = {};
+    (p.costLines || []).forEach(l => {
+      const code = String(l.code || '').trim(); if (!code) return;
+      const head = code.split(/[-.]/)[0];
+      if (!byKey[head]) { byKey[head] = { key: head, label: 'Section ' + head, options: [] }; gs.push(byKey[head]); }
+      byKey[head].options.push({ code, label: code + (l.desc ? ' — ' + l.desc : '') });
+    });
+    return gs;
+  }
+  // Coding straight from the review screen, the way a bill is coded. One code covers the whole
+  // invoice; splitting it across several is what the allocation screen is for.
+  apQuickCode(id, field, val) {
+    const inv = this.apInv(id); if (!inv || this.apLocked(inv)) return;
+    const alloc = ((inv.alloc || []).length ? inv.alloc : [{
+      id: 'al' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), code: '', desc: '', amount: this.apNet(inv),
+    }]).slice();
+    alloc[0] = Object.assign({}, alloc[0], { [field]: val });
+    if (alloc.length === 1) alloc[0].amount = this.apNet(inv);
+    this._apCommit(id, { alloc }, field === 'code' ? 'Cost code set' : '', field === 'code' ? String(val || '(cleared)') : '');
+  }
+  // A supplier who has never billed us before is created from the invoice itself, seeded with
+  // what was read off it, so nothing has to be typed twice.
+  onApVendor(id, val) {
+    if (val !== '__new__') { this.setApField(id, 'vendorId', val); return; }
+    const inv = this.apInv(id); if (!inv) return;
+    this.setState({
+      vendorModal: { apId: id },
+      vendorForm: {
+        type: 'supplier', company: inv.supplierName || '', rep: '',
+        abn: this.apAbnFormat(inv.abn) || '', phone: '',
+        email: (inv.source && inv.source.senderAddress) || '', address: '',
+      },
+    });
+  }
+
   // ---- cost allocation -------------------------------------------------------------------------
   apAddAllocLine(id) {
     const inv = this.apInv(id); if (!inv || this.apLocked(inv)) return;
@@ -10946,7 +11002,7 @@ class Component extends DCLogic {
         vendorModal: null,
         projects: vendorModal.billId ? s.projects.map(p => p.id !== s.pid ? p : { ...p, bills: (p.bills || []).map(x => x.id === vendorModal.billId ? { ...x, vendorId: id } : x) }) : s.projects,
       };
-    }));
+    }, () => { if (vendorModal.apId) this._apCommit(vendorModal.apId, { vendorId: id }, 'Supplier added to the Directory', vendor.company); }));
   }
   addCostLine() {
     this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, costLines: [...p.costLines, { id: 'cl' + Date.now(), code: '', cat: 'other', desc: 'New cost line', orig: 0, adj: 0, committed: 0, actual: 0, ftc: 0 }] }) }));
@@ -14716,7 +14772,18 @@ class Component extends DCLogic {
           extractOk: !!(x.extract && x.extract.ok),
           // fields
           vendorId: x.vendorId || '', vendorOptions: _apVendOpts,
-          onVendor: e => this.setApField(x.id, 'vendorId', e.target.value),
+          onVendor: e => this.onApVendor(x.id, e.target.value),
+          // coding, the way a bill is coded — one code here, several on the allocation screen
+          codeGroups: this.apCodeGroups(x.pid),
+          quickCode: ((x.alloc || [])[0] || {}).code || '',
+          quickDesc: ((x.alloc || [])[0] || {}).desc || '',
+          onQuickCode: e => this.apQuickCode(x.id, 'code', e.target.value),
+          onQuickDesc: e => this.apQuickCode(x.id, 'desc', e.target.value),
+          quickCodeBorder: ((x.alloc || [])[0] || {}).code ? '#e4e8ee' : '#eddcc0',
+          quickCodeBg: ((x.alloc || [])[0] || {}).code ? '#fff' : '#fbf1e3',
+          isSplit: (x.alloc || []).length > 1,
+          splitNote: (x.alloc || []).map(a => (a.code || '—') + '  ' + this.apMoney(this._num(a.amount))).join('   ·   '),
+          showCoding: !!x.pid && !this.apLocked(x),
           vendorBorder: x.vendorId ? '#e4e8ee' : '#eddcc0', vendorBg: x.vendorId ? '#fff' : '#fbf1e3',
           supplierRead: x.supplierName || '', hasSupplierRead: !!x.supplierName && !x.vendorId,
           abn: fld('abn', 'ABN'),
@@ -14784,17 +14851,7 @@ class Component extends DCLogic {
         const x = _apOpen;
         const p = this.proj(x.pid);
         const locked = this.apLocked(x);
-        const groups = p ? (() => {
-          const gs = [], byKey = new Map();
-          (p.costLines || []).forEach(l => {
-            const code = String(l.code || '').trim(); if (!code) return;
-            const head = code.split(/[-.]/)[0];
-            let g = byKey.get(head);
-            if (!g) { g = { key: head, label: 'Section ' + head, options: [] }; byKey.set(head, g); gs.push(g); }
-            g.options.push({ code, label: code + (l.desc ? ' — ' + l.desc : '') });
-          });
-          return gs;
-        })() : [];
+        const groups = this.apCodeGroups(x.pid);
         const lines = (x.alloc || []).map(a => {
           const left = this.apBudgetLeft(x.pid, a.code, x.id);
           const over = left != null && this._num(a.amount) > left + 0.005;
