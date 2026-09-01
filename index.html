@@ -5173,6 +5173,7 @@ class Component extends DCLogic {
         // The shared load never answered. Leave autosave disarmed: this browser is holding
         // whatever it had locally and saving that would overwrite everyone else.
         this._setSave('projects', 'error');
+        this._retryProjects(0);
         this._applyDeepLink();
         return;
       }
@@ -5180,7 +5181,7 @@ class Component extends DCLogic {
       if (Array.isArray(serverProjects) && serverProjects.length) {
         // Anything this machine had that never reached the server goes back in here, and only
         // ever as an addition — see _addMissing.
-        const recovered = this._recoverProjWal(serverProjects, row && row.updated_at);
+        const recovered = this._recoverProjWal(serverProjects);
         const use = recovered || serverProjects;
         const _dupes = this._dedupeIds(use);
         this._lastSavedProjects = serverProjects;
@@ -5191,6 +5192,31 @@ class Component extends DCLogic {
       this._projLoaded = true;
       this._applyDeepLink(); // ?project=&bill=/&claim= → open that record
     }).catch(() => { this._setSave('projects', 'error'); });
+  }
+  // Same as the catalogues: keep asking. When it lands, whatever was done in the meantime is
+  // laid over the server's copy, and only then is saving armed.
+  _retryProjects(attempt) {
+    const n = attempt || 0;
+    const wait = Math.min(60000, 4000 * Math.pow(2, Math.min(n, 4)));
+    clearTimeout(this._retryProj);
+    this._retryProj = setTimeout(() => {
+      if (!this.currentUser()) { this._retryProjects(n + 1); return; }
+      this._sbLoadCatalogFull('projects').then(row => {
+        if (!row || !Array.isArray(row.data)) { this._retryProjects(n + 1); return; }
+        const mineNow = this.state.projects || [];
+        this._setBaseline('projects', row.data, row.updated_at);
+        const over = this._localOver('projects', row.data, mineNow, false);
+        const use = over || row.data;
+        this._lastSavedProjects = row.data;
+        this.setState({ projects: use }, () => {
+          this._projLoaded = true;
+          const rec = this._recoverWal('projects', this.state.projects);
+          if (rec != null) this._adoptCatalog('projects', rec);
+          if (over || rec) { this._setSave('projects', 'restored'); this.flushProjects(); }
+          else this._setSave('projects', 'saved');
+        });
+      }).catch(() => this._retryProjects(n + 1));
+    }, wait);
   }
   componentDidUpdate() {
     this._initSigEditor(); // populate the signature editor once when it appears
@@ -5209,11 +5235,8 @@ class Component extends DCLogic {
         this._setSave('projects', 'saving');
         if (this._projTimer) clearTimeout(this._projTimer);
         this._projTimer = setTimeout(() => {
-          // On disk here first. If the window goes away mid-flight, or the network never
-          // answers, this is what the next session finds.
-          this._writeProjWal(snapshot);
           return this._sbSaveCatalog('projects', snapshot)
-            .then(ok => { if (ok !== false) this._clearProjWal(); this._setSave('projects', ok === false ? 'error' : 'saved'); })
+            .then(ok => { this._setSave('projects', ok === false ? 'error' : 'saved'); })
             .catch(() => this._setSave('projects', 'error'));
         }, 800);
       }
@@ -5880,7 +5903,10 @@ class Component extends DCLogic {
       // Unblocks anything waiting, but does NOT mark the channel loaded: with no confirmed
       // copy there is nothing to measure a write against, and a write with nothing to measure
       // against is exactly the overwrite this whole change exists to stop.
-      const giveUp = () => { this._setSave(key, 'error'); res(); };
+      // Unblocks anything waiting and leaves the channel disarmed, but no longer gives up on
+      // it: a browser that never got the shared copy is exactly the one whose work has nowhere
+      // to go, and it used to stay that way until the page was reloaded.
+      const giveUp = () => { this._setSave(key, 'error'); this._retryCatalog(key, mapper, 0); res(); };
       this._sbLoadCatalogFull(key).then(row => {
         const res = row ? { ok: true, data: row.data } : { ok: false, data: null };
         if (!res.ok) { giveUp(); return; }
@@ -5889,7 +5915,13 @@ class Component extends DCLogic {
         this._setBaseline(key, row.data, row.updated_at);
         let patch = null;
         try { patch = mapper(res.data); } catch (e) { patch = null; }
-        if (patch) this.setState(patch, done); else done();   // resolve only once state is committed
+        // Anything this machine had that never reached the server goes back in, additively.
+        const after = () => {
+          const rec = this._recoverWal(key, this._currentDoc(key));
+          if (rec != null) { this._adoptCatalog(key, rec); this._setSave(key, 'restored'); this._flushChannel(key); }
+          done();
+        };
+        if (patch) this.setState(patch, after); else after();   // resolve only once state is committed
       }).catch(giveUp);
     });
     return this._catReadyMap[key];
@@ -6025,6 +6057,8 @@ class Component extends DCLogic {
   }
   // Put a reconciled document back into this window, so it stops trying to write its stale one.
   _adoptCatalog(key, doc) {
+    const tk = this._timerFor(key);
+    if (tk && this[tk]) { clearTimeout(this[tk]); this[tk] = null; }
     const patch = {
       company: () => ({ company: this._normCompany(doc) }),
       defaults: () => ({ defaults: doc || {} }),
@@ -6069,7 +6103,10 @@ class Component extends DCLogic {
       return run;
     }
     const url = c.url + '/rest/v1/app_catalog';
-    const settle = (doc, rev) => { this._setBaseline(key, doc, rev); this._broadcastSave(key, doc, rev); return true; };
+    // On this machine before it goes anywhere. If the network never answers, or the window
+    // closes mid-flight, this is what the next session finds.
+    this._writeWal(key, data);
+    const settle = (doc, rev) => { this._setBaseline(key, doc, rev); this._clearWal(key); this._broadcastSave(key, doc, rev); return true; };
 
     // No row of ours yet, or no stamp to go on: create it.
     const insert = doc => fetch(url, {
@@ -6124,53 +6161,183 @@ class Component extends DCLogic {
   // It cannot be pushed to the server on the way out: the document is close to a megabyte and a
   // browser will not carry a body that size through an unload. So it is written where a write is
   // instant and cannot fail for want of a network — this machine — and picked up next time.
-  _projWal() { return 'cubicProjectsWAL'; }
-  _writeProjWal() {
+  // ---- the journal, for every shared document ---------------------------------------------------
+  // It used to cover the budget and nothing else, which is how seven cost codes went the same way
+  // as the budget lines on the same afternoon: the browser could not save, and only one of the nine
+  // shared documents had anywhere local to fall back to. All nine are written down now.
+  _walKey(ch) { return 'cubicWAL:' + ch; }
+
+  // Channels whose fallback, when the server cannot be read, is a built-in demo set rather than
+  // this person's own data. A journal written against one of those must never be allowed to
+  // introduce records the server has not heard of, or a reconnect would push demo rows into
+  // everybody's data.
+  _walSeeded(ch) { return ch === 'projects' || ch === 'vendors'; }
+  // Small, and made of values rather than records — so the only way to know an edit from a
+  // disagreement is to remember what it was edited from.
+  _walKeepsBase(ch) { return ['company', 'defaults', 'financial', 'ap_settings'].indexOf(ch) >= 0; }
+
+  _walSnapshot(ch, doc) {
+    return {
+      at: new Date().toISOString(),
+      user: (this.currentUser() || {}).email || '',
+      rev: this._revs()[ch] || '',
+      loaded: ch === 'projects' ? !!this._projLoaded : !!this._catIsLoaded(ch),
+      data: (doc === undefined) ? this._currentDoc(ch) : doc,
+      base: this._walKeepsBase(ch) ? (this._baseline()[ch] === undefined ? null : this._baseline()[ch]) : undefined,
+    };
+  }
+  _writeWal(ch, doc) {
     try {
-      if (typeof localStorage === 'undefined') return false;
-      localStorage.setItem(this._projWal(), JSON.stringify({
-        at: new Date().toISOString(),
-        rev: this._revs().projects || '',
-        user: (this.currentUser() || {}).email || '',
-        data: this.state.projects || [],
-      }));
+      if (typeof localStorage === 'undefined') return true;
+      localStorage.setItem(this._walKey(ch), JSON.stringify(this._walSnapshot(ch, doc)));
+      if (this._walFailed) delete this._walFailed[ch];
       return true;
     } catch (e) {
-      // Out of room. Worth knowing about rather than failing quietly, because it means the
-      // safety net is not there.
-      this._walFull = true;
+      // Out of room. The budget is the big one and the valuable one, so the small journals are
+      // given up to make space for it rather than the other way round.
+      if (ch === 'projects') {
+        try {
+          this._sharedKeys().forEach(k => { if (k !== 'projects') localStorage.removeItem(this._walKey(k)); });
+          localStorage.setItem(this._walKey(ch), JSON.stringify(this._walSnapshot(ch, doc)));
+          if (this._walFailed) delete this._walFailed[ch];
+          return true;
+        } catch (e2) {}
+      }
+      // Nowhere to put it. The person needs to know the net is not there.
+      this._walFailed = this._walFailed || {};
+      this._walFailed[ch] = true;
       return false;
     }
   }
-  _clearProjWal() { try { if (typeof localStorage !== 'undefined') localStorage.removeItem(this._projWal()); } catch (e) {} }
-  _readProjWal() {
+  _clearWal(ch) { try { if (typeof localStorage !== 'undefined') localStorage.removeItem(this._walKey(ch)); } catch (e) {} }
+  _readWal(ch) {
     try {
       if (typeof localStorage === 'undefined') return null;
-      const raw = localStorage.getItem(this._projWal());
+      const raw = localStorage.getItem(this._walKey(ch));
       const o = raw ? JSON.parse(raw) : null;
-      return (o && Array.isArray(o.data)) ? o : null;
+      return (o && o.data !== undefined) ? o : null;
     } catch (e) { return null; }
   }
+  _walIsFailing() { const f = this._walFailed || {}; return Object.keys(f).some(k => f[k]); }
 
-  // Anything still unwritten when the window goes away. Hiding a tab still leaves the page alive,
-  // so that one can go over the network properly; a close cannot, and gets the local copy.
+  // Local work laid over the server's copy. Additive only — see _addMissing — and when the local
+  // side was never confirmed against the server, records the server has never seen are dropped
+  // first for the channels that fall back to demo data.
+  _localOver(ch, serverDoc, mine, wasLoaded) {
+    let use = mine;
+    if (!wasLoaded && this._walSeeded(ch) && Array.isArray(use) && Array.isArray(serverDoc)) {
+      const known = {}; serverDoc.forEach(x => { const k = this._idOf(x); if (k != null) known[k] = 1; });
+      use = use.filter(x => known[this._idOf(x)] != null);
+    }
+    const out = this._addMissing(serverDoc, use);
+    if (out == null || this._sameJson(out, serverDoc)) return null;
+    return out;
+  }
+
+  _recoverWal(ch, serverDoc) {
+    const wal = this._readWal(ch);
+    if (!wal) return null;
+    const me = (this.currentUser() || {}).email || '';
+    if (wal.user && me && wal.user !== me) { this._clearWal(ch); return null; }   // somebody else's
+    if (this._sameJson(wal.data, serverDoc)) { this._clearWal(ch); return null; } // it did get out
+    const rev = this._revs()[ch] || '';
+    let out;
+    if (wal.rev && rev && wal.rev === rev) {
+      out = wal.data;                                     // nothing moved since; take it back whole
+    } else if (wal.base !== undefined && wal.base !== null) {
+      // A real three-way merge: what it was edited from, what was typed, what is there now.
+      out = this._merge3(wal.base, wal.data, serverDoc);
+      if (out != null && this._sameJson(out, serverDoc)) out = null;
+    } else {
+      out = this._localOver(ch, serverDoc, wal.data, !!wal.loaded);
+    }
+    if (out == null) { this._clearWal(ch); return null; }
+    // Deliberately NOT cleared here. settle() removes it once the server has confirmed the
+    // write; until then this is still the only copy.
+    this._walRecovered = true;
+    return out;
+  }
+
+  // The projects journal keeps its old names so every existing call site still reads plainly.
+  _writeProjWal(doc) { return this._writeWal('projects', doc); }
+  _clearProjWal() { this._clearWal('projects'); }
+  _readProjWal() { return this._readWal('projects'); }
+  _recoverProjWal(serverDoc) { return this._recoverWal('projects', serverDoc); }
+
+  // ---- a load that failed is tried again --------------------------------------------------------
+  // A channel that could not be read used to stay dead for the whole session: nothing was written,
+  // nothing was retried, and everything done in that browser had nowhere to go. It now keeps
+  // trying, and when it finally lands, whatever was done in the meantime is laid over the server's
+  // copy rather than under it.
+  _retryCatalog(key, mapper, attempt) {
+    const n = attempt || 0;
+    const wait = Math.min(60000, 4000 * Math.pow(2, Math.min(n, 4)));
+    clearTimeout(this['_retry_' + key]);
+    this['_retry_' + key] = setTimeout(() => {
+      if (!this.currentUser()) { this._retryCatalog(key, mapper, n + 1); return; }
+      this._sbLoadCatalogFull(key).then(row => {
+        if (!row) { this._retryCatalog(key, mapper, n + 1); return; }
+        const mineNow = this._currentDoc(key);
+        this._setBaseline(key, row.data, row.updated_at);
+        let patch = null;
+        try { patch = mapper ? mapper(row.data) : null; } catch (e) { patch = null; }
+        const settle = () => {
+          this._catLoadedMap = this._catLoadedMap || {};
+          this._catLoadedMap[key] = true;
+          // Edits made while disconnected go on top of what the server has, never underneath it.
+          const over = this._localOver(key, row.data, mineNow, false);
+          if (over != null) this._adoptCatalog(key, over);
+          const rec = this._recoverWal(key, this._currentDoc(key));
+          if (rec != null) this._adoptCatalog(key, rec);
+          if (over != null || rec != null) { this._setSave(key, 'restored'); this._flushChannel(key); }
+          else this._setSave(key, 'saved');
+        };
+        if (patch) this.setState(patch, settle); else settle();
+      }).catch(() => this._retryCatalog(key, mapper, n + 1));
+    }, wait);
+  }
+
+  // ---- leaving the window -----------------------------------------------------------------------
+  // Hiding a tab leaves the page alive, so that case can still go over the network properly. A
+  // close cannot: the budget alone is close to a megabyte and no browser will carry a body that
+  // size through an unload. So everything still outstanding is written where a write is instant
+  // and cannot fail for want of a network — this machine.
   _initExitGuards() {
     if (this._exitGuarded || typeof window === 'undefined') return;
     this._exitGuarded = true;
-    // Deliberately not conditional on the load having worked. That is the case that needs it.
-    const dirty = () => this.state.projects !== this._lastSavedProjects;
+    // Every document, not only the budget. Comparing content is affordable here because this runs
+    // when a window is being hidden or closed, never while somebody is typing.
+    const journalAll = () => {
+      this._sharedKeys().forEach(ch => {
+        const base = this._baseline()[ch];
+        const now = this._currentDoc(ch);
+        if (base !== undefined && this._sameJson(base, now)) return;
+        this._writeWal(ch, now);
+      });
+    };
+    const anyDirty = () => this._sharedKeys().some(ch => {
+      const b = this._baseline()[ch];
+      return b !== undefined && !this._sameJson(b, this._currentDoc(ch));
+    });
     try {
       document.addEventListener('visibilitychange', () => {
         if (document.visibilityState !== 'hidden') return;
-        if (dirty()) this._writeProjWal();
-        // The page is still running here, so a real save is possible and is the better outcome.
+        journalAll();
+        // Still running here, so a real save is possible and is the better outcome.
         Object.keys(this._saveChannels()).forEach(ch => {
           const st = (this.state.saveStatus || {})[ch];
-          if (st === 'saving' || st === 'error' || (ch === 'projects' && dirty())) this._flushChannel(ch);
+          if (st === 'saving' || st === 'error' || (ch === 'projects' && this.state.projects !== this._lastSavedProjects)) this._flushChannel(ch);
         });
       });
-      window.addEventListener('pagehide', () => { if (dirty()) this._writeProjWal(); });
-      window.addEventListener('beforeunload', () => { if (dirty()) this._writeProjWal(); });
+      window.addEventListener('pagehide', journalAll);
+      window.addEventListener('beforeunload', e => {
+        journalAll();
+        // Only worth stopping somebody when the journal itself could not be written. With it, the
+        // work is already safe, and a dialog on every close is one people learn to click through.
+        if (!this._walIsFailing() || !anyDirty()) return;
+        e.preventDefault(); e.returnValue = '';
+        return '';
+      });
     } catch (e) {}
   }
 
@@ -13754,10 +13921,13 @@ class Component extends DCLogic {
     ['company', 'defaults', 'financial', 'vendors', 'cost_codes', 'projects', 'profile', 'ap_invoices', 'ap_settings'].forEach(c => { if (_ssAll[c] === 'synced') _syncN++; });
     // Never loaded means never saved. Saying anything else here is how work goes missing.
     const _noLink = !this._projLoaded;
+    // No connection AND no room to write it down locally is the one state where work is
+    // genuinely at risk, and it has to say so rather than sit on a colour.
+    const _noNet = this._walIsFailing();
     const _gErr = _errN > 0 || _noLink, _gPend = !_gErr && _pendN > 0, _gMrg = !_gErr && !_gPend && _mrgN > 0;
     const globalSaveV = {
       isError: _gErr, isSaving: _gPend, isClean: !_gErr && !_gPend,
-      text: _noLink ? 'Not connected — nothing is being saved' : (_gErr ? 'Not saved — click Save' : (_gPend ? 'Saving…' : (_gMrg ? (_rstN ? 'Recovered work that had not been saved' : 'Merged changes from another window') : (_syncN ? 'Updated with the team’s changes' : 'All changes saved')))),
+      text: (_noLink && _noNet) ? 'Not connected and no room to keep a local copy — save your work elsewhere' : _noLink ? 'Not connected — retrying; a local copy is being kept' : (_gErr ? 'Not saved — click Save' : (_gPend ? 'Saving…' : (_gMrg ? (_rstN ? 'Recovered work that had not been saved' : 'Merged changes from another window') : (_syncN ? 'Updated with the team’s changes' : 'All changes saved')))),
       color: _gErr ? '#b91c1c' : (_gPend ? '#8a6d00' : (_gMrg ? '#1d4ed8' : '#15803d')),
       bg: _gErr ? '#fdecec' : (_gPend ? '#fdf6e3' : (_gMrg ? '#e7eefc' : '#eef8f1')),
       dot: _gErr ? '#dc2626' : (_gPend ? '#e0a800' : '#22a35a'),
