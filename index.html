@@ -6120,7 +6120,21 @@ class Component extends DCLogic {
       () => this._sbRowMeta(key).then(at => settle(doc, at), () => settle(doc, null))) : false)).catch(() => false);
 
     const known = this._revs()[key];
-    if (!known) return insert(data);
+    if (!known) {
+      // No confirmed copy to measure against. If there is genuinely no row, this is the first
+      // write and an insert is right. If there IS one, we have never read it, so it must not be
+      // replaced by ours — ours goes on top of it and is written conditionally like anything
+      // else.
+      return this._sbLoadCatalogFull(key).then(row => {
+        if (!row) return insert(data);
+        this._setBaseline(key, row.data, row.updated_at);
+        const over = this._localOver(key, row.data, data, false);
+        if (over == null) { this._adoptCatalog(key, row.data); this._noteMerge(key); return true; }
+        this._adoptCatalog(key, over);
+        this._noteMerge(key);
+        return this._sbSaveCatalog(key, over, (depth || 0) + 1);
+      }).catch(() => false);
+    }
 
     const known_ms = Date.parse(known);
     const stamp = new Date(Math.max(Date.now(), (isNaN(known_ms) ? 0 : known_ms) + 1)).toISOString();
@@ -6392,28 +6406,6 @@ class Component extends DCLogic {
     };
     try { walk(doc); } catch (e) { return 0; }
     return fixed;
-  }
-  _recoverProjWal(serverDoc, serverRev) {
-    const wal = this._readProjWal();
-    if (!wal) return null;
-    const me = (this.currentUser() || {}).email || '';
-    if (wal.user && me && wal.user !== me) { this._clearProjWal(); return null; }   // not this person's work
-    if (this._sameJson(wal.data, serverDoc)) { this._clearProjWal(); return null; } // it did get out
-    let out;
-    if (wal.rev && serverRev && wal.rev === serverRev) {
-      out = wal.data;                       // nothing moved since; take it back whole
-    } else if (wal.rev) {
-      out = this._addMissing(serverDoc, wal.data);   // based on a real copy, once
-    } else {
-      // Never confirmed against the server at all, so this may be the demo seed with somebody's
-      // work layered on top. Only projects the server already has are considered.
-      const known = {}; (serverDoc || []).forEach(p => { if (p && p.id) known[p.id] = 1; });
-      out = this._addMissing(serverDoc, (wal.data || []).filter(p => p && known[p.id]));
-    }
-    if (out == null || this._sameJson(out, serverDoc)) { this._clearProjWal(); return null; }
-    this._clearProjWal();
-    this._walRecovered = true;
-    return out;
   }
 
   // ---- windows in the same browser ---------------------------------------------------------------
@@ -7276,7 +7268,6 @@ class Component extends DCLogic {
   }
   setFileFolder(k) { this.setState({ fileFolder: k }); }
   setPhotoGroup(v) { this.setState({ photoGroup: v }); }
-  setBillSort(v) { this.setState({ billSort: v }); }
   setBillStatus(v) { this.setState({ billStatus: v }); }
   setPhotoDesc(id, val) { this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, photos: (p.photos || []).map(ph => ph.id === id ? { ...ph, desc: val } : ph), defects: (p.defects || []).map(d => ({ ...d, photos: (d.photos || []).map(ph => ph.id === id ? { ...ph, desc: val } : ph) })), docs: (p.docs || []).map(d => ({ ...d, attachments: (d.attachments || []).map(a => a.id === id ? { ...a, desc: val } : a) })) }) })); }
   addProjectPhoto(e) { if (!this.can('documents', 'edit')) return; const files = Array.from((e.target && e.target.files) || []); if (!files.length) return; files.forEach(file => { this._sbUploadFile(file, 'photos').then(url => { if (!url) return; const ph = { id: 'ph' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), name: file.name || 'photo', url, type: file.type || '', at: this.todayLocal(), desc: '' }; this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, photos: [...(p.photos || []), ph] }) })); }); }); if (e.target) e.target.value = ''; }
@@ -8791,7 +8782,8 @@ class Component extends DCLogic {
   }
   apSettings() { const d = this.apSettingsSeed(); const s = this.state.apSettings || {}; const out = Object.assign({}, d, s); out.rules = (s.rules && s.rules.length) ? d.rules.map(r => Object.assign({}, r, (s.rules.find(x => x.key === r.key) || {}))) : d.rules; out.approvalLimits = Object.assign({}, d.approvalLimits, s.approvalLimits || {}); return out; }
   _saveApSettings(obj) {
-    if (!this._catIsLoaded('ap_settings')) return;
+    this._writeWal('ap_settings', obj || {});
+    if (!this._catIsLoaded('ap_settings')) { this._setSave('ap_settings', 'error'); return; }
     this._setSave('ap_settings', 'saving');
     clearTimeout(this._apSetTimer);
     this._apSetTimer = setTimeout(() => this._sbSaveCatalog('ap_settings', obj || {}).then(ok => this._setSave('ap_settings', ok === false ? 'error' : 'saved')).catch(() => this._setSave('ap_settings', 'error')), 500);
@@ -8823,7 +8815,9 @@ class Component extends DCLogic {
   apAll() { return this.state.apInvoices || []; }
   apInv(id) { return this.apAll().find(x => x.id === id) || null; }
   _saveApInvoices(list) {
-    if (!this._catIsLoaded('ap_invoices')) return;
+    // Written down first. Returning here without it is how a day's work ends up nowhere.
+    this._writeWal('ap_invoices', list || []);
+    if (!this._catIsLoaded('ap_invoices')) { this._setSave('ap_invoices', 'error'); return; }
     this._setSave('ap_invoices', 'saving');
     clearTimeout(this._apInvTimer);
     this._apInvTimer = setTimeout(() => this._sbSaveCatalog('ap_invoices', list || []).then(ok => this._setSave('ap_invoices', ok === false ? 'error' : 'saved')).catch(() => this._setSave('ap_invoices', 'error')), 600);
