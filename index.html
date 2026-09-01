@@ -796,7 +796,10 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
               </div>
               <div style="padding:10px 16px;border-bottom:1px solid #eef1f4;display:flex;align-items:center;justify-content:space-between;gap:12px">
                 <div style="display:flex;align-items:center;gap:9px;width:100%;max-width:440px;border:1.5px solid #b9c3d0;border-radius:10px;background:#fff;padding:9px 13px"><span style="font-size:15px;line-height:1;flex:0 0 auto">🔍</span><input value="{{ settingsV.codeSearch.value }}" onInput="{{ settingsV.codeSearch.onInput }}" placeholder="Search cost codes — code or description" style="flex:1;min-width:0;border:0;outline:none;background:transparent;font-size:14px;color:#0f1720;font-family:inherit"></div>
-                <sc-if value="{{ settingsV.codeSearch.has }}" hint-placeholder-val="{{ false }}"><span style="font-size:12px;color:#8894a2;white-space:nowrap">{{ settingsV.codeSearch.shown }} of {{ settingsV.codeSearch.total }} parent codes</span></sc-if>
+                <div style="display:flex;align-items:center;gap:12px;white-space:nowrap">
+                  <sc-if value="{{ settingsV.codeSearch.has }}" hint-placeholder-val="{{ false }}"><span style="font-size:12px;color:#8894a2">{{ settingsV.codeSearch.shown }} of {{ settingsV.codeSearch.total }} parent codes</span></sc-if>
+                  <button onClick="{{ settingsV.codeExpand.onToggle }}" style="border:1px solid #cfd8e2;background:#fff;color:#4a5765;border-radius:8px;padding:7px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="border-color:#2b59c3;color:#2b59c3">{{ settingsV.codeExpand.label }}</button>
+                </div>
               </div>
               <sc-if value="{{ settingsV.hasUploadMsg }}" hint-placeholder-val="{{ false }}">
                 <div style="padding:10px 16px;font-size:12px;line-height:1.5;border-bottom:1px solid {{ settingsV.uploadBorder }};background:{{ settingsV.uploadBg }};color:{{ settingsV.uploadFg }}">{{ settingsV.uploadMsg }}</div>
@@ -805,11 +808,13 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                 <div style="overflow-x:auto"><div style="min-width:760px">
                   <sc-for list="{{ settingsV.parentGroups }}" as="g" hint-placeholder-count="3">
                     <div style="border-bottom:1px solid #e4e8ee">
-                      <div style="display:grid;grid-template-columns:150px 1fr auto;gap:10px;align-items:center;padding:11px 16px;background:#f4f7fb">
+                      <div style="display:grid;grid-template-columns:26px 150px 1fr auto;gap:10px;align-items:center;padding:11px 16px;background:#f4f7fb">
+                        <button onClick="{{ g.onToggle }}" title="{{ g.toggleTitle }}" style="border:1px solid #d6dee8;background:#fff;color:#4a5765;border-radius:6px;width:26px;height:26px;font-size:11px;line-height:1;cursor:pointer;font-family:inherit;padding:0" style-hover="border-color:#2b59c3;color:#2b59c3">{{ g.caret }}</button>
                         <input value="{{ g.parentCode }}" onInput="{{ g.onParentCode }}" placeholder="Parent code" class="mono" style="width:100%;border:1px solid #d6dee8;border-radius:6px;padding:7px 9px;font-size:12.5px;font-weight:700;font-family:'IBM Plex Mono',monospace;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none">
                         <input value="{{ g.parentDesc }}" onInput="{{ g.onParentDesc }}" placeholder="Parent code description (e.g. PRELIMINARIES)" style="width:100%;border:1px solid #d6dee8;border-radius:6px;padding:7px 9px;font-size:12.5px;font-weight:600;font-family:inherit;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none">
                         <div style="display:flex;align-items:center;gap:10px"><span style="font-size:10.5px;color:#8894a2;white-space:nowrap">{{ g.childCount }} child</span><button onClick="{{ g.onDeleteParent }}" title="Delete this parent and all its child codes" style="border:1px solid #f0d4d4;background:#fff;color:#b91c1c;border-radius:7px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap" style-hover="background:#fdecec">✕ Parent</button></div>
                       </div>
+                      <sc-if value="{{ g.open }}" hint-placeholder-val="{{ true }}">
                       <div style="padding:6px 16px 12px 16px">
                         <div style="display:grid;grid-template-columns:150px 1fr 40px;gap:10px;padding:5px 0 4px 26px;font-size:9.5px;font-weight:700;letter-spacing:.3px;color:#a4afba;text-transform:uppercase">
                           <div>Child code</div><div>Child code description</div><div></div>
@@ -823,6 +828,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                         </sc-for>
                         <button onClick="{{ g.onAddChild }}" style="margin:8px 0 0 26px;border:1px dashed #cfd8e2;background:#fff;color:#2b59c3;border-radius:7px;padding:6px 12px;font-size:11.5px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="border-color:#2b59c3;background:#f5f8ff">＋ Add child code</button>
                       </div>
+                      </sc-if>
                     </div>
                   </sc-for>
                 </div></div>
@@ -4990,6 +4996,7 @@ class Component extends DCLogic {
       payConfirm: "",
       budgetColW: this._loadBudgetColW(),
       budgetColOrder: this._loadBudgetColOrder(),
+      codeOpen: this._loadCodeOpen(),
       budgetColHidden: this._loadBudgetColHidden(),
       budgetColMenu: false,
       budgetSort: { col: '', dir: 'asc' },
@@ -12745,6 +12752,28 @@ class Component extends DCLogic {
   }
   sigLink() { let url = ''; try { url = window.prompt('Link URL', 'https://'); } catch (e) {} if (url) this.sigExec('createLink', url); }
   _cid() { return this._rid('cc'); }
+
+  // ---- the cost-code catalogue, section by section ---------------------------------------------
+  // Every section used to be open, so the page was a two-hundred-and-fifty-nine row wall and the
+  // one code you wanted was somewhere in the middle of it. They start closed; which ones you left
+  // open is remembered on this machine, because it is a view preference and not shared data.
+  _loadCodeOpen() {
+    try { if (typeof localStorage === 'undefined') return {}; const raw = localStorage.getItem('cubicCodeOpen'); const o = raw ? JSON.parse(raw) : null; return (o && typeof o === 'object') ? o : {}; } catch (e) { return {}; }
+  }
+  _saveCodeOpen(o) { try { if (typeof localStorage !== 'undefined') localStorage.setItem('cubicCodeOpen', JSON.stringify(o || {})); } catch (e) {} }
+  codeSectionOpen(id) { const o = this.state.codeOpen || {}; return !!o[id]; }
+  toggleCodeSection(id) {
+    const o = Object.assign({}, this.state.codeOpen || {});
+    if (o[id]) delete o[id]; else o[id] = 1;
+    this._saveCodeOpen(o);
+    this.setState({ codeOpen: o });
+  }
+  setAllCodeSections(open) {
+    const o = {};
+    if (open) (this.state.customCodes || []).forEach(p => { o[p.id] = 1; });
+    this._saveCodeOpen(o);
+    this.setState({ codeOpen: o });
+  }
   // Time so it sorts and can be dated; randomness so two windows cannot mint the same one.
   _rid(prefix) { return String(prefix || 'id') + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
   // fn(list) -> nextList, applied to the loaded catalogue (an array is still accepted)
@@ -16305,11 +16334,23 @@ class Component extends DCLogic {
         onParentCode: e => this.setParentField(par.id, 'parentCode', e.target.value), onParentDesc: e => this.setParentField(par.id, 'parentDesc', e.target.value),
         onAddChild: () => this.addChildCode(par.id), onDeleteParent: () => this.deleteParent(par.id),
         childCount: String((par.children || []).length),
+        // A search is a request to see what matched, so matches open regardless.
+        open: _codeq ? true : this.codeSectionOpen(par.id),
+        closed: _codeq ? false : !this.codeSectionOpen(par.id),
+        caret: (_codeq || this.codeSectionOpen(par.id)) ? '▾' : '▸',
+        onToggle: () => this.toggleCodeSection(par.id),
+        toggleTitle: (_codeq || this.codeSectionOpen(par.id)) ? 'Hide the child codes' : 'Show the child codes',
         children: (par.children || []).map(ch => ({ id: ch.id, childCode: ch.childCode || '', childDesc: ch.childDesc || '',
           onChildCode: e => this.setChildField(par.id, ch.id, 'childCode', e.target.value), onChildDesc: e => this.setChildField(par.id, ch.id, 'childDesc', e.target.value),
           onDelete: () => this.deleteChildCode(par.id, ch.id) })),
       }));
       const childTotal = parentGroups.reduce((a, g) => a + g.children.length, 0);
+      const _openN = parentGroups.filter(g => g.open).length;
+      const codeExpandV = {
+        label: _openN ? 'Collapse all' : 'Expand all',
+        onToggle: () => this.setAllCodeSections(_openN === 0),
+        openCount: String(_openN),
+      };
       const inUseCount = this.costCodeCatalog().length;
       const up = S.codeUpload || null;
       const co = S.company || this._companyDefaults();
@@ -16530,7 +16571,7 @@ class Component extends DCLogic {
       settingsV = { show: true, tab, save: settingsSave, isCompany: tab === 'company', isDefaults: tab === 'defaults', isFinancial: tab === 'financial', isRoles: tab === 'roles', isCodes: tab === 'codes', isTemplates: tab === 'templates', isMyDetails: tab === 'mydetails', isIngestion: tab === 'ingestion', ingestion: ingestionV, company: companyV, defaults: defaultsV, financial: financialV, myDetails: myDetailsV, templates: templatesV,
         tabs: validTabs.map(k => ({ k, l: tabLabels[k], active: tab === k, onClick: () => this.setSettingsTab(k) })).map(t => ({ ...t, bg: t.active ? '#2b59c3' : '#fff', fg: t.active ? '#fff' : '#4a5765', border: t.active ? '#2b59c3' : '#cfd8e2' })),
         matrixHead, matrixRows,
-        parentGroups, codeSearch: codeSearchV, codeCount: String(childTotal), parentCount: String(parentGroups.length), hasCodes: parentGroups.length > 0, noCodes: parentGroups.length === 0, catalogCount: String(inUseCount),
+        parentGroups, codeSearch: codeSearchV, codeExpand: codeExpandV, codeCount: String(childTotal), parentCount: String(parentGroups.length), hasCodes: parentGroups.length > 0, noCodes: parentGroups.length === 0, catalogCount: String(inUseCount),
         hasUploadMsg: !!up, uploadMsg: up ? up.msg : '', uploadBg: up ? (up.ok ? '#eaf6ee' : '#fdecec') : '#fff', uploadFg: up ? (up.ok ? '#15803d' : '#b91c1c') : '#4a5765', uploadBorder: up ? (up.ok ? '#bfe3ca' : '#f4c9c9') : '#eef1f4',
         onAddParent: () => this.addParentGroup(), onUpload: e => this.uploadCostCodes(e), onResetPerms: () => this.resetPerms() };
     }
