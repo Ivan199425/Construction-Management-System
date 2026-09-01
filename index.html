@@ -1845,11 +1845,13 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                   <select value="{{ r.parentCode }}" onChange="{{ r.onParentSelect }}" title="Parent section. Pick one and the code list beside it narrows to that section." style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 5px;font-size:12px;font-family:'IBM Plex Mono',monospace;color:#4a5765;background:#fff;cursor:pointer;{{ r.bc.parentCode }}" style-focus="border-color:#2b59c3;outline:none">
                     <option value="">Section…</option>
                     <sc-for list="{{ r.parentOptions }}" as="pp" hint-placeholder-count="3"><option value="{{ pp.code }}">{{ pp.label }}</option></sc-for>
+                    <option value="__newchild__">{{ r.newInSection }}</option>
+                    <option value="__newparent__">＋ New section + code…</option>
                   </select>
                   <select value="{{ r.code }}" onChange="{{ r.onCodeSelect }}" title="Select a saved cost code" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 5px;font-size:12px;font-family:'IBM Plex Mono',monospace;color:#0f1720;background:#fff;cursor:pointer;{{ r.bc.code }}" style-focus="border-color:#2b59c3;outline:none">
                     <option value="">Select code…</option>
                     <sc-for list="{{ r.codeGroups }}" as="grp" hint-placeholder-count="3"><optgroup label="{{ grp.label }}"><sc-for list="{{ grp.options }}" as="o" hint-placeholder-count="3"><option value="{{ o.code }}">{{ o.label }}</option></sc-for></optgroup></sc-for>
-                    <option value="__new__">＋ New cost code…</option>
+                    <option value="__new__">{{ r.newInSection }}</option>
                   </select>
                   <input value="{{ r.desc }}" onInput="{{ r.onDesc }}" placeholder="Description" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 9px;font-size:12.5px;font-family:inherit;color:#0f1720;background:#fff;{{ r.bc.desc }}" style-focus="border-color:#2b59c3;outline:none">
                   <select value="{{ r.cat }}" onChange="{{ r.onCat }}" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 6px;font-size:12px;font-family:inherit;color:#0f1720;background:#fff;cursor:pointer;{{ r.bc.cat }}" style-focus="border-color:#2b59c3;outline:none">
@@ -4913,7 +4915,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
   <sc-if value="{{ codeModal.open }}" hint-placeholder-val="{{ false }}">
     <div onClick="{{ onCloseCodeModal }}" style="position:fixed;inset:0;background:rgba(15,23,32,.42);display:flex;align-items:center;justify-content:center;z-index:50;animation:fadeUp .15s ease">
       <div onClick="{{ stop }}" style="background:#fff;border-radius:14px;width:420px;max-width:92vw;box-shadow:0 24px 60px rgba(15,23,32,.28);overflow:hidden">
-        <div style="padding:18px 22px;border-bottom:1px solid #eef1f4"><div style="font-size:16px;font-weight:600;color:#0f1720">New cost code</div><div style="font-size:12.5px;color:#8894a2;margin-top:2px">Adds a parent → child code to the catalogue and applies the child code to this line</div></div>
+        <div style="padding:18px 22px;border-bottom:1px solid #eef1f4"><div style="font-size:16px;font-weight:600;color:#0f1720">{{ codeModal.title }}</div><div style="font-size:12.5px;color:#8894a2;margin-top:2px">{{ codeModal.note }}</div></div>
         <div style="padding:20px 22px;display:flex;flex-direction:column;gap:15px">
           <div style="display:flex;gap:12px">
             <div style="flex:0 0 130px"><label style="font-size:12px;font-weight:600;color:#4a5765;display:block;margin-bottom:5px">Parent code</label><input value="{{ codeModal.parentCode }}" onInput="{{ onCodeModalParentCode }}" placeholder="e.g. 02" class="mono" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:'IBM Plex Mono',monospace"></div>
@@ -9436,6 +9438,15 @@ class Component extends DCLogic {
   // Picking a parent that the current child does not belong to clears the child, rather than
   // leaving a line claiming to be in two sections at once.
   setLineParent(lineId, parentCode) {
+    // Two ways in, from the section list rather than the code list. Adding into the section
+    // already chosen leaves that section as it was; starting a new one opens the same modal
+    // empty, so a whole code — parent and child together — can be built without going to
+    // Settings for it.
+    if (parentCode === '__newparent__') { this.openNewChildCode(lineId, ''); return; }
+    if (parentCode === '__newchild__') {
+      this.openNewChildCode(lineId, this.lineParent(this.costLine(lineId) || {}).code);
+      return;
+    }
     if (!this.can('financial', 'edit')) return;
     const v = String(parentCode || '').trim();
     this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : Object.assign({}, p, {
@@ -12380,8 +12391,42 @@ class Component extends DCLogic {
       return next;
     }) }) }));
   }
+  // The cost line a row is showing, whatever the sort or filter has done to the order.
+  costLine(lineId) {
+    const p = this.proj(this.state.pid);
+    return ((p && p.costLines) || []).find(x => x.id === lineId) || null;
+  }
+  // The next unused number in a section. Working it out by hand means scrolling the whole
+  // catalogue to find where a section ends, which is the errand that sends people to a second
+  // window in the first place.
+  nextChildCode(parentCode) {
+    const pc = String(parentCode || '').trim();
+    if (!pc) return '';
+    let max = 0;
+    this.costCodeCatalog().forEach(c => {
+      if ((c.parentCode || '') !== pc) return;
+      const m = String(c.code || '').match(/(\d+)\s*$/);
+      if (m) max = Math.max(max, Number(m[1]));
+    });
+    return pc + '-' + String(max + 1).padStart(3, '0');
+  }
+  // Adding a code without leaving the budget. It goes into the shared catalogue in Settings →
+  // Cost codes exactly as if it had been typed there, and is available to every project.
+  openNewChildCode(lineId, parentCode) {
+    const pc = String(parentCode || '').trim();
+    const par = pc ? this.costCodeCatalog().find(c => (c.parentCode || '') === pc) : null;
+    this.setState({
+      codeModal: { lineId: lineId || '', section: pc },
+      codeForm: {
+        parentCode: pc,
+        parentDesc: (par && par.parentDesc) || '',
+        childCode: this.nextChildCode(pc),
+        childDesc: '',
+      },
+    });
+  }
   onCodeSelect(lineId, val) {
-    if (val === '__new__') { this.setState({ codeModal: { lineId }, codeForm: { parentCode: '', parentDesc: '', childCode: '', childDesc: '' } }); return; }
+    if (val === '__new__') { this.openNewChildCode(lineId, this.lineParent(this.costLine(lineId) || {}).code); return; }
     this.applyCode(lineId, val);
   }
   setCodeForm(k, v) { this.setState(s => ({ codeForm: { ...s.codeForm, [k]: v } })); }
@@ -14923,6 +14968,8 @@ class Component extends DCLogic {
           current: this.money(this.lineCurrent(l, p)), eac: this.money(this.lineForecast(l, p)), variance: this.signed(variance), varColor: this.varColor(variance),
           pct: (() => { const v = this.linePctSpent(l, p); return v == null ? '—' : v + '%'; })(),
           parentCode: _parentOf(l), parentOptions: _parentOptions,
+          hasSection: !!_parentOf(l),
+          newInSection: (() => { const pc = _parentOf(l); const o = _parentOptions.find(x => x.code === pc); return pc ? ('＋ New code in ' + ((o && o.label) || pc) + '…') : '＋ New cost code…'; })(),
           onParentSelect: e => this.setLineParent(l.id, e.target.value),
           codeCatalog, codeGroups: this.lineChildGroups(l), onCodeSelect: e => this.onCodeSelect(l.id, e.target.value),
           onCode: e => this.setLineField(l.id, 'code', e.target.value),
@@ -16660,7 +16707,15 @@ class Component extends DCLogic {
       commitmentRows, commitSearchV, costLineRows, costTotals, chart, costInsight, markupSummary, budgetColTemplate, budgetMinWidth, budgetHeaderCols, budgetTotalCols, colMenuItems, budgetColMenu: S.budgetColMenu, onToggleColMenu: () => this.toggleBudgetColMenu(), onCloseColMenu: () => this.closeBudgetColMenu(), onResetBudgetCols: () => this.resetBudgetCols(), budgetCatOptions, budgetCatValue, budgetFiltered, budgetRowCount, budgetTotalLineCount, onBudgetCatFilter: e => this.setBudgetCatFilter(e.target.value), budgetHasLines: (p && (p.costLines || []).length > 0), onGenSchedule: () => this.generateScheduleFromBudget(), budgetVarRows, varSearchV, budgetVarApproved, budgetVarHas, budgetVarEmpty, onAddVariation: () => this.addVariation(), onAddCostLine: () => this.addCostLine(),
       onExportCsv: () => this.exportCostReportExcel(), onExportPdf: () => this.exportPdf(),
       onDownloadPdf: () => this.downloadCostReportPdf(), onExportCsvRaw: () => this.exportCsv(),
-      codeModal: S.codeModal ? { open: true, parentCode: S.codeForm.parentCode, parentDesc: S.codeForm.parentDesc, childCode: S.codeForm.childCode, childDesc: S.codeForm.childDesc } : { open: false },
+      codeModal: S.codeModal ? {
+        open: true,
+        parentCode: S.codeForm.parentCode, parentDesc: S.codeForm.parentDesc,
+        childCode: S.codeForm.childCode, childDesc: S.codeForm.childDesc,
+        title: S.codeModal.section ? ('New code in ' + S.codeModal.section + (S.codeForm.parentDesc ? ' · ' + S.codeForm.parentDesc : '')) : 'New cost code',
+        note: S.codeModal.lineId
+          ? 'Saved to the cost-code catalogue in Settings → Cost codes, and applied to this line.'
+          : 'Goes into the cost-code catalogue in Settings → Cost codes, ready for every project.',
+      } : { open: false },
       onCodeModalParentCode: (e) => this.setCodeForm('parentCode', e.target.value), onCodeModalParentDesc: (e) => this.setCodeForm('parentDesc', e.target.value),
       onCodeModalChildCode: (e) => this.setCodeForm('childCode', e.target.value), onCodeModalChildDesc: (e) => this.setCodeForm('childDesc', e.target.value),
       onCloseCodeModal: () => this.closeCodeModal(), onSaveCode: () => this.saveCode(),
