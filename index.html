@@ -9660,16 +9660,19 @@ class Component extends DCLogic {
     });
     return out;
   }
-  // Once a section is picked on a line that has no code yet, only that section is offered,
-  // which is the point of choosing the parent first. A line that already carries a code keeps
-  // the whole list, so no code that used to be reachable from here stops being reachable.
+  // The codes worth offering on this line: its section and nothing else. Whether the section was
+  // chosen by hand or follows from the code already on the line makes no difference — a list of
+  // 250 codes to pick a plumbing code out of is not a list, and every one of the other 240 is a
+  // miscoding waiting to happen.
+  //
+  // Changing section is done in the section dropdown beside it, which clears the code and
+  // re-narrows this one. Adding a code to the section is the last entry in this list.
   lineChildGroups(l) {
     const all = this.costCodeGroups();
-    if (l && l.code) return all;
-    const picked = String((l && l.parentCode) == null ? '' : l.parentCode).trim();
-    if (!picked) return all;
-    const hit = all.filter(g => g.key === picked);
-    return hit.length ? hit : all;
+    const par = this.lineParent(l).code;
+    if (!par) return all;
+    const hit = all.filter(g => g.key === par);
+    return hit.length ? hit : all;   // a code whose section is not in the catalogue: show everything
   }
   // Picking a parent that the current child does not belong to clears the child, rather than
   // leaving a line claiming to be in two sections at once.
