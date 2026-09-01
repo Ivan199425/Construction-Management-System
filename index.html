@@ -6190,6 +6190,22 @@ class Component extends DCLogic {
   // introduce records the server has not heard of, or a reconnect would push demo rows into
   // everybody's data.
   _walSeeded(ch) { return ch === 'projects' || ch === 'vendors'; }
+  // The built-in demo records, by id. They are fixed, so they can be told apart from anything
+  // a person actually created — which is the difference between refusing to push demo rows
+  // into shared data and refusing to save somebody's afternoon.
+  _seedIds(ch) {
+    this._seedIdCache = this._seedIdCache || {};
+    if (this._seedIdCache[ch]) return this._seedIdCache[ch];
+    let list = [];
+    try {
+      if (ch === 'projects') list = this.seed() || [];
+      else if (ch === 'vendors') list = this.seedVendors() || [];
+    } catch (e) { list = []; }
+    const m = {};
+    (list || []).forEach(x => { const k = this._idOf(x); if (k != null) m[k] = 1; });
+    this._seedIdCache[ch] = m;
+    return m;
+  }
   // Small, and made of values rather than records — so the only way to know an edit from a
   // disagreement is to remember what it was edited from.
   _walKeepsBase(ch) { return ['company', 'defaults', 'financial', 'ap_settings'].indexOf(ch) >= 0; }
@@ -6243,9 +6259,9 @@ class Component extends DCLogic {
   // first for the channels that fall back to demo data.
   _localOver(ch, serverDoc, mine, wasLoaded) {
     let use = mine;
-    if (!wasLoaded && this._walSeeded(ch) && Array.isArray(use) && Array.isArray(serverDoc)) {
-      const known = {}; serverDoc.forEach(x => { const k = this._idOf(x); if (k != null) known[k] = 1; });
-      use = use.filter(x => known[this._idOf(x)] != null);
+    if (!wasLoaded && this._walSeeded(ch) && Array.isArray(use)) {
+      const demo = this._seedIds(ch);
+      use = use.filter(x => !demo[this._idOf(x)]);
     }
     const out = this._addMissing(serverDoc, use);
     if (out == null || this._sameJson(out, serverDoc)) return null;
@@ -6329,7 +6345,14 @@ class Component extends DCLogic {
       this._sharedKeys().forEach(ch => {
         const base = this._baseline()[ch];
         const now = this._currentDoc(ch);
-        if (base !== undefined && this._sameJson(base, now)) return;
+        if (base !== undefined && this._sameJson(base, now)) return;   // nothing new here
+        if (base === undefined) {
+          // This session has never reconciled that channel with the server, so what is in
+          // state may be the startup placeholder. Anything already written down was written
+          // by a session that knew more, and is left alone.
+          const existing = this._readWal(ch);
+          if (existing && (existing.rev || existing.loaded)) return;
+        }
         this._writeWal(ch, now);
       });
     };
