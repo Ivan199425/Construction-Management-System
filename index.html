@@ -5154,8 +5154,11 @@ class Component extends DCLogic {
   _loadProjects() {
     this._projLoaded = false;
     this._lastSavedProjects = this.state.projects;
-    this._sbLoadCatalog('projects').then(res => {
-      if (!res || !res.ok) {
+    this._initCatalogSync();
+    this._sbLoadCatalogFull('projects').then(row => {
+      const res = row ? { ok: true, data: row.data } : { ok: false, data: null };
+      if (row) this._setBaseline('projects', row.data, row.updated_at);
+      if (!res.ok) {
         // The shared load never answered. Leave autosave disarmed: this browser is holding
         // whatever it had locally and saving that would overwrite everyone else.
         this._setSave('projects', 'error');
@@ -5844,8 +5847,12 @@ class Component extends DCLogic {
     this._catReadyMap = this._catReadyMap || {};
     this._catReadyMap[key] = new Promise(res => {
       const done = () => { this._catLoadedMap[key] = true; res(); };
-      this._sbLoadCatalog(key).then(res => {
-        if (!res || !res.ok) { done(); return; } // read failed: do not seed the server from local
+      this._sbLoadCatalogFull(key).then(row => {
+        const res = row ? { ok: true, data: row.data } : { ok: false, data: null };
+        if (!res.ok) { done(); return; } // read failed: do not seed the server from local
+        // The copy every later write is measured against. Without it a write has nothing to
+        // compare itself to and falls back to overwriting, which is the bug.
+        this._setBaseline(key, row.data, row.updated_at);
         let patch = null;
         try { patch = mapper(res.data); } catch (e) { patch = null; }
         if (patch) this.setState(patch, done); else done();   // resolve only once state is committed
@@ -5882,13 +5889,221 @@ class Component extends DCLogic {
         : { ok: false, data: null })
       .catch(() => ({ ok: false, data: null }));
   }
-  _sbSaveCatalog(key, data) {
-    const c = this._SB; if (!c || !c.url || !c.key || typeof fetch === 'undefined') return Promise.resolve(false);
-    return fetch(c.url + '/rest/v1/app_catalog', {
+  // ===== Two windows, one document ==============================================================
+  // Every shared channel is a single row holding a single document, and writing it used to be an
+  // unconditional upsert of the whole thing. Two windows open at once — even two belonging to the
+  // same person — each wrote their own complete copy, and the later write silently erased whatever
+  // the earlier one had added. That is how an afternoon of budget lines disappeared from a project
+  // while the screen said "All changes saved": a second window, opened only to add a cost code,
+  // was still holding the budget as it stood when that window was opened, and saved it back.
+  //
+  // Three things stop it now. A write refuses to overwrite a row that has changed since the copy
+  // it is based on, and merges instead. A merge re-applies only what THIS window actually changed,
+  // so the other window's work survives. And windows in the same browser tell each other what they
+  // saved, so the collision usually never happens at all.
+
+  _revs() { this._catRev = this._catRev || {}; return this._catRev; }
+  _baseline() { this._catBase = this._catBase || {}; return this._catBase; }
+  // The document as the server last confirmed it. Everything that differs from this is ours, and
+  // is the only part we are entitled to re-apply over somebody else's newer copy.
+  _setBaseline(key, doc, rev) {
+    this._baseline()[key] = doc;
+    if (rev) this._revs()[key] = rev;
+  }
+
+  _sbRowMeta(key) {
+    const c = this._SB;
+    if (!c || !c.url || typeof fetch === 'undefined') return Promise.resolve(null);
+    return fetch(c.url + '/rest/v1/app_catalog?select=updated_at&key=eq.' + encodeURIComponent(key), { headers: this._sbUserHeaders() })
+      .then(r => (r.ok ? r.json() : null))
+      .then(rows => ((rows && rows[0]) ? rows[0].updated_at : null))
+      .catch(() => null);
+  }
+  _sbLoadCatalogFull(key) {
+    const c = this._SB;
+    if (!c || !c.url || typeof fetch === 'undefined') return Promise.resolve(null);
+    return fetch(c.url + '/rest/v1/app_catalog?select=data,updated_at&key=eq.' + encodeURIComponent(key), { headers: this._sbUserHeaders() })
+      .then(r => (r.ok ? r.json() : null))
+      .then(rows => ((rows && rows[0]) ? rows[0] : null))
+      .catch(() => null);
+  }
+
+  _sameJson(a, b) { try { return JSON.stringify(a) === JSON.stringify(b); } catch (e) { return a === b; } }
+  _isPlain(o) { return !!o && typeof o === 'object' && !Array.isArray(o); }
+  _idOf(x) { return (x && typeof x === 'object') ? (x.id != null ? x.id : (x.key != null ? x.key : (x.parentCode != null ? x.parentCode : x.code))) : undefined; }
+
+  // A three-way merge against the copy the server last confirmed. Merging at the level of whole
+  // projects is not enough — the window building the budget and the window adding a cost code
+  // were both editing the SAME project, so one would still have flattened the other. This goes
+  // down to the individual cost line.
+  //
+  // Nothing in this app mutates in place: every change rebuilds the objects it touches and
+  // leaves the rest alone. So an unchanged reference is proof we did not touch that record, and
+  // that one test decides almost every node without comparing any content.
+  _merge3(base, mine, theirs) {
+    if (mine === theirs) return theirs;
+    if (mine === base) return theirs;                 // untouched here → take theirs
+    if (this._sameJson(base, theirs)) return mine;    // untouched there → keep ours
+    if (Array.isArray(mine) && Array.isArray(theirs)) {
+      const baseArr = Array.isArray(base) ? base : [];
+      // A list whose members cannot be told apart cannot be reconciled member by member.
+      if (mine.some(x => this._idOf(x) == null) || theirs.some(x => this._idOf(x) == null)) return mine;
+      const bById = {}; baseArr.forEach(x => { const k = this._idOf(x); if (k != null) bById[k] = x; });
+      const mById = {}; mine.forEach(x => { const k = this._idOf(x); if (k != null) mById[k] = x; });
+      const out = [], seen = {};
+      // Their order survives; ours contributes only what they do not already have.
+      theirs.forEach(x => {
+        const k = this._idOf(x); seen[k] = 1;
+        if (k in mById) { out.push(this._merge3(bById[k], mById[k], x)); return; }
+        if (k in bById) return;    // we deleted it
+        out.push(x);               // they added it
+      });
+      mine.forEach(x => {
+        const k = this._idOf(x);
+        if (seen[k]) return;
+        if (k in bById) return;    // they deleted it
+        out.push(x);               // we added it
+      });
+      return out;
+    }
+    if (this._isPlain(mine) && this._isPlain(theirs)) {
+      const b = this._isPlain(base) ? base : {};
+      const out = Object.assign({}, theirs);
+      Object.keys(mine).forEach(k => { out[k] = this._merge3(b[k], mine[k], (k in theirs) ? theirs[k] : b[k]); });
+      Object.keys(b).forEach(k => { if (!(k in mine) && (k in out) && this._sameJson(b[k], theirs[k])) delete out[k]; });
+      return out;
+    }
+    // One value, changed on both sides. The person looking at the screen wins, and the pill says
+    // a merge happened so it is not silent.
+    return mine;
+  }
+
+  // Their copy with ours reconciled into it. null means there is no confirmed copy to measure
+  // against, which is the signal to keep theirs rather than guess.
+  _mergeCatalog(key, theirs, mine) {
+    const base = this._baseline()[key];
+    if (base === undefined) return null;
+    try { return this._merge3(base, mine, theirs); } catch (e) { return null; }
+  }
+  // Put a reconciled document back into this window, so it stops trying to write its stale one.
+  _adoptCatalog(key, doc) {
+    const patch = {
+      company: () => ({ company: this._normCompany(doc) }),
+      defaults: () => ({ defaults: doc || {} }),
+      financial: () => ({ financial: doc || {} }),
+      vendors: () => ({ vendors: Array.isArray(doc) ? doc : [] }),
+      cost_codes: () => ({ customCodes: Array.isArray(doc) ? doc : [] }),
+      templates: () => ({ templates: Array.isArray(doc) ? doc : [] }),
+      ap_invoices: () => ({ apInvoices: Array.isArray(doc) ? doc : [] }),
+      ap_settings: () => ({ apSettings: doc || {} }),
+      projects: () => ({ projects: Array.isArray(doc) ? doc : [] }),
+    }[key];
+    if (!patch) return;
+    const p = patch();
+    if (key === 'projects') this._lastSavedProjects = p.projects;   // adopting is not an edit
+    this.setState(p);
+  }
+
+  // A collision is worth saying out loud. It used to be invisible, which is why an afternoon went
+  // missing without anybody noticing until the next morning.
+  _noteMerge(key) {
+    this._setSave(key, 'merged');
+    clearTimeout(this['_merged_' + key]);
+    this['_merged_' + key] = setTimeout(() => { if ((this.state.saveStatus || {})[key] === 'merged') this._setSave(key, 'saved'); }, 6000);
+  }
+
+  // The single place every shared document is written.
+  //
+  // Reading the stamp and then writing would still leave a gap: two windows can both read, both
+  // see nothing newer, and both write. So the stamp goes into the WHERE clause — the update only
+  // matches a row that is still the one we based our copy on. If it matches nothing, somebody
+  // wrote in between, and we reconcile and try again instead of flattening them.
+  _sbSaveCatalog(key, data, depth) {
+    const c = this._SB;
+    if (!c || !c.url || !c.key || typeof fetch === 'undefined') return Promise.resolve(false);
+    const url = c.url + '/rest/v1/app_catalog';
+    const settle = (doc, rev) => { this._setBaseline(key, doc, rev); this._broadcastSave(key, doc, rev); return true; };
+
+    // No row of ours yet, or no stamp to go on: create it.
+    const insert = doc => fetch(url, {
       method: 'POST',
-      headers: this._sbUserHeaders({ 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates,return=minimal' }),
-      body: JSON.stringify([{ key, data, updated_at: new Date().toISOString() }])
-    }).then(r => r.ok).catch(() => false);
+      headers: this._sbUserHeaders({ 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates,return=representation' }),
+      body: JSON.stringify([{ key, data: doc, updated_at: new Date().toISOString() }]),
+    }).then(r => (r.ok ? r.json().then(rows => settle(doc, rows && rows[0] && rows[0].updated_at),
+      () => this._sbRowMeta(key).then(at => settle(doc, at), () => settle(doc, null))) : false)).catch(() => false);
+
+    const known = this._revs()[key];
+    if (!known) return insert(data);
+
+    const stamp = new Date().toISOString();
+    const q = url + '?key=eq.' + encodeURIComponent(key) + '&updated_at=eq.' + encodeURIComponent(known);
+    return fetch(q, {
+      method: 'PATCH',
+      headers: this._sbUserHeaders({ 'Content-Type': 'application/json', Prefer: 'return=representation' }),
+      body: JSON.stringify({ data, updated_at: stamp }),
+    }).then(r => {
+      if (!r.ok) return false;
+      return r.json().then(rows => {
+        if (rows && rows.length) return settle(data, rows[0].updated_at || stamp);
+        // Matched nothing: the row moved on. Reconcile against what is there now and write that.
+        if ((depth || 0) >= 3) return false;   // a row being rewritten faster than we can answer
+        return this._sbLoadCatalogFull(key).then(row => {
+          if (!row) return insert(data);
+          const merged = this._mergeCatalog(key, row.data, data);
+          if (merged == null) {
+            this._setBaseline(key, row.data, row.updated_at);
+            this._adoptCatalog(key, row.data);
+            this._noteMerge(key);
+            return true;
+          }
+          this._revs()[key] = row.updated_at;
+          this._baseline()[key] = row.data;
+          return this._sbSaveCatalog(key, merged, (depth || 0) + 1).then(ok => {
+            if (ok) { this._adoptCatalog(key, merged); this._noteMerge(key); }
+            return ok;
+          });
+        });
+      }, () => false);
+    }).catch(() => false);
+  }
+  // ---- windows in the same browser ---------------------------------------------------------------
+  // Two windows on one machine is the common case and the one that cost a day's work. They can talk
+  // to each other directly, so a save in one becomes the other's copy immediately and the collision
+  // never arises. A window with unsaved edits of its own keeps them: the same merge decides.
+  _initCatalogSync() {
+    if (this._catChan !== undefined) return;
+    this._catChan = null;
+    try {
+      if (typeof BroadcastChannel === 'undefined') return;
+      const ch = new BroadcastChannel('cubic-catalog');
+      ch.onmessage = e => {
+        const m = e && e.data;
+        if (!m || m.from === this._winId || !m.key) return;
+        if (!this._catIsLoaded(m.key) && m.key !== 'projects') return;
+        if (m.key === 'projects' && !this._projLoaded) return;
+        const mine = this._currentDoc(m.key);
+        const merged = this._mergeCatalog(m.key, m.data, mine);
+        const next = (merged == null) ? m.data : merged;
+        this._setBaseline(m.key, next, m.rev);
+        this._adoptCatalog(m.key, next);
+      };
+      this._catChan = ch;
+    } catch (e) { this._catChan = null; }
+  }
+  _broadcastSave(key, doc, rev) {
+    this._winId = this._winId || ('w' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6));
+    this._initCatalogSync();
+    if (!this._catChan) return;
+    try { this._catChan.postMessage({ from: this._winId, key, data: doc, rev }); } catch (e) {}
+  }
+  _currentDoc(key) {
+    return {
+      company: this.state.company || {}, defaults: this.state.defaults || {},
+      financial: this.state.financial || {}, vendors: this.state.vendors || [],
+      cost_codes: this.state.customCodes || [], templates: this.state.templates || [],
+      ap_invoices: this.state.apInvoices || [], ap_settings: this.state.apSettings || {},
+      projects: this.state.projects || [],
+    }[key];
   }
   // ===== Supabase Storage (Phase 3b): upload a file, return its public URL (base64 fallback) =====
   // Folders whose contents are commercially sensitive. These go to the private bucket.
@@ -13200,17 +13415,31 @@ class Component extends DCLogic {
     const p = this.proj(S.pid);
     const inProject = S.view === 'project';
     // save-status pill + "Save changes" button model (auto-save stays; this is the visible affordance)
-    const _saveMeta = (ch, onSave) => { const st = (S.saveStatus && S.saveStatus[ch]) || 'saved'; const saving = st === 'saving'; return { saving, statusText: saving ? 'Saving…' : 'All changes saved', statusColor: saving ? '#8a6d00' : '#15803d', statusBg: saving ? '#fdf6e3' : '#eef8f1', dotColor: saving ? '#e0a800' : '#22a35a', saveLabel: saving ? 'Saving…' : 'Save changes', onSave }; };
+    // 'merged' means another window had written since this one last read, and the two copies
+    // were reconciled rather than one overwriting the other. Worth seeing: it is the moment
+    // that used to pass in silence while somebody's work was being discarded.
+    const _saveMeta = (ch, onSave) => {
+      const st = (S.saveStatus && S.saveStatus[ch]) || 'saved';
+      const saving = st === 'saving', merged = st === 'merged';
+      return { saving,
+        statusText: saving ? 'Saving…' : (merged ? 'Merged changes from another window' : 'All changes saved'),
+        statusColor: saving ? '#8a6d00' : (merged ? '#1d4ed8' : '#15803d'),
+        statusBg: saving ? '#fdf6e3' : (merged ? '#e7eefc' : '#eef8f1'),
+        dotColor: saving ? '#e0a800' : (merged ? '#2b59c3' : '#22a35a'),
+        saveLabel: saving ? 'Saving…' : 'Save changes', onSave };
+    };
     const projectsSaveV = _saveMeta('projects', () => this.flushProjects());
     // global save indicator in the top bar — aggregates every savable channel
     const _ssAll = S.saveStatus || {}; let _pendN = 0, _errN = 0;
     ['company', 'defaults', 'financial', 'vendors', 'cost_codes', 'projects', 'profile', 'ap_invoices', 'ap_settings'].forEach(c => { if (_ssAll[c] === 'saving') _pendN++; else if (_ssAll[c] === 'error') _errN++; });
-    const _gErr = _errN > 0, _gPend = !_gErr && _pendN > 0;
+    let _mrgN = 0;
+    ['company', 'defaults', 'financial', 'vendors', 'cost_codes', 'projects', 'profile', 'ap_invoices', 'ap_settings'].forEach(c => { if (_ssAll[c] === 'merged') _mrgN++; });
+    const _gErr = _errN > 0, _gPend = !_gErr && _pendN > 0, _gMrg = !_gErr && !_gPend && _mrgN > 0;
     const globalSaveV = {
       isError: _gErr, isSaving: _gPend, isClean: !_gErr && !_gPend,
-      text: _gErr ? 'Not saved — click Save' : (_gPend ? 'Saving…' : 'All changes saved'),
-      color: _gErr ? '#b91c1c' : (_gPend ? '#8a6d00' : '#15803d'),
-      bg: _gErr ? '#fdecec' : (_gPend ? '#fdf6e3' : '#eef8f1'),
+      text: _gErr ? 'Not saved — click Save' : (_gPend ? 'Saving…' : (_gMrg ? 'Merged changes from another window' : 'All changes saved')),
+      color: _gErr ? '#b91c1c' : (_gPend ? '#8a6d00' : (_gMrg ? '#1d4ed8' : '#15803d')),
+      bg: _gErr ? '#fdecec' : (_gPend ? '#fdf6e3' : (_gMrg ? '#e7eefc' : '#eef8f1')),
       dot: _gErr ? '#dc2626' : (_gPend ? '#e0a800' : '#22a35a'),
       label: _gErr ? 'Retry save' : 'Save now',
       onSave: () => this.saveAllNow(),
