@@ -5058,6 +5058,7 @@ class Component extends DCLogic {
     this._initExitGuards();
     this._loadSharedData();
     this._startAutosave(); // 30s sweep: flush/retry anything still pending
+    this._startLiveSync(); // and pull in what everybody else has done
     this._restoreSession();
   }
   // Everything shared with the rest of the team. Called at mount and again after a
@@ -5195,7 +5196,12 @@ class Component extends DCLogic {
     this._initSigEditor(); // populate the signature editor once when it appears
     this._colResizeScan(); // keep every table's column-width hook attached
     // Auto-sync any project change to Supabase so every user sees the same data (debounced, logged-in only).
-    if (!this._projLoaded) return; // don't save until the initial shared load has settled (avoids clobbering it)
+    if (!this._projLoaded) {
+      // Not 'wait and see': this browser never got the shared copy, so it must not write over
+      // it, and the person in front of it has to know that rather than read 'All changes saved'.
+      if (this.state.projects !== this._lastSavedProjects) this._setSave('projects', 'error');
+      return;
+    }
     if (this.state.projects !== this._lastSavedProjects) {
       this._lastSavedProjects = this.state.projects;
       if (this.currentUser()) {
@@ -6238,6 +6244,66 @@ class Component extends DCLogic {
   // Two windows on one machine is the common case and the one that cost a day's work. They can talk
   // to each other directly, so a save in one becomes the other's copy immediately and the collision
   // never arises. A window with unsaved edits of its own keeps them: the same merge decides.
+  // The shared documents were read once, at load, and never again. Everything after that was
+  // one-way: this browser wrote, and nothing ever told it what anybody else had written. So a
+  // colleague's screen kept showing the budget as it stood when they opened the page, for as
+  // long as they left it open, and the only way to see the day's work was to reload.
+  //
+  // Now each channel is checked for movement every few seconds — a request for one timestamp,
+  // not the document — and only fetched when it has actually changed. What comes back is
+  // reconciled the same way two windows are, so somebody else's work appears without taking
+  // away whatever this person has in front of them.
+  _sharedKeys() { return ['projects', 'cost_codes', 'vendors', 'company', 'defaults', 'financial', 'templates', 'ap_invoices', 'ap_settings']; }
+  _startLiveSync() {
+    if (this._liveIv || typeof setInterval === 'undefined') return;
+    this._liveIv = setInterval(() => this._pollShared(), 12000);
+    try {
+      // Coming back to the tab is the moment somebody most wants to be up to date.
+      document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') this._pollShared(); });
+      window.addEventListener('focus', () => this._pollShared());
+    } catch (e) {}
+  }
+  _pollShared() {
+    if (typeof document !== 'undefined' && document.visibilityState === 'hidden') return;
+    if (!this.currentUser()) return;
+    // Never pull the ground out from under someone mid-sentence. The check comes round again
+    // in a few seconds, by which time the field will usually have been left.
+    try {
+      const el = document.activeElement;
+      if (el && /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName || '')) return;
+    } catch (e) {}
+    this._sharedKeys().forEach(key => {
+      const ready = key === 'projects' ? this._projLoaded : this._catIsLoaded(key);
+      const known = this._revs()[key];
+      if (!ready || !known) return;
+      if (this._polling && this._polling[key]) return;
+      this._polling = this._polling || {};
+      this._polling[key] = true;
+      const done = () => { this._polling[key] = false; };
+      this._sbRowMeta(key).then(now => {
+        if (!now || now === known) { done(); return; }
+        return this._sbLoadCatalogFull(key).then(row => {
+          if (!row) { done(); return; }
+          const mine = this._currentDoc(key);
+          const merged = this._mergeCatalog(key, row.data, mine);
+          const next = (merged == null) ? row.data : merged;
+          // The baseline is what the SERVER has, so a write that follows is still a proper
+          // conditional update rather than a blind overwrite.
+          this._setBaseline(key, row.data, row.updated_at);
+          this._adoptCatalog(key, next);
+          this._noteIncoming(key);
+          // Our own unsent changes survived the merge, so they still need sending.
+          if (merged != null && !this._sameJson(merged, row.data)) this._flushChannel(key);
+          done();
+        });
+      }).catch(done);
+    });
+  }
+  _noteIncoming(key) {
+    this._setSave(key, 'synced');
+    clearTimeout(this['_synced_' + key]);
+    this['_synced_' + key] = setTimeout(() => { if ((this.state.saveStatus || {})[key] === 'synced') this._setSave(key, 'saved'); }, 6000);
+  }
   _initCatalogSync() {
     if (this._catChan !== undefined) return;
     this._catChan = null;
@@ -13659,10 +13725,10 @@ class Component extends DCLogic {
     // that used to pass in silence while somebody's work was being discarded.
     const _saveMeta = (ch, onSave) => {
       const st = (S.saveStatus && S.saveStatus[ch]) || 'saved';
-      const saving = st === 'saving', merged = st === 'merged' || st === 'restored';
+      const saving = st === 'saving', merged = st === 'merged' || st === 'restored' || st === 'synced';
       const restored = st === 'restored';
       return { saving,
-        statusText: saving ? 'Saving…' : (restored ? 'Recovered work that had not been saved' : (merged ? 'Merged changes from another window' : 'All changes saved')),
+        statusText: saving ? 'Saving…' : (restored ? 'Recovered work that had not been saved' : (st === 'synced' ? 'Updated with the team’s changes' : (merged ? 'Merged changes from another window' : 'All changes saved'))),
         statusColor: saving ? '#8a6d00' : (merged ? '#1d4ed8' : '#15803d'),
         statusBg: saving ? '#fdf6e3' : (merged ? '#e7eefc' : '#eef8f1'),
         dotColor: saving ? '#e0a800' : (merged ? '#2b59c3' : '#22a35a'),
@@ -13675,10 +13741,14 @@ class Component extends DCLogic {
     let _mrgN = 0;
     let _rstN = 0;
     ['company', 'defaults', 'financial', 'vendors', 'cost_codes', 'projects', 'profile', 'ap_invoices', 'ap_settings'].forEach(c => { if (_ssAll[c] === 'merged') _mrgN++; else if (_ssAll[c] === 'restored') { _mrgN++; _rstN++; } });
-    const _gErr = _errN > 0, _gPend = !_gErr && _pendN > 0, _gMrg = !_gErr && !_gPend && _mrgN > 0;
+    let _syncN = 0;
+    ['company', 'defaults', 'financial', 'vendors', 'cost_codes', 'projects', 'profile', 'ap_invoices', 'ap_settings'].forEach(c => { if (_ssAll[c] === 'synced') _syncN++; });
+    // Never loaded means never saved. Saying anything else here is how work goes missing.
+    const _noLink = !this._projLoaded;
+    const _gErr = _errN > 0 || _noLink, _gPend = !_gErr && _pendN > 0, _gMrg = !_gErr && !_gPend && _mrgN > 0;
     const globalSaveV = {
       isError: _gErr, isSaving: _gPend, isClean: !_gErr && !_gPend,
-      text: _gErr ? 'Not saved — click Save' : (_gPend ? 'Saving…' : (_gMrg ? (_rstN ? 'Recovered work that had not been saved' : 'Merged changes from another window') : 'All changes saved')),
+      text: _noLink ? 'Not connected — nothing is being saved' : (_gErr ? 'Not saved — click Save' : (_gPend ? 'Saving…' : (_gMrg ? (_rstN ? 'Recovered work that had not been saved' : 'Merged changes from another window') : (_syncN ? 'Updated with the team’s changes' : 'All changes saved')))),
       color: _gErr ? '#b91c1c' : (_gPend ? '#8a6d00' : (_gMrg ? '#1d4ed8' : '#15803d')),
       bg: _gErr ? '#fdecec' : (_gPend ? '#fdf6e3' : (_gMrg ? '#e7eefc' : '#eef8f1')),
       dot: _gErr ? '#dc2626' : (_gPend ? '#e0a800' : '#22a35a'),
