@@ -4973,7 +4973,10 @@ class Component extends DCLogic {
   constructor(props) {
     super(props);
     this.state = {
-      projects: this.seed(),
+      // A saved sign-in means real projects exist on the server. Until they arrive, show
+      // nothing rather than the demo set — an empty list with a warning is honest, three
+      // invented jobs are not.
+      projects: this._loadAuth() ? [] : this.seed(),
       view: (props.startView === 'First project') ? 'project' : 'portfolio',
       pid: 'p1',
       module: 'dashboard',
@@ -5162,6 +5165,10 @@ class Component extends DCLogic {
         const ns = Object.assign({}, this.state.session, { profile: prof });
         this._saveAuth(ns); this.setState({ session: ns, role: prof.role });
         this._loadProfilesIntoState();
+        // The mount-time reads went out with the old token and were refused. Now that there is
+        // a good one, ask again rather than waiting for the backoff to come round.
+        this._authDenied = false;
+        this._loadSharedData();
       };
       restoreSession();
     }
@@ -5993,7 +6000,14 @@ class Component extends DCLogic {
     const c = this._SB;
     if (!c || !c.url || typeof fetch === 'undefined') return Promise.resolve(null);
     return fetch(c.url + '/rest/v1/app_catalog?select=data,updated_at&key=eq.' + encodeURIComponent(key), { headers: this._sbUserHeaders() })
-      .then(r => (r.ok ? r.json() : null))
+      .then(r => {
+        // 401/403 is the database saying it does not know who this is — a sign-in that has
+        // run out, not a network that is down. Saying 'not connected' sends somebody to check
+        // their wifi for an hour.
+        if (r.status === 401 || r.status === 403) this._authDenied = true;
+        else if (r.ok) this._authDenied = false;
+        return r.ok ? r.json() : null;
+      })
       .then(rows => ((rows && rows[0]) ? rows[0] : null))
       .catch(() => null);
   }
@@ -6671,6 +6685,20 @@ class Component extends DCLogic {
   _sbDeleteProfile(id) {
     const c = this._SB; if (!c) return Promise.resolve(false);
     return fetch(c.url + '/rest/v1/profiles?id=eq.' + encodeURIComponent(id), { method: 'DELETE', headers: this._sbUserHeaders() }).then(r => r.ok).catch(() => false);
+  }
+  // Back to the sign-in screen without throwing anything away. The journal is keyed to the
+  // person's own address, so whatever this browser was holding is still there and is picked up
+  // the moment they are back in.
+  signInAgain() {
+    try {
+      this._sharedKeys().forEach(ch => {
+        const b = this._baseline()[ch];
+        if (b === undefined || !this._sameJson(b, this._currentDoc(ch))) this._writeWal(ch, this._currentDoc(ch));
+      });
+    } catch (e) {}
+    const email = ((this.state.session || {}).profile || {}).email || '';
+    this._saveAuth(null);
+    this.setState({ session: null, users: [], auth: { view: 'login', email, password: '', newPassword: '', error: '', notice: 'Your sign-in had expired. Nothing has been lost — sign in and it comes straight back.', busy: false } });
   }
   _loadAuth() {
     try { if (typeof localStorage === 'undefined') return null; const raw = localStorage.getItem('cubicAuth'); if (!raw) return null; const s = JSON.parse(raw); return (s && s.profile) ? s : null; } catch (e) { return null; }
@@ -13984,6 +14012,9 @@ class Component extends DCLogic {
     // No connection AND no room to write it down locally is the one state where work is
     // genuinely at risk, and it has to say so rather than sit on a colour.
     const _noNet = this._walIsFailing();
+    // Refused rather than unreachable, and only worth saying once there is a session that
+    // ought to be working.
+    const _authGone = !!this._authDenied && !!S.session;
     const _gErr = _errN > 0 || _noLink, _gPend = !_gErr && _pendN > 0, _gMrg = !_gErr && !_gPend && _mrgN > 0;
     const newVersionV = {
       show: !!S.newVersion,
@@ -13991,12 +14022,12 @@ class Component extends DCLogic {
     };
     const globalSaveV = {
       isError: _gErr, isSaving: _gPend, isClean: !_gErr && !_gPend,
-      text: (_noLink && _noNet) ? 'Not connected and no room to keep a local copy — save your work elsewhere' : _noLink ? 'Not connected — retrying; a local copy is being kept' : (_gErr ? 'Not saved — click Save' : (_gPend ? 'Saving…' : (_gMrg ? (_rstN ? 'Recovered work that had not been saved' : 'Merged changes from another window') : (_syncN ? 'Updated with the team’s changes' : 'All changes saved')))),
+      text: _authGone ? 'Your sign-in has expired — sign in again to see the team’s data' : (_noLink && _noNet) ? 'Not connected and no room to keep a local copy — save your work elsewhere' : _noLink ? 'Not connected — retrying; a local copy is being kept' : (_gErr ? 'Not saved — click Save' : (_gPend ? 'Saving…' : (_gMrg ? (_rstN ? 'Recovered work that had not been saved' : 'Merged changes from another window') : (_syncN ? 'Updated with the team’s changes' : 'All changes saved')))),
       color: _gErr ? '#b91c1c' : (_gPend ? '#8a6d00' : (_gMrg ? '#1d4ed8' : '#15803d')),
       bg: _gErr ? '#fdecec' : (_gPend ? '#fdf6e3' : (_gMrg ? '#e7eefc' : '#eef8f1')),
       dot: _gErr ? '#dc2626' : (_gPend ? '#e0a800' : '#22a35a'),
-      label: _gErr ? 'Retry save' : 'Save now',
-      onSave: () => this.saveAllNow(),
+      label: _authGone ? 'Sign in again' : (_gErr ? 'Retry save' : 'Save now'),
+      onSave: () => (_authGone ? this.signInAgain() : this.saveAllNow()),
     };
     const orgName = this.props.orgName ?? 'Cubic';
 
