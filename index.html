@@ -6157,7 +6157,8 @@ class Component extends DCLogic {
   _initExitGuards() {
     if (this._exitGuarded || typeof window === 'undefined') return;
     this._exitGuarded = true;
-    const dirty = () => this._projLoaded && this.state.projects !== this._lastSavedProjects;
+    // Deliberately not conditional on the load having worked. That is the case that needs it.
+    const dirty = () => this.state.projects !== this._lastSavedProjects;
     try {
       document.addEventListener('visibilitychange', () => {
         if (document.visibilityState !== 'hidden') return;
@@ -6231,9 +6232,17 @@ class Component extends DCLogic {
     const me = (this.currentUser() || {}).email || '';
     if (wal.user && me && wal.user !== me) { this._clearProjWal(); return null; }   // not this person's work
     if (this._sameJson(wal.data, serverDoc)) { this._clearProjWal(); return null; } // it did get out
-    const out = (wal.rev && serverRev && wal.rev === serverRev)
-      ? wal.data
-      : this._addMissing(serverDoc, wal.data);
+    let out;
+    if (wal.rev && serverRev && wal.rev === serverRev) {
+      out = wal.data;                       // nothing moved since; take it back whole
+    } else if (wal.rev) {
+      out = this._addMissing(serverDoc, wal.data);   // based on a real copy, once
+    } else {
+      // Never confirmed against the server at all, so this may be the demo seed with somebody's
+      // work layered on top. Only projects the server already has are considered.
+      const known = {}; (serverDoc || []).forEach(p => { if (p && p.id) known[p.id] = 1; });
+      out = this._addMissing(serverDoc, (wal.data || []).filter(p => p && known[p.id]));
+    }
     if (out == null || this._sameJson(out, serverDoc)) { this._clearProjWal(); return null; }
     this._clearProjWal();
     this._walRecovered = true;
