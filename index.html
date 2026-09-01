@@ -5172,9 +5172,10 @@ class Component extends DCLogic {
         // ever as an addition — see _addMissing.
         const recovered = this._recoverProjWal(serverProjects, row && row.updated_at);
         const use = recovered || serverProjects;
+        const _dupes = this._dedupeIds(use);
         this._lastSavedProjects = serverProjects;
         this.setState({ projects: use }, () => {
-          if (recovered) { this._setSave('projects', 'restored'); this.flushProjects(); }
+          if (recovered || _dupes) { this._setSave('projects', 'restored'); this.flushProjects(); }
         });
       }
       this._projLoaded = true;
@@ -5973,14 +5974,18 @@ class Component extends DCLogic {
       theirs.forEach(x => {
         const k = this._idOf(x); seen[k] = 1;
         if (k in mById) { out.push(this._merge3(bById[k], mById[k], x)); return; }
-        if (k in bById) return;    // we deleted it
+        // This direction is safe to honour: it was in the copy we started from and is gone
+        // from ours, so this window is the one that deleted it and meant to.
+        if (k in bById) return;
         out.push(x);               // they added it
       });
       mine.forEach(x => {
         const k = this._idOf(x);
         if (seen[k]) return;
-        if (k in bById) return;    // they deleted it
-        out.push(x);               // we added it
+        // Deliberately NOT dropped when it appears in the baseline. See the note above: we
+        // cannot tell their deletion from their staleness, and only one of those two guesses
+        // can lose somebody's work.
+        out.push(x);
       });
       return out;
     }
@@ -6183,6 +6188,28 @@ class Component extends DCLogic {
   // On the way back in. If the copy left behind was made against the document that is still on
   // the server then nobody has written since and those edits simply never made it out, so they go
   // back whole. If the server has moved on, only what is missing is restored.
+  // Two records with the same id are indistinguishable to anything that merges by id, so the
+  // second one would quietly disappear the first time two windows met. Ids minted before they
+  // carried any randomness can collide; this walks the document once on the way in and gives
+  // any duplicate a fresh id. Nothing is removed and nothing is reordered.
+  _dedupeIds(doc) {
+    let fixed = 0;
+    const walk = node => {
+      if (Array.isArray(node)) {
+        const seen = {};
+        node.forEach(x => {
+          if (x && typeof x === 'object' && typeof x.id === 'string') {
+            if (seen[x.id]) { x.id = this._rid('fx'); fixed++; } else seen[x.id] = 1;
+          }
+          walk(x);
+        });
+        return;
+      }
+      if (node && typeof node === 'object') Object.keys(node).forEach(k => walk(node[k]));
+    };
+    try { walk(doc); } catch (e) { return 0; }
+    return fixed;
+  }
   _recoverProjWal(serverDoc, serverRev) {
     const wal = this._readProjWal();
     if (!wal) return null;
@@ -6497,7 +6524,7 @@ class Component extends DCLogic {
     const today = new Date().toISOString().slice(0, 10);
     const proj = this.proj(this.state.pid);
     const ref = this.nextDefectRef(proj && proj.defects);
-    const d = { id: 'df' + Date.now(), ref, title: '', location: '', desc: '', severity: 'minor', commitmentId: '', raised: today, status: 'open', notes: '', photos: [], priority: 'Low', trade: '', assignee: 'Danny Prelac', creator: this.state.role === 'Subcontractor' ? 'Subcontractor' : 'Ivan Abad Garcia', closedBy: '', dateResolved: '', dateClosed: '' };
+    const d = { id: this._rid('df'), ref, title: '', location: '', desc: '', severity: 'minor', commitmentId: '', raised: today, status: 'open', notes: '', photos: [], priority: 'Low', trade: '', assignee: 'Danny Prelac', creator: this.state.role === 'Subcontractor' ? 'Subcontractor' : 'Ivan Abad Garcia', closedBy: '', dateResolved: '', dateClosed: '' };
     this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, defects: [...(p.defects || []), d] }) }));
   }
   tradeList() { return ['STRUCTURAL STEEL', 'CONCRETE', 'MECHANICAL', 'ELECTRICAL', 'HYDRAULIC / PLUMBING', 'FIRE SERVICES', 'FACADE / GLAZING', 'GLAZIER', 'PLASTERBOARD', 'PAINTER', 'TILER', 'FLOOR AND WALL TILING', 'WATERPROOFING', 'CAULKER', 'JOINERY', 'DOORS', 'PROTECTIVE COATINGS', 'ROOFING', 'LANDSCAPING', 'OTHER']; }
@@ -6653,7 +6680,7 @@ class Component extends DCLogic {
   lineCurrent(l, p) { return (Number(l.orig) || 0) + (Number(l.adj) || 0) + this.lineVarAdj(l, p); }
   setVariationCostCode(vid, code) { if (!this.can('variations', 'edit')) return; this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, contract: { ...p.contract, variations: p.contract.variations.map(v => v.id === vid ? { ...v, costCode: code } : v) } }) })); }
   setVariationField(vid, field, val) { if (!this.can('variations', 'edit')) return; this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, contract: { ...p.contract, variations: p.contract.variations.map(v => v.id === vid ? { ...v, [field]: val } : v) } }) })); }
-  addVariation() { if (!this.can('variations', 'edit')) return; const p = this.proj(this.state.pid); if (!p) return; const ref = this.nextSeqRef((p.contract && p.contract.variations) || [], 'ref', 'VO-', 3); const v = { id: 'vo' + Date.now(), ref, desc: '', value: 0, time: 0, status: 'draft', costCode: '', attachments: [], sentForApprovalAt: '' }; this.setState(s => ({ projects: s.projects.map(x => x.id !== s.pid ? x : { ...x, contract: { ...x.contract, variations: [...x.contract.variations, v] } }) })); }
+  addVariation() { if (!this.can('variations', 'edit')) return; const p = this.proj(this.state.pid); if (!p) return; const ref = this.nextSeqRef((p.contract && p.contract.variations) || [], 'ref', 'VO-', 3); const v = { id: this._rid('vo'), ref, desc: '', value: 0, time: 0, status: 'draft', costCode: '', attachments: [], sentForApprovalAt: '' }; this.setState(s => ({ projects: s.projects.map(x => x.id !== s.pid ? x : { ...x, contract: { ...x.contract, variations: [...x.contract.variations, v] } }) })); }
   deleteVariation(vid) { this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, contract: { ...p.contract, variations: p.contract.variations.filter(v => v.id !== vid) } }) })); }
   eotCauseList() { return ['Variation / change order', 'Inclement weather', 'Latent site condition', 'Client instruction / delay', 'Access / possession delay', 'Suspension of works', 'Industrial action', 'Utility / authority delay', 'Other']; }
   docCategories() {
@@ -6673,7 +6700,7 @@ class Component extends DCLogic {
   }
   setDocTab(k) { this.setState({ docTab: k }); }
   addCalendarDays(iso, n) { const parts = (iso || this.todayLocal()).split('-').map(Number); const d = new Date(parts[0], parts[1] - 1, parts[2]); d.setDate(d.getDate() + n); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
-  addDoc(category) { if (!this.can('documents', 'edit')) return; const p = this.proj(this.state.pid); if (!p) return; const cat = this.docCategories().find(c => c.key === category); const same = (p.docs || []).filter(d => d.category === category); const ref = this.nextSeqRef(same, 'ref', cat.prefix, 3); const today = this.todayLocal(); const d = { id: 'doc' + Date.now(), category, ref, title: '', party: '', date: today, dueDate: cat.hasDue ? (category === 'rfi' ? this.addCalendarDays(today, 7) : '') : '', status: cat.statuses[0], priority: cat.hasPriority ? 'medium' : '', notes: '', revision: '', question: '', response: '', resolution: '', costSchedImpact: 'no', linkedVariationId: '', costCode: '', thread: [], attachments: [], time: category === 'meeting' ? '10:00' : '', durationMin: 60, location: '', description: '', chairEmail: '', attendees: [], invitedAt: '', inviteEmailCount: 0, inviteSmsCount: 0, actions: [] }; this.setState(s => ({ projects: s.projects.map(x => x.id !== s.pid ? x : { ...x, docs: [...(x.docs || []), d] }), ...(category === 'rfi' ? { expandedRfi: { ...(s.expandedRfi || {}), [d.id]: true } } : {}), ...(category === 'meeting' ? { expandedMtg: { ...(s.expandedMtg || {}), [d.id]: true } } : {}) })); }
+  addDoc(category) { if (!this.can('documents', 'edit')) return; const p = this.proj(this.state.pid); if (!p) return; const cat = this.docCategories().find(c => c.key === category); const same = (p.docs || []).filter(d => d.category === category); const ref = this.nextSeqRef(same, 'ref', cat.prefix, 3); const today = this.todayLocal(); const d = { id: this._rid('doc'), category, ref, title: '', party: '', date: today, dueDate: cat.hasDue ? (category === 'rfi' ? this.addCalendarDays(today, 7) : '') : '', status: cat.statuses[0], priority: cat.hasPriority ? 'medium' : '', notes: '', revision: '', question: '', response: '', resolution: '', costSchedImpact: 'no', linkedVariationId: '', costCode: '', thread: [], attachments: [], time: category === 'meeting' ? '10:00' : '', durationMin: 60, location: '', description: '', chairEmail: '', attendees: [], invitedAt: '', inviteEmailCount: 0, inviteSmsCount: 0, actions: [] }; this.setState(s => ({ projects: s.projects.map(x => x.id !== s.pid ? x : { ...x, docs: [...(x.docs || []), d] }), ...(category === 'rfi' ? { expandedRfi: { ...(s.expandedRfi || {}), [d.id]: true } } : {}), ...(category === 'meeting' ? { expandedMtg: { ...(s.expandedMtg || {}), [d.id]: true } } : {}) })); }
   expandAllRfi(val) { const p = this.proj(this.state.pid); if (!p) return; const m = {}; (p.docs || []).forEach(d => { if (d.category === 'rfi') m[d.id] = val; }); this.setState({ expandedRfi: m }); }
   setDocField(id, field, val) { if (!this.can('documents', 'edit')) return; this.setState(s => ({ projects: s.projects.map(p => { if (p.id !== s.pid) return p; return { ...p, docs: (p.docs || []).map(d => { if (d.id !== id) return d; if (d.category === 'rfi') { if (field === 'status' && val === 'closed' && d.costSchedImpact === 'yes' && !d.linkedVariationId) return d; if (field === 'date' && val) return { ...d, date: val, dueDate: this.addCalendarDays(val, 7) }; } return { ...d, [field]: val }; }) }; }) })); }
   deleteDoc(id) { if (!this.can('documents', 'edit')) return; this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, docs: (p.docs || []).filter(d => d.id !== id) }) })); }
@@ -7463,7 +7490,7 @@ class Component extends DCLogic {
       '</body></html>';
     this._openPrintDoc(html, 'RFI PDF');
   }
-  addEot() { const p = this.proj(this.state.pid); if (!p) return; const ref = this.nextSeqRef(p.eots || [], 'ref', 'EOT-', 3); const e = { id: 'eot' + Date.now(), ref, title: '', cause: 'Variation / change order', eventDate: this.todayLocal(), startDate: this.todayLocal(), daysClaimed: 0, daysGranted: 0, status: 'draft', notes: '', attachments: [], sentForApprovalAt: '', clientResponse: '' }; this.setState(s => ({ projects: s.projects.map(x => x.id !== s.pid ? x : { ...x, eots: [...(x.eots || []), e] }) })); }
+  addEot() { const p = this.proj(this.state.pid); if (!p) return; const ref = this.nextSeqRef(p.eots || [], 'ref', 'EOT-', 3); const e = { id: this._rid('eot'), ref, title: '', cause: 'Variation / change order', eventDate: this.todayLocal(), startDate: this.todayLocal(), daysClaimed: 0, daysGranted: 0, status: 'draft', notes: '', attachments: [], sentForApprovalAt: '', clientResponse: '' }; this.setState(s => ({ projects: s.projects.map(x => x.id !== s.pid ? x : { ...x, eots: [...(x.eots || []), e] }) })); }
   setEotField(id, field, val) { this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, eots: (p.eots || []).map(e => e.id !== id ? e : { ...e, [field]: val, ...(field === 'status' && val === 'approved' && (!e.daysGranted || Number(e.daysGranted) === 0) ? { daysGranted: e.daysClaimed } : {}) }) }) })); }
   deleteEot(id) { this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, eots: (p.eots || []).filter(e => e.id !== id) }) })); }
   addEotAttachment(id, e) { const files = Array.from((e.target && e.target.files) || []); if (!files.length) return; files.forEach(file => { this._sbUploadFile(file, 'eot').then(url => { if (!url) return; const att = { id: 'att' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), name: file.name || 'file', type: file.type || '', size: file.size || 0, url }; this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, eots: (p.eots || []).map(x => x.id === id ? { ...x, attachments: [...(x.attachments || []), att] } : x) }) })); }); }); if (e.target) e.target.value = ''; }
@@ -10633,7 +10660,7 @@ class Component extends DCLogic {
     if (!this.can('claims', 'edit')) return;
     const today = new Date().toISOString().slice(0, 10);
     const due = this.addCalendarDays(today, this._termDays());
-    this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, claims: [...(p.claims || []), { id: 'pc' + Date.now(), claimNo: this.nextSeqRef(p.claims, 'claimNo', 'PC-', 3), commitmentId: '', period: today.slice(0, 7), thisClaim: 0, toDate: 0, varsClaimed: 0, taxRate: 10, status: 'submitted', submitted: today, assessed: '', certified: 0, paymentDue: due, invoice: '', sentAt: '' }] }) }));
+    this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, claims: [...(p.claims || []), { id: this._rid('pc'), claimNo: this.nextSeqRef(p.claims, 'claimNo', 'PC-', 3), commitmentId: '', period: today.slice(0, 7), thisClaim: 0, toDate: 0, varsClaimed: 0, taxRate: 10, status: 'submitted', submitted: today, assessed: '', certified: 0, paymentDue: due, invoice: '', sentAt: '' }] }) }));
   }
   deleteClaim(id) { this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, claims: (p.claims || []).filter(x => x.id !== id), bills: (p.bills || []).filter(b => b.claimId !== id) }) })); }
   setClaimField(id, field, val) {
@@ -10943,7 +10970,7 @@ class Component extends DCLogic {
     const retAmt2 = claim * this._num(e.retentionPct) / 100;
     const net2 = Math.max(0, claim - retAmt2 - this._num(e.backCharges));
     const total2 = net2 + net2 * gst / 100;   // the register now agrees with the PDF
-    const record = { id: 'inv' + Date.now(), no: noStr, date: e.date || today, dueDate: e.dueDate || due, amount: claim, gstRate: gst, total: total2, extra, from: sc.from || '', subject: sc.subject || '', message: (sc.message || '').trim(), recipients: recips.slice(), status: 'sent', paidAt: '', payRef: '', lines: invLines };
+    const record = { id: this._rid('inv'), no: noStr, date: e.date || today, dueDate: e.dueDate || due, amount: claim, gstRate: gst, total: total2, extra, from: sc.from || '', subject: sc.subject || '', message: (sc.message || '').trim(), recipients: recips.slice(), status: 'sent', paidAt: '', payRef: '', lines: invLines };
     const msg = record.message ? ' — “' + record.message + '”' : '';
     this._emailInvoiceWithPdf(recips, sc.subject || '', sc.message || '', null, noStr);
     this.setState(s => ({ projects: s.projects.map(x => x.id !== s.pid ? x : { ...x, clientInvoiced: inv, clientInvoiceNo: no, senderEmail: sc.from || x.senderEmail, invoices: [...(x.invoices || []), record], clientInvoiceSentAt: noStr + ' sent to ' + recips.length + ' recipient(s): ' + recips.join(', ') + ' on ' + today + ' · due ' + this.fmtDate(e.dueDate || due) + msg }), invoiceSend: null }));
@@ -11813,7 +11840,7 @@ class Component extends DCLogic {
     if (!this.can('bills', 'edit')) return;
     const today = new Date().toISOString().slice(0, 10);
     const due = this.addCalendarDays(today, this._termDays());
-    this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, bills: [...(p.bills || []), { id: 'bill' + Date.now(), billNo: this.nextSeqRef(p.bills, 'billNo', 'BILL-', 4), vendorId: '', code: '', desc: '', amount: 0, taxRate: 10, billDate: today, dueDate: due, status: 'unpaid', paid: 0, invoice: '', sentAt: '', commitmentId: '' }] }) }));
+    this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, bills: [...(p.bills || []), { id: this._rid('bill'), billNo: this.nextSeqRef(p.bills, 'billNo', 'BILL-', 4), vendorId: '', code: '', desc: '', amount: 0, taxRate: 10, billDate: today, dueDate: due, status: 'unpaid', paid: 0, invoice: '', sentAt: '', commitmentId: '' }] }) }));
   }
   deleteBill(id) {
     this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, bills: (p.bills || []).filter(x => x.id !== id) }) }));
@@ -12075,7 +12102,7 @@ class Component extends DCLogic {
     }, () => { if (vendorModal.apId) this._apCommit(vendorModal.apId, { vendorId: id }, 'Supplier added to the Directory', vendor.company); }));
   }
   addCostLine() {
-    this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, costLines: [...p.costLines, { id: 'cl' + Date.now(), code: '', cat: 'other', desc: 'New cost line', orig: 0, adj: 0, committed: 0, actual: 0, ftc: 0 }] }) }));
+    this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, costLines: [...p.costLines, { id: this._rid('cl'), code: '', cat: 'other', desc: 'New cost line', orig: 0, adj: 0, committed: 0, actual: 0, ftc: 0 }] }) }));
   }
   // Move a cost line up or down. The swap is made against the rows currently displayed, so a
   // category filter or a search does not send the line somewhere unexpected in the full list.
@@ -12717,7 +12744,9 @@ class Component extends DCLogic {
     if (el) this.setMyProfileField('signature', el.innerHTML);
   }
   sigLink() { let url = ''; try { url = window.prompt('Link URL', 'https://'); } catch (e) {} if (url) this.sigExec('createLink', url); }
-  _cid() { return 'cc' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+  _cid() { return this._rid('cc'); }
+  // Time so it sorts and can be dated; randomness so two windows cannot mint the same one.
+  _rid(prefix) { return String(prefix || 'id') + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
   // fn(list) -> nextList, applied to the loaded catalogue (an array is still accepted)
   _commitCodes(fn) {
     this._withCatalog('cost_codes', () => this.setState(st => {
