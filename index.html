@@ -275,6 +275,9 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
       </div>
       <div style="display:flex;align-items:center;gap:10px">
         <span title="Your work saves automatically, with a safety re-check every 30 seconds" style="display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:{{ globalSaveV.color }};background:{{ globalSaveV.bg }};border-radius:20px;padding:5px 12px;white-space:nowrap"><span style="width:7px;height:7px;border-radius:50%;background:{{ globalSaveV.dot }};flex:0 0 auto"></span>{{ globalSaveV.text }}</span>
+        <sc-if value="{{ newVersionV.show }}" hint-placeholder-val="{{ false }}">
+          <button onClick="{{ newVersionV.onReload }}" title="This page is running an older version of the app. Your work is saved first, then the page reloads." style="display:inline-flex;align-items:center;gap:7px;border:1px solid #b45309;background:#fbf1e3;color:#b45309;border-radius:20px;padding:5px 13px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap" style-hover="background:#f6e7cf">↻ Update available — reload</button>
+        </sc-if>
         <button onClick="{{ globalSaveV.onSave }}" title="Save everything to the server right now" style="border:0;background:#2b59c3;color:#fff;border-radius:8px;padding:8px 16px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap" style-hover="background:#244fb0">{{ globalSaveV.label }}</button>
       </div>
     </header>
@@ -5059,6 +5062,7 @@ class Component extends DCLogic {
     this._loadSharedData();
     this._startAutosave(); // 30s sweep: flush/retry anything still pending
     this._startLiveSync(); // and pull in what everybody else has done
+    this._startVersionWatch(); // and notice when this page itself is out of date
     this._restoreSession();
   }
   // Everything shared with the rest of the team. Called at mount and again after a
@@ -6422,6 +6426,42 @@ class Component extends DCLogic {
   // reconciled the same way two windows are, so somebody else's work appears without taking
   // away whatever this person has in front of them.
   _sharedKeys() { return ['projects', 'cost_codes', 'vendors', 'company', 'defaults', 'financial', 'templates', 'ap_invoices', 'ap_settings']; }
+  _pageStamp() {
+    if (typeof fetch === 'undefined' || typeof location === 'undefined') return Promise.resolve('');
+    return fetch(location.pathname, { method: 'HEAD', cache: 'no-store' })
+      .then(r => {
+        // Whatever the server is willing to say. Vercel sends an etag; the local dev server
+        // sends neither that nor a modified date, so the byte count stands in — the whole app
+        // is one file, and a build that changes nothing about its size is not a build.
+        const h = r.headers;
+        return h.get('etag') || h.get('last-modified') || h.get('content-length') || '';
+      })
+      .catch(() => '');
+  }
+  _startVersionWatch() {
+    if (this._verIv) return;
+    this._pageStamp().then(v => { this._verAt = v; });
+    const check = () => {
+      if (!this._verAt || this.state.newVersion) return;
+      if (typeof document !== 'undefined' && document.visibilityState === 'hidden') return;
+      this._pageStamp().then(v => { if (v && v !== this._verAt) this.setState({ newVersion: true }); });
+    };
+    this._verIv = setInterval(check, 60000);
+    try { window.addEventListener('focus', check); } catch (e) {}
+  }
+  // Reloading throws away anything not yet written, so everything is flushed and journalled
+  // first and the reload waits for it.
+  reloadForUpdate() {
+    const done = () => { try { location.reload(); } catch (e) {} };
+    try {
+      this._sharedKeys().forEach(ch => {
+        const b = this._baseline()[ch];
+        if (b === undefined || !this._sameJson(b, this._currentDoc(ch))) this._writeWal(ch, this._currentDoc(ch));
+      });
+    } catch (e) {}
+    Promise.all(Object.keys(this._saveChannels()).map(ch => this._flushChannel(ch))).then(done, done);
+    setTimeout(done, 4000);   // never leave somebody stuck on a button that did nothing
+  }
   _startLiveSync() {
     if (this._liveIv || typeof setInterval === 'undefined') return;
     this._liveIv = setInterval(() => this._pollShared(), 12000);
@@ -13922,6 +13962,10 @@ class Component extends DCLogic {
     // genuinely at risk, and it has to say so rather than sit on a colour.
     const _noNet = this._walIsFailing();
     const _gErr = _errN > 0 || _noLink, _gPend = !_gErr && _pendN > 0, _gMrg = !_gErr && !_gPend && _mrgN > 0;
+    const newVersionV = {
+      show: !!S.newVersion,
+      onReload: () => this.reloadForUpdate(),
+    };
     const globalSaveV = {
       isError: _gErr, isSaving: _gPend, isClean: !_gErr && !_gPend,
       text: (_noLink && _noNet) ? 'Not connected and no room to keep a local copy — save your work elsewhere' : _noLink ? 'Not connected — retrying; a local copy is being kept' : (_gErr ? 'Not saved — click Save' : (_gPend ? 'Saving…' : (_gMrg ? (_rstN ? 'Recovered work that had not been saved' : 'Merged changes from another window') : (_syncN ? 'Updated with the team’s changes' : 'All changes saved')))),
@@ -16949,7 +16993,7 @@ class Component extends DCLogic {
       onCloseVendorModal: () => this.closeVendorModal(), onSaveVendor: () => this.saveVendor(),
       pageTitle, pageSub, crumb1, crumb2, pageStatus, primaryAction, kpis, hasKpis: kpis.length > 0,
       statusFilters, portfolioRows, totals, dashModules,
-      contractFields, contractVarRows, contractCalc, hasContractFile, contractFileName, onViewContract: () => this.viewProjectContract(), projectsSaveV, globalSaveV,
+      contractFields, contractVarRows, contractCalc, hasContractFile, contractFileName, onViewContract: () => this.viewProjectContract(), projectsSaveV, globalSaveV, newVersionV,
       commitmentRows, commitSearchV, costLineRows, costTotals, chart, costInsight, markupSummary, budgetColTemplate, budgetMinWidth, budgetHeaderCols, budgetTotalCols, colMenuItems, budgetColMenu: S.budgetColMenu, onToggleColMenu: () => this.toggleBudgetColMenu(), onCloseColMenu: () => this.closeBudgetColMenu(), onResetBudgetCols: () => this.resetBudgetCols(), budgetCatOptions, budgetCatValue, budgetFiltered, budgetRowCount, budgetTotalLineCount, onBudgetCatFilter: e => this.setBudgetCatFilter(e.target.value), budgetHasLines: (p && (p.costLines || []).length > 0), onGenSchedule: () => this.generateScheduleFromBudget(), budgetVarRows, varSearchV, budgetVarApproved, budgetVarHas, budgetVarEmpty, onAddVariation: () => this.addVariation(), onAddCostLine: () => this.addCostLine(),
       onExportCsv: () => this.exportCostReportExcel(), onExportPdf: () => this.exportPdf(),
       onDownloadPdf: () => this.downloadCostReportPdf(), onExportCsvRaw: () => this.exportCsv(),
