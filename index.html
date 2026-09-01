@@ -5068,7 +5068,7 @@ class Component extends DCLogic {
     });
     // Pull the SHARED vendor/contractor directory (server = source of truth; if empty, seed it from local).
     this._gateCatalog('vendors', serverData => {
-      if (Array.isArray(serverData) && serverData.length) {
+      if (Array.isArray(serverData)) {
         try { if (typeof localStorage !== 'undefined') localStorage.setItem('cubicVendors', JSON.stringify(serverData)); } catch (e) {}
         return { vendors: serverData };
       }
@@ -5847,16 +5847,20 @@ class Component extends DCLogic {
     this._catReadyMap = this._catReadyMap || {};
     this._catReadyMap[key] = new Promise(res => {
       const done = () => { this._catLoadedMap[key] = true; res(); };
+      // Unblocks anything waiting, but does NOT mark the channel loaded: with no confirmed
+      // copy there is nothing to measure a write against, and a write with nothing to measure
+      // against is exactly the overwrite this whole change exists to stop.
+      const giveUp = () => { this._setSave(key, 'error'); res(); };
       this._sbLoadCatalogFull(key).then(row => {
         const res = row ? { ok: true, data: row.data } : { ok: false, data: null };
-        if (!res.ok) { done(); return; } // read failed: do not seed the server from local
+        if (!res.ok) { giveUp(); return; }
         // The copy every later write is measured against. Without it a write has nothing to
         // compare itself to and falls back to overwriting, which is the bug.
         this._setBaseline(key, row.data, row.updated_at);
         let patch = null;
         try { patch = mapper(res.data); } catch (e) { patch = null; }
         if (patch) this.setState(patch, done); else done();   // resolve only once state is committed
-      }).catch(done);
+      }).catch(giveUp);
     });
     return this._catReadyMap[key];
   }
@@ -6021,6 +6025,15 @@ class Component extends DCLogic {
   _sbSaveCatalog(key, data, depth) {
     const c = this._SB;
     if (!c || !c.url || !c.key || typeof fetch === 'undefined') return Promise.resolve(false);
+    // One at a time per channel. A retry inside a reconcile (depth > 0) is already part of the
+    // write that holds the slot, so it must not queue behind itself.
+    if (!depth) {
+      this._writeQ = this._writeQ || {};
+      const prev = this._writeQ[key] || Promise.resolve();
+      const run = prev.then(() => this._sbSaveCatalog(key, data, 1), () => this._sbSaveCatalog(key, data, 1));
+      this._writeQ[key] = run.then(() => {}, () => {});
+      return run;
+    }
     const url = c.url + '/rest/v1/app_catalog';
     const settle = (doc, rev) => { this._setBaseline(key, doc, rev); this._broadcastSave(key, doc, rev); return true; };
 
@@ -6046,7 +6059,7 @@ class Component extends DCLogic {
       return r.json().then(rows => {
         if (rows && rows.length) return settle(data, rows[0].updated_at || stamp);
         // Matched nothing: the row moved on. Reconcile against what is there now and write that.
-        if ((depth || 0) >= 3) return false;   // a row being rewritten faster than we can answer
+        if ((depth || 0) >= 5) return false;   // a row being rewritten faster than we can answer
         return this._sbLoadCatalogFull(key).then(row => {
           if (!row) return insert(data);
           const merged = this._mergeCatalog(key, row.data, data);
@@ -12413,15 +12426,15 @@ class Component extends DCLogic {
   // every savable channel → a function that pushes the CURRENT state to the server (always re-derived, never a stale snapshot)
   _saveChannels() {
     return {
-      company: () => this._catIsLoaded('company') ? this._sbSaveCatalog('company', this.state.company || {}) : Promise.resolve(true),
-      defaults: () => this._catIsLoaded('defaults') ? this._sbSaveCatalog('defaults', this.state.defaults || {}) : Promise.resolve(true),
-      financial: () => this._catIsLoaded('financial') ? this._sbSaveCatalog('financial', this.state.financial || {}) : Promise.resolve(true),
-      vendors: () => this._catIsLoaded('vendors') ? this._sbSaveCatalog('vendors', this.state.vendors || []) : Promise.resolve(true),
-      cost_codes: () => this._catIsLoaded('cost_codes') ? this._sbSaveCatalog('cost_codes', this.state.customCodes || []) : Promise.resolve(true),
-      templates: () => this._catIsLoaded('templates') ? this._sbSaveCatalog('templates', this.state.templates || []) : Promise.resolve(true),
-      ap_invoices: () => this._catIsLoaded('ap_invoices') ? this._sbSaveCatalog('ap_invoices', this.state.apInvoices || []) : Promise.resolve(true),
-      ap_settings: () => this._catIsLoaded('ap_settings') ? this._sbSaveCatalog('ap_settings', this.state.apSettings || {}) : Promise.resolve(true),
-      projects: () => { if (!this._projLoaded || !this.currentUser()) return Promise.resolve(true); this._lastSavedProjects = this.state.projects; return this._sbSaveCatalog('projects', this.state.projects); },
+      company: () => this._catIsLoaded('company') ? this._sbSaveCatalog('company', this.state.company || {}) : Promise.resolve(false),
+      defaults: () => this._catIsLoaded('defaults') ? this._sbSaveCatalog('defaults', this.state.defaults || {}) : Promise.resolve(false),
+      financial: () => this._catIsLoaded('financial') ? this._sbSaveCatalog('financial', this.state.financial || {}) : Promise.resolve(false),
+      vendors: () => this._catIsLoaded('vendors') ? this._sbSaveCatalog('vendors', this.state.vendors || []) : Promise.resolve(false),
+      cost_codes: () => this._catIsLoaded('cost_codes') ? this._sbSaveCatalog('cost_codes', this.state.customCodes || []) : Promise.resolve(false),
+      templates: () => this._catIsLoaded('templates') ? this._sbSaveCatalog('templates', this.state.templates || []) : Promise.resolve(false),
+      ap_invoices: () => this._catIsLoaded('ap_invoices') ? this._sbSaveCatalog('ap_invoices', this.state.apInvoices || []) : Promise.resolve(false),
+      ap_settings: () => this._catIsLoaded('ap_settings') ? this._sbSaveCatalog('ap_settings', this.state.apSettings || {}) : Promise.resolve(false),
+      projects: () => { if (!this._projLoaded || !this.currentUser()) return Promise.resolve(false); this._lastSavedProjects = this.state.projects; return this._sbSaveCatalog('projects', this.state.projects); },
       profile: () => { const p = this.state.session && this.state.session.profile; if (!p) return Promise.resolve(true); return this._sbUpdateProfile(p.id, { name: p.name, phone: p.phone, title: p.title, signature: p.signature, photoUrl: p.photoUrl }); },
     };
   }
