@@ -5046,6 +5046,7 @@ class Component extends DCLogic {
 
   componentDidMount() {
     this._colResizeInit();
+    this._initExitGuards();
     this._loadSharedData();
     this._startAutosave(); // 30s sweep: flush/retry anything still pending
     this._restoreSession();
@@ -5167,8 +5168,14 @@ class Component extends DCLogic {
       }
       const serverProjects = res.data;
       if (Array.isArray(serverProjects) && serverProjects.length) {
+        // Anything this machine had that never reached the server goes back in here, and only
+        // ever as an addition — see _addMissing.
+        const recovered = this._recoverProjWal(serverProjects, row && row.updated_at);
+        const use = recovered || serverProjects;
         this._lastSavedProjects = serverProjects;
-        this.setState({ projects: serverProjects });
+        this.setState({ projects: use }, () => {
+          if (recovered) { this._setSave('projects', 'restored'); this.flushProjects(); }
+        });
       }
       this._projLoaded = true;
       this._applyDeepLink(); // ?project=&bill=/&claim= → open that record
@@ -5185,7 +5192,14 @@ class Component extends DCLogic {
         const snapshot = this.state.projects;
         this._setSave('projects', 'saving');
         if (this._projTimer) clearTimeout(this._projTimer);
-        this._projTimer = setTimeout(() => this._sbSaveCatalog('projects', snapshot).then(ok => this._setSave('projects', ok === false ? 'error' : 'saved')).catch(() => this._setSave('projects', 'error')), 800);
+        this._projTimer = setTimeout(() => {
+          // On disk here first. If the window goes away mid-flight, or the network never
+          // answers, this is what the next session finds.
+          this._writeProjWal(snapshot);
+          return this._sbSaveCatalog('projects', snapshot)
+            .then(ok => { if (ok !== false) this._clearProjWal(); this._setSave('projects', ok === false ? 'error' : 'saved'); })
+            .catch(() => this._setSave('projects', 'error'));
+        }, 800);
       }
     }
   }
@@ -6041,14 +6055,18 @@ class Component extends DCLogic {
     const insert = doc => fetch(url, {
       method: 'POST',
       headers: this._sbUserHeaders({ 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates,return=representation' }),
-      body: JSON.stringify([{ key, data: doc, updated_at: new Date().toISOString() }]),
+      body: JSON.stringify([{ key, data: doc, updated_at: (() => {
+        const k = Date.parse(this._revs()[key] || '');
+        return new Date(Math.max(Date.now(), (isNaN(k) ? 0 : k) + 1)).toISOString();
+      })() }]),
     }).then(r => (r.ok ? r.json().then(rows => settle(doc, rows && rows[0] && rows[0].updated_at),
       () => this._sbRowMeta(key).then(at => settle(doc, at), () => settle(doc, null))) : false)).catch(() => false);
 
     const known = this._revs()[key];
     if (!known) return insert(data);
 
-    const stamp = new Date().toISOString();
+    const known_ms = Date.parse(known);
+    const stamp = new Date(Math.max(Date.now(), (isNaN(known_ms) ? 0 : known_ms) + 1)).toISOString();
     const q = url + '?key=eq.' + encodeURIComponent(key) + '&updated_at=eq.' + encodeURIComponent(known);
     return fetch(q, {
       method: 'PATCH',
@@ -6079,6 +6097,107 @@ class Component extends DCLogic {
       }, () => false);
     }).catch(() => false);
   }
+  // ---- the last edit before the window closes ---------------------------------------------------
+  // A change is written 800ms after it is made. Close the window inside that window and the change
+  // was gone, and the projects document is the one channel with no local copy to fall back on.
+  //
+  // It cannot be pushed to the server on the way out: the document is close to a megabyte and a
+  // browser will not carry a body that size through an unload. So it is written where a write is
+  // instant and cannot fail for want of a network — this machine — and picked up next time.
+  _projWal() { return 'cubicProjectsWAL'; }
+  _writeProjWal() {
+    try {
+      if (typeof localStorage === 'undefined') return false;
+      localStorage.setItem(this._projWal(), JSON.stringify({
+        at: new Date().toISOString(),
+        rev: this._revs().projects || '',
+        user: (this.currentUser() || {}).email || '',
+        data: this.state.projects || [],
+      }));
+      return true;
+    } catch (e) {
+      // Out of room. Worth knowing about rather than failing quietly, because it means the
+      // safety net is not there.
+      this._walFull = true;
+      return false;
+    }
+  }
+  _clearProjWal() { try { if (typeof localStorage !== 'undefined') localStorage.removeItem(this._projWal()); } catch (e) {} }
+  _readProjWal() {
+    try {
+      if (typeof localStorage === 'undefined') return null;
+      const raw = localStorage.getItem(this._projWal());
+      const o = raw ? JSON.parse(raw) : null;
+      return (o && Array.isArray(o.data)) ? o : null;
+    } catch (e) { return null; }
+  }
+
+  // Anything still unwritten when the window goes away. Hiding a tab still leaves the page alive,
+  // so that one can go over the network properly; a close cannot, and gets the local copy.
+  _initExitGuards() {
+    if (this._exitGuarded || typeof window === 'undefined') return;
+    this._exitGuarded = true;
+    const dirty = () => this._projLoaded && this.state.projects !== this._lastSavedProjects;
+    try {
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState !== 'hidden') return;
+        if (dirty()) this._writeProjWal();
+        // The page is still running here, so a real save is possible and is the better outcome.
+        Object.keys(this._saveChannels()).forEach(ch => {
+          const st = (this.state.saveStatus || {})[ch];
+          if (st === 'saving' || st === 'error' || (ch === 'projects' && dirty())) this._flushChannel(ch);
+        });
+      });
+      window.addEventListener('pagehide', () => { if (dirty()) this._writeProjWal(); });
+      window.addEventListener('beforeunload', () => { if (dirty()) this._writeProjWal(); });
+    } catch (e) {}
+  }
+
+  // Putting back what never got out. This only ever ADDS: a record the local copy has and the
+  // server does not is restored, a record they both have is left exactly as the server has it,
+  // and nothing is ever removed. Recovery must not be able to undo somebody else's newer work —
+  // that is the mistake this whole change exists to stop, and it would be a poor way to repeat it.
+  _addMissing(server, local) {
+    if (Array.isArray(server) && Array.isArray(local)) {
+      if (server.some(x => this._idOf(x) == null) || local.some(x => this._idOf(x) == null)) return server;
+      const byId = {}; server.forEach((x, i) => { const k = this._idOf(x); if (k != null) byId[k] = i; });
+      const out = server.map(x => x);
+      local.forEach(x => {
+        const k = this._idOf(x);
+        if (byId[k] == null) { out.push(x); return; }          // gone from the server: put it back
+        out[byId[k]] = this._addMissing(server[byId[k]], x);    // present in both: go deeper
+      });
+      return out;
+    }
+    if (this._isPlain(server) && this._isPlain(local)) {
+      const out = Object.assign({}, server);
+      Object.keys(local).forEach(k => {
+        if (!(k in server)) { out[k] = local[k]; return; }
+        out[k] = this._addMissing(server[k], local[k]);
+      });
+      return out;
+    }
+    return server;   // a value they disagree on: the server is the newer authority
+  }
+
+  // On the way back in. If the copy left behind was made against the document that is still on
+  // the server then nobody has written since and those edits simply never made it out, so they go
+  // back whole. If the server has moved on, only what is missing is restored.
+  _recoverProjWal(serverDoc, serverRev) {
+    const wal = this._readProjWal();
+    if (!wal) return null;
+    const me = (this.currentUser() || {}).email || '';
+    if (wal.user && me && wal.user !== me) { this._clearProjWal(); return null; }   // not this person's work
+    if (this._sameJson(wal.data, serverDoc)) { this._clearProjWal(); return null; } // it did get out
+    const out = (wal.rev && serverRev && wal.rev === serverRev)
+      ? wal.data
+      : this._addMissing(serverDoc, wal.data);
+    if (out == null || this._sameJson(out, serverDoc)) { this._clearProjWal(); return null; }
+    this._clearProjWal();
+    this._walRecovered = true;
+    return out;
+  }
+
   // ---- windows in the same browser ---------------------------------------------------------------
   // Two windows on one machine is the common case and the one that cost a day's work. They can talk
   // to each other directly, so a save in one becomes the other's copy immediately and the collision
@@ -12250,7 +12369,11 @@ class Component extends DCLogic {
       return {
         customCodes: parents,
         codeModal: null,
-        projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, costLines: p.costLines.map(l => l.id === codeModal.lineId ? { ...l, code: childCode, cat: 'other', desc: (!l.desc || l.desc === 'New cost line') ? cDesc : l.desc } : l) }),
+        // Only when it was opened from a line. Rebuilding this array is what pushes the whole
+        // budget to the server, and a window opened just to add codes has no business doing that.
+        projects: codeModal.lineId
+          ? s.projects.map(p => p.id !== s.pid ? p : { ...p, costLines: p.costLines.map(l => l.id === codeModal.lineId ? { ...l, code: childCode, cat: 'other', desc: (!l.desc || l.desc === 'New cost line') ? cDesc : l.desc } : l) })
+          : s.projects,
       };
     }));
   }
@@ -13433,9 +13556,10 @@ class Component extends DCLogic {
     // that used to pass in silence while somebody's work was being discarded.
     const _saveMeta = (ch, onSave) => {
       const st = (S.saveStatus && S.saveStatus[ch]) || 'saved';
-      const saving = st === 'saving', merged = st === 'merged';
+      const saving = st === 'saving', merged = st === 'merged' || st === 'restored';
+      const restored = st === 'restored';
       return { saving,
-        statusText: saving ? 'Saving…' : (merged ? 'Merged changes from another window' : 'All changes saved'),
+        statusText: saving ? 'Saving…' : (restored ? 'Recovered work that had not been saved' : (merged ? 'Merged changes from another window' : 'All changes saved')),
         statusColor: saving ? '#8a6d00' : (merged ? '#1d4ed8' : '#15803d'),
         statusBg: saving ? '#fdf6e3' : (merged ? '#e7eefc' : '#eef8f1'),
         dotColor: saving ? '#e0a800' : (merged ? '#2b59c3' : '#22a35a'),
@@ -13446,11 +13570,12 @@ class Component extends DCLogic {
     const _ssAll = S.saveStatus || {}; let _pendN = 0, _errN = 0;
     ['company', 'defaults', 'financial', 'vendors', 'cost_codes', 'projects', 'profile', 'ap_invoices', 'ap_settings'].forEach(c => { if (_ssAll[c] === 'saving') _pendN++; else if (_ssAll[c] === 'error') _errN++; });
     let _mrgN = 0;
-    ['company', 'defaults', 'financial', 'vendors', 'cost_codes', 'projects', 'profile', 'ap_invoices', 'ap_settings'].forEach(c => { if (_ssAll[c] === 'merged') _mrgN++; });
+    let _rstN = 0;
+    ['company', 'defaults', 'financial', 'vendors', 'cost_codes', 'projects', 'profile', 'ap_invoices', 'ap_settings'].forEach(c => { if (_ssAll[c] === 'merged') _mrgN++; else if (_ssAll[c] === 'restored') { _mrgN++; _rstN++; } });
     const _gErr = _errN > 0, _gPend = !_gErr && _pendN > 0, _gMrg = !_gErr && !_gPend && _mrgN > 0;
     const globalSaveV = {
       isError: _gErr, isSaving: _gPend, isClean: !_gErr && !_gPend,
-      text: _gErr ? 'Not saved — click Save' : (_gPend ? 'Saving…' : (_gMrg ? 'Merged changes from another window' : 'All changes saved')),
+      text: _gErr ? 'Not saved — click Save' : (_gPend ? 'Saving…' : (_gMrg ? (_rstN ? 'Recovered work that had not been saved' : 'Merged changes from another window') : 'All changes saved')),
       color: _gErr ? '#b91c1c' : (_gPend ? '#8a6d00' : (_gMrg ? '#1d4ed8' : '#15803d')),
       bg: _gErr ? '#fdecec' : (_gPend ? '#fdf6e3' : (_gMrg ? '#e7eefc' : '#eef8f1')),
       dot: _gErr ? '#dc2626' : (_gPend ? '#e0a800' : '#22a35a'),
