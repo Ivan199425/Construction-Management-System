@@ -2082,9 +2082,8 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                     <span style="font-size:11px;color:#8894a2">%</span>
                   </div>
                   <div style="text-align:right"><div class="mono" style="font-size:12px;color:#0f1720">{{ r.prevInvoiced }}</div><div style="font-size:10px;color:#6b7787">{{ r.prevPct }} of budget</div></div>
-                  <div style="display:flex;align-items:center;justify-content:flex-end;gap:3px">
-                    <span style="font-size:11px;color:#8894a2">{{ currencySymbol }}</span>
-                    <input value="{{ r.claimValue }}" onInput="{{ r.onClaim }}" placeholder="0.00" title="Type the amount to claim this time and the progress % follows. Type a % instead and this follows." class="mono" style="width:100px;border:1px solid #e4e8ee;border-radius:6px;padding:6px 6px;font-size:12.5px;font-weight:600;text-align:right;font-family:'IBM Plex Mono',monospace;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none">
+                  <div style="display:flex;align-items:center;justify-content:flex-end">
+                    <input value="{{ r.claimValue }}" onInput="{{ r.onClaim }}" onFocus="{{ r.onClaimFocus }}" onBlur="{{ r.onClaimBlur }}" placeholder="{{ currencySymbol }}0.00" title="Type the amount to claim this time and the progress % follows. Type a % instead and this follows." class="mono" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 8px;font-size:12.5px;font-weight:600;text-align:right;font-family:'IBM Plex Mono',monospace;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none">
                   </div>
                   <div class="mono" style="font-size:12.5px;color:#b45309;text-align:right">{{ r.outstandingPct }}</div>
                 </div>
@@ -14755,8 +14754,10 @@ class Component extends DCLogic {
           outstandingPct: Math.round(outPct) + '%',
           selected, checkMark: selected ? '✓' : '', checkBg: selected ? '#2b59c3' : '#fff', checkBorder: selected ? '#2b59c3' : '#cfd8e2',
           rowOpacity: selected ? '1' : '.9',
-          claimValue: _cl.byAmount ? String(_cl.claim) : (thisClaim > 0 ? String(Math.round(thisClaim * 100) / 100) : ''),
+          claimValue: this._mdisp('clm:' + l.code, _cl.byAmount ? String(_cl.claim) : (thisClaim > 0 ? String(this._r2(thisClaim)) : '')),
           onClaim: e => this.setClientClaimAmount(l.code, e.target.value),
+          onClaimFocus: () => this.startEdit('clm:' + l.code),
+          onClaimBlur: () => this.endEdit(),
           onPct: e => this.setClientProgress(l.code, e.target.value),
           onSelect: () => this.toggleClientSelect(l.code),
         };
