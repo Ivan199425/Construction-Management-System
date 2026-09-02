@@ -15012,9 +15012,9 @@ class Component extends DCLogic {
         return {
           code: l.code, desc: l.desc, budget: this.money(budget),
           pct: raw == null ? '' : String(raw),
-          prevInvoiced: this.money(PI), prevPct: Math.round(prevPct) + '%',
+          prevInvoiced: this.money(PI), prevPct: this._r2(prevPct) + '%',
           thisClaim: this.money(thisClaim), thisClaimZero: thisClaim <= 0,
-          outstandingPct: Math.round(outPct) + '%',
+          outstandingPct: this._r2(outPct) + '%',
           selected, checkMark: selected ? '✓' : '', checkBg: selected ? '#2b59c3' : '#fff', checkBorder: selected ? '#2b59c3' : '#cfd8e2',
           rowOpacity: selected ? '1' : '.9',
           claimValue: this._claimDisp('clm:' + l.code, _cl),
