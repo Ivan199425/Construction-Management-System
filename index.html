@@ -2078,7 +2078,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                   <div style="font-size:12.5px;color:#0f1720">{{ r.desc }}</div>
                   <div class="mono" style="font-size:12.5px;color:#0f1720;text-align:right">{{ r.budget }}</div>
                   <div style="display:flex;align-items:center;justify-content:center;gap:3px">
-                    <input value="{{ r.pct }}" onInput="{{ r.onPct }}" type="number" placeholder="0" class="mono" style="width:54px;border:1px solid #e4e8ee;border-radius:6px;padding:6px 6px;font-size:12.5px;text-align:right;font-family:'IBM Plex Mono',monospace;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none">
+                    <input value="{{ r.pct }}" onInput="{{ r.onPct }}" type="number" placeholder="" title="Percentage of the approved budget claimed to date. Type here and the amount follows; type an amount and this follows." class="mono" style="width:76px;border:1px solid #e4e8ee;border-radius:6px;padding:6px 6px;font-size:12.5px;text-align:right;font-family:'IBM Plex Mono',monospace;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none">
                     <span style="font-size:11px;color:#8894a2">%</span>
                   </div>
                   <div style="text-align:right"><div class="mono" style="font-size:12px;color:#0f1720">{{ r.prevInvoiced }}</div><div style="font-size:10px;color:#6b7787">{{ r.prevPct }} of budget</div></div>
