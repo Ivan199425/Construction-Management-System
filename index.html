@@ -11279,12 +11279,15 @@ class Component extends DCLogic {
     if (!selected) claim = 0;
     // Never claim past the budget, whichever end it was driven from.
     if (budget > 0) claim = Math.min(claim, Math.max(0, budget - PI));
+    claim = this._r2(claim);
     const pct = budget > 0 ? this._r2(((PI + claim) / budget) * 100) : 0;
-    return { budget, PI, claim, pct, selected, byAmount, rawPct };
+    return { budget, PI, claim, pct, selected, byAmount, rawPct, rawClaim: typed };
   }
   // Typing a percentage takes the line back to being driven by percentage.
   setClientClaimAmount(code, val) {
-    const clean = String(val == null ? '' : val).replace(/[^0-9.]/g, '');
+    let clean = String(val == null ? '' : val).replace(/[^0-9.]/g, '');
+    const dot = clean.indexOf('.');
+    if (dot >= 0) clean = clean.slice(0, dot + 1) + clean.slice(dot + 1).replace(/\./g, '');
     this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : Object.assign({}, p, {
       clientClaim: Object.assign({}, p.clientClaim || {}, { [code]: clean }),
     })) }));
@@ -11295,6 +11298,18 @@ class Component extends DCLogic {
     return next;
   }
   setClientProgress(code, val) { this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, clientProgress: { ...(p.clientProgress || {}), [code]: val }, clientClaim: this.clearClientClaimAmount(p, code) }) })); }
+  // The claim column, in two states. Being typed into: exactly the characters in it, so a
+  // half-finished "4526." survives long enough to become "4526.23". Left alone: the amount
+  // that will actually be claimed, as money — which is not always what was typed, because a
+  // claim is capped at what is left of the budget.
+  _claimDisp(key, cl) {
+    if ((this.state.editCell || '') === key) {
+      if (cl.byAmount) return String(cl.rawClaim == null ? '' : cl.rawClaim);
+      return cl.claim > 0 ? String(this._r2(cl.claim)) : '';
+    }
+    if (cl.byAmount) return this.money(this._r2(cl.claim));
+    return cl.claim > 0 ? this.money(this._r2(cl.claim)) : '';
+  }
   clientLineSelected(p, code) { const sel = p.clientSelected || {}; return (code in sel) ? !!sel[code] : true; }
   toggleClientSelect(code) { this.setState(s => ({ projects: s.projects.map(p => { if (p.id !== s.pid) return p; const cur = this.clientLineSelected(p, code); return { ...p, clientSelected: { ...(p.clientSelected || {}), [code]: !cur } }; }) })); }
   setAllClientSelect(val) { this.setState(s => ({ projects: s.projects.map(p => { if (p.id !== s.pid) return p; const m = {}; (p.costLines || []).forEach(l => { m[l.code] = val; }); return { ...p, clientSelected: m }; }) })); }
@@ -11481,7 +11496,13 @@ class Component extends DCLogic {
   }
   closeInvoicePayments() { this.setState({ invoicePay: null }); }
   setInvoicePayField(k, v) {
-    this.setState(st => (st.invoicePay ? { invoicePay: Object.assign({}, st.invoicePay, { form: Object.assign({}, st.invoicePay.form || {}, { [k]: v }) }) } : {}));
+    let val = v;
+    if (k === 'amount') {
+      val = String(v == null ? '' : v).replace(/[^0-9.]/g, '');
+      const dot = val.indexOf('.');
+      if (dot >= 0) val = val.slice(0, dot + 1) + val.slice(dot + 1).replace(/\./g, '');
+    }
+    this.setState(st => (st.invoicePay ? { invoicePay: Object.assign({}, st.invoicePay, { form: Object.assign({}, st.invoicePay.form || {}, { [k]: val }) }) } : {}));
   }
   // Loads one receipt back into the form to be corrected — the point of the whole dialog.
   editInvoicePayment(payId) {
@@ -11640,7 +11661,9 @@ class Component extends DCLogic {
   }
   closeInvoiceEdit() { this.setState({ invoiceEdit: null }); }
   setInvoiceEditLine(code, val) {
-    const clean = String(val == null ? '' : val).replace(/[^0-9.]/g, '');
+    let clean = String(val == null ? '' : val).replace(/[^0-9.]/g, '');
+    const dot = clean.indexOf('.');
+    if (dot >= 0) clean = clean.slice(0, dot + 1) + clean.slice(dot + 1).replace(/\./g, '');
     this.setState(st => (st.invoiceEdit ? { invoiceEdit: Object.assign({}, st.invoiceEdit, {
       lines: (st.invoiceEdit.lines || []).map(r => r.code !== code ? r : Object.assign({}, r, { amount: clean })),
     }) } : {}));
@@ -14994,7 +15017,7 @@ class Component extends DCLogic {
           outstandingPct: Math.round(outPct) + '%',
           selected, checkMark: selected ? '✓' : '', checkBg: selected ? '#2b59c3' : '#fff', checkBorder: selected ? '#2b59c3' : '#cfd8e2',
           rowOpacity: selected ? '1' : '.9',
-          claimValue: this._mdisp('clm:' + l.code, _cl.byAmount ? String(_cl.claim) : (thisClaim > 0 ? String(this._r2(thisClaim)) : '')),
+          claimValue: this._claimDisp('clm:' + l.code, _cl),
           onClaim: e => this.setClientClaimAmount(l.code, e.target.value),
           onClaimFocus: () => this.startEdit('clm:' + l.code),
           onClaimBlur: () => this.endEdit(),
