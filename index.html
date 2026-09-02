@@ -11181,7 +11181,7 @@ class Component extends DCLogic {
     if (!selected) claim = 0;
     // Never claim past the budget, whichever end it was driven from.
     if (budget > 0) claim = Math.min(claim, Math.max(0, budget - PI));
-    const pct = budget > 0 ? ((PI + claim) / budget) * 100 : 0;
+    const pct = budget > 0 ? this._r2(((PI + claim) / budget) * 100) : 0;
     return { budget, PI, claim, pct, selected, byAmount, rawPct };
   }
   // Typing a percentage takes the line back to being driven by percentage.
@@ -14738,7 +14738,7 @@ class Component extends DCLogic {
       const rows = (p.costLines || []).map(l => {
         const _cl = this.clientClaimLine(p, l);
         const budget = _cl.budget;
-        const raw = _cl.byAmount ? String(Math.round(_cl.pct * 100) / 100) : _cl.rawPct;
+        const raw = _cl.byAmount ? String(_cl.pct) : _cl.rawPct;
         const PI = _cl.PI;
         const selected = _cl.selected;
         const thisClaim = _cl.claim;
