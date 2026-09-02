@@ -11549,7 +11549,7 @@ class Component extends DCLogic {
     const retAmt2 = claim * this._num(e.retentionPct) / 100;
     const net2 = Math.max(0, claim - retAmt2 - this._num(e.backCharges));
     const total2 = net2 + net2 * gst / 100;   // the register now agrees with the PDF
-    const record = { id: this._rid('inv'), no: noStr, date: e.date || today, dueDate: e.dueDate || due, amount: claim, gstRate: gst, total: total2, extra, from: sc.from || '', subject: sc.subject || '', message: (sc.message || '').trim(), recipients: recips.slice(), status: 'sent', paidAt: '', payRef: '', lines: invLines, snap };
+    const record = { id: this._rid('inv'), no: noStr, date: e.date || today, dueDate: e.dueDate || due, amount: claim, gstRate: gst, total: total2, extra, from: sc.from || '', subject: sc.subject || '', message: (sc.message || '').trim(), recipients: recips.slice(), status: 'sent', paidAt: '', payRef: '', lines: invLines, snap, payments: [], paid: 0 };
     const msg = record.message ? ' — “' + record.message + '”' : '';
     this._emailInvoiceWithPdf(recips, sc.subject || '', sc.message || '', null, noStr);
     this.setState(s => ({ projects: s.projects.map(x => x.id !== s.pid ? x : { ...x, clientInvoiced: inv, clientClaim: {}, clientInvoiceNo: no, senderEmail: sc.from || x.senderEmail, invoices: [...(x.invoices || []), record], clientInvoiceSentAt: noStr + ' sent to ' + recips.length + ' recipient(s): ' + recips.join(', ') + ' on ' + today + ' · due ' + this.fmtDate(e.dueDate || due) + msg }), invoiceSend: null }));
@@ -14472,15 +14472,15 @@ class Component extends DCLogic {
       const bills = p.bills || [];
       const gross = bills.reduce((s, x) => s + this.billTotal(x), 0);
       const today = new Date().toISOString().slice(0, 10);
-      const paid = bills.filter(x => x.status === 'paid').reduce((s, x) => s + this.billTotal(x), 0);
-      const outstanding = bills.filter(x => x.status !== 'paid').reduce((s, x) => s + this.billTotal(x), 0);
+      const paid = bills.reduce((s, x) => s + this.billPaid(x), 0);
+      const outstanding = bills.reduce((s, x) => s + this.billOutstanding(x), 0);
       const overdueBills = bills.filter(x => x.status !== 'paid' && x.dueDate && x.dueDate < today);
       const overdue = overdueBills.reduce((s, x) => s + this.billTotal(x), 0);
       const uncoded = bills.filter(x => !x.code).length;
       kpis = [
         kpiCard('Total (incl. tax)', this.money(gross), bills.length + ' bills'),
-        kpiCard('Paid', this.money(paid), bills.filter(x => x.status === 'paid').length + ' bills', '#15803d'),
-        kpiCard('Outstanding', this.money(outstanding), bills.filter(x => x.status !== 'paid').length + ' bills', outstanding ? '#b45309' : '#15803d'),
+        kpiCard('Paid', this.money(paid), bills.filter(x => this.billStatusFor(x) === 'paid').length + ' bills', '#15803d'),
+        kpiCard('Outstanding', this.money(outstanding), bills.filter(x => this.billStatusFor(x) !== 'paid').length + ' bills', outstanding ? '#b45309' : '#15803d'),
         kpiCard('Overdue', this.money(overdue), overdueBills.length + ' past due', overdue ? '#b91c1c' : '#15803d'),
         kpiCard('Unassigned', String(uncoded), uncoded ? 'need a cost code' : 'all coded', uncoded ? '#b45309' : '#15803d'),
         kpiCard('Vendors', String(new Set(bills.map(x => x.vendorId).filter(Boolean)).size), 'directory: ' + S.vendors.length),
@@ -14682,7 +14682,7 @@ class Component extends DCLogic {
         const _ivSt = this.invoiceStatus(iv);
         const paid = _ivSt === 'paid';
         const partPaid = _ivSt === 'partial';
-        return { id: iv.id, title: iv.no, sub: ((iv.recipients || []).length) + ' recipient(s)' + (iv.subject ? ' · ' + iv.subject : ''), meta: iv.date ? this.fmtDate(iv.date) : '—', amount: this.money(iv.total || iv.amount || 0), statusLabel: paid ? 'Paid' : (partPaid ? 'Part paid' : 'Sent'), statusColor: paid ? '#15803d' : (partPaid ? '#b45309' : '#1d4ed8'), statusBg: paid ? '#e6f4ea' : (partPaid ? '#fdf3e3' : '#e7eefc') };
+        return { id: iv.id, title: iv.no, sub: ((iv.recipients || []).length) + ' recipient(s)' + (iv.subject ? ' · ' + iv.subject : ''), meta: iv.date ? this.fmtDate(iv.date) : '—', amount: this.money(iv.total || iv.amount || 0), statusLabel: paid ? 'Paid' : (partPaid ? 'Part paid' : 'Sent'), statusColor: paid ? '#15803d' : (partPaid ? '#b45309' : '#1d4ed8'), statusBg: paid ? '#e6f4ea' : (partPaid ? '#fbf1e3' : '#e7eefc') };
       });
       // PERMITS — attached documents on permit docs (with gallery navigation)
       const permitItems = [];
@@ -15021,7 +15021,7 @@ class Component extends DCLogic {
           total: this.money(iv.total), recipients: (iv.recipients || []).length + ' recipient(s)',
           statusLabel: this.invoiceStatusLabel(iv, overdue),
           statusColor: paid ? '#15803d' : (ivStatus === 'partial' ? '#b45309' : (overdue ? '#b91c1c' : '#1d4ed8')),
-          statusBg: paid ? '#e6f4ea' : (ivStatus === 'partial' ? '#fdf3e3' : (overdue ? '#fbeef0' : '#e7eefc')),
+          statusBg: paid ? '#e6f4ea' : (ivStatus === 'partial' ? '#fbf1e3' : (overdue ? '#fbeef0' : '#e7eefc')),
           paid, unpaid: !paid, payRef: iv.payRef || '', paidAt: this.fmtDate(iv.paidAt),
           receivedLabel: this.money(received), owingLabel: this.money(owing),
           hasPayments: nPay > 0, noPayments: nPay === 0,
@@ -15030,7 +15030,9 @@ class Component extends DCLogic {
           canDelete: this.can('invoices', 'edit'), canEdit: this.can('invoices', 'edit'),
           onEdit: () => this.openInvoiceEdit(iv.id), onViewPdf: () => this.previewInvoicePdf(iv.id),
           onViewExcel: () => this.exportInvoiceExcel(iv.id), onDownloadPdf: () => this.downloadInvoicePdf(iv.id),
-          onDelete: () => this.openDeleteConfirm('invoice', iv.id, iv.no, 'The amounts this invoice claimed will be released so they can be invoiced again.'),
+          onDelete: () => this.openDeleteConfirm('invoice', iv.id, iv.no,
+            'The amounts this invoice claimed will be released so they can be invoiced again.'
+            + (nPay > 0 ? ' ' + this.money(received) + ' recorded as received against it (' + (nPay === 1 ? '1 payment' : nPay + ' payments') + ') will be deleted too.' : '')),
         };
       });
       let invoicedTot = 0, paidTot = 0;
