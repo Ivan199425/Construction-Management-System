@@ -2082,7 +2082,10 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                     <span style="font-size:11px;color:#8894a2">%</span>
                   </div>
                   <div style="text-align:right"><div class="mono" style="font-size:12px;color:#0f1720">{{ r.prevInvoiced }}</div><div style="font-size:10px;color:#6b7787">{{ r.prevPct }} of budget</div></div>
-                  <div class="mono" style="font-size:13px;font-weight:600;color:#0f1720;text-align:right">{{ r.thisClaim }}</div>
+                  <div style="display:flex;align-items:center;justify-content:flex-end;gap:3px">
+                    <span style="font-size:11px;color:#8894a2">{{ currencySymbol }}</span>
+                    <input value="{{ r.claimValue }}" onInput="{{ r.onClaim }}" placeholder="0.00" title="Type the amount to claim this time and the progress % follows. Type a % instead and this follows." class="mono" style="width:100px;border:1px solid #e4e8ee;border-radius:6px;padding:6px 6px;font-size:12.5px;font-weight:600;text-align:right;font-family:'IBM Plex Mono',monospace;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none">
+                  </div>
                   <div class="mono" style="font-size:12.5px;color:#b45309;text-align:right">{{ r.outstandingPct }}</div>
                 </div>
               </sc-for>
@@ -10755,7 +10758,7 @@ class Component extends DCLogic {
     const code = (f.code || '').trim() || (name.replace(/[^a-zA-Z0-9]/g, '').slice(0, 6).toUpperCase() || 'PROJ');
     return {
       id, name, code, client, status: 'active', projectType: f.projectType || 'Residential', address: (f.address || '').trim(), gstRate: Number(f.gstRate) || 10,
-      customers: [], clientProgress: {}, clientInvoiced: {}, clientInvoiceNo: 0, clientSelected: {},
+      customers: [], clientProgress: {}, clientInvoiced: {}, clientClaim: {}, clientInvoiceNo: 0, clientSelected: {},
       eots: [], docs: [], description: '',
       schedule: { fileName: '', fileType: '', fileUrl: '', uploadedAt: '', version: 0, versions: [], activities: [] },
       clientReps: [], team: [],
@@ -11156,7 +11159,45 @@ class Component extends DCLogic {
   setProjectField(field, val) { if (!this.can('projectSetup', 'edit')) return; this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, [field]: val }) })); }
   projectTypeList() { return ['Commercial', 'Residential', 'Infrastructure', 'Public works', 'Lead']; }
   setContractField(field, val) { if (!this.can('projectSetup', 'edit')) return; this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, contract: { ...p.contract, [field]: val } }) })); }
-  setClientProgress(code, val) { this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, clientProgress: { ...(p.clientProgress || {}), [code]: val } }) })); }
+  // What this line is claiming, and the percentage that goes with it.
+  //
+  // A claim can be driven from either end. Type a percentage of the budget and the amount
+  // follows; type the amount and the percentage follows. The amount is the one that gets
+  // stored when it is typed, because a claim is a figure on an invoice and has to come out to
+  // the cent — deriving it back out of a rounded percentage lands a few cents away from what
+  // somebody typed, and on a $300,000 line that is a conversation nobody wants to have.
+  clientClaimLine(p, l) {
+    const budget = this.lineCurrent(l, p);
+    const rawPct = (p.clientProgress || {})[l.code];
+    const PI = this._num((p.clientInvoiced || {})[l.code]);
+    const typed = (p.clientClaim || {})[l.code];
+    const byAmount = typed != null && typed !== '';
+    const selected = this.clientLineSelected(p, l.code);
+    let claim;
+    if (byAmount) claim = Math.max(0, this._num(typed));
+    else {
+      const pct = (rawPct == null || rawPct === '') ? 0 : this._num(rawPct);
+      claim = Math.max(0, budget * pct / 100 - PI);
+    }
+    if (!selected) claim = 0;
+    // Never claim past the budget, whichever end it was driven from.
+    if (budget > 0) claim = Math.min(claim, Math.max(0, budget - PI));
+    const pct = budget > 0 ? ((PI + claim) / budget) * 100 : 0;
+    return { budget, PI, claim, pct, selected, byAmount, rawPct };
+  }
+  // Typing a percentage takes the line back to being driven by percentage.
+  setClientClaimAmount(code, val) {
+    const clean = String(val == null ? '' : val).replace(/[^0-9.]/g, '');
+    this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : Object.assign({}, p, {
+      clientClaim: Object.assign({}, p.clientClaim || {}, { [code]: clean }),
+    })) }));
+  }
+  clearClientClaimAmount(p, code) {
+    const next = Object.assign({}, p.clientClaim || {});
+    delete next[code];
+    return next;
+  }
+  setClientProgress(code, val) { this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, clientProgress: { ...(p.clientProgress || {}), [code]: val }, clientClaim: this.clearClientClaimAmount(p, code) }) })); }
   clientLineSelected(p, code) { const sel = p.clientSelected || {}; return (code in sel) ? !!sel[code] : true; }
   toggleClientSelect(code) { this.setState(s => ({ projects: s.projects.map(p => { if (p.id !== s.pid) return p; const cur = this.clientLineSelected(p, code); return { ...p, clientSelected: { ...(p.clientSelected || {}), [code]: !cur } }; }) })); }
   setAllClientSelect(val) { this.setState(s => ({ projects: s.projects.map(p => { if (p.id !== s.pid) return p; const m = {}; (p.costLines || []).forEach(l => { m[l.code] = val; }); return { ...p, clientSelected: m }; }) })); }
@@ -11166,15 +11207,14 @@ class Component extends DCLogic {
     let any = false;
     (p.costLines || []).forEach(l => {
       const B = this.lineCurrent(l, p);
-      const raw = prog[l.code]; const pct = raw == null || raw === '' ? 0 : Number(raw) || 0;
-      const toDate = B * pct / 100; const PI = Number(inv[l.code]) || 0;
-      if (this.clientLineSelected(p, l.code) && toDate - PI > 0.005) { inv[l.code] = toDate; any = true; }
+      const _cl = this.clientClaimLine(p, l);
+      if (_cl.claim > 0.005) { inv[l.code] = _cl.PI + _cl.claim; any = true; }
     });
     if (!any) return;
     const today = new Date().toISOString().slice(0, 10);
     const no = (Number(p.clientInvoiceNo) || 0) + 1;
     const to = (p.customers && p.customers[0] && (p.customers[0].email || p.customers[0].company)) || p.client;
-    this.setState(s => ({ projects: s.projects.map(x => x.id !== s.pid ? x : { ...x, clientInvoiced: inv, clientInvoiceNo: no, clientInvoiceSentAt: 'Invoice INV-' + String(no).padStart(3, '0') + ' sent to ' + to + ' on ' + today }) }));
+    this.setState(s => ({ projects: s.projects.map(x => x.id !== s.pid ? x : { ...x, clientInvoiced: inv, clientClaim: {}, clientInvoiceNo: no, clientInvoiceSentAt: 'Invoice INV-' + String(no).padStart(3, '0') + ' sent to ' + to + ' on ' + today }) }));
   }
   // --- invoice: review & send to multiple recipients ---
   todayLocal() { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
@@ -11358,11 +11398,8 @@ class Component extends DCLogic {
       if (!rows.length) { rows.push({ code: '', desc: 'Progress claim', budget: this._num(issued.amount), pct: 100, prior: 0, amount: this._num(issued.amount) }); claim = this._num(issued.amount); }
     } else {
       (p.costLines || []).forEach(l => {
-        const B = this.lineCurrent(l, p); const raw = prog[l.code];
-        const pct = (raw == null || raw === '') ? 0 : this._num(raw);
-        const toDate = B * pct / 100; const PI = this._num(invd[l.code]);
-        const tc = this.clientLineSelected(p, l.code) ? Math.max(0, toDate - PI) : 0;
-        if (tc > 0.005) { rows.push({ code: l.code, desc: l.desc, budget: B, pct, prior: PI, amount: tc }); claim += tc; }
+        const _cl = this.clientClaimLine(p, l);
+        if (_cl.claim > 0.005) { rows.push({ code: l.code, desc: l.desc, budget: _cl.budget, pct: _cl.pct, prior: _cl.PI, amount: _cl.claim }); claim += _cl.claim; }
       });
     }
     // While the send dialog is open its edits override the draft, so the preview, the PDF,
@@ -14700,13 +14737,12 @@ class Component extends DCLogic {
       const inv = p.clientInvoiced || {};
       let claimTotal = 0, prevTotal = 0;
       const rows = (p.costLines || []).map(l => {
-        const budget = this.lineCurrent(l, p);
-        const raw = prog[l.code];
-        const pct = raw == null || raw === '' ? 0 : Number(raw) || 0;
-        const toDate = budget * pct / 100;
-        const PI = Number(inv[l.code]) || 0;
-        const selected = this.clientLineSelected(p, l.code);
-        const thisClaim = selected ? Math.max(0, toDate - PI) : 0;
+        const _cl = this.clientClaimLine(p, l);
+        const budget = _cl.budget;
+        const raw = _cl.byAmount ? String(Math.round(_cl.pct * 100) / 100) : _cl.rawPct;
+        const PI = _cl.PI;
+        const selected = _cl.selected;
+        const thisClaim = _cl.claim;
         const invoicedAfter = PI + thisClaim;
         const outPct = budget > 0 ? Math.max(0, 100 - (invoicedAfter / budget * 100)) : 0;
         const prevPct = budget > 0 ? (PI / budget * 100) : 0;
@@ -14719,6 +14755,8 @@ class Component extends DCLogic {
           outstandingPct: Math.round(outPct) + '%',
           selected, checkMark: selected ? '✓' : '', checkBg: selected ? '#2b59c3' : '#fff', checkBorder: selected ? '#2b59c3' : '#cfd8e2',
           rowOpacity: selected ? '1' : '.9',
+          claimValue: _cl.byAmount ? String(_cl.claim) : (thisClaim > 0 ? String(Math.round(thisClaim * 100) / 100) : ''),
+          onClaim: e => this.setClientClaimAmount(l.code, e.target.value),
           onPct: e => this.setClientProgress(l.code, e.target.value),
           onSelect: () => this.toggleClientSelect(l.code),
         };
