@@ -598,6 +598,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                       <sc-for list="{{ settingsV.ingestion.collectScopeOptions }}" as="o" hint-placeholder-count="3"><option value="{{ o.v }}">{{ o.label }}</option></sc-for>
                     </select>
                     <div style="font-size:11px;color:#8894a2;margin-top:6px;line-height:1.55">{{ settingsV.ingestion.collectScopeNote }}</div>
+                    <sc-if value="{{ settingsV.ingestion.hasNoCodeProjects }}" hint-placeholder-val="{{ false }}"><div style="font-size:11px;color:#b45309;margin-top:6px;line-height:1.55">No project number on {{ settingsV.ingestion.noCodeProjects }} — an invoice can only be placed on it by its full name or a PO reference. Give it a number in Project setup and matching gets a great deal better.</div></sc-if>
                     <sc-if value="{{ settingsV.ingestion.hasSkipped }}" hint-placeholder-val="{{ false }}">
                       <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:6px">
                         <div style="font-size:11px;color:#8894a2">Set aside so far: <strong style="color:#4a5765">{{ settingsV.ingestion.skippedCount }}</strong> — see the <strong style="color:#4a5765">Not collected</strong> tab on the Invoices screen.</div>
@@ -8942,14 +8943,18 @@ class Component extends DCLogic {
       provider: 'm365', mailbox: '', connected: false, pollMinutes: 5, folder: 'Inbox',
       requireAttachment: true, lastSync: '', failures: 0,
       // How much of the mailbox is worth taking in. 'all' keeps every invoice that arrives;
-      // 'matched' keeps only what could be placed on a project here; 'active' narrows that
-      // to projects still running. Default 'all', because narrowing it is a decision.
-      collectScope: 'all',
+      // 'matched' keeps only what could be placed on a project here; 'open' narrows that
+      // further to projects that are not closed.
+      //
+      // 'matched' by default: an invoice for a job that is not in this system is somebody
+      // else's, and putting it in the queue only makes a person read it to find that out.
+      // Nothing is discarded — it is set aside under Not collected and comes back in a click.
+      collectScope: 'matched',
       rules: [
         { key: 'po', label: 'PO or commitment number found in subject, body or document', on: true },
         { key: 'project', label: 'Project number or name found in subject or body', on: true },
-        { key: 'sole', label: 'Supplier is committed to exactly one active project', on: true },
-        { key: 'forwarder', label: 'Forwarded by a team member who works on exactly one active project', on: true },
+        { key: 'sole', label: 'Supplier is committed to exactly one project that is not closed', on: true },
+        { key: 'forwarder', label: 'Forwarded by a team member who works on exactly one project that is not closed', on: true },
         { key: 'sender', label: 'Supplier email address mapped to a project', on: false },
       ],
       senderMap: [],
@@ -9374,7 +9379,7 @@ class Component extends DCLogic {
   // below the threshold lands in Unallocated rather than guessing (BR-4.17, BR-4.18).
   apMatchProject(inv) {
     const cfg = this.apSettings();
-    const projects = (this.state.projects || []).filter(p => p.status !== 'archived' && p.status !== 'complete');
+    const projects = (this.state.projects || []).filter(p => p.status !== 'closed');
     const all = this.state.projects || [];
     const hay = [inv.poRef, (inv.source && inv.source.subject) || '', (inv.source && inv.source.body) || '', (inv.extract && inv.extract.text) || ''].join(' \n ').toLowerCase();
     for (let i = 0; i < cfg.rules.length; i++) {
@@ -9397,7 +9402,7 @@ class Component extends DCLogic {
       if (r.key === 'sole' && inv.vendorId) {
         const v = this.apVendor(inv);
         const hits = projects.filter(p => (p.commitments || []).some(cm => cm.vendor && v && cm.vendor === v.company) || (p.bills || []).some(b => b.vendorId === inv.vendorId));
-        if (hits.length === 1) return { pid: hits[0].id, rule: 'Supplier is committed to one active project only', conf: 80, commitmentId: '' };
+        if (hits.length === 1) return { pid: hits[0].id, rule: 'Supplier is committed to one open project only', conf: 80, commitmentId: '' };
       }
       // Whoever forwarded it works here. If they are on exactly one live project, that is
       // almost certainly the one the invoice belongs to.
@@ -17230,6 +17235,8 @@ class Component extends DCLogic {
         collectScopeNote: (_apS.collectScope === 'all' || !_apS.collectScope)
           ? 'Every invoice is taken in. Anything that cannot be placed on a project waits under Unallocated.'
           : 'Mail that cannot be placed on a project is set aside under Not collected instead of joining the queue — nothing is deleted, and one click takes any of it back. A PDF you drop in yourself is always kept; an email saved as .eml counts as mail and is judged the same way.',
+        noCodeProjects: (this.state.projects || []).filter(p => p.status !== 'closed' && String(p.code || '').trim().length < 3).map(p => p.name).join(', '),
+        hasNoCodeProjects: (this.state.projects || []).some(p => p.status !== 'closed' && String(p.code || '').trim().length < 3),
         skippedCount: String(this.apNotCollected().length),
         onRecollect: () => this.apRecollectAll(),
         canRecollect: this.apCanCollect(),
