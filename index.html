@@ -2123,8 +2123,13 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                     <div class="mono" style="font-size:12.5px;font-weight:600;color:#0f1720;text-align:right">{{ iv.total }}</div>
                     <div style="text-align:center"><span style="font-size:11px;font-weight:600;padding:2px 10px;border-radius:14px;background:{{ iv.statusBg }};color:{{ iv.statusColor }}">{{ iv.statusLabel }}</span></div>
                     <div style="text-align:right">
-                      <sc-if value="{{ iv.paid }}" hint-placeholder-val="{{ true }}"><span class="mono" style="font-size:11px;color:#15803d">✓ {{ iv.payRef }} · {{ iv.paidAt }}</span></sc-if>
-                      <sc-if value="{{ iv.unpaid }}" hint-placeholder-val="{{ false }}"><button onClick="{{ iv.onPay }}" style="border:0;background:#15803d;color:#fff;border-radius:7px;padding:6px 13px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="background:#0f6b31">💳 Pay online</button></sc-if>
+                      <sc-if value="{{ iv.hasPayments }}" hint-placeholder-val="{{ true }}">
+                        <button onClick="{{ iv.onPay }}" title="See, correct or remove the payments received against this invoice" style="border:1px solid #e4e8ee;background:#fff;border-radius:8px;padding:5px 10px;cursor:pointer;font-family:inherit;text-align:right" style-hover="border-color:#15803d">
+                          <span class="mono" style="display:block;font-size:11.5px;font-weight:600;color:#15803d">{{ iv.receivedLabel }} received</span>
+                          <span style="display:block;font-size:10px;color:#8894a2;margin-top:1px">{{ iv.owingLabel }} outstanding · {{ iv.payCountLabel }}</span>
+                        </button>
+                      </sc-if>
+                      <sc-if value="{{ iv.noPayments }}" hint-placeholder-val="{{ false }}"><button onClick="{{ iv.onPay }}" style="border:0;background:#15803d;color:#fff;border-radius:7px;padding:6px 13px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="background:#0f6b31">＋ Record payment</button></sc-if>
                     </div>
                     <div style="display:flex;align-items:center;justify-content:flex-end;gap:4px"><button onClick="{{ iv.onViewPdf }}" title="Open the Tax Invoice PDF" style="border:0;background:transparent;color:#8894a2;cursor:pointer;font-size:13px;padding:2px;line-height:1" style-hover="color:#2b59c3">📄</button><button onClick="{{ iv.onDownloadPdf }}" title="Download this invoice as a PDF file" style="border:0;background:transparent;color:#8894a2;cursor:pointer;font-size:13px;padding:2px;line-height:1" style-hover="color:#b91c1c">⬇</button><button onClick="{{ iv.onViewExcel }}" title="Export this invoice to Excel (.xlsx, same template)" style="border:0;background:transparent;color:#8894a2;cursor:pointer;font-size:13px;padding:2px;line-height:1" style-hover="color:#15803d">📊</button><sc-if value="{{ iv.canEdit }}" hint-placeholder-val="{{ true }}"><button onClick="{{ iv.onEdit }}" title="Edit &amp; re-send this invoice" style="border:0;background:transparent;color:#8894a2;cursor:pointer;font-size:13px;padding:2px;line-height:1" style-hover="color:#2b59c3">✎</button></sc-if><sc-if value="{{ iv.canDelete }}" hint-placeholder-val="{{ true }}"><button onClick="{{ iv.onDelete }}" title="Delete this invoice" style="border:0;background:transparent;color:#c0c8d1;cursor:pointer;font-size:14px;padding:2px;line-height:1" style-hover="color:#b91c1c">✕</button></sc-if></div>
                   </div>
@@ -2143,7 +2148,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                 </div>
               </div></div>
             </div>
-            <div style="font-size:12px;color:#8894a2;line-height:1.5;margin-top:10px">Recipients can <strong style="color:#6b7787">pay online</strong> — marking an invoice paid updates the project's Paid / Outstanding totals above. Due date is <strong style="color:#6b7787">15 days</strong> from the sent date.</div>
+            <div style="font-size:12px;color:#8894a2;line-height:1.5;margin-top:10px">Record what the client actually pays, whenever it arrives — a part payment leaves the rest <strong style="color:#6b7787">outstanding</strong>, and the Paid / Outstanding totals above follow. Any payment can be corrected or removed. Due date is <strong style="color:#6b7787">15 days</strong> from the sent date.</div>
           </sc-if>
         </sc-if>
 
@@ -4483,6 +4488,74 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
   </sc-if>
 
   <!-- EDIT / RE-SEND AN ISSUED INVOICE -->
+  <sc-if value="{{ invoicePayV.open }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ invoicePayV.onClose }}" style="position:fixed;inset:0;background:rgba(15,23,32,.5);display:flex;align-items:center;justify-content:center;z-index:67;padding:24px;animation:fadeUp .15s ease">
+      <div onClick="{{ stop }}" style="background:#fff;border-radius:14px;width:640px;max-width:96vw;max-height:92vh;box-shadow:0 24px 60px rgba(15,23,32,.3);overflow:hidden;display:flex;flex-direction:column">
+        <div style="padding:18px 22px;border-bottom:1px solid #eef1f4;display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex:0 0 auto">
+          <div><div style="font-size:17px;font-weight:600;color:#0f1720">Payments · {{ invoicePayV.no }}</div><div style="font-size:12.5px;color:#8894a2;margin-top:2px">{{ invoicePayV.countLabel }} · {{ invoicePayV.statusLabel }}</div></div>
+          <button onClick="{{ invoicePayV.onClose }}" style="border:0;background:transparent;color:#8894a2;cursor:pointer;font-size:20px;line-height:1">&#10005;</button>
+        </div>
+        <div style="padding:18px 22px;display:flex;flex-direction:column;gap:13px;overflow-y:auto;flex:1 1 auto">
+          <div style="display:flex;gap:18px;background:#f7f9fb;border:1px solid #e4e8ee;border-radius:9px;padding:10px 13px;font-size:12px;flex-wrap:wrap">
+            <span><span style="color:#8894a2">Invoice total</span> <span class="mono" style="font-weight:600;color:#0f1720">{{ invoicePayV.invoiceTotal }}</span></span>
+            <span><span style="color:#8894a2">Received</span> <span class="mono" style="font-weight:600;color:#15803d">{{ invoicePayV.received }}</span></span>
+            <span><span style="color:#8894a2">Outstanding</span> <span class="mono" style="font-weight:700;color:#b45309">{{ invoicePayV.outstanding }}</span></span>
+          </div>
+          <sc-if value="{{ invoicePayV.none }}" hint-placeholder-val="{{ false }}"><div style="padding:14px;text-align:center;color:#8894a2;font-size:12.5px">Nothing received yet.</div></sc-if>
+          <sc-for list="{{ invoicePayV.rows }}" as="rc" hint-placeholder-count="2">
+            <div style="border:1px solid #e4e8ee;border-radius:10px;padding:11px 13px">
+              <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px">
+                <div style="font-size:12.5px;color:#0f1720">{{ rc.date }} <span style="color:#8894a2">·</span> {{ rc.method }}</div>
+                <div class="mono" style="font-size:15px;font-weight:700;color:#15803d">{{ rc.amount }}</div>
+              </div>
+              <sc-if value="{{ rc.hasReference }}" hint-placeholder-val="{{ false }}"><div class="mono" style="font-size:11px;color:#6b7787;margin-top:3px">Ref {{ rc.reference }}</div></sc-if>
+              <sc-if value="{{ rc.hasNotes }}" hint-placeholder-val="{{ false }}"><div style="font-size:11.5px;color:#6b7787;margin-top:3px;line-height:1.5">{{ rc.notes }}</div></sc-if>
+              <sc-if value="{{ rc.isLegacy }}" hint-placeholder-val="{{ false }}"><div style="font-size:11px;color:#b45309;margin-top:4px;line-height:1.5">{{ rc.legacyNote }}</div></sc-if>
+              <sc-if value="{{ rc.hasEdited }}" hint-placeholder-val="{{ false }}"><div style="font-size:10.5px;color:#a4afba;margin-top:3px">{{ rc.edited }}</div></sc-if>
+              <sc-if value="{{ invoicePayV.canEdit }}" hint-placeholder-val="{{ true }}">
+                <div style="display:flex;gap:8px;margin-top:8px">
+                  <sc-if value="{{ rc.notConfirming }}" hint-placeholder-val="{{ true }}">
+                    <button onClick="{{ rc.onEdit }}" style="border:1px solid #cfd8e2;background:#fff;color:#2b59c3;border-radius:7px;padding:5px 11px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="border-color:#2b59c3">&#9998; Correct</button>
+                    <button onClick="{{ rc.onAskRemove }}" style="border:1px solid #cfd8e2;background:#fff;color:#b91c1c;border-radius:7px;padding:5px 11px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="border-color:#b91c1c">Remove</button>
+                  </sc-if>
+                  <sc-if value="{{ rc.confirming }}" hint-placeholder-val="{{ false }}">
+                    <span style="font-size:12px;color:#b91c1c;align-self:center">Remove this payment?</span>
+                    <button onClick="{{ rc.onRemove }}" style="border:0;background:#b91c1c;color:#fff;border-radius:7px;padding:5px 11px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">Remove it</button>
+                    <button onClick="{{ rc.onCancelRemove }}" style="border:1px solid #cfd8e2;background:#fff;color:#4a5765;border-radius:7px;padding:5px 11px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">Keep it</button>
+                  </sc-if>
+                </div>
+              </sc-if>
+            </div>
+          </sc-for>
+          <sc-if value="{{ invoicePayV.canEdit }}" hint-placeholder-val="{{ true }}">
+            <div style="border:1px solid #e4e8ee;border-radius:10px;padding:14px 15px;background:#fbfcfd">
+              <div style="font-size:13px;font-weight:600;color:#0f1720;margin-bottom:11px">{{ invoicePayV.formTitle }}</div>
+              <div style="display:flex;gap:12px;margin-bottom:11px">
+                <div style="flex:1"><label style="font-size:12px;font-weight:600;color:#4a5765;display:block;margin-bottom:5px">Amount received</label><input value="{{ invoicePayV.amount }}" onInput="{{ invoicePayV.onAmount }}" placeholder="0.00" class="mono" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-weight:600;text-align:right;font-family:'IBM Plex Mono',monospace" style-focus="border-color:#2b59c3;outline:none"></div>
+                <div style="flex:1"><label style="font-size:12px;font-weight:600;color:#4a5765;display:block;margin-bottom:5px">Date received</label><input value="{{ invoicePayV.datePaid }}" onInput="{{ invoicePayV.onDate }}" type="date" class="mono" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:'IBM Plex Mono',monospace" style-focus="border-color:#2b59c3;outline:none"></div>
+              </div>
+              <div style="display:flex;gap:12px;margin-bottom:11px">
+                <div style="flex:1"><label style="font-size:12px;font-weight:600;color:#4a5765;display:block;margin-bottom:5px">Method</label><select value="{{ invoicePayV.methodValue }}" onChange="{{ invoicePayV.onMethod }}" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:inherit;background:#fff" style-focus="border-color:#2b59c3;outline:none"><sc-for list="{{ invoicePayV.methodOptions }}" as="mo" hint-placeholder-count="3"><option value="{{ mo.v }}">{{ mo.v }}</option></sc-for></select></div>
+                <div style="flex:1"><label style="font-size:12px;font-weight:600;color:#4a5765;display:block;margin-bottom:5px">Reference</label><input value="{{ invoicePayV.reference }}" onInput="{{ invoicePayV.onReference }}" placeholder="Bank reference, receipt no&hellip;" class="mono" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:'IBM Plex Mono',monospace" style-focus="border-color:#2b59c3;outline:none"></div>
+              </div>
+              <div style="margin-bottom:11px"><label style="font-size:12px;font-weight:600;color:#4a5765;display:block;margin-bottom:5px">Notes</label><textarea value="{{ invoicePayV.notes }}" onInput="{{ invoicePayV.onNotes }}" rows="2" placeholder="Short-paid pending the variation, retention held&hellip;" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:12.5px;font-family:inherit;line-height:1.6;resize:vertical" style-focus="border-color:#2b59c3;outline:none"></textarea></div>
+              <sc-if value="{{ invoicePayV.hasOverpayNote }}" hint-placeholder-val="{{ false }}"><div style="font-size:11.5px;color:#b45309;margin-bottom:10px;line-height:1.5">{{ invoicePayV.overpayNote }}</div></sc-if>
+              <div style="display:flex;justify-content:flex-end;gap:8px">
+                <sc-if value="{{ invoicePayV.editing }}" hint-placeholder-val="{{ false }}"><button onClick="{{ invoicePayV.onCancelEdit }}" style="border:1px solid #cfd8e2;background:#fff;color:#4a5765;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Cancel</button></sc-if>
+                <sc-if value="{{ invoicePayV.canSave }}" hint-placeholder-val="{{ true }}"><button onClick="{{ invoicePayV.onSave }}" style="border:0;background:#15803d;color:#fff;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="background:#0f6b31">{{ invoicePayV.saveLabel }}</button></sc-if>
+                <sc-if value="{{ invoicePayV.cannotSave }}" hint-placeholder-val="{{ false }}"><button style="border:0;background:#e4e8ee;color:#a4afba;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:600;cursor:default;font-family:inherit">{{ invoicePayV.saveLabel }}</button></sc-if>
+              </div>
+            </div>
+          </sc-if>
+          <sc-if value="{{ invoicePayV.readOnly }}" hint-placeholder-val="{{ false }}"><div style="font-size:12px;color:#8894a2;line-height:1.5">You can see what has been received but not change it.</div></sc-if>
+        </div>
+        <div style="padding:14px 22px;border-top:1px solid #eef1f4;display:flex;justify-content:flex-end;flex:0 0 auto">
+          <button onClick="{{ invoicePayV.onClose }}" style="border:1px solid #cfd8e2;background:#fff;color:#4a5765;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Done</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
   <sc-if value="{{ invoiceEditV.open }}" hint-placeholder-val="{{ false }}">
     <div onClick="{{ invoiceEditV.onClose }}" style="position:fixed;inset:0;background:rgba(15,23,32,.5);display:flex;align-items:center;justify-content:center;z-index:66;padding:24px;animation:fadeUp .15s ease">
       <div onClick="{{ stop }}" style="background:#fff;border-radius:14px;width:820px;max-width:96vw;max-height:92vh;box-shadow:0 24px 60px rgba(15,23,32,.3);overflow:hidden;display:flex;flex-direction:column">
@@ -5049,6 +5122,7 @@ class Component extends DCLogic {
       vendorModal: null,
       billSend: null,
       invoiceEdit: null,
+      invoicePay: null,
       deleteConfirm: null,
       reportColMenu: false,
       claimSend: null,
@@ -11352,7 +11426,99 @@ class Component extends DCLogic {
   }
   // INV-007 -> 7. Anything that is not one of ours reads as 0 and is left alone.
   _invSeq(iv) { const m = /(\d+)\s*$/.exec(String((iv && iv.no) || '')); return m ? Number(m[1]) : 0; }
-  payInvoiceOnline(id) { const today = this.todayLocal(); const ref = 'PAY-' + Math.random().toString(36).slice(2, 8).toUpperCase(); this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, invoices: (p.invoices || []).map(iv => iv.id !== id ? iv : { ...iv, status: 'paid', paidAt: today, payRef: ref }) }) })); }
+  invoicePayments(iv) {
+    if (!iv) return [];
+    if (Array.isArray(iv.payments)) return iv.payments;
+    // Marked paid before there was a list to put it in.
+    if (iv.status === 'paid') return [{ id: 'legacy:' + iv.id, method: '', amount: this._num(iv.total),
+      datePaid: iv.paidAt || iv.date || '', reference: iv.payRef || '', notes: '', legacy: true }];
+    return [];
+  }
+  invoiceReceived(iv) { return this._r2(this.invoicePayments(iv).reduce((a, r) => a + this._num(r.amount), 0)); }
+  invoiceOutstanding(iv) { return this._r2(Math.max(0, this._num(iv.total) - this.invoiceReceived(iv))); }
+  invoiceStatus(iv) {
+    const got = this.invoiceReceived(iv), tot = this._num(iv.total);
+    if (got <= 0.005) return 'sent';
+    if (got + 0.005 >= tot) return 'paid';
+    return 'partial';
+  }
+  invoiceStatusLabel(iv, overdue) {
+    const st = this.invoiceStatus(iv);
+    if (st === 'paid') return 'Paid';
+    if (st === 'partial') return overdue ? 'Part paid · overdue' : 'Part paid';
+    return overdue ? 'Overdue' : 'Sent';
+  }
+  // Every write to the list goes through here so the derived fields cannot drift from it.
+  // The first edit of a legacy record turns that stand-in receipt into a real one.
+  _withInvoicePayments(id, fn) {
+    this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, invoices: (p.invoices || []).map(iv => {
+      if (iv.id !== id) return iv;
+      const before = this.invoicePayments(iv).map(r => { const c = Object.assign({}, r); delete c.legacy; return c; });
+      const list = (fn(before, iv) || []).filter(r => r && this._num(r.amount) > 0);
+      return Object.assign({}, iv, this._invoicePayFields(iv, list));
+    }) }) }));
+  }
+  // The fields an invoice carries alongside its payment list, worked out from the list.
+  _invoicePayFields(iv, list) {
+    const got = this._r2((list || []).reduce((a, r) => a + this._num(r.amount), 0));
+    const tot = this._num(iv.total);
+    const status = got <= 0.005 ? 'sent' : (got + 0.005 >= tot ? 'paid' : 'partial');
+    const dated = (list || []).filter(r => r.datePaid).sort((a, b) => String(a.datePaid).localeCompare(String(b.datePaid)));
+    const last = dated[dated.length - 1] || (list || [])[(list || []).length - 1];
+    return { payments: list || [], paid: got, status,
+      paidAt: status === 'paid' ? ((last && last.datePaid) || this.todayLocal()) : '',
+      payRef: (last && last.reference) || '' };
+  }
+  payInvoiceOnline(id) { this.openInvoicePayments(id); }
+  invoicePayMethods() { return ['EFT / Bank transfer', 'BPAY', 'Cheque', 'Credit card', 'Direct debit', 'Cash', 'Other']; }
+  _blankInvoicePayForm(outstanding) {
+    return { amount: outstanding > 0.005 ? String(this._r2(outstanding)) : '', datePaid: this.todayLocal(),
+      method: 'EFT / Bank transfer', reference: '', notes: '' };
+  }
+  openInvoicePayments(invId) {
+    const p = this.proj(this.state.pid); const iv = (p.invoices || []).find(x => x.id === invId); if (!iv) return;
+    this.setState({ invoicePay: { invId, payId: null, confirm: '', form: this._blankInvoicePayForm(this.invoiceOutstanding(iv)) } });
+  }
+  closeInvoicePayments() { this.setState({ invoicePay: null }); }
+  setInvoicePayField(k, v) {
+    this.setState(st => (st.invoicePay ? { invoicePay: Object.assign({}, st.invoicePay, { form: Object.assign({}, st.invoicePay.form || {}, { [k]: v }) }) } : {}));
+  }
+  // Loads one receipt back into the form to be corrected — the point of the whole dialog.
+  editInvoicePayment(payId) {
+    const st = this.state.invoicePay; if (!st) return;
+    const p = this.proj(this.state.pid); const iv = (p.invoices || []).find(x => x.id === st.invId); if (!iv) return;
+    const r = this.invoicePayments(iv).find(x => x.id === payId); if (!r) return;
+    this.setState({ invoicePay: Object.assign({}, st, { payId, confirm: '', form: {
+      amount: String(r.amount == null ? '' : this._r2(this._num(r.amount))), datePaid: r.datePaid || '',
+      method: r.method || '', reference: r.reference || '', notes: r.notes || '' } }) });
+  }
+  cancelInvoicePaymentEdit() {
+    const st = this.state.invoicePay; if (!st) return;
+    const p = this.proj(this.state.pid); const iv = (p.invoices || []).find(x => x.id === st.invId);
+    this.setState({ invoicePay: Object.assign({}, st, { payId: null, confirm: '', form: this._blankInvoicePayForm(iv ? this.invoiceOutstanding(iv) : 0) }) });
+  }
+  saveInvoicePayment() {
+    const st = this.state.invoicePay; if (!st) return;
+    if (!this.can('invoices', 'edit')) return;
+    const f = st.form || {};
+    const amt = this._r2(this._num(f.amount)); if (amt <= 0) return;
+    const me = this.currentUser() || {};
+    const body = { method: f.method || '', amount: amt, datePaid: f.datePaid || this.todayLocal(),
+      reference: f.reference || '', notes: f.notes || '' };
+    this._withInvoicePayments(st.invId, list => (st.payId
+      ? list.map(r => r.id !== st.payId ? r : Object.assign({}, r, body, { editedBy: me.name || me.email || '', editedAt: this.now() }))
+      : list.concat([Object.assign({ id: this._rid('rcpt'), by: me.name || me.email || '', at: this.now() }, body)])));
+    this.setState(s => (s.invoicePay ? { invoicePay: Object.assign({}, s.invoicePay, { payId: null, confirm: '',
+      form: { amount: '', datePaid: this.todayLocal(), method: 'EFT / Bank transfer', reference: '', notes: '' } }) } : {}));
+  }
+  askRemoveInvoicePayment(payId) { this.setState(st => (st.invoicePay ? { invoicePay: Object.assign({}, st.invoicePay, { confirm: payId }) } : {})); }
+  cancelRemoveInvoicePayment() { this.setState(st => (st.invoicePay ? { invoicePay: Object.assign({}, st.invoicePay, { confirm: '' }) } : {})); }
+  removeInvoicePayment(payId) {
+    const st = this.state.invoicePay; if (!st) return;
+    if (!this.can('invoices', 'edit')) return;
+    this._withInvoicePayments(st.invId, list => list.filter(r => r.id !== payId));
+    this.setState(s => (s.invoicePay ? { invoicePay: Object.assign({}, s.invoicePay, { confirm: '', payId: s.invoicePay.payId === payId ? null : s.invoicePay.payId }) } : {}));
+  }
   toggleRecipient(email) { this.setState(s => { if (!s.invoiceSend) return {}; const cur = s.invoiceSend.recipients || []; const has = cur.indexOf(email) >= 0; return { invoiceSend: { ...s.invoiceSend, recipients: has ? cur.filter(e => e !== email) : [...cur, email] } }; }); }
   setInvoiceNewEmail(v) { this.setState(s => s.invoiceSend ? { invoiceSend: { ...s.invoiceSend, newEmail: v } } : {}); }
   addInvoiceEmail() { this.setState(s => { if (!s.invoiceSend) return {}; const e = (s.invoiceSend.newEmail || '').trim(); if (!e) return {}; const cur = s.invoiceSend.recipients || []; if (cur.indexOf(e) >= 0) return { invoiceSend: { ...s.invoiceSend, newEmail: '' } }; return { invoiceSend: { ...s.invoiceSend, recipients: [...cur, e], newEmail: '' } }; }); }
@@ -11517,8 +11683,9 @@ class Component extends DCLogic {
             periodFrom: e.periodFrom, periodTo: e.periodTo, retentionPct: this._num(e.retentionPct),
             backCharges: this._num(e.backCharges), notes: e.notes,
           });
-          return Object.assign({}, iv, { date: e.date || iv.date, dueDate: e.dueDate || iv.dueDate, extra,
+          const next = Object.assign({}, iv, { date: e.date || iv.date, dueDate: e.dueDate || iv.dueDate, extra,
             amount, total: this._r2(net + net * gstRate / 100), lines, snap });
+          return Object.assign(next, this._invoicePayFields(next, this.invoicePayments(iv).map(r => { const c = Object.assign({}, r); delete c.legacy; return c; })));
         }) };
     }) , invoiceEdit: null }));
     if (alsoSend) setTimeout(() => this.openInvoiceSend(e.id), 60);
@@ -14512,8 +14679,10 @@ class Component extends DCLogic {
       });
       const totalBills = (p.bills || []).filter(b => !(b.fromClaim || b.claimId)).length + (p.claims || []).length;
       const invItems = (p.invoices || []).map(iv => {
-        const paid = iv.status === 'paid';
-        return { id: iv.id, title: iv.no, sub: ((iv.recipients || []).length) + ' recipient(s)' + (iv.subject ? ' · ' + iv.subject : ''), meta: iv.date ? this.fmtDate(iv.date) : '—', amount: this.money(iv.total || iv.amount || 0), statusLabel: paid ? 'Paid' : 'Sent', statusColor: paid ? '#15803d' : '#1d4ed8', statusBg: paid ? '#e6f4ea' : '#e7eefc' };
+        const _ivSt = this.invoiceStatus(iv);
+        const paid = _ivSt === 'paid';
+        const partPaid = _ivSt === 'partial';
+        return { id: iv.id, title: iv.no, sub: ((iv.recipients || []).length) + ' recipient(s)' + (iv.subject ? ' · ' + iv.subject : ''), meta: iv.date ? this.fmtDate(iv.date) : '—', amount: this.money(iv.total || iv.amount || 0), statusLabel: paid ? 'Paid' : (partPaid ? 'Part paid' : 'Sent'), statusColor: paid ? '#15803d' : (partPaid ? '#b45309' : '#1d4ed8'), statusBg: paid ? '#e6f4ea' : (partPaid ? '#fdf3e3' : '#e7eefc') };
       });
       // PERMITS — attached documents on permit docs (with gallery navigation)
       const permitItems = [];
@@ -14839,17 +15008,25 @@ class Component extends DCLogic {
       const no = priorCount + 1;
       const today0 = this.todayLocal();
       const ledger = (p.invoices || []).slice().reverse().map(iv => {
-        const paid = iv.status === 'paid';
+        const ivStatus = this.invoiceStatus(iv);
+        const paid = ivStatus === 'paid';
+        const received = this.invoiceReceived(iv);
+        const owing = this.invoiceOutstanding(iv);
         const overdue = !paid && iv.dueDate && iv.dueDate < today0;
+        const nPay = this.invoicePayments(iv).length;
         return {
           id: iv.id, no: iv.no, date: this.fmtDate(iv.date), due: this.fmtDate(iv.dueDate),
           revLabel: this._num((iv.extra || {}).rev) > 0 ? 'Rev ' + this._num((iv.extra || {}).rev) : '',
           hasRev: this._num((iv.extra || {}).rev) > 0,
           total: this.money(iv.total), recipients: (iv.recipients || []).length + ' recipient(s)',
-          statusLabel: paid ? 'Paid' : (overdue ? 'Overdue' : 'Sent'),
-          statusColor: paid ? '#15803d' : (overdue ? '#b91c1c' : '#1d4ed8'), statusBg: paid ? '#e6f4ea' : (overdue ? '#fbeef0' : '#e7eefc'),
+          statusLabel: this.invoiceStatusLabel(iv, overdue),
+          statusColor: paid ? '#15803d' : (ivStatus === 'partial' ? '#b45309' : (overdue ? '#b91c1c' : '#1d4ed8')),
+          statusBg: paid ? '#e6f4ea' : (ivStatus === 'partial' ? '#fdf3e3' : (overdue ? '#fbeef0' : '#e7eefc')),
           paid, unpaid: !paid, payRef: iv.payRef || '', paidAt: this.fmtDate(iv.paidAt),
-          onPay: () => this.payInvoiceOnline(iv.id),
+          receivedLabel: this.money(received), owingLabel: this.money(owing),
+          hasPayments: nPay > 0, noPayments: nPay === 0,
+          payCountLabel: nPay === 1 ? '1 payment' : nPay + ' payments',
+          onPay: () => this.openInvoicePayments(iv.id),
           canDelete: this.can('invoices', 'edit'), canEdit: this.can('invoices', 'edit'),
           onEdit: () => this.openInvoiceEdit(iv.id), onViewPdf: () => this.previewInvoicePdf(iv.id),
           onViewExcel: () => this.exportInvoiceExcel(iv.id), onDownloadPdf: () => this.downloadInvoicePdf(iv.id),
@@ -14857,7 +15034,7 @@ class Component extends DCLogic {
         };
       });
       let invoicedTot = 0, paidTot = 0;
-      (p.invoices || []).forEach(iv => { invoicedTot += Number(iv.total) || 0; if (iv.status === 'paid') paidTot += Number(iv.total) || 0; });
+      (p.invoices || []).forEach(iv => { invoicedTot += this._num(iv.total); paidTot += this.invoiceReceived(iv); });
       invoiceV = {
         show: true, rows,
         ledger, hasLedger: ledger.length > 0, noLedger: ledger.length === 0, ledgerCount: String(ledger.length),
@@ -16019,6 +16196,65 @@ class Component extends DCLogic {
       };
     }
 
+    // Payments received against one invoice: the list, and the form to add or correct one.
+    let invoicePayV = { open: false };
+    if (S.invoicePay) {
+      const _ip = S.invoicePay;
+      const _ipP = this.proj(S.pid);
+      const _ipIv = ((_ipP && _ipP.invoices) || []).find(x => x.id === _ip.invId);
+      if (_ipIv) {
+        const _f = _ip.form || {};
+        const _got = this.invoiceReceived(_ipIv), _owe = this.invoiceOutstanding(_ipIv);
+        const _recs = this.invoicePayments(_ipIv).slice().sort((a, b) => String(b.datePaid || '').localeCompare(String(a.datePaid || '')));
+        const _canEdit = this.can('invoices', 'edit');
+        const _typed = this._r2(this._num(_f.amount));
+        invoicePayV = {
+          open: true, no: _ipIv.no || '', canEdit: _canEdit, readOnly: !_canEdit,
+          invoiceTotal: this.money(this._num(_ipIv.total)),
+          received: this.money(_got), outstanding: this.money(_owe),
+          statusLabel: this.invoiceStatusLabel(_ipIv, false),
+          none: _recs.length === 0, any: _recs.length > 0,
+          countLabel: _recs.length === 1 ? '1 payment recorded' : _recs.length + ' payments recorded',
+          rows: _recs.map(r => ({
+            id: r.id, amount: this.money(this._num(r.amount)),
+            date: r.datePaid ? this.fmtDate(r.datePaid) : 'no date',
+            method: r.method || '—', reference: r.reference || '', hasReference: !!r.reference,
+            notes: r.notes || '', hasNotes: !!r.notes,
+            by: r.by || '', hasBy: !!r.by,
+            edited: r.editedAt ? ('edited ' + r.editedAt + (r.editedBy ? ' by ' + r.editedBy : '')) : '',
+            hasEdited: !!r.editedAt,
+            legacyNote: r.legacy ? 'Recorded before payments were itemised — edit it to what was actually received.' : '',
+            isLegacy: !!r.legacy,
+            beingEdited: _ip.payId === r.id,
+            confirming: _ip.confirm === r.id, notConfirming: _ip.confirm !== r.id,
+            onEdit: () => this.editInvoicePayment(r.id),
+            onAskRemove: () => this.askRemoveInvoicePayment(r.id),
+            onCancelRemove: () => this.cancelRemoveInvoicePayment(),
+            onRemove: () => this.removeInvoicePayment(r.id),
+          })),
+          editing: !!_ip.payId, adding: !_ip.payId,
+          formTitle: _ip.payId ? 'Correct this payment' : 'Record a payment',
+          amount: _f.amount == null ? '' : String(_f.amount),
+          datePaid: _f.datePaid || '', reference: _f.reference || '', notes: _f.notes || '',
+          methodValue: _f.method || '',
+          methodOptions: this.invoicePayMethods().map(m => ({ v: m })),
+          saveLabel: _ip.payId ? 'Save the correction' : 'Record it',
+          canSave: _canEdit && _typed > 0, cannotSave: !(_canEdit && _typed > 0),
+          overpayNote: _typed > 0 && !_ip.payId && _typed > _owe + 0.005
+            ? 'That is more than the ' + this.money(_owe) + ' still outstanding.' : '',
+          hasOverpayNote: _typed > 0 && !_ip.payId && _typed > _owe + 0.005,
+          onAmount: ev => this.setInvoicePayField('amount', ev.target.value),
+          onDate: ev => this.setInvoicePayField('datePaid', ev.target.value),
+          onMethod: ev => this.setInvoicePayField('method', ev.target.value),
+          onReference: ev => this.setInvoicePayField('reference', ev.target.value),
+          onNotes: ev => this.setInvoicePayField('notes', ev.target.value),
+          onSave: () => this.saveInvoicePayment(),
+          onCancelEdit: () => this.cancelInvoicePaymentEdit(),
+          onClose: () => this.closeInvoicePayments(),
+        };
+      }
+    }
+
     // guarded delete — the Delete button only enables once "delete" has been typed
     let deleteConfirmV = { open: false };
     if (S.deleteConfirm) {
@@ -17140,7 +17376,7 @@ class Component extends DCLogic {
       onAddDefect: () => this.addDefect(), onExportDefectsPdf: () => this.exportDefectsPdf(),
       onDefectSearch: e => this.setDefectSearch(e.target.value),
       claimRows, claimTotals, claimSearchV, onAddClaim: () => this.addClaim(),
-      moduleCommitments, subModalV, signModalV, shareModalV, acctSendV, paymentModalV, mailHandoffV, deleteConfirmV, invoiceEditV, pdfPreviewV,
+      moduleCommitments, subModalV, signModalV, shareModalV, acctSendV, paymentModalV, mailHandoffV, deleteConfirmV, invoiceEditV, invoicePayV, pdfPreviewV,
       onAddContractVar: () => this.openModal('contract'),
       projDescription, clientRepRows, teamRows, clientNameV, scheduleSummary, detailsV, contactsV, filesV, scheduleV, reportV, invoiceV, invoiceSendV, variationSendV, eotV, eotSendV, documentsV, rfiSendV, meetingSendV,
       docViewerV: S.docViewer ? { open: true, name: S.docViewer.curName, url: S.docViewer.curUrl, isPdf: S.docViewer.curKind === 'pdf', isImage: S.docViewer.curKind === 'image', isOther: S.docViewer.curKind === 'other', hasNav: (S.docViewer.items || []).length > 1, position: (S.docViewer.index + 1) + ' / ' + (S.docViewer.items || []).length, onPrev: () => this.docViewerNav(-1), onNext: () => this.docViewerNav(1), onClose: () => this.closeDocViewer(), onNewTab: () => this.docViewerNewTab() } : { open: false },
