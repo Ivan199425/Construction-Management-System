@@ -1003,6 +1003,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
               </div>
               <div style="display:flex;align-items:center;gap:8px;flex:0 0 auto">
                 <sc-if value="{{ apV.isAdmin }}" hint-placeholder-val="{{ true }}"><button onClick="{{ apV.onSettings }}" title="Mailbox, matching rules and accountant routing" style="border:1px solid #cfd8e2;background:#fff;color:#4a5765;border-radius:8px;padding:9px 14px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="border-color:#2b59c3;color:#2b59c3">⚙ Ingestion settings</button></sc-if>
+                <sc-if value="{{ apV.hasStrays }}" hint-placeholder-val="{{ false }}"><button onClick="{{ apV.onSetAsideStrays }}" title="Move every invoice that matches no project in this system out of the queue and into Not collected. Nothing is deleted — Collect brings any of them back." style="border:1px solid #e6d3b3;background:#fff;color:#b45309;border-radius:8px;padding:9px 14px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="border-color:#b45309">🧹 Set aside {{ apV.strayCount }} with no project</button></sc-if>
                 <button onClick="{{ apV.onExport }}" title="Export every invoice you can see to a spreadsheet" style="border:1px solid #cfd8e2;background:#fff;color:#4a5765;border-radius:8px;padding:9px 14px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="border-color:#15803d;color:#15803d">📊 Export</button>
                 <sc-if value="{{ apV.canEdit }}" hint-placeholder-val="{{ true }}">
                   <label title="Drop in invoice PDFs or images, or a whole email saved as .eml" style="display:inline-flex;align-items:center;gap:7px;border:0;background:#2b59c3;color:#fff;border-radius:8px;padding:10px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="background:#244dab">
@@ -9709,6 +9710,37 @@ class Component extends DCLogic {
                                : takeable.length + ' invoices now match a project and have been collected.')
       : 'Checked ' + pending.length + ' — none of them matches a project in the system yet.' });
   }
+  apUnallocatedStrays() {
+    return this.apAll().filter(x => x && !x.voided && x.status === 'unallocated'
+      && !this.apMatchProject(x).pid);
+  }
+  apSetAsideStrays() {
+    if (!this.apCanCollect()) return;
+    const threshold = this._num(this.apSettings().confidence) || 80;
+    const waiting = this.apAll().filter(x => x && !x.voided && x.status === 'unallocated');
+    if (!waiting.length) { this.setState({ apNotice: 'Nothing is waiting for a project.' }); return; }
+    let placed = 0, aside = 0;
+    waiting.forEach(inv => {
+      const m = this.apMatchProject(inv);
+      if (m.pid && m.conf >= threshold) {
+        this._apCommit(inv.id, { pid: m.pid, matchRule: m.rule, matchConf: m.conf,
+          commitmentId: m.commitmentId || inv.commitmentId || '', status: 'in_review', notCollectedReason: '' },
+          'Matched on sweep', m.rule);
+        placed++;
+        return;
+      }
+      if (m.pid) return;   // it matches something, just not confidently enough — leave it alone
+      this._apCommit(inv.id, { status: 'not_collected', pid: '', commitmentId: '', matchRule: '', matchConf: 0,
+        assignedTo: '', notCollectedReason: 'No project in this system could be matched to it.' },
+        'Set aside', 'Swept from the queue — no project in this system matched it.');
+      aside++;
+    });
+    const bits = [];
+    if (aside) bits.push((aside === 1 ? 'One invoice' : aside + ' invoices') + ' set aside under Not collected — nothing was deleted, and Collect brings any of them back.');
+    if (placed) bits.push((placed === 1 ? 'One' : String(placed)) + ' now matched a project and went to the queue.');
+    if (!bits.length) bits.push('Everything waiting still matches a project here — nothing was set aside.');
+    this.setState({ apNotice: bits.join(' ') });
+  }
   apCollectAnyway(id) {
     if (!this.apCanCollect()) return;
     const inv = this.apInv(id);
@@ -16776,6 +16808,9 @@ class Component extends DCLogic {
           canEdit: this.can('apInvoices', 'edit'),
           onUpload: e => { this.apIngestFiles(e.target.files); e.target.value = ''; },
           onExport: () => this.apExportCsv(), onSettings: () => this.goApSettings(),
+          strayCount: String(this.apUnallocatedStrays().length),
+          hasStrays: this.apCanCollect() && this.apUnallocatedStrays().length > 0,
+          onSetAsideStrays: () => this.apSetAsideStrays(),
           isAdmin: this.can('admin', 'view'),
           projectOptions: _apProjOpts, vendorOptions: _apVendOpts,
         };
