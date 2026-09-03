@@ -9648,15 +9648,16 @@ class Component extends DCLogic {
     return inv;
   }
 
-  // Whether an arriving invoice is one of ours. Only mail is judged: a file somebody chose and
-  // uploaded by hand is wanted by definition, and refusing it would be refusing the person.
+  // Whether an arriving invoice is one of ours. How it arrived says nothing about the answer —
+  // a folder of the month's PDFs gets dropped in at once, and a subcontractor working several
+  // jobs sends invoices for all of them — so mail and uploads are judged alike.
   // Nothing is discarded either way — a declined invoice is set aside where it can be seen and
   // taken back, because the cost of wrongly binning a real invoice is far higher than the cost
   // of a list nobody reads.
   apCollectVerdict(inv, match) {
     const scope = this.apSettings().collectScope || 'all';
     if (scope === 'all') return { keep: true, reason: '' };
-    if (!inv || !inv.source || inv.source.kind !== 'email') return { keep: true, reason: '' };
+    if (!inv) return { keep: true, reason: '' };
     // Nothing could be read from the document — a scan, a photograph, an attachment that
     // would not decode. No rule had anything to work on, so failing to place it says nothing
     // about whose invoice it is. Those go to a person, never to the bin.
@@ -9665,7 +9666,7 @@ class Component extends DCLogic {
     // confidence setting means 'do not file this automatically' — it has never meant 'this
     // is not ours', and treating the two as one would refuse invoices the rules did place.
     const m = match || { pid: inv.pid || '' };
-    if (!m.pid) return { keep: false, reason: 'No project in this system could be matched to it.' };
+    if (!m.pid) return { keep: false, reason: this._apNoProjectReason() };
     if (scope === 'open') {
       const p = this.proj(m.pid);
       // Only closed. A job on hold still draws standing plant, storage, security and
@@ -9686,6 +9687,7 @@ class Component extends DCLogic {
     });
     return Object.keys(seen).filter(r => seen[r].length > 1).sort();
   }
+  _apNoProjectReason() { return 'No project in this system could be matched to it — no project number, name or PO reference on it matched one here.'; }
   apNotCollected() { return this.apAll().filter(x => x.status === 'not_collected'); }
   // Seeing the declined pile and being able to empty it are the same right, and it is one
   // Ivan already configured: whoever may place an invoice that arrived without a project.
@@ -9731,7 +9733,7 @@ class Component extends DCLogic {
       }
       if (m.pid) return;   // it matches something, just not confidently enough — leave it alone
       this._apCommit(inv.id, { status: 'not_collected', pid: '', commitmentId: '', matchRule: '', matchConf: 0,
-        assignedTo: '', notCollectedReason: 'No project in this system could be matched to it.' },
+        assignedTo: '', notCollectedReason: this._apNoProjectReason() },
         'Set aside', 'Swept from the queue — no project in this system matched it.');
       aside++;
     });
@@ -17295,7 +17297,7 @@ class Component extends DCLogic {
         ],
         collectScopeNote: (_apS.collectScope === 'all' || !_apS.collectScope)
           ? 'Every invoice is taken in. Anything that cannot be placed on a project waits under Unallocated.'
-          : 'Mail that cannot be placed on a project is set aside under Not collected instead of joining the queue — nothing is deleted, and one click takes any of it back. A PDF you drop in yourself is always kept; an email saved as .eml counts as mail and is judged the same way.',
+          : 'An invoice that cannot be placed on a project is set aside under Not collected instead of joining the queue — nothing is deleted, and one click takes any of it back. Uploads are judged the same as mail, because a folder of PDFs dropped in at once can hold another job’s invoice. Anything with no readable text is always kept, since no rule had anything to work on.',
         noCodeProjects: (this.state.projects || []).filter(p => p.status !== 'closed' && String(p.code || '').trim().length < 3).map(p => p.name).join(', '),
         clashingRefs: this._apRefClashes().join(', '),
         hasClashingRefs: this._apRefClashes().length > 0,
