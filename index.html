@@ -7019,7 +7019,8 @@ class Component extends DCLogic {
     const today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
     const orgName = this.props.orgName ?? 'Cubic';
     const logo = (typeof window !== 'undefined' && window.CUBIC_LOGO) ? window.CUBIC_LOGO : '';
-    const logoHtml = logo ? '<img src="' + logo + '" alt="' + esc(orgName) + '" style="height:52px;width:auto;display:block;margin-bottom:14px">' : '';
+    const _banner = this._docBannerHtml(esc, orgName);
+    const logoHtml = _banner || (logo ? '<img src="' + logo + '" alt="' + esc(orgName) + '" style="height:52px;width:auto;display:block;margin-bottom:14px">' : '');
     const st = '<style>*{box-sizing:border-box}body{font-family:Arial,Helvetica,sans-serif;color:#0f1720;margin:0;padding:40px 44px;max-width:900px;margin:0 auto}h1{font-size:20px;margin:0}.sub{color:#6b7787;font-size:12px;margin:2px 0 18px}.summary{display:flex;gap:10px;margin-bottom:22px}.kp{flex:1;border:1px solid #e4e8ee;border-radius:8px;padding:9px 12px}.kp .k{font-size:9.5px;text-transform:uppercase;letter-spacing:.4px;color:#8894a2;font-weight:700}.kp .v{font-size:20px;font-weight:700;margin-top:2px}.defect{border:1px solid #e4e8ee;border-radius:8px;padding:13px 15px;margin-bottom:12px;page-break-inside:avoid}.dhead{display:flex;align-items:center;gap:8px;margin-bottom:5px}.ref{font-family:monospace;font-weight:700;font-size:13px}.due{margin-left:auto;font-size:11px;font-weight:600}.dtitle{font-size:14px;font-weight:700;margin:5px 0 3px;color:#0f1720}.loc{font-size:11.5px;color:#455565;margin-bottom:3px}.wf{font-size:10.5px;color:#6b7787;margin-bottom:6px}.desc{font-size:12.5px;line-height:1.5}.note{font-size:12px;color:#374151;margin-top:5px;line-height:1.5}.lbl{font-weight:700;color:#0f1a24;font-size:10.5px;text-transform:uppercase;letter-spacing:.3px}.photos{margin-top:9px}@media print{@page{size:A4 landscape;margin:11mm}body{padding:0}}</style>';
     const scr = '<' + 'script>window.onload=function(){window.print();};<' + '/script>';
     const html = '<!doctype html><html><head><meta charset="utf-8"><title>' + esc(p.name) + ' — Defects report</title>' + st + '</head><body>' +
@@ -7914,7 +7915,7 @@ class Component extends DCLogic {
     const atts = (d.attachments || []); const attHtml = atts.length ? '<div style="margin-top:22px"><div class="lbl">Attached drawings / documents</div><ul style="margin:6px 0 0;padding-left:18px;font-size:12.5px;line-height:1.8">' + atts.map(a => '<li>' + esc(a.name) + '</li>').join('') + '</ul></div>' : '';
     const respHtml = (d.response && d.response.trim()) ? ('<div style="font-size:12.5px;line-height:1.6;white-space:pre-wrap">' + esc(d.response) + '</div>') : '<div style="border-bottom:1px solid #cfd8e2;height:22px"></div><div style="border-bottom:1px solid #cfd8e2;height:22px"></div><div style="border-bottom:1px solid #cfd8e2;height:22px"></div>';
     const st = '<style>body{font-family:Arial,Helvetica,sans-serif;color:#0f1720;margin:34px}.top{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #0f1a24;padding-bottom:16px;margin-bottom:20px}.tt{font-size:22px;font-weight:800;letter-spacing:1px;color:#0f1a24}.meta{font-size:12px;color:#4a5765;text-align:right;line-height:1.7}.grid{display:flex;gap:40px;margin-bottom:18px}.lbl{font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:#8894a2;margin-bottom:4px}.val{font-size:13px;line-height:1.6}.box{border:1px solid #e4e8ee;border-radius:8px;padding:14px 16px;margin-top:16px}.q{font-size:13px;line-height:1.6}.imp{margin-top:16px;font-size:12.5px;padding:10px 13px;border-radius:8px}.sign{margin-top:40px;display:flex;gap:40px}.sign>div{flex:1;border-top:1px solid #333;padding-top:6px;font-size:12px;color:#555}.pbtn{position:fixed;top:16px;right:16px;background:#2b59c3;color:#fff;border:0;border-radius:8px;padding:10px 16px;font-size:13px;font-weight:600;cursor:pointer}@media print{.pbtn{display:none}@page{size:A4;margin:14mm}}</style>';
-    const html = '<!doctype html><html><head><meta charset="utf-8"><title>' + esc(d.ref) + ' — RFI</title>' + st + '</head><body>' +
+    const html = '<!doctype html><html><head><meta charset="utf-8"><title>' + esc(d.ref) + ' — RFI</title>' + st + '</head><body>' + this._docBannerHtml(esc, 'Cubic Construction Management') +
       '<button class="pbtn" onclick="window.print()">🖨 Print / Save as PDF</button>' +
       '<div class="top"><div>' + logoHtml + '<div style="font-size:11px;color:#8894a2;margin-top:6px">Cubic Construction Management</div></div><div><div class="tt">REQUEST FOR INFORMATION</div><div class="meta"><strong>' + esc(d.ref) + '</strong><br>Date sent: ' + (d.date ? esc(this.fmtDate(d.date)) : today) + '<br><strong style="color:#b45309">Response required by: ' + (d.dueDate ? esc(this.fmtDate(d.dueDate)) : '—') + '</strong><br>Project: ' + esc(p.name) + ' (' + esc(p.code) + ')</div></div></div>' +
       '<div class="grid"><div><div class="lbl">Submitted by</div><div class="val">' + (esc(d.party) || '—') + '</div></div><div><div class="lbl">Subject</div><div class="val">' + (esc(d.title) || '—') + '</div></div><div><div class="lbl">Cost code</div><div class="val">' + esc(codeLabel) + '</div></div></div>' +
@@ -7957,7 +7958,7 @@ class Component extends DCLogic {
     const logoHtml = logo ? '<img src="' + logo + '" style="height:52px">' : '<div style="font-weight:700;font-size:22px;color:#1d4ed8">CUBIC</div>';
     const atts = (e.attachments || []); const attHtml = atts.length ? '<div style="margin-top:22px"><div class="lbl">Supporting documents</div><ul style="margin:6px 0 0;padding-left:18px;font-size:12.5px;line-height:1.8">' + atts.map(a => '<li>' + esc(a.name) + '</li>').join('') + '</ul></div>' : '';
     const st = '<style>body{font-family:Arial,Helvetica,sans-serif;color:#0f1720;margin:34px}.top{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #0f1a24;padding-bottom:16px;margin-bottom:20px}.tt{font-size:22px;font-weight:800;letter-spacing:1px;color:#0f1a24}.meta{font-size:12px;color:#4a5765;text-align:right;line-height:1.7}.grid{display:flex;gap:40px;margin-bottom:18px}.lbl{font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:#8894a2;margin-bottom:4px}.val{font-size:13px;line-height:1.6}table{border-collapse:collapse;width:100%;margin-top:6px}th{background:#0f1a24;color:#fff;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.4px;padding:8px 9px}td{padding:8px 9px;border-bottom:1px solid #e4e8ee;font-size:12.5px}.r{text-align:right}.imp{margin-top:18px;display:flex;gap:14px}.imp>div{flex:1;border:1px solid #e4e8ee;border-radius:8px;padding:12px 14px}.big{font-size:15px;font-weight:800}.sign{margin-top:44px;display:flex;gap:40px}.sign>div{flex:1;border-top:1px solid #333;padding-top:6px;font-size:12px;color:#555}.pbtn{position:fixed;top:16px;right:16px;background:#2b59c3;color:#fff;border:0;border-radius:8px;padding:10px 16px;font-size:13px;font-weight:600;cursor:pointer}@media print{.pbtn{display:none}@page{size:A4;margin:14mm}}</style>';
-    const html = '<!doctype html><html><head><meta charset="utf-8"><title>' + esc(e.ref) + ' — EOT claim</title>' + st + '</head><body>' +
+    const html = '<!doctype html><html><head><meta charset="utf-8"><title>' + esc(e.ref) + ' — EOT claim</title>' + st + '</head><body>' + this._docBannerHtml(esc, 'Cubic Construction Management') +
       '<button class="pbtn" onclick="window.print()">🖨 Print / Save as PDF</button>' +
       '<div class="top"><div>' + logoHtml + '<div style="font-size:11px;color:#8894a2;margin-top:6px">Cubic Construction Management</div></div><div><div class="tt">EXTENSION OF TIME CLAIM</div><div class="meta"><strong>' + esc(e.ref) + '</strong><br>Date: ' + today + '<br>Project: ' + esc(p.name) + ' (' + esc(p.code) + ')</div></div></div>' +
       '<div class="grid"><div><div class="lbl">Submitted to</div><div class="val">' + billLines + '</div></div><div><div class="lbl">Project</div><div class="val">' + esc(p.name) + '<br>' + esc(p.address || '') + '</div></div></div>' +
@@ -8699,7 +8700,8 @@ class Component extends DCLogic {
     const acct = (this._accountsEmail && this._accountsEmail()) || 'accounts@cubiccm.com';
     const coContact = [co.phone, acct, co.website].filter(Boolean).map(esc).join(' &nbsp;&middot;&nbsp; ');
     const logo = (typeof window !== 'undefined' && window.CUBIC_LOGO) ? window.CUBIC_LOGO : '';
-    const logoHtml = logo ? '<img src="' + logo + '" alt="' + esc(coName) + '" style="width:152px;height:auto;display:block">' : '<div style="font-weight:700;font-size:13pt;color:#2A3580">' + esc(coName.toUpperCase()) + '</div>';
+    const _banner = this._docBannerHtml(esc, coName);
+    const logoHtml = _banner ? '' : (logo ? '<img src="' + logo + '" alt="' + esc(coName) + '" style="width:152px;height:auto;display:block">' : '<div style="font-weight:700;font-size:13pt;color:#2A3580">' + esc(coName.toUpperCase()) + '</div>');
 
     const gst = this._num(p.gstRate), value = this._num(v.value);
     const gstAmt = value * gst / 100, total = value + gstAmt;
@@ -8737,7 +8739,8 @@ class Component extends DCLogic {
       + '@media print{@page{size:A4;margin:15mm}body{padding:0;max-width:none}}</style>';
 
     const html = '<!doctype html><html><head><meta charset="utf-8"><title>' + esc(v.ref) + ' - Variation Order</title>' + st + '</head><body>'
-      + '<div class="hdr">' + logoHtml + '<div class="co"><div class="nm">' + esc(coName.toUpperCase()) + '</div><div>ABN ' + esc(coAbn) + '</div>'
+      + _banner
+      + '<div class="hdr">' + logoHtml + '<div class="co"><div class="nm">' + esc(coName.toUpperCase()) + '</div>' + this._docSloganHtml(esc) + '<div>ABN ' + esc(coAbn) + '</div>'
       + (coAddr ? '<div>' + esc(coAddr) + '</div>' : '') + (coContact ? '<div>' + coContact + '</div>' : '') + '</div></div>'
 
       + '<div class="trow"><div><h1>Variation Order</h1><div class="sub">Instruction to vary the works</div></div>'
@@ -11091,9 +11094,11 @@ class Component extends DCLogic {
       + '@media print{@page{size:A4;margin:14mm}body{padding:0;max-width:none}}</style>';
     const scr = '<' + 'script>window.onload=function(){window.print();};<' + '/script>';
     const logo = (typeof window !== 'undefined' && window.CUBIC_LOGO) ? window.CUBIC_LOGO : '';
-    const logoHtml = logo ? '<img src="' + logo + '" alt="' + esc(coName) + '" style="height:58px;width:auto;display:block">' : '<div style="font-weight:700;font-size:13pt;color:#2A3580">' + esc(coName.toUpperCase()) + '</div>';
+    const _banner = this._docBannerHtml(esc, coName);
+    const logoHtml = _banner ? '' : (logo ? '<img src="' + logo + '" alt="' + esc(coName) + '" style="height:58px;width:auto;display:block">' : '<div style="font-weight:700;font-size:13pt;color:#2A3580">' + esc(coName.toUpperCase()) + '</div>');
     const html = '<!doctype html><html><head><meta charset="utf-8"><title>Subcontract Agreement — ' + esc(ref) + '</title>' + st + '</head><body>'
-      + '<div class="hdr">' + logoHtml + '<div class="co"><strong>' + esc(coName.toUpperCase()) + '</strong><br>ABN ' + esc(coAbn) + '<br>' + esc(coAddr)
+      + _banner
+      + '<div class="hdr">' + logoHtml + '<div class="co"><strong>' + esc(coName.toUpperCase()) + '</strong>' + this._docSloganBr(esc) + 'ABN ' + esc(coAbn) + '<br>' + esc(coAddr)
       + (co.phone ? '<br>' + esc(co.phone) : '') + (co.website ? '<br>' + esc(co.website) : '') + '</div></div>'
       + '<h1>Subcontract Agreement</h1><div class="sub">Formal Instrument of Agreement</div>'
       // ---- particulars (unique per project / subcontract) ----
@@ -12135,6 +12140,19 @@ class Component extends DCLogic {
     return new Blob([out], { type: 'application/pdf' });
   }
   // The letterhead logo: PNG -> JPEG via canvas, so it can be embedded with DCTDecode.
+  _docBanner() { return String(((this.state.company || {}).pdfHeaderUrl) || '').trim(); }
+  _docBannerHtml(esc, alt) {
+    const b = this._docBanner();
+    if (!b) return '';
+    return '<img src="' + b + '" alt="' + esc(String(alt || '')) + '" style="width:100%;height:auto;display:block;margin-bottom:16px">';
+  }
+  // In a block of <br>-separated lines, an absent slogan must still leave the break behind it.
+  _docSloganBr(esc) { return this._docSloganHtml(esc) || '<br>'; }
+  _docSloganHtml(esc) {
+    const sl = String(((this.state.company || {}).slogan) || '').trim();
+    if (!sl) return '';
+    return '<div style="font-size:8.5pt;color:#6E7480;font-style:italic;margin-top:1px">' + esc(sl) + '</div>';
+  }
   _pdfLogo() {
     const url = ((this.state.company || {}).logoUrl || '').trim() || ((typeof window !== 'undefined' && window.CUBIC_LOGO) || '');
     if (!url || typeof document === 'undefined') return Promise.resolve(null);
@@ -12427,7 +12445,8 @@ class Component extends DCLogic {
     const cust = (p.customers && p.customers[0]) || null;
     const pm = ((p.team || []).find(t => /project\s*manager/i.test(t.role || '')) || (p.team || [])[0] || null);
     const logo = (typeof window !== 'undefined' && window.CUBIC_LOGO) ? window.CUBIC_LOGO : '';
-    const logoHtml = logo ? '<img src="' + logo + '" alt="' + esc(coName) + '" style="height:56px;width:auto;display:block">' : '<div style="font-weight:700;font-size:13pt;color:#2A3580">' + esc(coName.toUpperCase()) + '</div>';
+    const _banner = this._docBannerHtml(esc, coName);
+    const logoHtml = _banner ? '' : (logo ? '<img src="' + logo + '" alt="' + esc(coName) + '" style="height:56px;width:auto;display:block">' : '<div style="font-weight:700;font-size:13pt;color:#2A3580">' + esc(coName.toUpperCase()) + '</div>');
     const cellK = 'style="width:27%;background:#F4F5F8;font-weight:600"';
     const r2 = (k, v) => '<tr><td ' + cellK + '>' + esc(k) + '</td><td>' + v + '</td></tr>';
     const money = n => esc(this.money(n));
@@ -12469,7 +12488,8 @@ class Component extends DCLogic {
       + '.ftr{text-align:center;font-size:8pt;color:#9AA0AC;margin-top:14px}'
       + '@media print{@page{size:A4;margin:11mm}body{padding:0;max-width:none}}</style>';
     const html = '<!doctype html><html><head><meta charset="utf-8"><title>' + esc(m.no) + ' - ' + esc(p.name) + '</title>' + st + '</head><body>'
-      + '<div class="hdr">' + logoHtml + '<div class="co"><strong>' + esc(coName.toUpperCase()) + '</strong><br>ABN ' + esc(coAbn) + '<br>' + esc(coAddr)
+      + _banner
+      + '<div class="hdr">' + logoHtml + '<div class="co"><strong>' + esc(coName.toUpperCase()) + '</strong>' + this._docSloganBr(esc) + 'ABN ' + esc(coAbn) + '<br>' + esc(coAddr)
       + '<br>' + [co.phone, acct, co.website].filter(Boolean).map(esc).join(' &nbsp;&middot;&nbsp; ') + '</div></div>'
       + '<div class="trow"><div><h1>Tax Invoice</h1><div class="sub">Progress Payment Claim</div></div>'
       + '<div class="amtbox"><div class="amtlbl">Amount payable (incl. GST)</div>'
