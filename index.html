@@ -599,6 +599,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                     </select>
                     <div style="font-size:11px;color:#8894a2;margin-top:6px;line-height:1.55">{{ settingsV.ingestion.collectScopeNote }}</div>
                     <sc-if value="{{ settingsV.ingestion.hasNoCodeProjects }}" hint-placeholder-val="{{ false }}"><div style="font-size:11px;color:#b45309;margin-top:6px;line-height:1.55">No project number on {{ settingsV.ingestion.noCodeProjects }} — an invoice can only be placed on it by its full name or a PO reference. Give it a number in Project setup and matching gets a great deal better.</div></sc-if>
+                    <sc-if value="{{ settingsV.ingestion.hasClashingRefs }}" hint-placeholder-val="{{ false }}"><div style="font-size:11px;color:#b45309;margin-top:6px;line-height:1.55">{{ settingsV.ingestion.clashingRefs }} — used on more than one open project. An invoice quoting one of these can only be placed if the supplier matches a subcontract; otherwise it waits under Unallocated. Numbering subcontracts uniquely across projects makes the strongest matching rule work again.</div></sc-if>
                     <sc-if value="{{ settingsV.ingestion.hasSkipped }}" hint-placeholder-val="{{ false }}">
                       <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:6px">
                         <div style="font-size:11px;color:#8894a2">Set aside so far: <strong style="color:#4a5765">{{ settingsV.ingestion.skippedCount }}</strong> — see the <strong style="color:#4a5765">Not collected</strong> tab on the Invoices screen.</div>
@@ -9386,9 +9387,22 @@ class Component extends DCLogic {
       const r = cfg.rules[i];
       if (!r.on) continue;
       if (r.key === 'po') {
+        const hits = [];
         for (const p of all) {
           const hit = (p.commitments || []).find(cm => { const ref = String(cm.ref || '').trim().toLowerCase(); return ref.length >= 3 && hay.indexOf(ref) >= 0; });
-          if (hit) return { pid: p.id, rule: 'PO / commitment reference (' + hit.ref + ')', conf: 95, commitmentId: hit.id };
+          if (hit) hits.push({ p: p, cm: hit });
+        }
+        if (hits.length === 1) {
+          return { pid: hits[0].p.id, rule: 'PO / commitment reference (' + hits[0].cm.ref + ')', conf: 95, commitmentId: hits[0].cm.id };
+        }
+        if (hits.length > 1) {
+          // The same reference on more than one job. Whose subcontract it is decides.
+          const _v = this.apVendor(inv);
+          const mine = _v ? hits.filter(h => h.cm.vendor && h.cm.vendor === _v.company) : [];
+          if (mine.length === 1) {
+            return { pid: mine[0].p.id, rule: 'PO / commitment reference (' + mine[0].cm.ref + ') with ' + _v.company, conf: 95, commitmentId: mine[0].cm.id };
+          }
+          // Still more than one. Say nothing and let the remaining rules try.
         }
       }
       if (r.key === 'project') {
@@ -9658,6 +9672,18 @@ class Component extends DCLogic {
       if (p && p.status === 'closed') return { keep: false, reason: 'It belongs to ' + p.name + ', which is closed.' };
     }
     return { keep: true, reason: '' };
+  }
+  // Subcontract references carried by more than one open project. The PO rule cannot choose
+  // between them on the reference alone, so it falls back to the supplier, and failing that
+  // leaves the invoice for a person.
+  _apRefClashes() {
+    const seen = {};
+    (this.state.projects || []).filter(p => p.status !== 'closed').forEach(p => {
+      const mine = {};
+      (p.commitments || []).forEach(c => { const r = String(c.ref || '').trim(); if (r.length >= 3) mine[r] = 1; });
+      Object.keys(mine).forEach(r => { (seen[r] = seen[r] || []).push(p.name); });
+    });
+    return Object.keys(seen).filter(r => seen[r].length > 1).sort();
   }
   apNotCollected() { return this.apAll().filter(x => x.status === 'not_collected'); }
   // Seeing the declined pile and being able to empty it are the same right, and it is one
@@ -17236,6 +17262,8 @@ class Component extends DCLogic {
           ? 'Every invoice is taken in. Anything that cannot be placed on a project waits under Unallocated.'
           : 'Mail that cannot be placed on a project is set aside under Not collected instead of joining the queue — nothing is deleted, and one click takes any of it back. A PDF you drop in yourself is always kept; an email saved as .eml counts as mail and is judged the same way.',
         noCodeProjects: (this.state.projects || []).filter(p => p.status !== 'closed' && String(p.code || '').trim().length < 3).map(p => p.name).join(', '),
+        clashingRefs: this._apRefClashes().join(', '),
+        hasClashingRefs: this._apRefClashes().length > 0,
         hasNoCodeProjects: (this.state.projects || []).some(p => p.status !== 'closed' && String(p.code || '').trim().length < 3),
         skippedCount: String(this.apNotCollected().length),
         onRecollect: () => this.apRecollectAll(),
