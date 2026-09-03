@@ -609,7 +609,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                   </div>
                   <div style="grid-column:1 / -1;display:flex;align-items:center;gap:9px">
                     <span onClick="{{ settingsV.ingestion.onRequireAttachment }}" style="{{ settingsV.ingestion.requireAttachmentStyle }};cursor:pointer">{{ settingsV.ingestion.requireAttachmentTick }}</span>
-                    <span onClick="{{ settingsV.ingestion.onRequireAttachment }}" style="cursor:pointer;font-size:12.5px;color:#4a5765">Only consider mail carrying a PDF or image attachment</span>
+                    <span onClick="{{ settingsV.ingestion.onRequireAttachment }}" style="cursor:pointer;font-size:12.5px;color:#4a5765">Only consider mail carrying a PDF or image attachment — a message with nothing attached is set aside under Not collected, not deleted</span>
                   </div>
                 </div>
                 <div style="margin-top:12px;background:#fbf1e3;border:1px solid #eddcc0;border-radius:9px;padding:10px 13px;font-size:12px;color:#b45309;line-height:1.6">{{ settingsV.ingestion.connectNote }}</div>
@@ -9565,7 +9565,15 @@ class Component extends DCLogic {
         inv.source = source;
         inv.status = 'received';
         inv.extract = { ok: false, engine: 'eml', text: mail.body || '', conf: {} };
-        return [this._apFinalise(inv, mail.body || '')];
+        const rec = this._apFinalise(inv, mail.body || '');
+        // Nothing was attached. If the mailbox is set to invoices only, this is not one.
+        if (this.apSettings().requireAttachment && rec.status !== 'not_collected') {
+          rec.status = 'not_collected';
+          rec.pid = ''; rec.commitmentId = ''; rec.matchRule = ''; rec.matchConf = 0; rec.assignedTo = '';
+          rec.notCollectedReason = this._apNoAttachmentReason();
+          rec.audit.push({ at: new Date().toISOString(), by: 'System', action: 'Not collected', detail: rec.notCollectedReason });
+        }
+        return [rec];
       }
       // Each attachment is assessed on its own; one email can produce several invoices (BR-4.04).
       return Promise.all(useful.map(a => {
@@ -9687,6 +9695,7 @@ class Component extends DCLogic {
     });
     return Object.keys(seen).filter(r => seen[r].length > 1).sort();
   }
+  _apNoAttachmentReason() { return 'No invoice was attached — the message carried no PDF or image to read. Turn off \u201conly consider mail carrying an attachment\u201d in Invoice ingestion to keep messages like this.'; }
   _apNoProjectReason() { return 'No project in this system could be matched to it — no project number, name or PO reference on it matched one here.'; }
   apNotCollected() { return this.apAll().filter(x => x.status === 'not_collected'); }
   // Seeing the declined pile and being able to empty it are the same right, and it is one
