@@ -6,6 +6,12 @@
       "runtimeExecutable": "node",
       "runtimeArgs": [".claude/static-server.cjs", "8080"],
       "port": 8080
+    },
+    {
+      "name": "Cubic PM (phone check, 8099)",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [".claude/static-server.cjs", "8099"],
+      "port": 8099
     }
   ]
 }
