@@ -672,8 +672,13 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                     </div>
                   </div>
                   <div style="grid-column:1 / -1">
-                    <label style="font-size:11px;font-weight:600;color:#4a5765;display:block;margin-bottom:5px">Mailbox to watch</label>
-                    <input value="{{ settingsV.ingestion.mailbox }}" onInput="{{ settingsV.ingestion.onMailbox }}" placeholder="e.g. accounts@cubiccm.com" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:inherit;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none">
+                    <label style="font-size:11px;font-weight:600;color:#4a5765;display:block;margin-bottom:5px">Receiving address</label>
+                    <input value="{{ settingsV.ingestion.mailbox }}" onInput="{{ settingsV.ingestion.onMailbox }}" placeholder="e.g. invoices@sydneylvl.com" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:inherit;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none">
+                    <div style="font-size:11px;color:#8894a2;margin-top:6px;line-height:1.55">The address suppliers send invoices to. Its domain counts as one of ours, so a message forwarded by one of your own people is read as a forward and the supplier is taken from the invoice inside, not from whoever passed it on.</div>
+                    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:9px">
+                      <sc-if value="{{ settingsV.ingestion.canCheck }}" hint-placeholder-val="{{ true }}"><button onClick="{{ settingsV.ingestion.onCheckNow }}" title="Look now instead of waiting for the next check" style="border:1px solid #cfd8e2;background:#fff;color:#4a5765;border-radius:7px;padding:6px 13px;font-size:11.5px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="border-color:#2b59c3;color:#2b59c3">{{ settingsV.ingestion.checkLabel }}</button></sc-if>
+                      <div style="font-size:11px;color:#a4afba">{{ settingsV.ingestion.mailLine }}</div>
+                    </div>
                   </div>
                   <div>
                     <label style="font-size:11px;font-weight:600;color:#4a5765;display:block;margin-bottom:5px">Check every</label>
@@ -707,8 +712,8 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                     <span onClick="{{ settingsV.ingestion.onRequireAttachment }}" style="cursor:pointer;font-size:12.5px;color:#4a5765">Only consider mail carrying a PDF or image attachment — a message with nothing attached is set aside under Not collected, not deleted</span>
                   </div>
                 </div>
-                <div style="margin-top:12px;background:#fbf1e3;border:1px solid #eddcc0;border-radius:9px;padding:10px 13px;font-size:12px;color:#b45309;line-height:1.6">{{ settingsV.ingestion.connectNote }}</div>
-                <div style="font-size:11px;color:#a4afba;margin-top:8px">Last collection: {{ settingsV.ingestion.lastSync }}</div>
+                <div style="margin-top:12px;background:{{ settingsV.ingestion.noteBg }};border:1px solid {{ settingsV.ingestion.noteBorder }};border-radius:9px;padding:10px 13px;font-size:12px;color:{{ settingsV.ingestion.noteColor }};line-height:1.6">{{ settingsV.ingestion.connectNote }}</div>
+
               </div>
 
               <!-- matching rules -->
@@ -1099,6 +1104,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
               <div style="display:flex;flex-wrap:var(--cpms-wrap,nowrap);align-items:center;gap:8px;flex:0 0 var(--cpms-grow,auto)">
                 <sc-if value="{{ apV.isAdmin }}" hint-placeholder-val="{{ true }}"><button onClick="{{ apV.onSettings }}" title="Mailbox, matching rules and accountant routing" style="border:1px solid #cfd8e2;background:#fff;color:#4a5765;border-radius:8px;padding:9px 14px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="border-color:#2b59c3;color:#2b59c3">⚙ Ingestion settings</button></sc-if>
                 <sc-if value="{{ apV.hasStrays }}" hint-placeholder-val="{{ false }}"><button onClick="{{ apV.onSetAsideStrays }}" title="Move every invoice that matches no project in this system out of the queue and into Not collected. Nothing is deleted — Collect brings any of them back." style="border:1px solid #e6d3b3;background:#fff;color:#b45309;border-radius:8px;padding:9px 14px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="border-color:#b45309">🧹 Set aside {{ apV.strayCount }} with no project</button></sc-if>
+                <sc-if value="{{ apV.canCheckMail }}" hint-placeholder-val="{{ true }}"><button onClick="{{ apV.onCheckMail }}" title="Look in the receiving mailbox now. Anything waiting is read and matched exactly as an upload is." style="border:1px solid #cfd8e2;background:#fff;color:#4a5765;border-radius:8px;padding:9px 14px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="border-color:#2b59c3;color:#2b59c3">{{ apV.checkMailLabel }}</button></sc-if>
                 <button onClick="{{ apV.onExport }}" title="Export every invoice you can see to a spreadsheet" style="border:1px solid #cfd8e2;background:#fff;color:#4a5765;border-radius:8px;padding:9px 14px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="border-color:#15803d;color:#15803d">📊 Export</button>
                 <sc-if value="{{ apV.canEdit }}" hint-placeholder-val="{{ true }}">
                   <label title="Drop in invoice PDFs or images, or a whole email saved as .eml" style="display:inline-flex;align-items:center;gap:7px;border:0;background:#2b59c3;color:#fff;border-radius:8px;padding:10px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="background:#244dab">
@@ -5397,6 +5403,7 @@ class Component extends DCLogic {
       apFilter: { project: '', vendor: '', sort: 'newest' },
       apBusy: 0, apSend: null, apPrompt: null,
       apNotice: '', apAuditOpen: '', apEmailOpen: false,
+      apMail: { at: '', n: 0, busy: false, err: '', ok: false, off: false },
       anim: 0,
     };
     this._SB = { url: 'https://vzxenkijxzzrgnmopnxh.supabase.co', key: 'sb_publishable_dqhiUAGqlZ6gSt-INv1KNA_kJeRNimR', emailFn: 'resend-email', smsFn: 'send-sms' };
@@ -5411,6 +5418,7 @@ class Component extends DCLogic {
     this._startLiveSync(); // and pull in what everybody else has done
     this._startVersionWatch(); // and notice when this page itself is out of date
     this._restoreSession();
+    this._startMailWatch();
   }
   // Everything shared with the rest of the team. Called at mount and again after a
   // successful sign-in: with RLS on, the mount-time call is denied while logged out,
@@ -9737,6 +9745,126 @@ class Component extends DCLogic {
     return null;
   }
 
+  // ---- collecting from the mailbox --------------------------------------------------------------
+  // A message sent to the receiving address is written into ap_inbox by the inbound-email
+  // function. Nothing about it is interpreted on the server: the whole message is stored as it
+  // arrived, and read here, so an emailed invoice and a dropped file are the same thing to
+  // everything downstream.
+  apMailAddress() { return this._apAddr(this.apSettings().mailbox); }
+  apMailState() { return Object.assign({ at: '', n: 0, busy: false, err: '', ok: false, off: false }, this.state.apMail || {}); }
+  // Reading the queue needs the signed-in user’s token, because the table is behind RLS.
+  _apMailLink() {
+    const c = this._SB; const ss = this.state.session;
+    return !!(c && c.url && c.key && typeof fetch !== 'undefined' && ss && ss.access_token);
+  }
+  apCanCheckMail() { return this.can('apInvoices', 'edit') && this._apMailLink(); }
+  _apInboxUrl(q) { return (this._SB || {}).url + '/rest/v1/ap_inbox' + q; }
+  _apMailSet(patch) { this.setState(st => ({ apMail: Object.assign({ at: '', n: 0, busy: false, err: '', ok: false, off: false }, st.apMail || {}, patch) })); }
+
+  // Two windows will both see the same unread message. The claim is a conditional update — it
+  // matches only a row that is still new — so one of them gets it and the other is handed
+  // nothing and moves on. Without this the same invoice enters the system twice.
+  // The raw text comes back with the claim, so the message is fetched and claimed at once.
+  _apClaimMail(row) {
+    return fetch(this._apInboxUrl('?id=eq.' + encodeURIComponent(row.id) + '&status=eq.new&select=id,raw'), {
+      method: 'PATCH',
+      headers: this._sbUserHeaders({ 'Content-Type': 'application/json', Prefer: 'return=representation' }),
+      body: JSON.stringify({ status: 'collecting', attempts: (this._num(row.attempts) || 0) + 1 }),
+    }).then(r => (r.ok ? r.json() : [])).then(a => ((a && a.length) ? a[0] : null)).catch(() => null);
+  }
+  _apFinishMail(id, status, note, ids) {
+    const body = { status: status, note: note || '', invoice_ids: ids || [] };
+    if (status === 'collected') { body.collected_at = new Date().toISOString(); body.collected_by = (this.currentUser() || {}).email || ''; }
+    return fetch(this._apInboxUrl('?id=eq.' + encodeURIComponent(id)), {
+      method: 'PATCH',
+      headers: this._sbUserHeaders({ 'Content-Type': 'application/json', Prefer: 'return=minimal' }),
+      body: JSON.stringify(body),
+    }).catch(() => {});
+  }
+
+  // One message at a time, deliberately. A morning’s worth arriving at once would otherwise
+  // run twenty extractions in parallel and lock the window up on the machine of whoever
+  // happened to have the app open.
+  _apCollectRows(rows) {
+    const list = (rows || []).filter(Boolean);
+    const mine = {};
+    const step = (i, made) => {
+      if (i >= list.length) return Promise.resolve(made);
+      const row = list[i];
+      return this._apClaimMail(row).then(claimed => {
+        if (!claimed) return step(i + 1, made);
+        const raw = String(claimed.raw || '');
+        if (!raw.trim()) return this._apFinishMail(row.id, 'failed', 'The message arrived empty', []).then(() => step(i + 1, made));
+        return this._apFromEmlText(raw).then(recs => {
+          const got = (recs || []).filter(Boolean);
+          if (!got.length) return this._apFinishMail(row.id, 'failed', 'Nothing could be read from the message', []).then(() => step(i + 1, made));
+          got.forEach(r => { mine[r.id] = 1; });
+          return new Promise(res => this._apAdd(got, res))
+            .then(() => this._apFinishMail(row.id, 'collected', '', got.map(x => x.id)))
+            .then(() => step(i + 1, made + got.length), () => step(i + 1, made + got.length));
+        });
+      }).catch(() => {
+        // Put it back rather than leave it claimed, so a passing failure is retried. Three
+        // goes is enough to tell a network blip from a message that cannot be read at all.
+        const n = (this._num(row.attempts) || 0) + 1;
+        return this._apFinishMail(row.id, n >= 3 ? 'failed' : 'new',
+          n >= 3 ? 'Could not be read after three attempts' : 'Could not be read; it will be tried again', [])
+          .then(() => step(i + 1, made));
+      });
+    };
+    return step(0, 0).then(n => {
+      const fresh = (this.state.apInvoices || []).filter(x => mine[x.id]);
+      if (!fresh.length) return n;
+      // A failure to send must not lose the invoices that were collected fine.
+      return Promise.resolve(this.apNotifyUnallocated(fresh)).then(() => n, () => n);
+    });
+  }
+
+  apCollectMail(manual) {
+    if (!this.can('apInvoices', 'edit')) return Promise.resolve(0);
+    if (this._apMailRunning) return Promise.resolve(0);
+    if (!this._apMailLink()) {
+      if (manual) this._apMailSet({ err: 'Not signed in to the shared data yet — sign in and try again', busy: false, ok: false });
+      return Promise.resolve(0);
+    }
+    this._apMailRunning = true;
+    this._apMailSet({ busy: true, err: '' });
+    const done = (patch, n) => { this._apMailRunning = false; this._apMailSet(Object.assign({ busy: false }, patch)); return n; };
+    return fetch(this._apInboxUrl('?status=eq.new&order=received_at.asc&limit=20&select=id,received_at,from_addr,subject,attempts,size_bytes'), { headers: this._sbUserHeaders() })
+      .then(r => (r.ok ? r.json() : Promise.reject(new Error(r.status === 404 ? 'missing' : 'HTTP ' + r.status))))
+      .then(rows => this._apCollectRows(rows || []).then(n => done({ at: new Date().toISOString(), n: n, ok: true, off: false, err: '' }, n)))
+      .catch(e => {
+        // A missing table is not a fault worth retrying every five minutes — it means the
+        // migration has not been run. Say so once, and stop until somebody asks again.
+        const missing = String(e && e.message) === 'missing';
+        return done({
+          err: missing ? 'The invoice mailbox has not been set up on the server yet — run the ap_inbox migration in Supabase.' : 'Could not reach the mailbox just now',
+          ok: false, off: missing, at: new Date().toISOString(),
+        }, 0);
+      });
+  }
+
+  // Once a minute the app asks whether enough time has passed to look. A hidden tab does not
+  // bother: collection is not urgent, and a laptop with the app open in four tabs should not
+  // make four requests a minute between them.
+  _startMailWatch() {
+    clearInterval(this._mailTimer);
+    this._mailTimer = setInterval(() => this._mailTick(), 60000);
+    setTimeout(() => this._mailTick(), 9000);
+  }
+  _mailTick() {
+    if (typeof document !== 'undefined' && document.hidden) return;
+    const st = this.apMailState();
+    if (st.off || st.busy) return;
+    // No receiving address set means nothing is expected to arrive. Check now still works.
+    if (!this.apMailAddress()) return;
+    if (!this.apCanCheckMail()) return;
+    const every = Math.max(1, this._num(this.apSettings().pollMinutes) || 5);
+    const last = Date.parse(st.at || '') || 0;
+    if (Date.now() - last < every * 60000) return;
+    this.apCollectMail(false);
+  }
+
   // ---- capture ---------------------------------------------------------------------------------
   // Upload and mailbox capture share one path from extraction onwards, so a manually uploaded
   // invoice behaves identically to one that arrived by email (BR-4.07).
@@ -9814,7 +9942,13 @@ class Component extends DCLogic {
   _apReadText(file) { return new Promise(res => { try { const r = new FileReader(); r.onload = e => res(e.target.result); r.onerror = () => res(''); r.readAsText(file); } catch (e) { res(''); } }); }
 
   _apFromEml(file) {
-    return this._apReadText(file).then(txt => {
+    return this._apReadText(file).then(txt => this._apFromEmlText(txt || ''));
+  }
+
+  // The same reader, working from the message text rather than a file. Splitting it out is
+  // what lets a collected email and an uploaded .eml share every line below this one.
+  _apFromEmlText(txt) {
+    return Promise.resolve().then(() => {
       const mail = this._apParseEml(txt || '');
       const docs = (mail.attachments || []).filter(a => /pdf$/i.test(a.mime) || /^image\//i.test(a.mime) || /\.(pdf|png|jpe?g|gif|webp|tiff?)$/i.test(a.name));
       // Statements, quotes and delivery dockets are not invoices; the email is still kept, but
@@ -17431,6 +17565,10 @@ class Component extends DCLogic {
           busy: S.apBusy > 0, busyLabel: S.apBusy > 0 ? ('Reading ' + S.apBusy + ' file(s)…') : '',
           canEdit: this.can('apInvoices', 'edit'),
           onUpload: e => { this.apIngestFiles(e.target.files); e.target.value = ''; },
+          canCheckMail: this.apCanCheckMail(),
+          checkingMail: !!(S.apMail || {}).busy,
+          checkMailLabel: (S.apMail || {}).busy ? '… Checking mail' : '✉ Check mail',
+          onCheckMail: () => this.apCollectMail(true),
           onExport: () => this.apExportCsv(), onSettings: () => this.goApSettings(),
           strayCount: String(this.apUnallocatedStrays().length),
           hasStrays: this.apCanCollect() && this.apUnallocatedStrays().length > 0,
@@ -17891,6 +18029,29 @@ class Component extends DCLogic {
       const _apSampleInv = (S.apInvoices || []).filter(x => x.pid)[0] || null;
       const _apToggle = (k, v) => () => this.setApSetting(k, v);
       const _apEditable = this.can('apInvoices', 'edit');
+      const _apMailS = this.apMailState();
+      const _apMailAddr = this.apMailAddress();
+      const _apMailOk = !!_apMailS.ok;
+      const _apMailD = new Date(Date.parse(_apMailS.at || ''));
+      const _apMailWhen = isNaN(_apMailD.getTime())
+        ? 'not yet'
+        : (String(_apMailD.getDate()).padStart(2, '0') + '/' + String(_apMailD.getMonth() + 1).padStart(2, '0')
+           + ' ' + String(_apMailD.getHours()).padStart(2, '0') + ':' + String(_apMailD.getMinutes()).padStart(2, '0'));
+      const _apMailN = this._num(_apMailS.n);
+      const _apMailLine = !_apMailS.at
+        ? 'Not looked yet.'
+        : ('Last looked ' + _apMailWhen + ' — ' + (_apMailN > 0 ? (_apMailN === 1 ? '1 invoice collected' : _apMailN + ' invoices collected') : 'nothing waiting') + '.');
+      // Four states worth telling apart: looking, reached it, could not reach it, and never
+      // asked. The old pill could only say the last two, and said them from a stored flag.
+      const _apMailStatus = (() => {
+      const _every = Math.max(1, this._num(_apS.pollMinutes) || 5);
+      const _live = 'Mail sent to ' + (_apMailAddr || 'the receiving address') + ' is collected on its own, within about ' + _every + ' minute' + (_every === 1 ? '' : 's') + ' of arriving while somebody has the app open, and is read exactly as an uploaded .eml is — same supplier match, same project rules, same duplicate check. Check now looks straight away.';
+        const _setup = 'Receiving mail is set up once on the server: run the ap_inbox migration, deploy the inbound-email function, and point a mail provider at it. supabase/functions/inbound-email/README.md has the steps, including why the address must be on a subdomain. Until that is done, Upload on the Invoices screen is the way in and everything after it is identical.';
+        if (_apMailS.busy) return { text: 'Checking…', fg: '#4a5765', bg: '#eef1f5', note: _live, noteBg: '#f5f7fa', noteBorder: '#e4e8ee', noteFg: '#4a5765' };
+        if (_apMailS.err) return { text: 'Not receiving', fg: '#b45309', bg: '#fbf1e3', note: _apMailS.err + ' — ' + _setup, noteBg: '#fbf1e3', noteBorder: '#eddcc0', noteFg: '#b45309' };
+        if (_apMailS.ok) return { text: 'Receiving', fg: '#15803d', bg: '#e6f4ea', note: _live, noteBg: '#e6f4ea', noteBorder: '#c7e6d1', noteFg: '#15803d' };
+        return { text: 'Not checked yet', fg: '#b45309', bg: '#fbf1e3', note: _setup, noteBg: '#fbf1e3', noteBorder: '#eddcc0', noteFg: '#b45309' };
+      })();
       const ingestionV = {
         editable: _apEditable,
         // Mailbox. Polling a mailbox needs a server-side connector with delegated access; the
@@ -17901,11 +18062,19 @@ class Component extends DCLogic {
         googleStyle: _apS.provider === 'google' ? 'border-color:#2b59c3;background:#f2f6fd;color:#2b59c3' : 'border-color:#cfd8e2;background:#fff;color:#4a5765',
         m365Style: _apS.provider === 'm365' ? 'border-color:#2b59c3;background:#f2f6fd;color:#2b59c3' : 'border-color:#cfd8e2;background:#fff;color:#4a5765',
         mailbox: _apS.mailbox || '', onMailbox: e => this.setApSetting('mailbox', e.target.value),
-        connected: !!_apS.connected,
-        statusText: _apS.connected ? 'Connected' : 'Not connected',
-        statusColor: _apS.connected ? '#15803d' : '#b45309',
-        statusBg: _apS.connected ? '#e6f4ea' : '#fbf1e3',
-        connectNote: 'Automatic collection needs a mailbox connector running on the server with delegated access — no password is ever stored. Until that is switched on, invoices come in through Upload on the Invoices screen: drop the PDFs, or the whole email saved as .eml, and the rest of the workflow is identical.',
+        connected: _apMailOk,
+        statusText: _apMailStatus.text, statusColor: _apMailStatus.fg, statusBg: _apMailStatus.bg,
+        // The address suppliers send to. Setting it also makes its domain one of ours, so a
+        // message forwarded by a colleague is read as a forward and the supplier is taken
+        // from the message inside rather than from whoever passed it on.
+        mailAddr: _apMailAddr, hasMailAddr: !!_apMailAddr,
+        mailLine: _apMailLine,
+        mailErr: _apMailS.err || '', hasMailErr: !!_apMailS.err,
+        canCheck: this.apCanCheckMail(), checking: !!_apMailS.busy,
+        checkLabel: _apMailS.busy ? 'Checking…' : 'Check now',
+        onCheckNow: () => this.apCollectMail(true),
+        noteBg: _apMailStatus.noteBg, noteBorder: _apMailStatus.noteBorder, noteColor: _apMailStatus.noteFg,
+        connectNote: _apMailStatus.note,
         pollMinutes: String(_apS.pollMinutes), onPoll: e => this.setApSetting('pollMinutes', Number(e.target.value) || 5),
         pollOptions: [{ v: '1', label: 'Every minute' }, { v: '5', label: 'Every 5 minutes' }, { v: '15', label: 'Every 15 minutes' }, { v: '60', label: 'Hourly' }],
         folder: _apS.folder || 'Inbox', onFolder: e => this.setApSetting('folder', e.target.value),
