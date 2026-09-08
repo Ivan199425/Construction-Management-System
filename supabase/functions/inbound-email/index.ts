@@ -75,6 +75,34 @@ const headerOf = (raw: string, name: string): string => {
   return m ? m[1].replace(/\r?\n[ \t]+/g, ' ').trim() : '';
 };
 
+// Every address this message can be said to have been sent to.
+//
+// A forward is the normal case here, not the exception, and on a forward the one address that is
+// NOT ours is often the envelope: mail sent to accounts@ours is forwarded to a collecting address
+// somewhere else, and the provider reports that far end. The original recipient survives in the
+// headers instead — in To, or Cc, or the Delivered-To that Gmail stamps on. An invoice Bcc'd to a
+// list has it in none of them and only the envelope to go on.
+//
+// So all of them are gathered and any one matching is enough. Deciding on a single header would
+// mean picking which of those cases to be wrong about.
+const RECIPIENT_HEADERS = ['To', 'Cc', 'Delivered-To', 'X-Original-To', 'X-Forwarded-To', 'Envelope-To', 'X-Envelope-To'];
+
+const allRecipients = (raw: string): string[] => {
+  const head = raw.split(/\r?\n\r?\n/)[0] || '';
+  const out: string[] = [];
+  const add = (s: string) => { const a = addr(s); if (a && a.indexOf('@') > 0 && out.indexOf(a) < 0) out.push(a); };
+  for (const name of RECIPIENT_HEADERS) {
+    // Every occurrence, not the first: Delivered-To is stamped once per hop, and the hop that
+    // matters is rarely the one at the top.
+    const re = new RegExp('^' + name + ':[ \\t]*([\\s\\S]*?)(?=\\r?\\n[^ \\t]|$)', 'gim');
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(head))) {
+      m[1].replace(/\r?\n[ \t]+/g, ' ').split(',').forEach(add);
+    }
+  }
+  return out;
+};
+
 const pick = (o: Record<string, unknown>, keys: string[]): string => {
   for (const k of keys) {
     const v = o[k];
@@ -226,10 +254,8 @@ Deno.serve(async (req: Request) => {
   const size = new TextEncoder().encode(raw).length;
   const tooBig = size > MAX_BYTES;
 
-  // Envelope first, headers second. A provider knows which address it actually delivered to;
-  // the To: header can say anything, and on a forward it usually says somebody else.
   const envTo = addr(url.searchParams.get('to') || req.headers.get('x-inbound-to') || '');
-  const to = envTo || addr(headerOf(raw, 'To'));
+  const recipients = [envTo].concat(allRecipients(raw)).filter(Boolean);
   const from = addr(headerOf(raw, 'From'));
   const subject = headerOf(raw, 'Subject').slice(0, 500);
   const messageId = headerOf(raw, 'Message-ID').replace(/^<|>$/g, '').slice(0, 400);
@@ -238,13 +264,19 @@ Deno.serve(async (req: Request) => {
   // the setup notes ask for a domain, because a URL that leaks should not become a way to put
   // documents in front of the accounts team.
   const allow = (Deno.env.get('INBOUND_TO') || '').split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
-  if (allow.length && to) {
-    const dom = to.split('@')[1] || '';
-    if (!allow.some(a => a === to || a === dom || a === '@' + dom)) {
-      // Not an error on the provider's part, so not an error code: nothing should be retried.
-      return json({ ok: true, ignored: 'not a receiving address', to }, 200);
-    }
+  const matches = (a: string) => {
+    const dom = a.split('@')[1] || '';
+    return allow.some(x => x === a || x === dom || x === '@' + dom);
+  };
+  const mine = recipients.find(matches) || '';
+  if (allow.length && recipients.length && !mine) {
+    // Not an error on the provider's part, so not an error code: nothing should be retried.
+    return json({ ok: true, ignored: 'not a receiving address', tried: recipients }, 200);
   }
+  // Record the address of ours it came to, when there is one. That is the useful fact — which of
+  // accounts@, sales@ or ivan@ a supplier is writing to — not whichever collecting address the
+  // forward happened to pass through.
+  const to = mine || envTo || recipients[0] || '';
 
   const row = {
     to_addr: to, from_addr: from, subject, message_id: messageId,
