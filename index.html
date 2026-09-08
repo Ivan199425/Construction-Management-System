@@ -297,6 +297,16 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
         <div style="height:1px;background:rgba(255,255,255,.07);margin:12px 6px"></div>
       </sc-if>
       <div style="font-size:10.5px;font-weight:600;letter-spacing:.9px;color:#5f7080;padding:6px 10px 8px">PROJECTS</div>
+      <button onClick="{{ projPickV.onToggle }}" title="{{ projPickV.title }}" style="width:100%;display:flex;align-items:center;gap:9px;padding:8px 10px;border:1px solid rgba(255,255,255,.10);background:{{ projPickV.bg }};color:{{ projPickV.fg }};border-radius:7px;cursor:pointer;text-align:left;font-family:inherit" style-hover="border-color:rgba(255,255,255,.22)">
+        <span style="width:6px;height:6px;border-radius:50%;background:{{ projPickV.dot }};flex:0 0 auto"></span>
+        <span style="flex:1;overflow:hidden">
+          <span style="display:block;font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ projPickV.name }}</span>
+          <span class="mono" style="display:block;font-size:10.5px;color:#5f7080;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ projPickV.code }}</span>
+        </span>
+        <span style="font-size:10px;color:#5f7080;flex:0 0 auto">{{ projPickV.caret }}</span>
+      </button>
+      <sc-if value="{{ projPickV.open }}" hint-placeholder-val="{{ true }}">
+      <div style="margin:4px 0 2px;padding:4px;border:1px solid rgba(255,255,255,.08);border-radius:9px;background:rgba(0,0,0,.22)">
       <sc-for list="{{ switcherProjects }}" as="p" hint-placeholder-count="3">
         <button onClick="{{ p.onOpen }}" style="width:100%;display:flex;align-items:center;gap:9px;padding:8px 10px;border:0;background:{{ p.bg }};color:{{ p.fg }};border-radius:7px;cursor:pointer;text-align:left;margin-bottom:2px;font-family:inherit" style-hover="background:rgba(255,255,255,.06)">
           <span style="width:6px;height:6px;border-radius:50%;background:{{ p.dot }};flex:0 0 auto"></span>
@@ -307,6 +317,8 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
         </button>
       </sc-for>
       <sc-if value="{{ canCreateProject }}" hint-placeholder-val="{{ true }}"><button onClick="{{ onNewProject }}" style="width:100%;display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px dashed rgba(255,255,255,.12);background:transparent;color:#5f7080;border-radius:7px;cursor:pointer;margin-top:6px;font-family:inherit;font-size:12.5px" style-hover="color:#8493a3;border-color:rgba(255,255,255,.2)">＋ New project</button></sc-if>
+      </div>
+      </sc-if>
 
       <div style="height:1px;background:rgba(255,255,255,.07);margin:16px 6px"></div>
       <button onClick="{{ onGoPortfolio }}" style="width:100%;display:flex;align-items:center;gap:10px;padding:9px 10px;border:0;background:{{ navPortfolio.bg }};color:{{ navPortfolio.fg }};border-radius:7px;cursor:pointer;text-align:left;font-family:inherit;font-size:13px;font-weight:500;margin-bottom:2px" style-hover="background:rgba(255,255,255,.06)">
@@ -5307,6 +5319,7 @@ class Component extends DCLogic {
       pid: 'p1',
       module: 'dashboard',
       navOpen: false,
+      projPick: false,
       labourWeek: '',
       statusFilter: 'all',
       commitTab: 'budget',
@@ -7105,7 +7118,7 @@ class Component extends DCLogic {
   doPasswordRecover() { this.setState(s => ({ auth: { ...s.auth, notice: 'Password reset by email isn’t enabled yet. Ask your administrator to re-invite you, then use “Activate account” to set a new password.', error: '' } })); }
   doPasswordReset() { this.doPasswordRecover(); }
   // ===== Admin → Users =====
-  goUsers() { this.setState({ view: 'users', anim: this.state.anim + 1, navOpen: false }); this._loadProfilesIntoState(); }
+  goUsers() { this.setState({ view: 'users', anim: this.state.anim + 1, navOpen: false, projPick: false }); this._loadProfilesIntoState(); }
   openUserCreate() { this.setState({ userAdminModal: { mode: 'create' }, userForm: { id: '', name: '', email: '', role: 'Field', projectIds: [], status: 'invited', external: false }, userFormError: '' }); }
   openUserEdit(id) { const u = (this.state.users || []).find(x => x.id === id); if (!u) return; this.setState({ userAdminModal: { mode: 'edit', id }, userForm: { id: u.id, name: u.name, email: u.email, role: u.role, projectIds: [...(u.projectIds || [])], status: u.status, external: !!u.external }, userFormError: '' }); }
   closeUserAdmin() { this.setState({ userAdminModal: null, userFormError: '' }); }
@@ -7325,7 +7338,7 @@ class Component extends DCLogic {
   }
   vendorName(id) { const v = this.state.vendors.find(x => x.id === id); return v ? v.company : ''; }
   vendorTypeLabel(t) { return { contractor: 'Contractor', supplier: 'Supplier', service: 'Service' }[t] || t; }
-  goVendors() { this.setState({ view: 'vendors', anim: this.state.anim + 1, navOpen: false }); }
+  goVendors() { this.setState({ view: 'vendors', anim: this.state.anim + 1, navOpen: false, projPick: false }); }
   setVendorField(id, field, val) { this._commitVendors(list => list.map(v => v.id === id ? { ...v, [field]: val } : v)); }
   deleteVendor(id) {
     this._withCatalog('vendors', () => this.setState(s => {
@@ -10549,16 +10562,16 @@ class Component extends DCLogic {
     else { inv.status = 'unallocated'; inv.assignedTo = this.apOwnerFor(inv); }
     inv.audit = [{ at: new Date().toISOString(), by: (this.currentUser() || {}).name || '', action: 'Created by hand', detail: '' }];
     this._apAdd([inv]);
-    this.setState({ view: 'apinbox', apScreen: 'review', apOpen: inv.id, apDocUrl: '', apDocKind: '', apEmailOpen: false, anim: this.state.anim + 1, navOpen: false });
+    this.setState({ view: 'apinbox', apScreen: 'review', apOpen: inv.id, apDocUrl: '', apDocKind: '', apEmailOpen: false, anim: this.state.anim + 1, navOpen: false, projPick: false });
   }
-  goApSettings() { this.setState({ view: 'settings', settingsTab: 'ingestion', anim: this.state.anim + 1, navOpen: false }); }
+  goApSettings() { this.setState({ view: 'settings', settingsTab: 'ingestion', anim: this.state.anim + 1, navOpen: false, projPick: false }); }
 
   // ---- navigation ------------------------------------------------------------------------------
-  goApInvoices() { this.setState({ view: 'apinbox', apScreen: 'inbox', apOpen: '', anim: this.state.anim + 1, navOpen: false }); }
+  goApInvoices() { this.setState({ view: 'apinbox', apScreen: 'inbox', apOpen: '', anim: this.state.anim + 1, navOpen: false, projPick: false }); }
   setApTab(t) { this.setState({ apTab: t, apSel: {} }); }
   openApReview(id) {
     const inv = this.apInv(id); if (!inv) return;
-    this.setState({ view: 'apinbox', apScreen: 'review', apOpen: id, apDocUrl: '', apDocKind: '', apEmailOpen: false, anim: this.state.anim + 1, navOpen: false });
+    this.setState({ view: 'apinbox', apScreen: 'review', apOpen: id, apDocUrl: '', apDocKind: '', apEmailOpen: false, anim: this.state.anim + 1, navOpen: false, projPick: false });
     this._apLoadDoc(inv);
   }
   // The review screen shows the document beside the data, so the invoice is rendered inline
@@ -10575,8 +10588,8 @@ class Component extends DCLogic {
   }
   toggleApEmail() { this.setState(s => ({ apEmailOpen: !s.apEmailOpen })); }
   toggleApAudit(id) { this.setState(s => ({ apAuditOpen: s.apAuditOpen === id ? '' : id })); }
-  openApAlloc(id) { this.setState({ view: 'apinbox', apScreen: 'alloc', apOpen: id, anim: this.state.anim + 1, navOpen: false }); }
-  apBack() { this.setState({ apScreen: 'inbox', apOpen: '', anim: this.state.anim + 1, navOpen: false }); }
+  openApAlloc(id) { this.setState({ view: 'apinbox', apScreen: 'alloc', apOpen: id, anim: this.state.anim + 1, navOpen: false, projPick: false }); }
+  apBack() { this.setState({ apScreen: 'inbox', apOpen: '', anim: this.state.anim + 1, navOpen: false, projPick: false }); }
   toggleApSel(id) { this.setState(s => { const sel = Object.assign({}, s.apSel || {}); if (sel[id]) delete sel[id]; else sel[id] = true; return { apSel: sel }; }); }
   apSelIds() { return Object.keys(this.state.apSel || {}); }
   apBulkProject(pid) { if (!pid) return; this.apSelIds().forEach(id => this.apSetProject(id, pid)); this.setState({ apSel: {} }); }
@@ -11175,7 +11188,7 @@ class Component extends DCLogic {
   }
 
   // ---------- actions ----------
-  openProject(id) { this.setState({ view: 'project', pid: id, module: 'dashboard', anim: this.state.anim + 1, navOpen: false }); }
+  openProject(id) { this.setState({ view: 'project', pid: id, module: 'dashboard', anim: this.state.anim + 1, navOpen: false, projPick: false }); }
   // ----- Create a new project -----
   _blankProject(f) {
     const name = (f.name || '').trim();
@@ -11192,7 +11205,7 @@ class Component extends DCLogic {
       commitments: [], costLines: [], costTrend: [], claims: [], bills: [], defects: [], invoices: [], photos: [], markups: {},
     };
   }
-  openNewProject() { if (!this.can('projectSetup', 'edit')) return; this.setState({ projectModal: { open: true }, projectForm: { name: '', code: '', client: '', projectType: 'Residential', address: '', gstRate: '10' }, projectFormError: '' }); }
+  openNewProject() { if (!this.can('projectSetup', 'edit')) return; this.setState({ projPick: false, projectModal: { open: true }, projectForm: { name: '', code: '', client: '', projectType: 'Residential', address: '', gstRate: '10' }, projectFormError: '' }); }
   closeProjectModal() { this.setState({ projectModal: null, projectFormError: '' }); }
   setProjectFormField(k, v) { this.setState(s => ({ projectForm: { ...s.projectForm, [k]: v }, projectFormError: '' })); }
   saveNewProject() {
@@ -11208,15 +11221,16 @@ class Component extends DCLogic {
       this._saveAuth(sess); this.setState({ session: sess }); this._sbUpdateProfile(cu.id, { projectIds: pids });
     }
   }
+  toggleProjectPicker() { this.setState(s => ({ projPick: !s.projPick })); }
   toggleNav() { this.setState(s => ({ navOpen: !s.navOpen })); }
   closeNav() { this.setState({ navOpen: false }); }
-  goPortfolio() { this.setState({ view: 'portfolio', anim: this.state.anim + 1, navOpen: false }); }
+  goPortfolio() { this.setState({ view: 'portfolio', anim: this.state.anim + 1, navOpen: false, projPick: false }); }
   _loadUsersForLabour() {
     if (!this.can('labour', 'view')) return;
     if ((this.state.users || []).length) return;
     this._sbListProfiles().then(list => { if (list && list.length) this.setState({ users: list }); });
   }
-  setModule(m) { this.setState({ module: m, anim: this.state.anim + 1, navOpen: false }); if (m === 'labour') this._loadUsersForLabour(); }
+  setModule(m) { this.setState({ module: m, anim: this.state.anim + 1, navOpen: false, projPick: false }); if (m === 'labour') this._loadUsersForLabour(); }
   setStatusFilter(f) { this.setState({ statusFilter: f }); }
   setCostCat(c) { this.setState({ costCat: c }); }
   toggle(id) { this.setState(s => ({ expanded: { ...s.expanded, [id]: !s.expanded[id] } })); }
@@ -11927,7 +11941,7 @@ class Component extends DCLogic {
     lines.push('Reference: ' + ref);
     return 'Payment details\n' + lines.map(l => '  ' + l).join('\n') + '\n\n';
   }
-  goPaymentSettings() { this.setState({ view: 'settings', settingsTab: 'company', anim: this.state.anim + 1, navOpen: false }); }
+  goPaymentSettings() { this.setState({ view: 'settings', settingsTab: 'company', anim: this.state.anim + 1, navOpen: false, projPick: false }); }
   // ---- Tax Invoice / Progress Payment Claim (approved CCM template) ----
   // Builds every figure for either the draft (no id) or an already-issued invoice (by id).
   _invoiceModel(p, invoiceId) {
@@ -13706,7 +13720,7 @@ class Component extends DCLogic {
       .catch(() => this.setState(st => ({ tplScan: Object.assign({}, st.tplScan || {}, { ok: false, msg: 'Could not reach storage.' }) })));
   }
   // ===== Settings (roles reference + cost-code catalog) =====
-  goSettings() { this.setState({ view: 'settings', anim: this.state.anim + 1, navOpen: false }); }
+  goSettings() { this.setState({ view: 'settings', anim: this.state.anim + 1, navOpen: false, projPick: false }); }
   setSettingsTab(t) { this.setState({ settingsTab: t }); }
   // ===== Save status (per channel: company/defaults/financial/profile/projects) — auto-save stays; these drive the visible "Saving…/Saved" + Save changes button =====
   _setSave(ch, st) { const cur = this.state.saveStatus || {}; if (cur[ch] === st) return; this.setState({ saveStatus: Object.assign({}, cur, { [ch]: st }) }); }
@@ -14800,6 +14814,22 @@ class Component extends DCLogic {
         bg: active ? 'rgba(43,89,195,.22)' : 'transparent', fg: active ? '#fff' : '#8493a3', dot: sm.color };
     });
 
+    // Closed, the row is the job you are in. On the portfolio it has nothing to name, so it
+    // says what it is for and how many there are to choose from.
+    const _pickOpen = !!S.projPick;
+    const _pickCur = inProject ? p : null;
+    const projPickV = {
+      open: _pickOpen,
+      caret: _pickOpen ? '▴' : '▾',
+      name: _pickCur ? _pickCur.name : 'Choose a project',
+      code: _pickCur ? _pickCur.code : (accessible.length === 1 ? '1 project' : accessible.length + ' projects'),
+      dot: _pickCur ? this.statusMeta(_pickCur.status).color : '#3d4a57',
+      bg: inProject ? 'rgba(43,89,195,.22)' : 'transparent',
+      fg: inProject ? '#fff' : '#8493a3',
+      title: _pickOpen ? 'Hide the other projects' : 'Switch to another project',
+      onToggle: () => this.toggleProjectPicker(),
+    };
+
     const navPortfolio = { bg: S.view === 'portfolio' ? 'rgba(43,89,195,.22)' : 'transparent', fg: S.view === 'portfolio' ? '#fff' : '#8493a3' };
     const navVendors = { show: this.can('directory', 'view'), bg: S.view === 'vendors' ? 'rgba(43,89,195,.22)' : 'transparent', fg: S.view === 'vendors' ? '#fff' : '#8493a3' };
     // The badge is the size of the queue: anything still needing a person to act on it.
@@ -15143,9 +15173,9 @@ class Component extends DCLogic {
       dashModules = [
         { label: 'Head contract', icon: '§', iconBg: '#e7eefc', iconColor: '#1d4ed8', metric: this.money(r.contract), metricLabel: 'current contract value', onClick: () => this.openContractModal(),
           aVal: String(cCount), aLabel: 'approved VOs', aColor: '#15803d', bVal: String(cPending), bLabel: 'pending', bColor: cPending ? '#b45309' : '#8894a2' },
-        { label: 'Financial', icon: '⇄', iconBg: '#ecf0f5', iconColor: '#334155', metric: this.money(p.commitments.reduce((s, cm) => s + this.commitValue(cm), 0)), metricLabel: 'total committed value', onClick: () => this.setState({ module: 'commitments', commitTab: 'budget', anim: this.state.anim + 1, navOpen: false }),
+        { label: 'Financial', icon: '⇄', iconBg: '#ecf0f5', iconColor: '#334155', metric: this.money(p.commitments.reduce((s, cm) => s + this.commitValue(cm), 0)), metricLabel: 'total committed value', onClick: () => this.setState({ module: 'commitments', commitTab: 'budget', anim: this.state.anim + 1, navOpen: false, projPick: false }),
           aVal: String(p.commitments.length), aLabel: 'agreements', aColor: '#0f1720', bVal: String(p.commitments.filter(c => c.status === 'signed').length), bLabel: 'signed', bColor: '#15803d' },
-        { label: 'Budget', icon: '$', iconBg: '#e9f6ee', iconColor: '#15803d', metric: this.money(r.forecast), metricLabel: 'forecast final cost', onClick: () => this.setState({ module: 'commitments', commitTab: 'budget', anim: this.state.anim + 1, navOpen: false }),
+        { label: 'Budget', icon: '$', iconBg: '#e9f6ee', iconColor: '#15803d', metric: this.money(r.forecast), metricLabel: 'forecast final cost', onClick: () => this.setState({ module: 'commitments', commitTab: 'budget', anim: this.state.anim + 1, navOpen: false, projPick: false }),
           aVal: this.signed(r.variance), aLabel: 'variance', aColor: this.varColor(r.variance), bVal: p.costLines.length + '', bLabel: 'cost codes', bColor: '#0f1720' },
       ];
     }
@@ -17983,7 +18013,7 @@ class Component extends DCLogic {
       projectModal: projectModalV, canCreateProject: this.can('projectSetup', 'edit'), onNewProject: () => this.openNewProject(),
       logo: (typeof window !== 'undefined' && window.CUBIC_LOGO) ? window.CUBIC_LOGO : '',
       emailComposeV, smsHandoffV,
-      switcherProjects, navPortfolio, moduleNav, showPlaceholder, placeholder, placeholderBullets, inProject, currentProjectName: p ? p.name : '',
+      switcherProjects, projPickV, navPortfolio, moduleNav, showPlaceholder, placeholder, placeholderBullets, inProject, currentProjectName: p ? p.name : '',
       onGoPortfolio: () => this.goPortfolio(), onGoVendors: () => this.goVendors(), navVendors,
       navUsers, showUsers, usersV, onGoUsers: () => this.goUsers(),
       navSettings, showSettings, settingsV, onGoSettings: () => this.goSettings(),
