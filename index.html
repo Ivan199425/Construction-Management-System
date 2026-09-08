@@ -1975,7 +1975,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                     </sc-if>
                   </div>
                   <sc-if value="{{ r.actualAuto }}" hint-placeholder-val="{{ false }}">
-                    <div title="Auto-summed from payments recorded against bills on this cost code" class="mono" style="display:flex;align-items:center;flex-wrap:var(--cpms-wrap,nowrap);justify-content:flex-end;gap:5px;padding:6px 8px;border:1px solid #cfe6d6;border-radius:6px;background:#eef8f1;font-size:12.5px;font-weight:600;color:#15803d;{{ r.bc.actual }}"><span style="font-size:10px">💵</span>{{ r.actualPaid }}</div>
+                    <div title="{{ r.actualSource }}" class="mono" style="display:flex;align-items:center;flex-wrap:var(--cpms-wrap,nowrap);justify-content:flex-end;gap:5px;padding:6px 8px;border:1px solid #cfe6d6;border-radius:6px;background:#eef8f1;font-size:12.5px;font-weight:600;color:#15803d;{{ r.bc.actual }}"><span style="font-size:10px">💵</span>{{ r.actualPaid }}</div>
                   </sc-if>
                   <sc-if value="{{ r.actualManual }}" hint-placeholder-val="{{ true }}">
                     <input value="{{ r.actualDisp }}" onInput="{{ r.onActual }}" onFocus="{{ r.onActualFocus }}" onBlur="{{ r.onCellBlur }}" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 8px;font-size:12.5px;text-align:right;font-family:'IBM Plex Mono',monospace;color:#0f1720;background:#fff;{{ r.bc.actual }}" style-focus="border-color:#2b59c3;outline:none">
@@ -3060,6 +3060,147 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
             </sc-if>
 
           </div>
+        </sc-if>
+
+        <!-- ============ LABOUR HOURS ============ -->
+        <sc-if value="{{ showLabour }}" hint-placeholder-val="{{ false }}">
+
+          <div style="display:flex;flex-wrap:var(--cpms-wrap,nowrap);align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px">
+            <div style="display:flex;flex-wrap:var(--cpms-wrap,nowrap);align-items:center;gap:8px;flex:0 0 var(--cpms-grow,auto)">
+              <button onClick="{{ labourV.onPrev }}" title="The week before this one" style="border:1px solid #cfd8e2;background:#fff;color:#4a5765;border-radius:8px;padding:7px 12px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="border-color:#2b59c3;color:#2b59c3">‹ Previous</button>
+              <button onClick="{{ labourV.onThis }}" title="Back to the week we are in" style="border:1px solid #cfd8e2;background:#fff;color:#4a5765;border-radius:8px;padding:7px 12px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="border-color:#2b59c3;color:#2b59c3">This week</button>
+              <button onClick="{{ labourV.onNext }}" title="The week after this one" style="border:1px solid #cfd8e2;background:#fff;color:#4a5765;border-radius:8px;padding:7px 12px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="border-color:#2b59c3;color:#2b59c3">Next ›</button>
+              <span style="font-size:13.5px;font-weight:600;color:#0f1720;white-space:nowrap">{{ labourV.weekLabel }}</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:14px;font-size:12.5px;color:#6b7787;white-space:nowrap">
+              <span>{{ labourV.weekHours }} h this week</span>
+              <span class="mono" style="font-weight:700;color:#0f1720">{{ labourV.weekCost }}</span>
+            </div>
+          </div>
+
+          <div style="font-size:12px;color:#8894a2;margin-bottom:12px">{{ labourV.stdText }}</div>
+
+          <sc-if value="{{ labourV.unpostedShow }}" hint-placeholder-val="{{ false }}">
+            <div style="background:#fbf1e3;border:1px solid #e6d3b3;border-radius:10px;padding:10px 14px;font-size:12.5px;color:#b45309;margin-bottom:14px">{{ labourV.unpostedText }}</div>
+          </sc-if>
+
+          <sc-if value="{{ labourV.noPeople }}" hint-placeholder-val="{{ true }}">
+            <div style="background:#fff;border:1px dashed #cfd8e2;border-radius:12px;padding:34px 22px;text-align:center">
+              <div style="font-size:15px;font-weight:600;color:#0f1720;margin-bottom:4px">Nobody is on this job yet</div>
+              <div style="font-size:13px;color:#6b7787;margin-bottom:16px">Add the people working here and their hours can be recorded week by week.</div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ labourV.hasOnJob }}" hint-placeholder-val="{{ true }}">
+            <div style="background:#fff;border:1px solid #e4e8ee;border-radius:12px;overflow:hidden;margin-bottom:18px">
+              <div style="overflow-x:auto"><div style="min-width:1140px">
+                <div class="colhdr dark" style="display:grid;grid-template-columns:1.5fr repeat(7,62px) 76px 96px 116px 132px;padding:9px 16px;background:#2A3580;border-bottom:1px solid #e4e8ee;font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#fff;text-transform:uppercase;gap:8px">
+                  <div>Person</div>
+                  <sc-for list="{{ labourV.dayHeads }}" as="d" hint-placeholder-count="7">
+                    <div style="text-align:center">{{ d.label }}<div style="font-weight:500;font-size:9px;letter-spacing:0;text-transform:none;color:rgba(255,255,255,.62);margin-top:1px">{{ d.sub }}</div></div>
+                  </sc-for>
+                  <div style="text-align:right">Hours</div>
+                  <div style="text-align:right">Rate</div>
+                  <div style="text-align:right">Cost</div>
+                  <div></div>
+                </div>
+                <sc-for list="{{ labourV.rows }}" as="r" hint-placeholder-count="3">
+                  <div style="display:grid;grid-template-columns:1.5fr repeat(7,62px) 76px 96px 116px 132px;padding:8px 16px;border-bottom:1px solid #eef1f4;align-items:center;gap:8px" style-hover="background:#f9fafc">
+                    <div style="min-width:0">
+                      <div style="font-size:13px;font-weight:600;color:#0f1720;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.name }}</div>
+                      <div style="font-size:10.5px;color:#8894a2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.role }}</div>
+                    </div>
+                    <sc-for list="{{ r.days }}" as="d" hint-placeholder-count="7">
+                      <input value="{{ d.value }}" onInput="{{ d.onInput }}" onFocus="{{ d.onFocus }}" onBlur="{{ labourV.onCellBlur }}" placeholder="0" inputmode="decimal" class="mono" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 4px;font-size:12.5px;text-align:center;font-family:'IBM Plex Mono',monospace;color:#0f1720;background:{{ d.bg }}" style-focus="border-color:#2b59c3;outline:none">
+                    </sc-for>
+                    <div class="mono" style="text-align:right;font-size:13px;font-weight:600;color:#0f1720">{{ r.hours }}</div>
+                    <sc-if value="{{ r.hasRow }}" hint-placeholder-val="{{ true }}">
+                      <input value="{{ r.rateDisp }}" onInput="{{ r.onRate }}" onFocus="{{ r.onRateFocus }}" onBlur="{{ labourV.onCellBlur }}" title="The rate this week was costed at. Changing it corrects this week only." inputmode="decimal" class="mono" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 6px;font-size:12px;text-align:right;font-family:'IBM Plex Mono',monospace;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none">
+                    </sc-if>
+                    <sc-if value="{{ r.noRow }}" hint-placeholder-val="{{ false }}">
+                      <div class="mono" style="text-align:right;font-size:12px;color:#a4afba">{{ r.rateFixed }}</div>
+                    </sc-if>
+                    <div class="mono" style="text-align:right;font-size:13px;color:#0f1720">{{ r.cost }}</div>
+                    <div style="text-align:right">
+                      <sc-if value="{{ r.overShow }}" hint-placeholder-val="{{ false }}">
+                        <span title="More than a standard week" style="font-size:11px;font-weight:600;padding:3px 9px;border-radius:16px;background:#fbf1e3;color:#b45309;white-space:nowrap">{{ r.overLabel }}</span>
+                      </sc-if>
+                    </div>
+                  </div>
+                </sc-for>
+                <div style="display:grid;grid-template-columns:1.5fr repeat(7,62px) 76px 96px 116px 132px;padding:10px 16px;background:#fafbfc;font-size:13px;font-weight:600;align-items:center;gap:8px">
+                  <div style="color:#0f1720">Week total</div>
+                  <div></div><div></div><div></div><div></div><div></div><div></div><div></div>
+                  <div class="mono" style="text-align:right">{{ labourV.weekHours }}</div>
+                  <div></div>
+                  <div class="mono" style="text-align:right">{{ labourV.weekCost }}</div>
+                  <div></div>
+                </div>
+              </div></div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ labourV.noOnJob }}" hint-placeholder-val="{{ false }}">
+            <div style="background:#fff;border:1px solid #e4e8ee;border-radius:12px;padding:22px;text-align:center;font-size:13px;color:#6b7787;margin-bottom:18px">Everyone on this list has finished on the job. Put someone back on to record another week.</div>
+          </sc-if>
+
+          <div style="display:flex;flex-wrap:var(--cpms-wrap,nowrap);align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px">
+            <div style="font-size:12px;font-weight:600;letter-spacing:.4px;color:#8894a2;text-transform:uppercase">Who is on this job</div>
+            <sc-if value="{{ labourV.canEdit }}" hint-placeholder-val="{{ true }}">
+              <div style="display:flex;flex-wrap:var(--cpms-wrap,nowrap);align-items:center;gap:8px;flex:0 0 var(--cpms-grow,auto)">
+                <sc-if value="{{ labourV.hasAddOptions }}" hint-placeholder-val="{{ true }}">
+                  <select value="{{ labourV.addValue }}" onChange="{{ labourV.onAdd }}" title="People whose account lists this project" style="border:1px solid #cfd8e2;border-radius:8px;padding:7px 10px;font-size:12.5px;font-family:inherit;color:#0f1720;background:#fff;cursor:pointer" style-focus="border-color:#2b59c3;outline:none">
+                    <option value="">＋ Add someone from Users &amp; access</option>
+                    <sc-for list="{{ labourV.addOptions }}" as="o" hint-placeholder-count="3"><option value="{{ o.v }}">{{ o.l }}</option></sc-for>
+                  </select>
+                </sc-if>
+                <sc-if value="{{ labourV.noOneToAdd }}" hint-placeholder-val="{{ false }}">
+                  <span style="font-size:11.5px;color:#8894a2;max-width:340px">{{ labourV.noOneToAddWhy }}</span>
+                </sc-if>
+                <button onClick="{{ labourV.onAddBlank }}" title="For somebody who has no account on the system" style="border:1px solid #cfd8e2;background:#fff;color:#2b59c3;border-radius:8px;padding:7px 12px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="border-color:#2b59c3">＋ Someone else</button>
+              </div>
+            </sc-if>
+          </div>
+
+          <sc-if value="{{ labourV.hasPeople }}" hint-placeholder-val="{{ true }}">
+            <div style="background:#fff;border:1px solid #e4e8ee;border-radius:12px;overflow:hidden">
+              <div style="overflow-x:auto"><div style="min-width:1080px">
+                <div class="colhdr dark" style="display:grid;grid-template-columns:1.4fr 92px 92px 104px 116px 124px 1.2fr 110px 34px;padding:9px 16px;background:#2A3580;border-bottom:1px solid #e4e8ee;font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#fff;text-transform:uppercase;gap:9px">
+                  <div>Name</div><div style="text-align:right">Rate</div><div style="text-align:right">Allowed</div>
+                  <div style="text-align:right">Hours to date</div><div>Against the allowance</div>
+                  <div style="text-align:right">Cost to date</div><div>Posts to</div><div>Status</div><div></div>
+                </div>
+                <sc-for list="{{ labourV.people }}" as="r" hint-placeholder-count="3">
+                  <div style="display:grid;grid-template-columns:1.4fr 92px 92px 104px 116px 124px 1.2fr 110px 34px;padding:8px 16px;border-bottom:1px solid #eef1f4;align-items:center;gap:9px" style-hover="background:#f9fafc">
+                    <input value="{{ r.nameV }}" onInput="{{ r.onName }}" placeholder="Name" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 8px;font-size:12.5px;font-family:inherit;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none">
+                    <input value="{{ r.rateDisp }}" onInput="{{ r.onRate }}" placeholder="0.00" title="The rate new weeks are costed at. Weeks already recorded keep the rate they were entered at." inputmode="decimal" class="mono" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 6px;font-size:12px;text-align:right;font-family:'IBM Plex Mono',monospace;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none">
+                    <input value="{{ r.allowanceDisp }}" onInput="{{ r.onAllowance }}" placeholder="—" title="Total hours this person is allowed on this project. Leave it empty for no limit." inputmode="decimal" class="mono" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 6px;font-size:12px;text-align:right;font-family:'IBM Plex Mono',monospace;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none">
+                    <div class="mono" style="text-align:right;font-size:13px;font-weight:600;color:#0f1720">{{ r.hoursToDate }}</div>
+                    <div style="min-width:0">
+                      <div style="font-size:11.5px;font-weight:600;color:{{ r.leftColor }};white-space:nowrap">{{ r.leftText }}</div>
+                      <sc-if value="{{ r.barShow }}" hint-placeholder-val="{{ true }}">
+                        <div style="height:5px;border-radius:4px;background:#eef1f5;margin-top:4px;overflow:hidden"><div style="height:100%;width:{{ r.barW }};background:{{ r.barColor }}"></div></div>
+                      </sc-if>
+                    </div>
+                    <div class="mono" style="text-align:right;font-size:13px;color:#0f1720">{{ r.costToDate }}</div>
+                    <select value="{{ r.lineValue }}" onChange="{{ r.onLine }}" title="Which budget line this person’s time is charged to" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 6px;font-size:12px;font-family:inherit;color:#0f1720;background:#fff;cursor:pointer" style-focus="border-color:#2b59c3;outline:none">
+                      <sc-for list="{{ r.lineOptions }}" as="o" hint-placeholder-count="3"><option value="{{ o.v }}">{{ o.l }}</option></sc-for>
+                    </select>
+                    <button onClick="{{ r.onToggle }}" title="Put them on the job or take them off it. Hours already recorded are kept either way." style="border:0;background:{{ r.statusBg }};color:{{ r.statusColor }};border-radius:16px;padding:4px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap">{{ r.statusLabel }}</button>
+                    <sc-if value="{{ r.canDelete }}" hint-placeholder-val="{{ false }}">
+                      <button onClick="{{ r.onDelete }}" title="Remove — they have no hours recorded" style="border:0;background:transparent;color:#c0c8d1;cursor:pointer;font-size:14px;padding:2px;line-height:1;min-width:var(--cpms-tap,auto);min-height:var(--cpms-tap,auto)" style-hover="color:#b91c1c">✕</button>
+                    </sc-if>
+                  </div>
+                </sc-for>
+                <div style="display:grid;grid-template-columns:1.4fr 92px 92px 104px 116px 124px 1.2fr 110px 34px;padding:10px 16px;background:#fafbfc;font-size:13px;font-weight:600;align-items:center;gap:9px">
+                  <div style="color:#0f1720">Everyone, to date</div><div></div><div></div>
+                  <div class="mono" style="text-align:right">{{ labourV.totalHours }}</div><div></div>
+                  <div class="mono" style="text-align:right">{{ labourV.totalCost }}</div><div></div><div></div><div></div>
+                </div>
+              </div></div>
+            </div>
+          </sc-if>
+
         </sc-if>
 
         <!-- ============ REPORT DESIGN ============ -->
@@ -5166,6 +5307,7 @@ class Component extends DCLogic {
       pid: 'p1',
       module: 'dashboard',
       navOpen: false,
+      labourWeek: '',
       statusFilter: 'all',
       commitTab: 'budget',
       costCat: 'all',
@@ -5178,6 +5320,7 @@ class Component extends DCLogic {
       financial: this._loadFinancial(),
       myPw: { new: '', confirm: '', msg: '', ok: false, busy: false },
       editCell: '',
+      labourRaw: null,
       predEditId: '',
       predEditText: '',
       projectModal: null,
@@ -5871,6 +6014,7 @@ class Component extends DCLogic {
     P.apInvoices = { _default: 0, Admin: 3, Finance: 3, PM: 3, ContractAdmin: 2, Superintendent: 0, Student: 1 };
     P.apAllocate = { _default: 0, Admin: 2, Finance: 2, PM: 2, ContractAdmin: 2 };
     P.messaging = { _default: 0, Field: 1, Employee: 1, PM: 2, Superintendent: 2, Finance: 2, Admin: 2, ContractAdmin: 2, Architect: 1, HR: 1 };
+    P.labour = { _default: 0, Field: 2, Employee: 2, PM: 3, Superintendent: 3, Finance: 3, HR: 3, Admin: 3, ContractAdmin: 1 };
     P.admin = { _default: 0, Admin: 2 };
     return P; }
   _loadPerms() { const def = this._buildPerms(); try { if (typeof localStorage === 'undefined') return def; const raw = localStorage.getItem('cubicPerms'); if (!raw) return def; const saved = JSON.parse(raw); if (!saved || typeof saved !== 'object') return def; const out = {}; Object.keys(def).forEach(k => { out[k] = Object.assign({}, def[k], saved[k] || {}); }); Object.keys(saved).forEach(k => { if (!out[k]) out[k] = saved[k]; }); return out; } catch (e) { return def; } }
@@ -6901,7 +7045,7 @@ class Component extends DCLogic {
     { key: 'dashboard', label: 'Dashboard' }, { key: 'directory', label: 'Directory' }, { key: 'projectSetup', label: 'Project Setup' },
     { key: 'financial', label: 'Financial / Estimates' }, { key: 'agreements', label: 'Subcontractor & Vendor Agreements' }, { key: 'variations', label: 'SoV / Variations' },
     { key: 'documents', label: 'Document Management' }, { key: 'rfis', label: 'RFIs' }, { key: 'punchList', label: 'Punch List' }, { key: 'reporting', label: 'Reporting' },
-    { key: 'schedule', label: 'Schedule' }, { key: 'eot', label: 'EOT' }, { key: 'invoices', label: 'Invoices' }, { key: 'bills', label: 'Bills' }, { key: 'claims', label: 'Progress Claims' }, { key: 'apInvoices', label: 'Invoice Management (AP)' }, { key: 'apAllocate', label: 'Allocate Unassigned Invoices' }, { key: 'messaging', label: 'Send Messages' }, { key: 'admin', label: 'User Administration' },
+    { key: 'schedule', label: 'Schedule' }, { key: 'eot', label: 'EOT' }, { key: 'invoices', label: 'Invoices' }, { key: 'bills', label: 'Bills' }, { key: 'claims', label: 'Progress Claims' }, { key: 'apInvoices', label: 'Invoice Management (AP)' }, { key: 'apAllocate', label: 'Allocate Unassigned Invoices' }, { key: 'labour', label: 'Labour Hours' }, { key: 'messaging', label: 'Send Messages' }, { key: 'admin', label: 'User Administration' },
   ]; }
   permBadge(lv) { return lv >= 3 ? { t: 'Approve', s: 'A', c: '#15803d', bg: '#e6f4ea' } : lv === 2 ? { t: 'Edit', s: 'E', c: '#1d4ed8', bg: '#e7eefc' } : lv === 1 ? { t: 'View', s: 'V', c: '#6b7787', bg: '#eef1f5' } : { t: 'No access', s: '—', c: '#c0c8d1', bg: 'transparent' }; }
   currentUser() { const s = this.state.session; return (s && s.profile && s.profile.status === 'active') ? s.profile : null; }
@@ -7196,7 +7340,22 @@ class Component extends DCLogic {
     this.state.projects.forEach(p => (p.bills || []).forEach(b => { if (b.vendorId === id) { count++; total += this.billTotal(b); projs.add(p.id); } }));
     return { count, total, projects: projs.size };
   }
-  lineActual(l, p) { const proj = p || this.proj(this.state.pid) || {}; const paid = this.lineActualPaid(l, proj); return paid > 0 ? paid : (Number(l.actual) || 0); }
+  lineActual(l, p) {
+    const proj = p || this.proj(this.state.pid) || {};
+    const paid = this.lineActualPaid(l, proj);
+    return (paid > 0 ? paid : (Number(l.actual) || 0)) + this.lineLabourCost(l, proj);
+  }
+  // Said in words underneath the figure, because three things can be inside it.
+  lineActualSource(l, p) {
+    const proj = p || this.proj(this.state.pid) || {};
+    const paid = this.lineActualPaid(l, proj), lab = this.lineLabourCost(l, proj);
+    const typed = Number(l.actual) || 0;
+    const parts = [];
+    if (paid > 0) parts.push(this.money(paid) + ' paid on bills and claims against this cost code');
+    else if (typed > 0) parts.push(this.money(typed) + ' entered by hand');
+    if (lab > 0) parts.push(this.money(lab) + ' of hours recorded on Labour hours');
+    return parts.length ? parts.join(', plus ') + '.' : 'Nothing recorded against this cost code yet.';
+  }
   lineVarAdj(l, p) { const proj = p || this.proj(this.state.pid) || {}; const vars = (proj.contract && proj.contract.variations) || []; return vars.reduce((s, v) => s + ((v.status === 'approved' && v.costCode && v.costCode === l.code) ? this._num(v.value) : 0), 0); }
   lineCurrent(l, p) { return (Number(l.orig) || 0) + (Number(l.adj) || 0) + this.lineVarAdj(l, p); }
   setVariationCostCode(vid, code) { if (!this.can('variations', 'edit')) return; this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, contract: { ...p.contract, variations: p.contract.variations.map(v => v.id === vid ? { ...v, costCode: code } : v) } }) })); }
@@ -7723,6 +7882,18 @@ class Component extends DCLogic {
       if (tot <= 0) return;
       if (sub != null) commitEvents.push({ n: sub, v: tot });
       if (c.status === 'paid' && pd != null) paidEvents.push({ n: pd, v: tot });
+    });
+
+    // Only hours that reach a budget line are dated here. The curve is scaled to the actual
+    // total, and hours with nowhere to post are not in that total, so counting them would
+    // drag every point on the line down.
+    const _lab = this.labourOf(p);
+    const _lineIds = {}; (p.costLines || []).forEach(l => { _lineIds[l.id] = 1; });
+    const _posts = {}; _lab.roster.forEach(r => { if (r.costLineId && _lineIds[r.costLineId]) _posts[r.id] = 1; });
+    _lab.weeks.forEach(w => {
+      if (!_posts[w.personId]) return;
+      const n = dnum(w.weekStart); if (n == null) return;
+      const v = this.labourRowCost(w); if (v > 0) paidEvents.push({ n, v });
     });
 
     const todayN = dnum(this.todayLocal());
@@ -11040,7 +11211,12 @@ class Component extends DCLogic {
   toggleNav() { this.setState(s => ({ navOpen: !s.navOpen })); }
   closeNav() { this.setState({ navOpen: false }); }
   goPortfolio() { this.setState({ view: 'portfolio', anim: this.state.anim + 1, navOpen: false }); }
-  setModule(m) { this.setState({ module: m, anim: this.state.anim + 1, navOpen: false }); }
+  _loadUsersForLabour() {
+    if (!this.can('labour', 'view')) return;
+    if ((this.state.users || []).length) return;
+    this._sbListProfiles().then(list => { if (list && list.length) this.setState({ users: list }); });
+  }
+  setModule(m) { this.setState({ module: m, anim: this.state.anim + 1, navOpen: false }); if (m === 'labour') this._loadUsersForLabour(); }
   setStatusFilter(f) { this.setState({ statusFilter: f }); }
   setCostCat(c) { this.setState({ costCat: c }); }
   toggle(id) { this.setState(s => ({ expanded: { ...s.expanded, [id]: !s.expanded[id] } })); }
@@ -12879,6 +13055,134 @@ class Component extends DCLogic {
   }
   // Actual = money actually paid: the paid portion of bills, plus any claim marked paid that
   // has not posted its bill yet (so it counts the moment it is marked paid).
+  // ---------- labour hours ----------
+  // Every reader goes through here, so a project saved before this section existed reads as
+  // an empty one rather than throwing.
+  labourOf(p) { const l = (p && p.labour) || {}; return { roster: l.roster || [], weeks: l.weeks || [] }; }
+  _labourDays() { return ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']; }
+  _labourDayLabels() { return ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']; }
+
+  // Companies do not all start the week on Monday, and Settings has a field that says so.
+  _weekStartIndex() {
+    const names = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+    const i = names.indexOf(String(((this.state.defaults || {}).weekStart) || '').trim().toLowerCase());
+    return i < 0 ? 1 : i;
+  }
+  // Local dates throughout: toISOString would hand back yesterday everywhere east of Greenwich.
+  weekStartOf(iso) {
+    const base = iso || this.todayLocal();
+    const parts = String(base).split('-').map(Number);
+    const d = new Date(parts[0], parts[1] - 1, parts[2]);
+    if (isNaN(d.getTime())) return this.weekStartOf(this.todayLocal());
+    return this.addDays(base, -((d.getDay() - this._weekStartIndex() + 7) % 7));
+  }
+  labourWeekStart() { return this.weekStartOf(this.state.labourWeek || this.todayLocal()); }
+  // A standard week only exists if somebody has said what theirs is, in Settings.
+  labourStandardWeek() { const n = this._num((this.state.defaults || {}).weeklyHours); return n > 0 ? n : 0; }
+
+  labourPerson(p, id) { return this.labourOf(p).roster.find(r => r.id === id) || null; }
+  labourWeekRow(p, personId, weekStart) { return this.labourOf(p).weeks.find(w => w.personId === personId && w.weekStart === weekStart) || null; }
+  labourRowHours(w) { if (!w) return 0; const d = w.d || {}; return this._r2(this._labourDays().reduce((a, k) => a + this._num(d[k]), 0)); }
+  labourRowCost(w) { return this._r2(this.labourRowHours(w) * this._num(w && w.rate)); }
+  labourPersonWeeks(p, personId) { return this.labourOf(p).weeks.filter(w => w.personId === personId); }
+  labourPersonHours(p, personId) { return this._r2(this.labourPersonWeeks(p, personId).reduce((a, w) => a + this.labourRowHours(w), 0)); }
+  labourPersonCost(p, personId) { return this._r2(this.labourPersonWeeks(p, personId).reduce((a, w) => a + this.labourRowCost(w), 0)); }
+  labourTotalHours(p) { return this._r2(this.labourOf(p).weeks.reduce((a, w) => a + this.labourRowHours(w), 0)); }
+  labourTotalCost(p) { return this._r2(this.labourOf(p).weeks.reduce((a, w) => a + this.labourRowCost(w), 0)); }
+
+  // Which budget line a person’s time is charged against. New people land on the first Labour
+  // line if the project has one; if it has none, their hours still count, they just have
+  // nowhere to post until somebody picks a line.
+  _labourDefaultLine(p) { const l = (p.costLines || []).find(x => x.cat === 'labor'); return l ? l.id : ''; }
+  lineLabourCost(l, p) {
+    const proj = p || this.proj(this.state.pid) || {};
+    if (!l || !l.id) return 0;
+    return this._r2(this.labourOf(proj).roster.filter(r => r.costLineId === l.id)
+      .reduce((a, r) => a + this.labourPersonCost(proj, r.id), 0));
+  }
+  // Hours recorded against a person who has no budget line, or one that has since been
+  // deleted. The money is real and has to be visible somewhere, so the screen says so rather
+  // than letting it disappear between the two views.
+  labourUnpostedCost(p) {
+    const ids = {}; (p.costLines || []).forEach(l => { ids[l.id] = 1; });
+    return this._r2(this.labourOf(p).roster.filter(r => !r.costLineId || !ids[r.costLineId])
+      .reduce((a, r) => a + this.labourPersonCost(p, r.id), 0));
+  }
+
+  // ---- entering and correcting ----
+  _labourUpdate(fn) {
+    this.setState(s => ({ projects: s.projects.map(p => {
+      if (p.id !== s.pid) return p;
+      const lab = this.labourOf(p);
+      return { ...p, labour: fn(lab, p) };
+    }) }));
+  }
+  addLabourPerson(userId) {
+    if (!this.can('labour', 'edit')) return;
+    const u = (this.state.users || []).find(x => x.id === userId) || null;
+    this._labourUpdate((lab, p) => {
+      if (userId && lab.roster.some(r => r.userId === userId)) return lab;
+      // The name is copied in rather than looked up later: when somebody leaves the company
+      // their profile goes, and the hours they worked here must still say whose they were.
+      const person = { id: this._rid('lb'), userId: userId || '', name: (u && (u.name || u.email)) || 'New person',
+        email: (u && u.email) || '', role: (u && u.role) || '', rate: '', allowance: '', costLineId: this._labourDefaultLine(p), active: true };
+      return { ...lab, roster: lab.roster.concat([person]) };
+    });
+  }
+  setLabourPerson(id, field, val) {
+    if (!this.can('labour', 'edit')) return;
+    this._labourUpdate(lab => ({ ...lab, roster: lab.roster.map(r => r.id !== id ? r : { ...r, [field]: val }) }));
+  }
+  // Taking somebody off the job does not undo the work they did. If they have hours they are
+  // marked finished and keep every one of them; only a person with nothing recorded is removed.
+  removeLabourPerson(id) {
+    if (!this.can('labour', 'edit')) return;
+    const p = this.proj(this.state.pid);
+    if (p && this.labourPersonHours(p, id) > 0) { this.setLabourPerson(id, 'active', false); return; }
+    this._labourUpdate(lab => ({ ...lab, roster: lab.roster.filter(r => r.id !== id), weeks: lab.weeks.filter(w => w.personId !== id) }));
+  }
+
+  // A week is costed at the rate that applied while it was being worked. Changing somebody’s
+  // standard rate today must not quietly restate what last month cost, so the rate is copied
+  // onto the week the first time an hour is entered against it, and can be corrected there.
+  setLabourHours(personId, day, text) {
+    if (!this.can('labour', 'edit')) return;
+    const week = this.labourWeekStart();
+    const raw = String(text == null ? '' : text).replace(/[^0-9.]/g, '');
+    const dot = raw.indexOf('.');
+    const clean = dot < 0 ? raw : raw.slice(0, dot + 1) + raw.slice(dot + 1).replace(/\./g, '');
+    const hours = Math.max(0, Math.min(24, this._r2(this._num(clean))));
+    this.setState({ labourRaw: clean, editCell: 'lb:' + personId + ':' + day });
+    this._labourUpdate((lab, p) => {
+      const person = lab.roster.find(r => r.id === personId);
+      const existing = lab.weeks.find(w => w.personId === personId && w.weekStart === week);
+      const who = (this.currentUser() || {}).name || '';
+      if (!existing) {
+        if (!hours) return lab;
+        const row = { id: this._rid('lw'), personId, weekStart: week, d: { [day]: hours },
+          rate: this._r2(this._num(person && person.rate)), enteredBy: who, enteredAt: this.now() };
+        return { ...lab, weeks: lab.weeks.concat([row]) };
+      }
+      const next = { ...existing, d: { ...(existing.d || {}), [day]: hours }, editedBy: who, editedAt: this.now() };
+      // A week emptied back to nothing is a week that was never worked; leaving a row of zeros
+      // behind would make the register lie about who was on site.
+      if (this.labourRowHours(next) === 0) return { ...lab, weeks: lab.weeks.filter(w => w.id !== existing.id) };
+      return { ...lab, weeks: lab.weeks.map(w => w.id !== existing.id ? w : next) };
+    });
+  }
+  setLabourWeekRate(personId, text) {
+    if (!this.can('labour', 'edit')) return;
+    const week = this.labourWeekStart();
+    const rate = this._r2(this._num(text));
+    this.setState({ labourRaw: String(text == null ? '' : text), editCell: 'lb:' + personId + ':rate' });
+    this._labourUpdate(lab => ({ ...lab, weeks: lab.weeks.map(w => (w.personId === personId && w.weekStart === week) ? { ...w, rate } : w) }));
+  }
+  endLabourEdit() { this.setState({ editCell: '', labourRaw: null }); }
+
+  // ---- moving between weeks ----
+  labourGoWeek(deltaWeeks) { this.setState({ labourWeek: this.addDays(this.labourWeekStart(), deltaWeeks * 7) }); }
+  labourThisWeek() { this.setState({ labourWeek: '' }); }
+
   lineActualPaid(l, p) {
     const proj = p || this.proj(this.state.pid) || {};
     const fromBills = this.lineBills(l, proj).reduce((s, b) => s + this._num(b.paid), 0);
@@ -14515,6 +14819,7 @@ class Component extends DCLogic {
       mkMod('contacts', 'Contacts', '☰', true),
       mkMod('schedule', 'Schedule', '▦', true),
       mkMod('defects', 'Defects List', '⚠', true),
+      mkMod('labour', 'Labour hours', '◔', true),
       mkMod('report', 'Report Design', '◫', true),
     ].filter(m => this.moduleVisible(m.key));
 
@@ -14543,6 +14848,7 @@ class Component extends DCLogic {
     const showInvoices = moduleCommitments && S.commitTab === 'invoices';
     const showVariations = moduleCommitments && S.commitTab === 'variations';
     const showDefects = inProject && S.module === 'defects';
+    const showLabour = inProject && S.module === 'labour';
     const showContacts = inProject && S.module === 'contacts';
     const showFiles = inProject && S.module === 'files';
     const showSchedule = inProject && S.module === 'schedule';
@@ -14586,8 +14892,126 @@ class Component extends DCLogic {
       if (showContacts) { pageTitle = 'Contacts'; pageSub = 'Everyone on the project — client, team, representatives & subcontractors — ' + p.name; crumb2 = 'Contacts'; primaryAction = { show: true, label: '✉ Compose email', onClick: () => this.openEmailCompose('') }; }
       if (showFiles) { pageTitle = 'Files & Photos'; pageSub = 'Invoices · Drawings · Photos · Bills & claims — auto-populated from the project — ' + p.name; crumb2 = 'Files & Photos'; }
       if (showSchedule) { pageTitle = 'Schedule'; pageSub = 'Project programme, critical path & progress — ' + p.name; crumb2 = 'Schedule'; }
+      if (showLabour) { pageTitle = 'Labour hours'; pageSub = 'Hours worked on the job, week by week, against what each person is allowed — ' + p.name; crumb2 = 'Labour hours'; }
       if (showReport) { pageTitle = 'Report Design'; pageSub = 'Build, schedule & send cost reports — ' + p.name; crumb2 = 'Report Design'; }
       if (showPlaceholder) { pageTitle = placeholder.title; pageSub = placeholder.desc; crumb2 = placeholder.title; }
+    }
+
+    // ---- labour hours ----
+    let labourV = { show: false, rows: [], people: [], addOptions: [], dayHeads: [] };
+    if (showLabour && p) {
+      const _lab = this.labourOf(p);
+      const _week = this.labourWeekStart();
+      const _weekEnd = this.addDays(_week, 6);
+      const _std = this.labourStandardWeek();
+      const _canEdit = this.can('labour', 'edit');
+      const _ec = S.editCell || '';
+      // While a cell is being typed in, what is on screen is what was typed — otherwise a
+      // half-written "7." loses its dot the moment it is parsed.
+      const _hrs = (key, n) => (_ec === key && S.labourRaw != null) ? String(S.labourRaw) : (n > 0 ? String(this._r2(n)) : '');
+      const _days = this._labourDays(), _dayLabels = this._labourDayLabels();
+      const _dayShort = iso => {
+        const d = new Date(iso + 'T00:00:00');
+        return isNaN(d.getTime()) ? '' : d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+      };
+      labourV.dayHeads = _dayLabels.map((l, i) => ({ label: l, sub: _dayShort(this.addDays(_week, i)) }));
+
+      // Somebody who has finished on the job keeps their history but stops appearing in the
+      // week, so the register shows who was actually on site.
+      const _onJob = _lab.roster.filter(r => r.active !== false);
+      labourV.rows = _onJob.map(r => {
+        const w = this.labourWeekRow(p, r.id, _week);
+        const hours = this.labourRowHours(w);
+        const rate = w ? this._num(w.rate) : this._num(r.rate);
+        const over = _std > 0 && hours > _std;
+        return {
+          id: r.id, name: r.name || '(unnamed)', role: r.role || '',
+          hasRow: !!w, noRow: !w,
+          rateDisp: (_ec === 'lb:' + r.id + ':rate' && S.labourRaw != null) ? String(S.labourRaw) : (rate > 0 ? String(this._r2(rate)) : ''),
+          onRate: e => this.setLabourWeekRate(r.id, e.target.value),
+          onRateFocus: () => this.startEdit('lb:' + r.id + ':rate'),
+          rateFixed: rate > 0 ? this.money(rate) : '—',
+          days: _days.map((k, i) => ({
+            key: k, value: _hrs('lb:' + r.id + ':' + k, this._num((w && w.d) ? w.d[k] : 0)),
+            onInput: e => this.setLabourHours(r.id, k, e.target.value),
+            onFocus: () => this.startEdit('lb:' + r.id + ':' + k),
+            bg: (i > 4) ? '#fafbfc' : '#fff',
+          })),
+          hours: hours > 0 ? String(hours) : '—',
+          cost: this.money(this.labourRowCost(w)),
+          overShow: over,
+          overLabel: over ? this._r2(hours - _std) + ' h over ' + _std : '',
+        };
+      });
+      const _wkHours = this._r2(labourV.rows.reduce((a, r) => a + this.labourRowHours(this.labourWeekRow(p, r.id, _week)), 0));
+      const _wkCost = this._r2(labourV.rows.reduce((a, r) => a + this.labourRowCost(this.labourWeekRow(p, r.id, _week)), 0));
+
+      // The roster underneath: what each person costs, what they are allowed, and where the
+      // money lands in the budget.
+      const _lineOpts = [{ v: '', l: '— no budget line —' }].concat((p.costLines || []).map(l => ({ v: l.id, l: (l.code ? l.code + ' — ' : '') + (l.desc || '') })));
+      labourV.people = _lab.roster.map(r => {
+        const done = this.labourPersonHours(p, r.id);
+        const allow = this._num(r.allowance);
+        const left = this._r2(allow - done);
+        const pct = allow > 0 ? Math.min(100, Math.round(done / allow * 100)) : 0;
+        const over = allow > 0 && done > allow;
+        const near = allow > 0 && !over && done >= allow * 0.9;
+        return {
+          id: r.id, nameV: r.name || '', onName: e => this.setLabourPerson(r.id, 'name', e.target.value),
+          role: r.role || '', userLinked: !!r.userId,
+          rateDisp: r.rate == null ? '' : String(r.rate), onRate: e => this.setLabourPerson(r.id, 'rate', e.target.value),
+          allowanceDisp: r.allowance == null ? '' : String(r.allowance), onAllowance: e => this.setLabourPerson(r.id, 'allowance', e.target.value),
+          hoursToDate: String(done),
+          allowanceText: allow > 0 ? String(allow) + ' h allowed' : 'no limit set',
+          leftText: allow > 0 ? (over ? this._r2(done - allow) + ' h over' : left + ' h left') : '—',
+          leftColor: over ? '#b91c1c' : (near ? '#b45309' : '#15803d'),
+          barW: (allow > 0 ? pct : 0) + '%',
+          barColor: over ? '#dc2626' : (near ? '#e0a800' : '#22a35a'),
+          barShow: allow > 0,
+          costToDate: this.money(this.labourPersonCost(p, r.id)),
+          lineValue: r.costLineId || '', lineOptions: _lineOpts, onLine: e => this.setLabourPerson(r.id, 'costLineId', e.target.value),
+          onJob: r.active !== false,
+          statusLabel: r.active === false ? 'Finished' : 'On the job',
+          statusBg: r.active === false ? '#eef1f5' : '#e6f4ea',
+          statusColor: r.active === false ? '#6b7787' : '#15803d',
+          onToggle: () => this.setLabourPerson(r.id, 'active', r.active === false),
+          canDelete: done === 0,
+          onDelete: () => this.removeLabourPerson(r.id),
+        };
+      });
+
+      // Only people who have this project on their account, and are not already listed.
+      const _taken = {}; _lab.roster.forEach(r => { if (r.userId) _taken[r.userId] = 1; });
+      labourV.addOptions = (S.users || []).filter(u => !_taken[u.id] && (u.projectIds || []).indexOf(p.id) >= 0)
+        .map(u => ({ v: u.id, l: (u.name || u.email) + ' — ' + this.roleLabel(u.role) }));
+
+      const _unposted = this.labourUnpostedCost(p);
+      labourV.show = true;
+      labourV.canEdit = _canEdit;
+      labourV.hasPeople = _lab.roster.length > 0;
+      labourV.noPeople = _lab.roster.length === 0;
+      labourV.hasOnJob = labourV.rows.length > 0;
+      labourV.noOnJob = labourV.rows.length === 0 && _lab.roster.length > 0;
+      labourV.weekLabel = 'Week of ' + this.fmtDate(_week) + ' – ' + this.fmtDate(_weekEnd);
+      labourV.isThisWeek = _week === this.weekStartOf(this.todayLocal());
+      labourV.onPrev = () => this.labourGoWeek(-1);
+      labourV.onNext = () => this.labourGoWeek(1);
+      labourV.onThis = () => this.labourThisWeek();
+      labourV.stdText = _std > 0 ? ('A standard week here is ' + _std + ' hours — anyone above it is flagged.') : 'Set a standard week in Settings › Defaults and anyone above it will be flagged.';
+      labourV.weekHours = String(_wkHours); labourV.weekCost = this.money(_wkCost);
+      labourV.totalHours = String(this.labourTotalHours(p));
+      labourV.totalCost = this.money(this.labourTotalCost(p));
+      labourV.addValue = '';
+      labourV.hasAddOptions = labourV.addOptions.length > 0;
+      labourV.noOneToAdd = labourV.addOptions.length === 0;
+      labourV.noOneToAddWhy = (S.users || []).length === 0
+        ? 'The staff list has not loaded — you can still add somebody by name.'
+        : 'Everyone in Users & access who is assigned to this project is already here. Assign more people to it under Users & access, or add somebody by name.';
+      labourV.onAdd = e => { const v = e.target.value; if (v) this.addLabourPerson(v); };
+      labourV.onAddBlank = () => this.addLabourPerson('');
+      labourV.onCellBlur = () => this.endLabourEdit();
+      labourV.unpostedShow = _unposted > 0;
+      labourV.unpostedText = this.money(_unposted) + ' of recorded time has no budget line to land on — pick one in “Posts to” and it joins the Labour actual cost.';
     }
 
     // KPI strip
@@ -15778,7 +16202,9 @@ class Component extends DCLogic {
           onOrigFocus: () => this.startEdit(l.id + ':orig'), onCommittedFocus: () => this.startEdit(l.id + ':committed'), onActualFocus: () => this.startEdit(l.id + ':actual'), onFtcFocus: () => this.startEdit(l.id + ':ftc'), onCellBlur: () => this.endEdit(),
           varAdj: this.signed(varAdjRaw), hasVarAdj: varAdjRaw !== 0, noVarAdj: varAdjRaw === 0, varRefs,
           commitmentOptions, linkedId: l.commitmentId || '', linked, invoiced, manual: !invoiced,
-          actualPaid: this.money(this.lineActualPaid(l, p)), actualAuto: this.lineActualPaid(l, p) > 0, actualManual: !(this.lineActualPaid(l, p) > 0),
+          actualPaid: this.money(this.lineActual(l, p)), actualSource: this.lineActualSource(l, p),
+          actualAuto: this.lineActualPaid(l, p) > 0 || this.lineLabourCost(l, p) > 0,
+          actualManual: !(this.lineActualPaid(l, p) > 0 || this.lineLabourCost(l, p) > 0),
           committedLinked: this.money(this.lineCommitted(l, p)),
           invoiceCount: bills.length,
           invoiceLabel: [bills.length ? bills.length + (bills.length === 1 ? ' bill' : ' bills') : '', lineCls.length ? lineCls.length + (lineCls.length === 1 ? ' claim' : ' claims') : ''].filter(Boolean).join(' + '),
@@ -17566,6 +17992,7 @@ class Component extends DCLogic {
       navAp, onGoAp: () => this.goApInvoices(),
       apV, apReviewV, apAllocV, apSendV, apPromptV, apRegV, apNoticeV,
       showDashboard, showContract, showDetails, showCommitments, showCost, showInvoices, showVariations, showBills, showClaims, showDefects,
+      showLabour, labourV,
       defectRows, defectSummary, defectAnalytics, defectSearch: S.defectSearch || '',
       onAddDefect: () => this.addDefect(), onExportDefectsPdf: () => this.exportDefectsPdf(),
       onDefectSearch: e => this.setDefectSearch(e.target.value),
