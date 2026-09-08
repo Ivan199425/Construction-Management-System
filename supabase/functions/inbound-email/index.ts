@@ -32,6 +32,9 @@
 //   * a body of Content-Type message/rfc822 or text/plain — the raw MIME
 //   * multipart/form-data with the raw message in a field named email, body-mime, message or raw
 //   * JSON with the raw message in raw, mime, RawEmail, body-mime or message
+//   * Resend's email.received webhook, which announces an arrival rather than delivering it —
+//     the message is then fetched from Resend, using RESEND_API_KEY (already set for the
+//     resend-email function; secrets are shared across a project)
 // If none of those is present, the parsed pieces a provider sends instead (from, to, subject,
 // text, html, attachments) are reassembled into a MIME message, so the app still sees one shape.
 // ---------------------------------------------------------------------------
@@ -113,6 +116,34 @@ function rebuild(from: string, to: string, subject: string, text: string, html: 
   return L.join('\r\n');
 }
 
+// Resend's webhook carries metadata only: the body and the attachments stay on their side until
+// they are asked for. So they are asked for here. The record it returns names a signed URL for
+// the raw MIME, which is the whole message byte for byte and exactly what everything downstream
+// wants — the parsed pieces are only a fallback for the case where that URL is not there.
+async function fromResend(id: string): Promise<string> {
+  const key = Deno.env.get('RESEND_API_KEY') || '';
+  if (!key) throw new Error('RESEND_API_KEY is not set, so the message cannot be fetched');
+  const meta = await fetch('https://api.resend.com/emails/receiving/' + encodeURIComponent(id), {
+    headers: { Authorization: 'Bearer ' + key },
+  });
+  if (!meta.ok) throw new Error('Resend would not hand over ' + id + ': ' + meta.status);
+  const body = await meta.json() as Record<string, unknown>;
+
+  const rawInfo = body.raw as Record<string, unknown> | undefined;
+  const url = rawInfo && typeof rawInfo.download_url === 'string' ? rawInfo.download_url : '';
+  if (url) {
+    const got = await fetch(url);
+    if (got.ok) return await got.text();
+  }
+
+  // Without the raw message the attachments cannot come with it. The invoice is still recorded
+  // rather than dropped: with "only mail carrying an attachment" switched on it lands under Not
+  // collected, which is a thing somebody can see, unlike silence.
+  const to = Array.isArray(body.to) ? (body.to as unknown[]).map(String).join(', ') : String(body.to || '');
+  return rebuild(String(body.from || ''), to, String(body.subject || ''),
+    String(body.text || ''), String(body.html || ''), []);
+}
+
 async function readMessage(req: Request): Promise<string> {
   const ctype = (req.headers.get('content-type') || '').toLowerCase();
 
@@ -149,6 +180,10 @@ async function readMessage(req: Request): Promise<string> {
   const d = (o.data && typeof o.data === 'object' ? o.data as Record<string, unknown> : o);
   const raw = pick(d, ['raw', 'mime', 'RawEmail', 'body-mime', 'message', 'rawEmail']);
   if (raw) return raw;
+
+  // Resend announces an arrival rather than delivering it. Go and get it.
+  const resendId = pick(d, ['email_id', 'emailId']);
+  if (resendId && String(o.type || '').indexOf('received') >= 0) return await fromResend(resendId);
 
   const list = (d.attachments || d.Attachments || []) as Record<string, unknown>[];
   const atts = (Array.isArray(list) ? list : []).map(a => ({
