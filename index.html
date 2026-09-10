@@ -505,7 +505,9 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                     </div>
                     <div>
                       <label style="display:inline-flex;align-items:center;gap:6px;border:1px solid #cfd8e2;background:#fff;color:#0f1720;border-radius:8px;padding:8px 14px;font-size:12.5px;font-weight:600;cursor:pointer" style-hover="border-color:#2b59c3;color:#2b59c3">⬆ Upload logo<input type="file" accept="image/*" onChange="{{ settingsV.company.onLogo }}" style="display:none"></label>
-                      <div style="font-size:11px;color:#8894a2;margin-top:8px;max-width:280px;line-height:1.5">PNG or SVG with transparent background works best. Used on the app and documents.</div>
+                      <div style="font-size:11px;color:#8894a2;margin-top:8px;max-width:280px;line-height:1.5">PNG or SVG with transparent background works best. Used on the app and documents. A new upload has its empty margins trimmed automatically.</div>
+                      <sc-if value="{{ settingsV.company.canTrimLogo }}" hint-placeholder-val="{{ false }}"><button onClick="{{ settingsV.company.onTrimLogo }}" title="Crop the blank border off the logo already uploaded, so the mark itself is bigger on every document" style="margin-top:9px;border:1px solid #cfd8e2;background:#fff;color:#4a5765;border-radius:8px;padding:7px 13px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="border-color:#2b59c3;color:#2b59c3">{{ settingsV.company.trimLabel }}</button></sc-if>
+                      <sc-if value="{{ settingsV.company.hasLogoNote }}" hint-placeholder-val="{{ false }}"><div style="font-size:11px;color:#4a5765;margin-top:7px;max-width:280px;line-height:1.5">{{ settingsV.company.logoNote }}</div></sc-if>
                     </div>
                   </div>
                 </div>
@@ -5404,6 +5406,7 @@ class Component extends DCLogic {
       apBusy: 0, apSend: null, apPrompt: null,
       apNotice: '', apAuditOpen: '', apEmailOpen: false,
       apMail: { at: '', n: 0, busy: false, err: '', ok: false, off: false },
+      logoBusy: false, logoNote: '',
       anim: 0,
     };
     this._SB = { url: 'https://vzxenkijxzzrgnmopnxh.supabase.co', key: 'sb_publishable_dqhiUAGqlZ6gSt-INv1KNA_kJeRNimR', emailFn: 'resend-email', smsFn: 'send-sms' };
@@ -8981,7 +8984,7 @@ class Component extends DCLogic {
     const acct = (this._accountsEmail && this._accountsEmail()) || '';
     const coContact = [co.phone, acct, co.website].filter(Boolean).map(esc).join(' &nbsp;&middot;&nbsp; ');
     const logo = this.brandLogo();
-    const logoHtml = logo ? '<img src="' + logo + '" alt="' + esc(coName) + '" style="height:92px;width:184px;object-fit:cover;object-position:center;display:block">' : '<div style="font-weight:700;font-size:13pt;color:#2A3580">' + esc(coName.toUpperCase()) + '</div>';
+    const logoHtml = logo ? '<img src="' + logo + '" alt="' + esc(coName) + '" style="height:92px;width:auto;max-width:320px;object-fit:contain;display:block">' : '<div style="font-weight:700;font-size:13pt;color:#2A3580">' + esc(coName.toUpperCase()) + '</div>';
 
     const gst = this._num(p.gstRate), value = this._num(v.value);
     const gstAmt = value * gst / 100, total = value + gstAmt;
@@ -11545,7 +11548,7 @@ class Component extends DCLogic {
       + '}catch(err){}});})();'
       + '<' + '/script>';
     const logo = this.brandLogo();
-    const logoHtml = logo ? '<img src="' + logo + '" alt="' + esc(coName) + '" style="height:92px;width:184px;object-fit:cover;object-position:center;display:block">' : '<div style="font-weight:700;font-size:13pt;color:#2A3580">' + esc(coName.toUpperCase()) + '</div>';
+    const logoHtml = logo ? '<img src="' + logo + '" alt="' + esc(coName) + '" style="height:92px;width:auto;max-width:320px;object-fit:contain;display:block">' : '<div style="font-weight:700;font-size:13pt;color:#2A3580">' + esc(coName.toUpperCase()) + '</div>';
     const html = '<!doctype html><html><head><meta charset="utf-8"><title>Subcontract Agreement — ' + esc(ref) + '</title>' + st + '</head><body>'
       + '<div class="hdr">' + logoHtml + '<div class="co"><strong>' + esc(coName.toUpperCase()) + '</strong>' + (coSlogan ? '<div style="font-size:6.5pt;font-weight:400;letter-spacing:.18em;text-transform:uppercase;color:#6E7480;margin-top:1px;margin-bottom:2px">' + esc(coSlogan) + '</div>' : '') + 'ABN ' + esc(coAbn) + '<br>' + esc(coAddr)
       + (co.phone ? '<br>' + esc(co.phone) : '') + (co.website ? '<br>' + esc(co.website) : '') + '</div></div>'
@@ -12884,7 +12887,7 @@ class Component extends DCLogic {
     const cust = (p.customers && p.customers[0]) || null;
     const pm = ((p.team || []).find(t => /project\s*manager/i.test(t.role || '')) || (p.team || [])[0] || null);
     const logo = this.brandLogo();
-    const logoHtml = logo ? '<img src="' + logo + '" alt="' + esc(coName) + '" style="height:92px;width:184px;object-fit:cover;object-position:center;display:block">' : '<div style="font-weight:700;font-size:13pt;color:#2A3580">' + esc(coName.toUpperCase()) + '</div>';
+    const logoHtml = logo ? '<img src="' + logo + '" alt="' + esc(coName) + '" style="height:92px;width:auto;max-width:320px;object-fit:contain;display:block">' : '<div style="font-weight:700;font-size:13pt;color:#2A3580">' + esc(coName.toUpperCase()) + '</div>';
     const cellK = 'style="width:27%;background:#F4F5F8;font-weight:600"';
     const r2 = (k, v) => '<tr><td ' + cellK + '>' + esc(k) + '</td><td>' + v + '</td></tr>';
     const money = n => esc(this.money(n));
@@ -13183,6 +13186,71 @@ class Component extends DCLogic {
   }
   // Printed under the company name on a letterhead, and nowhere else.
   _coSlogan() { return String(((this.state.company || {}).slogan) || '').trim(); }
+  // Where the artwork is, inside whatever canvas it was saved on.
+  //
+  // The background is taken from the corners rather than assumed to be white or transparent:
+  // this logo's ground is a pale blush, and a test for white would have found nothing to trim.
+  // If the four corners disagree the image has no uniform ground, and nothing is cropped.
+  _artworkBounds(px, w, h) {
+    const at = (x, y) => { const i = (y * w + x) * 4; return [px[i], px[i + 1], px[i + 2], px[i + 3]]; };
+    const corners = [at(0, 0), at(w - 1, 0), at(0, h - 1), at(w - 1, h - 1)];
+    const near = (a, b, tol) => Math.abs(a[0] - b[0]) <= tol && Math.abs(a[1] - b[1]) <= tol
+      && Math.abs(a[2] - b[2]) <= tol && Math.abs(a[3] - b[3]) <= tol;
+    const bg = corners[0];
+    // A transparent corner means the ground is transparency, whatever the colour underneath.
+    const clear = bg[3] < 8;
+    if (!clear && !corners.every(c => near(c, bg, 10))) return null;
+    const isBg = (x, y) => { const p = at(x, y); return clear ? p[3] < 8 : near(p, bg, 18); };
+    let top = 0, bottom = h - 1, left = 0, right = w - 1;
+    const rowBg = y => { for (let x = 0; x < w; x++) if (!isBg(x, y)) return false; return true; };
+    const colBg = x => { for (let y = top; y <= bottom; y++) if (!isBg(x, y)) return false; return true; };
+    while (top < bottom && rowBg(top)) top++;
+    while (bottom > top && rowBg(bottom)) bottom--;
+    while (left < right && colBg(left)) left++;
+    while (right > left && colBg(right)) right--;
+    const cw = right - left + 1, ch = bottom - top + 1;
+    // Nothing worth doing, or something went wrong and the whole image looks like background.
+    if (cw < 8 || ch < 8) return null;
+    if (cw >= w - 2 && ch >= h - 2) return null;
+    return { left: left, top: top, w: cw, h: ch, clear: clear };
+  }
+
+  // Load, trim, hand back a PNG. Anything that goes wrong hands back nothing and the caller
+  // uses the original - a logo that is not trimmed is a great deal better than no logo.
+  _trimImage(src) {
+    return new Promise(resolve => {
+      try {
+        if (typeof document === 'undefined' || !document.createElement) return resolve(null);
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onerror = () => resolve(null);
+        img.onload = () => {
+          try {
+            const w = img.naturalWidth || img.width, h = img.naturalHeight || img.height;
+            if (!w || !h) return resolve(null);
+            const c = document.createElement('canvas'); c.width = w; c.height = h;
+            const g = c.getContext('2d'); g.drawImage(img, 0, 0);
+            // A file served without CORS headers taints the canvas and reading it throws.
+            const px = g.getImageData(0, 0, w, h).data;
+            const b = this._artworkBounds(px, w, h);
+            if (!b) return resolve(null);
+            // A hair of breathing room, so the lettering is not flush against the edge.
+            const pad = Math.max(1, Math.round(Math.min(b.w, b.h) * 0.04));
+            const x0 = Math.max(0, b.left - pad), y0 = Math.max(0, b.top - pad);
+            const x1 = Math.min(w, b.left + b.w + pad), y1 = Math.min(h, b.top + b.h + pad);
+            const o = document.createElement('canvas'); o.width = x1 - x0; o.height = y1 - y0;
+            const og = o.getContext('2d');
+            if (!b.clear) { og.fillStyle = this._pixelCss(px, w, 0, 0); og.fillRect(0, 0, o.width, o.height); }
+            og.drawImage(c, x0, y0, o.width, o.height, 0, 0, o.width, o.height);
+            resolve({ url: o.toDataURL('image/png'), w: o.width, h: o.height, was: w + '\u00d7' + h });
+          } catch (e) { resolve(null); }
+        };
+        img.src = src;
+      } catch (e) { resolve(null); }
+    });
+  }
+  _pixelCss(px, w, x, y) { const i = (y * w + x) * 4; return 'rgb(' + px[i] + ',' + px[i + 1] + ',' + px[i + 2] + ')'; }
+
   brandLogo() {
     const own = String(((this.state.company || {}).logoUrl) || '').trim();
     if (own) return own;
@@ -14008,7 +14076,57 @@ class Component extends DCLogic {
     }));
   }
   openCompanyWebsite() { let w = ((this.state.company && this.state.company.website) || '').trim(); if (!w) return; if (!/^https?:\/\//i.test(w)) w = 'https://' + w; try { window.open(w, '_blank', 'noopener'); } catch (e) {} }
-  uploadCompanyLogo(e) { if (!this.can('admin', 'edit')) return; const f = e.target && e.target.files && e.target.files[0]; if (e.target) e.target.value = ''; if (!f) return; this._sbUploadFile(f, 'company').then(url => { if (url) this.setCompanyField('logoUrl', url); }); }
+  uploadCompanyLogo(e) {
+    if (!this.can('admin', 'edit')) return;
+    const f = e.target && e.target.files && e.target.files[0];
+    if (e.target) e.target.value = '';
+    if (!f) return;
+    this.setState({ logoBusy: true });
+    // Trim first, upload what comes back. SVG has no pixels to read, and needs no trimming.
+    const isSvg = /svg/i.test(f.type || '') || /\.svg$/i.test(f.name || '');
+    const job = isSvg ? Promise.resolve(null) : this._readDataUrl(f).then(d => (d ? this._trimImage(d) : null));
+    job.then(trimmed => {
+      if (!trimmed) return this._sbUploadFile(f, 'company');
+      return this._dataUrlToFile(trimmed.url, (f.name || 'logo').replace(/\.[^.]+$/, '') + '.png')
+        .then(tf => this._sbUploadFile(tf || f, 'company'));
+    }).then(url => {
+      this.setState({ logoBusy: false });
+      if (url) this.setCompanyField('logoUrl', url);
+    }).catch(() => this.setState({ logoBusy: false }));
+  }
+  _readDataUrl(file) { return new Promise(res => { try { const r = new FileReader(); r.onload = ev => res(ev.target.result); r.onerror = () => res(null); r.readAsDataURL(file); } catch (e) { res(null); } }); }
+  _dataUrlToFile(url, name) {
+    return new Promise(res => {
+      try {
+        const b = atob(String(url).split(',')[1] || '');
+        const arr = new Uint8Array(b.length);
+        for (let i = 0; i < b.length; i++) arr[i] = b.charCodeAt(i);
+        res(new File([arr], name, { type: 'image/png' }));
+      } catch (e) { res(null); }
+    });
+  }
+
+  // The one already uploaded. Same trimming, without asking for the file again.
+  trimCompanyLogo() {
+    if (!this.can('admin', 'edit')) return;
+    const cur = String(((this.state.company || {}).logoUrl) || '').trim();
+    if (!cur) return;
+    if (/\.svg($|\?)/i.test(cur)) { this.setState({ logoNote: 'An SVG has no margin to measure \u2014 edit it in a drawing program instead.' }); return; }
+    this.setState({ logoBusy: true, logoNote: '' });
+    this._trimImage(cur).then(t => {
+      if (!t) {
+        this.setState({ logoBusy: false, logoNote: 'Nothing to trim \u2014 either the edges are not one flat colour, or the artwork already reaches them.' });
+        return null;
+      }
+      return this._dataUrlToFile(t.url, 'logo.png').then(f => (f ? this._sbUploadFile(f, 'company') : null)).then(url => {
+        if (url) {
+          this.setCompanyField('logoUrl', url);
+          this.setState({ logoBusy: false, logoNote: 'Trimmed from ' + t.was + ' to ' + t.w + '\u00d7' + t.h + '.' });
+        } else this.setState({ logoBusy: false, logoNote: 'Could not save the trimmed logo.' });
+        return url;
+      });
+    }).catch(() => this.setState({ logoBusy: false, logoNote: 'Could not read the logo file.' }));
+  }
   uploadPdfHeader(e) { if (!this.can('admin', 'edit')) return; const f = e.target && e.target.files && e.target.files[0]; if (e.target) e.target.value = ''; if (!f) return; this._sbUploadFile(f, 'company').then(url => { if (url) this.setCompanyField('pdfHeaderUrl', url); }); }
   // ===== Defaults (shared) =====
   _defaultsSeed() { return { weeklyHours: '', weekStart: '', dateFormat: 'DD/MM/YYYY' }; }
@@ -18038,6 +18156,10 @@ class Component extends DCLogic {
         onBankAccount: e => this.setCompanyField('bankAccount', e.target.value), onAccountsEmail: e => this.setCompanyField('accountsEmail', e.target.value),
         onOpenWebsite: () => this.openCompanyWebsite(),
         onLogo: e => this.uploadCompanyLogo(e), onPdfHeader: e => this.uploadPdfHeader(e),
+        onTrimLogo: () => this.trimCompanyLogo(),
+        canTrimLogo: !!(co.logoUrl || '').trim() && !S.logoBusy,
+        trimLabel: S.logoBusy ? 'Working\u2026' : 'Trim empty margins',
+        logoNote: S.logoNote || '', hasLogoNote: !!S.logoNote,
       };
       const df = S.defaults || this._defaultsSeed();
       const dateFormatOptions = ['MM/DD/YYYY', 'DD/MM/YYYY', 'YYYY/MM/DD'].map(x => ({ v: x, l: x }));
