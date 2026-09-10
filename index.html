@@ -8493,7 +8493,7 @@ class Component extends DCLogic {
       scope: f.scope || '', inclusions: f.inclusions || '', exclusions: f.exclusions || '',
       special: (special && special !== legacy) ? special : 'Nil - the Standard Terms and Conditions at Annexure A apply without amendment.',
       quote: f.quote || '', quoteUrl: f.quoteUrl || '',
-      terms: this._htmlToText((typeof window !== 'undefined' && window.CCM_SUBCONTRACT_TERMS) || legacy || ''),
+      terms: this._htmlToText(this._subcontractTerms() || legacy || ''),
       meName: me.name || '', meTitle: me.title || '',
     };
   }
@@ -11506,7 +11506,7 @@ class Component extends DCLogic {
           + (f.quoteUrl ? ' and is available at:<br><span style="font-size:8.5pt;color:#2A3580;word-break:break-all">' + esc(f.quoteUrl) + '</span>' : '') + '.</div>')
       + '</div>');
     // Annexure A — the standard terms, identical for every project (loaded from subcontract-terms.js)
-    const stdTerms = (typeof window !== 'undefined' && window.CCM_SUBCONTRACT_TERMS) ? window.CCM_SUBCONTRACT_TERMS : '';
+    const stdTerms = this._subcontractTerms();
     const termsHtml = stdTerms || ('<div style="break-before:page"><h1 style="font-size:17pt">Terms and Conditions of Subcontract</h1><p style="color:#8a1c1c">Standard terms could not be loaded (subcontract-terms.js). Attach Annexure A before execution.</p></div>');
     const st = '<style>*{box-sizing:border-box}'
       + 'body{margin:0;padding:52px 58px;font-family:Archivo,system-ui,-apple-system,"Segoe UI",sans-serif;color:#1D2330;max-width:940px;margin:0 auto}'
@@ -13139,6 +13139,17 @@ class Component extends DCLogic {
   // Street, then suburb state postcode: "Cromer NSW 2099", not "Cromer, NSW, 2099". A comma
   // between the suburb, the state and the postcode is not how an address is written here, and
   // ten copies of the same expression were each getting it wrong on a letterhead.
+  // Annexure A with its parties filled in. The clauses name the Contractor once and give an
+  // address for claims twice; both follow the company profile now, so the standard terms
+  // cannot go out naming a company that is not this one.
+  _subcontractTerms() {
+    const raw = (typeof window !== 'undefined' && window.CCM_SUBCONTRACT_TERMS) ? window.CCM_SUBCONTRACT_TERMS : '';
+    // No name to use: the agreement's own defined term is what clause 3.6 means anyway, so
+    // the clause still reads correctly rather than showing a gap in a legal document.
+    const name = String(((this.state.company || {}).name) || '').trim() || 'the Contractor';
+    const acct = this._accountsEmail() || 'the Contractor\u2019s accounts address';
+    return raw.split('{{COMPANY}}').join(name).split('{{ACCOUNTS_EMAIL}}').join(acct);
+  }
   _coAddress() {
     const co = this.state.company || {};
     const clean = x => String(x == null ? '' : x).trim().replace(/^,+|,+$/g, '').trim();
