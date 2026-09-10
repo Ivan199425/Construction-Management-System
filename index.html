@@ -8973,7 +8973,7 @@ class Component extends DCLogic {
     const coName = (co.name || '').trim();
     const coAbn = this._abn();
     const coAddr = [co.street, co.city, co.state, co.zip].map(x => String(x == null ? '' : x).trim().replace(/^,+|,+$/g, '').trim()).filter(Boolean).join(', ');
-    const acct = (this._accountsEmail && this._accountsEmail()) || 'accounts@cubiccm.com';
+    const acct = (this._accountsEmail && this._accountsEmail()) || '';
     const coContact = [co.phone, acct, co.website].filter(Boolean).map(esc).join(' &nbsp;&middot;&nbsp; ');
     const logo = this.brandLogo();
     const logoHtml = logo ? '<img src="' + logo + '" alt="' + esc(coName) + '" style="width:152px;height:auto;display:block">' : '<div style="font-weight:700;font-size:13pt;color:#2A3580">' + esc(coName.toUpperCase()) + '</div>';
@@ -11473,7 +11473,7 @@ class Component extends DCLogic {
     const co = this.state.company || {};
     const coName = (co.name || '').trim();
     const coAbn = this._abn();
-    const coAddr = [co.street, co.city, co.state, co.zip].map(x => String(x == null ? '' : x).trim().replace(/^,+|,+$/g, '').trim()).filter(Boolean).join(', ') || 'Unit 3, 5 Bessemer Street, Blacktown NSW 2148';
+    const coAddr = [co.street, co.city, co.state, co.zip].map(x => String(x == null ? '' : x).trim().replace(/^,+|,+$/g, '').trim()).filter(Boolean).join(', ');
     const me = this.currentUser() || {};
     // Trade package: prefer the cost-code description, else the vendor's trade type
     const trade = (cc && cc.name) ? cc.name : (vendor ? this.vendorTypeLabel(vendor.type) : '');
@@ -11690,7 +11690,7 @@ class Component extends DCLogic {
       viaEmail: true, viaSms: false,
       recipients: (vendor && vendor.email) ? [vendor.email] : [], newEmail: '',
       phone: vendor ? vendor.phone : '',
-      from: p.senderEmail || me.email || 'accounts@cubiccm.com',
+      from: p.senderEmail || me.email || this._accountsEmail(),
       subject: 'Subcontract ' + cm.ref + ' for signing — ' + p.name,
       message: body, attachQuote: true,
     } });
@@ -12342,8 +12342,8 @@ class Component extends DCLogic {
     const co = this.state.company || {};
     const coName = (co.name || '').trim();
     const coAbn = this._abn();
-    const coAddr = [co.street, co.city, co.state, co.zip].map(x => String(x == null ? '' : x).trim().replace(/^,+|,+$/g, '').trim()).filter(Boolean).join(', ') || 'Unit 3, 5 Bessemer Street, Blacktown NSW 2148';
-    const acct = (this._accountsEmail && this._accountsEmail()) || 'accounts@cubiccm.com';
+    const coAddr = [co.street, co.city, co.state, co.zip].map(x => String(x == null ? '' : x).trim().replace(/^,+|,+$/g, '').trim()).filter(Boolean).join(', ');
+    const acct = (this._accountsEmail && this._accountsEmail()) || '';
     const cust = (p.customers && p.customers[0]) || null;
     const pm = ((p.team || []).find(t => /project\s*manager/i.test(t.role || '')) || (p.team || [])[0] || null);
     const d = iso => iso ? this.fmtDate(iso) : '';
@@ -12850,7 +12850,7 @@ class Component extends DCLogic {
     const co = this.state.company || {};
     const coName = (co.name || '').trim();
     const coAbn = this._abn();
-    const coAddr = [co.street, co.city, co.state, co.zip].map(x => String(x == null ? '' : x).trim().replace(/^,+|,+$/g, '').trim()).filter(Boolean).join(', ') || 'Unit 3, 5 Bessemer Street, Blacktown NSW 2148';
+    const coAddr = [co.street, co.city, co.state, co.zip].map(x => String(x == null ? '' : x).trim().replace(/^,+|,+$/g, '').trim()).filter(Boolean).join(', ');
     const cust = (p.customers && p.customers[0]) || null;
     const pm = ((p.team || []).find(t => /project\s*manager/i.test(t.role || '')) || (p.team || [])[0] || null);
     const logo = this.brandLogo();
@@ -12858,7 +12858,7 @@ class Component extends DCLogic {
     const cellK = 'style="width:27%;background:#F4F5F8;font-weight:600"';
     const r2 = (k, v) => '<tr><td ' + cellK + '>' + esc(k) + '</td><td>' + v + '</td></tr>';
     const money = n => esc(this.money(n));
-    const acct = (this._accountsEmail && this._accountsEmail()) || 'accounts@cubiccm.com';
+    const acct = (this._accountsEmail && this._accountsEmail()) || '';
     // Outstanding % = the approved budget not yet invoiced once this claim is counted.
     const outPct = r => (r.budget > 0 ? Math.max(0, this._r2(100 - ((r.prior + r.amount) / r.budget) * 100)) : 0);
     const workRows = m.rows.map(r => '<tr>'
@@ -13137,7 +13137,10 @@ class Component extends DCLogic {
     if (d.length !== 11) return raw;
     return d.slice(0, 2) + ' ' + d.slice(2, 5) + ' ' + d.slice(5, 8) + ' ' + d.slice(8);
   }
-  _accountsEmail() { const co = this.state.company || {}; return (co.accountsEmail || '').trim() || 'accounts@cubiccm.com'; }
+  // Printed on the letterhead, and named in subcontract clause 3.7 as where claims are sent.
+  // Blank rather than somebody else's: a subcontractor sending a claim to another company's
+  // accounts inbox is worse than one who can see there is no address to send it to.
+  _accountsEmail() { const co = this.state.company || {}; return (co.accountsEmail || '').trim(); }
   _billStandardRecipients() { const seen = {}, out = []; [this._accountsEmail(), 'gordon@cubiccm.com'].forEach(e => { if (e && !seen[e]) { seen[e] = 1; out.push(e); } }); return out; }
   openBillSend(id) {
     const p = this.proj(this.state.pid); const bill = (p.bills || []).find(b => b.id === id); if (!bill) return;
