@@ -8981,7 +8981,7 @@ class Component extends DCLogic {
     const acct = (this._accountsEmail && this._accountsEmail()) || '';
     const coContact = [co.phone, acct, co.website].filter(Boolean).map(esc).join(' &nbsp;&middot;&nbsp; ');
     const logo = this.brandLogo();
-    const logoHtml = logo ? '<img src="' + logo + '" alt="' + esc(coName) + '" style="height:92px;width:auto;max-width:300px;display:block">' : '<div style="font-weight:700;font-size:13pt;color:#2A3580">' + esc(coName.toUpperCase()) + '</div>';
+    const logoHtml = logo ? '<img src="' + logo + '" alt="' + esc(coName) + '" style="height:92px;width:184px;object-fit:cover;object-position:center;display:block">' : '<div style="font-weight:700;font-size:13pt;color:#2A3580">' + esc(coName.toUpperCase()) + '</div>';
 
     const gst = this._num(p.gstRate), value = this._num(v.value);
     const gstAmt = value * gst / 100, total = value + gstAmt;
@@ -11545,7 +11545,7 @@ class Component extends DCLogic {
       + '}catch(err){}});})();'
       + '<' + '/script>';
     const logo = this.brandLogo();
-    const logoHtml = logo ? '<img src="' + logo + '" alt="' + esc(coName) + '" style="height:92px;width:auto;max-width:300px;display:block">' : '<div style="font-weight:700;font-size:13pt;color:#2A3580">' + esc(coName.toUpperCase()) + '</div>';
+    const logoHtml = logo ? '<img src="' + logo + '" alt="' + esc(coName) + '" style="height:92px;width:184px;object-fit:cover;object-position:center;display:block">' : '<div style="font-weight:700;font-size:13pt;color:#2A3580">' + esc(coName.toUpperCase()) + '</div>';
     const html = '<!doctype html><html><head><meta charset="utf-8"><title>Subcontract Agreement — ' + esc(ref) + '</title>' + st + '</head><body>'
       + '<div class="hdr">' + logoHtml + '<div class="co"><strong>' + esc(coName.toUpperCase()) + '</strong>' + (coSlogan ? '<div style="font-size:6.5pt;font-weight:400;letter-spacing:.18em;text-transform:uppercase;color:#6E7480;margin-top:1px;margin-bottom:2px">' + esc(coSlogan) + '</div>' : '') + 'ABN ' + esc(coAbn) + '<br>' + esc(coAddr)
       + (co.phone ? '<br>' + esc(co.phone) : '') + (co.website ? '<br>' + esc(co.website) : '') + '</div></div>'
@@ -12884,7 +12884,7 @@ class Component extends DCLogic {
     const cust = (p.customers && p.customers[0]) || null;
     const pm = ((p.team || []).find(t => /project\s*manager/i.test(t.role || '')) || (p.team || [])[0] || null);
     const logo = this.brandLogo();
-    const logoHtml = logo ? '<img src="' + logo + '" alt="' + esc(coName) + '" style="height:92px;width:auto;max-width:300px;display:block">' : '<div style="font-weight:700;font-size:13pt;color:#2A3580">' + esc(coName.toUpperCase()) + '</div>';
+    const logoHtml = logo ? '<img src="' + logo + '" alt="' + esc(coName) + '" style="height:92px;width:184px;object-fit:cover;object-position:center;display:block">' : '<div style="font-weight:700;font-size:13pt;color:#2A3580">' + esc(coName.toUpperCase()) + '</div>';
     const cellK = 'style="width:27%;background:#F4F5F8;font-weight:600"';
     const r2 = (k, v) => '<tr><td ' + cellK + '>' + esc(k) + '</td><td>' + v + '</td></tr>';
     const money = n => esc(this.money(n));
@@ -13168,7 +13168,11 @@ class Component extends DCLogic {
     // the clause still reads correctly rather than showing a gap in a legal document.
     const name = String(((this.state.company || {}).name) || '').trim() || 'the Contractor';
     const acct = this._accountsEmail() || 'the Contractor\u2019s accounts address';
-    return raw.split('{{COMPANY}}').join(name).split('{{ACCOUNTS_EMAIL}}').join(acct);
+    const out = raw.split('{{COMPANY}}').join(name).split('{{ACCOUNTS_EMAIL}}').join(acct);
+    // Anything still in braces is a placeholder nobody filled in. In a legal clause that reads
+    // worse than the hard-coded name it replaced, so it becomes the defined term instead of
+    // being shown to a subcontractor.
+    return out.replace(/\{\{[A-Z_]+\}\}/g, 'the Contractor');
   }
   _coAddress() {
     const co = this.state.company || {};
