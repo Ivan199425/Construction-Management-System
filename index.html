@@ -8478,8 +8478,9 @@ class Component extends DCLogic {
       ref: cm.ref || 'DRAFT', status: this.agrLabel(a.status),
       date: (a.signedAt || a.sentAt) ? String(a.signedAt || a.sentAt).slice(0, 10) : this.todayLocal(),
       coName: (co.name || '').trim(),
+      coSlogan: this._coSlogan(),
       coAbn: this._abn(),
-      coAddr: [co.street, co.city, co.state, co.zip].map(x => String(x == null ? '' : x).trim().replace(/^,+|,+$/g, '').trim()).filter(Boolean).join(', '),
+      coAddr: this._coAddress(),
       coContact: [co.phone, (this._accountsEmail && this._accountsEmail()) || '', co.website].filter(Boolean).join('  -  '),
       subName: cm.vendor || '', subAbn: vendor.abn || '', subRep: vendor.rep || '', subEmail: vendor.email || '',
       subPhone: vendor.phone || '', subAddr: vendor.address || '',
@@ -8512,10 +8513,11 @@ class Component extends DCLogic {
     const need = h => { if (y + h > d.H - M - 28) { footer(); startPage(); } };
 
     startPage();
-    if (logo) { const lh = 30, lw = lh * (logo.w / Math.max(1, logo.h)); d.image(logo, M, y, Math.min(lw, 160), lh); }
+    if (logo) { const lh = 48, lw = lh * (logo.w / Math.max(1, logo.h)); d.image(logo, M, y, Math.min(lw, 200), lh); }
     else d.text(c.coName.toUpperCase(), M, y + 15, { size: 12, bold: true, color: NAVY });
     let hy = y + 6;
     d.text(c.coName.toUpperCase(), R, hy, { size: 8.5, bold: true, align: 'right', color: NAVY }); hy += 10;
+    if (c.coSlogan) { d.text(c.coSlogan.toUpperCase(), R, hy, { size: 6, align: 'right', color: MUT }); hy += 8; }
     d.text('ABN ' + c.coAbn, R, hy, { size: 7.5, align: 'right', color: MUT }); hy += 9;
     if (c.coAddr) { d.text(c.coAddr, R, hy, { size: 7.5, align: 'right', color: MUT }); hy += 9; }
     if (c.coContact) { d.text(c.coContact, R, hy, { size: 7.5, align: 'right', color: MUT }); hy += 9; }
@@ -8657,10 +8659,11 @@ class Component extends DCLogic {
         footer: 'Subcontract Agreement  -  ' + (c.ref || '') + '  -  ' + (c.projName || ''),
         headerHeight: 62,
         header: (dd, M, R) => {
-          if (logo) { const lh = 28, lw = lh * (logo.w / Math.max(1, logo.h)); dd.image(logo, M, M, Math.min(lw, 150), lh); }
+          if (logo) { const lh = 40, lw = lh * (logo.w / Math.max(1, logo.h)); dd.image(logo, M, M, Math.min(lw, 180), lh); }
           else dd.text((c.coName || '').toUpperCase(), M, M + 14, { size: 11, bold: true, color: NAVY });
           let hy = M + 5;
           dd.text((c.coName || '').toUpperCase(), R, hy, { size: 8, bold: true, align: 'right', color: NAVY }); hy += 9.5;
+          if (c.coSlogan) { dd.text(c.coSlogan.toUpperCase(), R, hy, { size: 6, align: 'right', color: MUT }); hy += 7.5; }
           dd.text('ABN ' + (c.coAbn || ''), R, hy, { size: 7, align: 'right', color: MUT }); hy += 8.5;
           if (c.coAddr) { dd.text(c.coAddr, R, hy, { size: 7, align: 'right', color: MUT }); hy += 8.5; }
           if (c.coContact) dd.text(c.coContact, R, hy, { size: 7, align: 'right', color: MUT });
@@ -8720,8 +8723,9 @@ class Component extends DCLogic {
       custCompany: doc.to || '', custName: doc.attention || '',
       meName: me.name || '', meTitle: me.title || '', today: this.todayLocal(),
       coName: (co.name || '').trim(),
+      coSlogan: this._coSlogan(),
       coAbn: this._abn(),
-      coAddr: [co.street, co.city, co.state, co.zip].map(x => String(x == null ? '' : x).trim().replace(/^,+|,+$/g, '').trim()).filter(Boolean).join(', '),
+      coAddr: this._coAddress(),
       coContact: [co.phone, (this._accountsEmail && this._accountsEmail()) || '', co.website].filter(Boolean).join('  -  '),
     };
   }
@@ -8746,10 +8750,11 @@ class Component extends DCLogic {
     const need = h => { if (y + h > d.H - M - 30) { footer(); startPage(); } };
 
     startPage();
-    if (logo) { const lh = 32, lw = lh * (logo.w / Math.max(1, logo.h)); d.image(logo, M, y, Math.min(lw, 170), lh); }
+    if (logo) { const lh = 50, lw = lh * (logo.w / Math.max(1, logo.h)); d.image(logo, M, y, Math.min(lw, 210), lh); }
     else d.text(c.coName.toUpperCase(), M, y + 16, { size: 12, bold: true, color: NAVY });
     let hy = y + 6;
     d.text(c.coName.toUpperCase(), R, hy, { size: 8.5, bold: true, align: 'right', color: NAVY }); hy += 10;
+    if (c.coSlogan) { d.text(c.coSlogan.toUpperCase(), R, hy, { size: 6, align: 'right', color: MUT }); hy += 8; }
     d.text('ABN ' + c.coAbn, R, hy, { size: 7.5, align: 'right', color: MUT }); hy += 9;
     if (c.coAddr) { d.text(c.coAddr, R, hy, { size: 7.5, align: 'right', color: MUT }); hy += 9; }
     if (c.coContact) { d.text(c.coContact, R, hy, { size: 7.5, align: 'right', color: MUT }); hy += 9; }
@@ -8971,12 +8976,13 @@ class Component extends DCLogic {
     const money = n => esc(this.money(n));
     const co = this.state.company || {};
     const coName = (co.name || '').trim();
+    const coSlogan = this._coSlogan();
     const coAbn = this._abn();
-    const coAddr = [co.street, co.city, co.state, co.zip].map(x => String(x == null ? '' : x).trim().replace(/^,+|,+$/g, '').trim()).filter(Boolean).join(', ');
+    const coAddr = this._coAddress();
     const acct = (this._accountsEmail && this._accountsEmail()) || '';
     const coContact = [co.phone, acct, co.website].filter(Boolean).map(esc).join(' &nbsp;&middot;&nbsp; ');
     const logo = this.brandLogo();
-    const logoHtml = logo ? '<img src="' + logo + '" alt="' + esc(coName) + '" style="width:152px;height:auto;display:block">' : '<div style="font-weight:700;font-size:13pt;color:#2A3580">' + esc(coName.toUpperCase()) + '</div>';
+    const logoHtml = logo ? '<img src="' + logo + '" alt="' + esc(coName) + '" style="height:92px;width:auto;max-width:300px;display:block">' : '<div style="font-weight:700;font-size:13pt;color:#2A3580">' + esc(coName.toUpperCase()) + '</div>';
 
     const gst = this._num(p.gstRate), value = this._num(v.value);
     const gstAmt = value * gst / 100, total = value + gstAmt;
@@ -9014,7 +9020,7 @@ class Component extends DCLogic {
       + '@media print{@page{size:A4;margin:15mm}body{padding:0;max-width:none}}</style>';
 
     const html = '<!doctype html><html><head><meta charset="utf-8"><title>' + esc(v.ref) + ' - Variation Order</title>' + st + '</head><body>'
-      + '<div class="hdr">' + logoHtml + '<div class="co"><div class="nm">' + esc(coName.toUpperCase()) + '</div><div>ABN ' + esc(coAbn) + '</div>'
+      + '<div class="hdr">' + logoHtml + '<div class="co"><div class="nm">' + esc(coName.toUpperCase()) + '</div>' + (coSlogan ? '<div style="font-size:6.5pt;font-weight:400;letter-spacing:.18em;text-transform:uppercase;color:#6E7480;margin-top:1px;margin-bottom:2px">' + esc(coSlogan) + '</div>' : '') + '<div>ABN ' + esc(coAbn) + '</div>'
       + (coAddr ? '<div>' + esc(coAddr) + '</div>' : '') + (coContact ? '<div>' + coContact + '</div>' : '') + '</div></div>'
 
       + '<div class="trow"><div><h1>Variation Order</h1><div class="sub">Instruction to vary the works</div></div>'
@@ -11472,8 +11478,9 @@ class Component extends DCLogic {
     // Head Contractor block — from Settings → Company profile, falling back to the CCM letterhead
     const co = this.state.company || {};
     const coName = (co.name || '').trim();
+    const coSlogan = this._coSlogan();
     const coAbn = this._abn();
-    const coAddr = [co.street, co.city, co.state, co.zip].map(x => String(x == null ? '' : x).trim().replace(/^,+|,+$/g, '').trim()).filter(Boolean).join(', ');
+    const coAddr = this._coAddress();
     const me = this.currentUser() || {};
     // Trade package: prefer the cost-code description, else the vendor's trade type
     const trade = (cc && cc.name) ? cc.name : (vendor ? this.vendorTypeLabel(vendor.type) : '');
@@ -11518,9 +11525,9 @@ class Component extends DCLogic {
       + '@media print{@page{size:A4;margin:14mm}body{padding:0;max-width:none}}</style>';
     const scr = '<' + 'script>window.onload=function(){window.print();};<' + '/script>';
     const logo = this.brandLogo();
-    const logoHtml = logo ? '<img src="' + logo + '" alt="' + esc(coName) + '" style="height:58px;width:auto;display:block">' : '<div style="font-weight:700;font-size:13pt;color:#2A3580">' + esc(coName.toUpperCase()) + '</div>';
+    const logoHtml = logo ? '<img src="' + logo + '" alt="' + esc(coName) + '" style="height:92px;width:auto;max-width:300px;display:block">' : '<div style="font-weight:700;font-size:13pt;color:#2A3580">' + esc(coName.toUpperCase()) + '</div>';
     const html = '<!doctype html><html><head><meta charset="utf-8"><title>Subcontract Agreement — ' + esc(ref) + '</title>' + st + '</head><body>'
-      + '<div class="hdr">' + logoHtml + '<div class="co"><strong>' + esc(coName.toUpperCase()) + '</strong><br>ABN ' + esc(coAbn) + '<br>' + esc(coAddr)
+      + '<div class="hdr">' + logoHtml + '<div class="co"><strong>' + esc(coName.toUpperCase()) + '</strong>' + (coSlogan ? '<div style="font-size:6.5pt;font-weight:400;letter-spacing:.18em;text-transform:uppercase;color:#6E7480;margin-top:1px;margin-bottom:2px">' + esc(coSlogan) + '</div>' : '') + 'ABN ' + esc(coAbn) + '<br>' + esc(coAddr)
       + (co.phone ? '<br>' + esc(co.phone) : '') + (co.website ? '<br>' + esc(co.website) : '') + '</div></div>'
       + '<h1>Subcontract Agreement</h1><div class="sub">Formal Instrument of Agreement</div>'
       // ---- particulars (unique per project / subcontract) ----
@@ -12341,8 +12348,9 @@ class Component extends DCLogic {
     const S = this._XS;
     const co = this.state.company || {};
     const coName = (co.name || '').trim();
+    const coSlogan = this._coSlogan();
     const coAbn = this._abn();
-    const coAddr = [co.street, co.city, co.state, co.zip].map(x => String(x == null ? '' : x).trim().replace(/^,+|,+$/g, '').trim()).filter(Boolean).join(', ');
+    const coAddr = this._coAddress();
     const acct = (this._accountsEmail && this._accountsEmail()) || '';
     const cust = (p.customers && p.customers[0]) || null;
     const pm = ((p.team || []).find(t => /project\s*manager/i.test(t.role || '')) || (p.team || [])[0] || null);
@@ -12601,8 +12609,9 @@ class Component extends DCLogic {
     return {
       m, pay: this._paymentDetails(),
       coName: (co.name || '').trim(),
+      coSlogan: this._coSlogan(),
       coAbn: this._abn(),
-      coAddr: [co.street, co.city, co.state, co.zip].map(x => String(x == null ? '' : x).trim().replace(/^,+|,+$/g, '').trim()).filter(Boolean).join(', '),
+      coAddr: this._coAddress(),
       coContact: [co.phone, (this._accountsEmail && this._accountsEmail()) || '', co.website].filter(Boolean).join('  -  '),
       custCompany: (cust && (cust.company || cust.name)) || p.client || '', custAbn: (cust && cust.abn) || '',
       custName: (cust && cust.name) || '', custAddr: (cust && cust.address) || p.address || '', custEmail: (cust && cust.email) || '',
@@ -12630,7 +12639,7 @@ class Component extends DCLogic {
     const need = h => { if (y + h > d.H - M - 24) { footer(); startPage(); } };
 
     startPage();
-    if (logo) { const lh = 32, lw = lh * (logo.w / Math.max(1, logo.h)); d.image(logo, M, y, Math.min(lw, 180), lh); }
+    if (logo) { const lh = 50, lw = lh * (logo.w / Math.max(1, logo.h)); d.image(logo, M, y, Math.min(lw, 210), lh); }
     else d.text(c.coName.toUpperCase(), M, y + 16, { size: 12, bold: true, color: NAVY });
     let hy = y + 8;
     d.text(c.coName.toUpperCase(), R, hy, { size: 9, bold: true, align: 'right', color: NAVY }); hy += 11;
@@ -12849,12 +12858,13 @@ class Component extends DCLogic {
     const dt = iso => iso ? esc(this.fmtDate(iso)) : blank;
     const co = this.state.company || {};
     const coName = (co.name || '').trim();
+    const coSlogan = this._coSlogan();
     const coAbn = this._abn();
-    const coAddr = [co.street, co.city, co.state, co.zip].map(x => String(x == null ? '' : x).trim().replace(/^,+|,+$/g, '').trim()).filter(Boolean).join(', ');
+    const coAddr = this._coAddress();
     const cust = (p.customers && p.customers[0]) || null;
     const pm = ((p.team || []).find(t => /project\s*manager/i.test(t.role || '')) || (p.team || [])[0] || null);
     const logo = this.brandLogo();
-    const logoHtml = logo ? '<img src="' + logo + '" alt="' + esc(coName) + '" style="height:56px;width:auto;display:block">' : '<div style="font-weight:700;font-size:13pt;color:#2A3580">' + esc(coName.toUpperCase()) + '</div>';
+    const logoHtml = logo ? '<img src="' + logo + '" alt="' + esc(coName) + '" style="height:92px;width:auto;max-width:300px;display:block">' : '<div style="font-weight:700;font-size:13pt;color:#2A3580">' + esc(coName.toUpperCase()) + '</div>';
     const cellK = 'style="width:27%;background:#F4F5F8;font-weight:600"';
     const r2 = (k, v) => '<tr><td ' + cellK + '>' + esc(k) + '</td><td>' + v + '</td></tr>';
     const money = n => esc(this.money(n));
@@ -12896,7 +12906,7 @@ class Component extends DCLogic {
       + '.ftr{text-align:center;font-size:8pt;color:#9AA0AC;margin-top:14px}'
       + '@media print{@page{size:A4;margin:11mm}body{padding:0;max-width:none}}</style>';
     const html = '<!doctype html><html><head><meta charset="utf-8"><title>' + esc(m.no) + ' - ' + esc(p.name) + '</title>' + st + '</head><body>'
-      + '<div class="hdr">' + logoHtml + '<div class="co"><strong>' + esc(coName.toUpperCase()) + '</strong><br>ABN ' + esc(coAbn) + '<br>' + esc(coAddr)
+      + '<div class="hdr">' + logoHtml + '<div class="co"><strong>' + esc(coName.toUpperCase()) + '</strong>' + (coSlogan ? '<div style="font-size:6.5pt;font-weight:400;letter-spacing:.18em;text-transform:uppercase;color:#6E7480;margin-top:1px;margin-bottom:2px">' + esc(coSlogan) + '</div>' : '') + 'ABN ' + esc(coAbn) + '<br>' + esc(coAddr)
       + '<br>' + [co.phone, acct, co.website].filter(Boolean).map(esc).join(' &nbsp;&middot;&nbsp; ') + '</div></div>'
       + '<div class="trow"><div><h1>Tax Invoice</h1><div class="sub">Progress Payment Claim</div></div>'
       + '<div class="amtbox"><div class="amtlbl">Amount payable (incl. GST)</div>'
@@ -13126,6 +13136,18 @@ class Component extends DCLogic {
   // The company’s own logo wins; the built-in one is what a profile that has not uploaded
   // yet falls back to. This was the other way round in ten of the eleven places that asked,
   // which is why uploading a logo in Settings changed nothing.
+  // Street, then suburb state postcode: "Cromer NSW 2099", not "Cromer, NSW, 2099". A comma
+  // between the suburb, the state and the postcode is not how an address is written here, and
+  // ten copies of the same expression were each getting it wrong on a letterhead.
+  _coAddress() {
+    const co = this.state.company || {};
+    const clean = x => String(x == null ? '' : x).trim().replace(/^,+|,+$/g, '').trim();
+    const street = clean(co.street), city = clean(co.city), st = clean(co.state), zip = clean(co.zip);
+    const tail = [city, [st, zip].filter(Boolean).join(' ')].filter(Boolean).join(' ');
+    return [street, tail].filter(Boolean).join(', ');
+  }
+  // Printed under the company name on a letterhead, and nowhere else.
+  _coSlogan() { return String(((this.state.company || {}).slogan) || '').trim(); }
   brandLogo() {
     const own = String(((this.state.company || {}).logoUrl) || '').trim();
     if (own) return own;
@@ -14277,8 +14299,7 @@ class Component extends DCLogic {
   }
   _costReportPdfContext(p) {
     const co = this.state.company || {};
-    const addr = [co.street, co.city, co.state, co.zip]
-      .map(x => String(x || '').trim().replace(/,$/, '')).filter(Boolean).join(', ');
+    const addr = this._coAddress();
     const contact = [co.phone, co.accountsEmail, co.website].map(x => String(x || '').trim()).filter(Boolean).join('  -  ');
     const m = this.costMatrix(p);
     return {
@@ -14332,7 +14353,7 @@ class Component extends DCLogic {
     newPage();
 
     // ---- letterhead ----
-    if (logo) { const lh = 40, lw = lh * (logo.w / Math.max(1, logo.h)); d.image(logo, M, y, Math.min(lw, 230), lh); }
+    if (logo) { const lh = 56, lw = lh * (logo.w / Math.max(1, logo.h)); d.image(logo, M, y, Math.min(lw, 260), lh); }
     else d.text(c.coName, M, y + 13, { size: 11, bold: true, color: NAVY });
     let hy = y + 4;
     d.text(c.coName, R, hy, { size: 7.5, bold: true, align: 'right', color: NAVY }); hy += 9;
@@ -14478,8 +14499,7 @@ class Component extends DCLogic {
   // ---- Report Design: the configurable cost report, same house style ------------
   _reportDesignContext(p) {
     const co = this.state.company || {};
-    const addr = [co.street, co.city, co.state, co.zip]
-      .map(x => String(x || '').trim().replace(/,$/, '')).filter(Boolean).join(', ');
+    const addr = this._coAddress();
     const contact = [co.phone, co.accountsEmail, co.website].map(x => String(x || '').trim()).filter(Boolean).join('  -  ');
     const rm = this._reportModel(p);
     const lines = rm.lines || [];
@@ -14748,8 +14768,7 @@ class Component extends DCLogic {
     const NAVY = '#2A3580', LINE = '#C9CDD6', MUTED = '#6E7480', GOOD = '#1E7A4B', BAD = '#B3261E';
     const dataDate = new Date().toLocaleDateString('en-AU', { year: 'numeric', month: 'long', day: 'numeric' });
 
-    const addr = [co.street, co.city, co.state, co.zip].map(x => String(x || '').trim().replace(/,$/, ''))
-      .filter(Boolean).join(', ');
+    const addr = this._coAddress();
     const contact = [co.phone, co.accountsEmail, co.website].map(x => String(x || '').trim()).filter(Boolean)
       .join(' &nbsp;&middot;&nbsp; ');
     const pctOf = v => T.current > 0 ? (Math.round(v / T.current * 1000) / 10) + '% of budget' : '';
