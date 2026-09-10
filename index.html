@@ -8642,8 +8642,7 @@ class Component extends DCLogic {
       y += 28;
       para(c.quote + ' - forms part of this Agreement as listed in section 6.');
       y += 6;
-      if (c.quoteUrl) { para('The quotation is attached to the covering email and is also available at:', 8.5); para(c.quoteUrl, 7.5); }
-      else para('The quotation is attached to the covering email as a separate document.');
+      para('The quotation is attached to the covering email as a separate document, and can be opened from this agreement in the system.');
     }
     footer();
   }
@@ -11502,8 +11501,17 @@ class Component extends DCLogic {
       + '<h1 style="font-size:17pt">Annexure B — Subcontractor\'s Quotation</h1>'
       + '<p style="font-size:9pt;color:#3A4152">' + esc(f.quote) + ' — forms part of this Agreement as listed in section 4.</p>'
       + ((_qIsImg && f.quoteUrl) ? '<img src="' + esc(f.quoteUrl) + '" alt="Quotation" style="max-width:100%;height:auto;border:1px solid #C9CDD6">'
-        : '<div style="border:1px solid #C9CDD6;padding:12px 14px;font-size:10pt;line-height:1.6">The quotation is attached to this Agreement as a separate PDF document'
-          + (f.quoteUrl ? ' and is available at:<br><span style="font-size:8.5pt;color:#2A3580;word-break:break-all">' + esc(f.quoteUrl) + '</span>' : '') + '.</div>')
+        : ('<p style="font-size:10pt;line-height:1.6;margin:0 0 10px">The quotation is attached to this Agreement as a separate PDF document.</p>'
+          + (f.quoteUrl
+            ? '<a id="cpmsQuote" data-name="' + esc(f.quote) + '" href="' + esc(f.quoteUrl) + '" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:14px;border:1px solid #C9CDD6;border-radius:8px;padding:14px 16px;text-decoration:none;color:inherit;max-width:460px">'
+              + '<svg width="38" height="46" viewBox="0 0 38 46" xmlns="http://www.w3.org/2000/svg" style="flex:0 0 auto">' + '<path d="M2 3.5A2.5 2.5 0 0 1 4.5 1h17L35 14.5v28a2.5 2.5 0 0 1-2.5 2.5h-28A2.5 2.5 0 0 1 2 42.5z" fill="#fff" stroke="#C9CDD6" stroke-width="1.5"/>' + '<path d="M21.5 1L35 14.5H24a2.5 2.5 0 0 1-2.5-2.5z" fill="#EEF1F5" stroke="#C9CDD6" stroke-width="1.5"/>' + '<rect x="6" y="25" width="25" height="13" rx="2.5" fill="#B3261E"/>' + '<text x="18.5" y="34.5" font-family="Archivo,Arial,sans-serif" font-size="8.5" font-weight="700" fill="#fff" text-anchor="middle">PDF</text>' + '</svg>'
+              + '<span style="min-width:0">'
+              + '<span style="display:block;font-size:10.5pt;font-weight:600;color:#1D2330;word-break:break-word">' + esc(f.quote) + '</span>'
+              + '<span style="display:block;font-size:8.5pt;color:#6E7480;margin-top:2px">Forms part of this Agreement as listed in section 4</span>'
+              + '<span style="display:block;font-size:8.5pt;color:#2A3580;font-weight:600;margin-top:5px">Open the quotation \u2192</span>'
+              + '</span></a>'
+              + '<p style="font-size:8.5pt;color:#6E7480;margin:10px 0 0">Open the agreement in the system to view or download the quotation.</p>'
+            : '<div style="border:1px solid #C9CDD6;border-radius:8px;padding:14px 16px;font-size:9.5pt;color:#6E7480">The quotation file is not attached to this record.</div>')))
       + '</div>');
     // Annexure A — the standard terms, identical for every project (loaded from subcontract-terms.js)
     const stdTerms = this._subcontractTerms();
@@ -11523,7 +11531,19 @@ class Component extends DCLogic {
       + '.sub{font-size:9pt;letter-spacing:.14em;text-transform:uppercase;color:#6E7480;font-weight:600;margin:0 0 16px}'
       + '.ftr{text-align:center;font-size:8pt;color:#9AA0AC;margin-top:14px}'
       + '@media print{@page{size:A4;margin:14mm}body{padding:0;max-width:none}}</style>';
-    const scr = '<' + 'script>window.onload=function(){window.print();};<' + '/script>';
+    // Chrome will not navigate to a data: URL, so a quote held as one is turned into a blob
+    // at click time - inside the gesture, which is also what keeps the new tab from being
+    // blocked. A quote that reached storage is an ordinary link and is left alone.
+    const scr = '<' + 'script>window.onload=function(){window.print();};'
+      + '(function(){var a=document.getElementById("cpmsQuote");if(!a)return;'
+      + 'a.addEventListener("click",function(e){var u=a.getAttribute("href")||"";'
+      + 'if(u.slice(0,5)!=="data:")return;e.preventDefault();'
+      + 'try{var c=u.split(",")[1]||"",m=(u.match(/^data:([^;,]+)/)||[])[1]||"application/pdf";'
+      + 'var b=atob(c),n=b.length,r=new Uint8Array(n);for(var i=0;i<n;i++)r[i]=b.charCodeAt(i);'
+      + 'var o=URL.createObjectURL(new Blob([r],{type:m}));var w=window.open(o,"_blank");'
+      + 'if(!w){var d=document.createElement("a");d.href=o;d.download=a.getAttribute("data-name")||"quotation.pdf";d.click();}'
+      + '}catch(err){}});})();'
+      + '<' + '/script>';
     const logo = this.brandLogo();
     const logoHtml = logo ? '<img src="' + logo + '" alt="' + esc(coName) + '" style="height:92px;width:auto;max-width:300px;display:block">' : '<div style="font-weight:700;font-size:13pt;color:#2A3580">' + esc(coName.toUpperCase()) + '</div>';
     const html = '<!doctype html><html><head><meta charset="utf-8"><title>Subcontract Agreement — ' + esc(ref) + '</title>' + st + '</head><body>'
