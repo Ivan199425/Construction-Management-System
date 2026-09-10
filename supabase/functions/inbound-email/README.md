@@ -20,16 +20,22 @@ the invoice was emailed or dropped in by hand.
 
 ## Two routes, and why you would pick one
 
-|  | **Forward** | **Own address** |
+|  | **Read your own mailbox** | **An address of your own** |
 |---|---|---|
 | Address suppliers use | the one they already use | `invoices@sydneylvl.com` |
 | DNS | **none** | one MX record on a subdomain |
-| How mail gets in | Workspace forwards a copy to a Resend-managed address | delivered straight to Resend |
-| Set up in | Resend + Gmail | Resend + Google Cloud DNS |
+| Needs a mail provider | **no** | yes, with inbound support |
+| How mail gets in | a script in your Google account posts each message | delivered straight to the provider |
+| Set up in | script.google.com, once | provider + Google Cloud DNS |
 
-**Forward** is the one to start with. It needs no DNS at all, nothing about your existing mail
-changes, and it can be undone by deleting one filter. The other route is worth moving to later if
-you want a `invoices@` address of your own that suppliers write to directly.
+**Read your own mailbox** is the one to start with, and for most people it is the only one worth
+doing. It needs no DNS, no MX record, no second mail provider and no OAuth application: it runs
+inside the Google account that already receives the invoices, with the permission that account
+already has. Nothing about your existing mail changes, and deleting the script undoes it.
+
+> Inbound email is not on every provider's plan — Resend's receiving feature in particular may
+> simply not appear in your dashboard. That rules out the second route entirely and does not
+> affect the first one at all, which is the main reason it is the recommendation.
 
 ---
 
@@ -63,48 +69,49 @@ one cause instead of five.
 
 ---
 
-## Route A — forward, no DNS
+## Route A — read your own mailbox
 
-### 1. Get a receiving address
+`gmail-forwarder.gs` in this folder is a Google Apps Script. It runs in the account the invoices
+already arrive at, finds the ones matching a query, and posts each whole message to the function.
 
-Resend → **Emails → Receiving → the three dots → Receiving address**. It gives you something like
-`abc123.resend.app`, working immediately, with no records to add anywhere.
+### 1. Paste it in
 
-### 2. Let the function accept it
+Signed in as that account, open **script.google.com → New project**, delete the sample, paste in
+`gmail-forwarder.gs`.
 
-```powershell
-powershell -ExecutionPolicy Bypass -File supabase\functions\inbound-email\set-receiving.ps1
-```
+### 2. Give it the URL
 
-That writes `INBOUND_TO` only — the key, and so the webhook URL you already have, is untouched.
+Set `ENDPOINT` at the top to the webhook URL `setup.ps1` printed, `?key=...` included. Lost it?
+Run `setup.ps1` again — it mints a new key and prints a new URL.
 
-### 3. Point Resend at the function
+### 3. Check it
 
-Resend → **Emails → Receiving → create a webhook**, pasting the URL from `setup.ps1`.
+**Run → testConnection.** Google asks you to authorise it; it is your own script reading your own
+mailbox, so approve it. The "unverified app" screen is expected for a script you wrote yourself —
+*Advanced → Go to project*. A `200` in the log means the whole chain works. Open CPMS → Invoices →
+**Check mail** and the test invoice appears.
 
-Resend's webhook only announces that mail has arrived; the function then fetches the whole message
-from Resend and stores that, so nothing is lost to a summary.
+### 4. Set it running
 
-### 4. Forward the invoices to it
+**Run → collectInvoices** once by hand to see what it picks up, then **Triggers (clock icon) → Add
+trigger → collectInvoices → Time-driven → Minutes timer → Every 15 minutes.**
 
-To `invoices@<id>.resend.app`. Either:
+### 5. Narrow the query
 
-- **Admin console → Apps → Google Workspace → Gmail → Routing**, adding a rule that sends a copy
-  there. An administrator can do this without the far end confirming, which is tidier; or
-- **Gmail → Settings → Forwarding**, which sends a confirmation code to the address first. That
-  code arrives in `ap_inbox` like anything else — read it in the Supabase Table Editor, in the
-  `raw` column of the newest row, and paste it back into Gmail.
+`QUERY` starts at `has:attachment newer_than:7d -from:me`. Everything it matches goes in front of
+whoever clears the invoice queue, so tighten it once it runs — `subject:(invoice OR "tax invoice"
+OR claim)`, or `to:accounts@sydneylvl.com`. The collect scope and the attachment rule in CPMS are a
+second line of defence, not a substitute for a sensible query.
 
-Forward selectively rather than everything: a filter on `has:attachment` plus a sender or subject
-condition keeps the queue to invoices. The collect scope and the attachment rule are a second line
-of defence, not the first.
+### 6. Tell the app
 
-### 5. Tell the app
+Settings → **Invoice ingestion** → Receiving address → **`accounts@sydneylvl.com`**. That is what
+makes `sydneylvl.com` an internal domain, so a message forwarded by one of your own people is read
+as a forward and the supplier is taken from the invoice inside rather than from whoever passed it
+on.
 
-Settings → **Invoice ingestion** → Receiving address → **`ivan@sydneylvl.com`**. That is the
-address suppliers actually write to, and it is what makes `sydneylvl.com` an internal domain, so a
-forward is read as a forward and the supplier is taken from the invoice inside rather than from
-whoever passed it on. The `resend.app` address is plumbing and does not belong in that field.
+Nothing needs changing on the server for this route: the script sends the address the mail was
+delivered to, which is already on the accept list.
 
 ---
 
