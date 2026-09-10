@@ -46,17 +46,18 @@ if ($LASTEXITCODE -ne 0) { Write-Host "Deploy failed." -ForegroundColor Red; exi
 $URL = "https://$PROJECT.supabase.co/functions/v1/inbound-email?key=$KEY"
 
 Write-Host ""
-Write-Host "Done. Two things left, both in a browser." -ForegroundColor Green
+Write-Host "Deployed. The server side is now complete." -ForegroundColor Green
 Write-Host ""
-Write-Host "  A. Supabase dashboard -> SQL Editor -> paste supabase\migrations\20260909_ap_inbox.sql -> Run"
+Write-Host "  You do NOT need the URL below unless you are wiring up a mail provider by hand." -ForegroundColor DarkGray
+Write-Host "  $URL" -ForegroundColor DarkGray
 Write-Host ""
-Write-Host "  B. Resend -> Domains -> add  inbox.sydneylvl.com  and add the MX record it gives you"
-Write-Host "     to Google Cloud DNS. Then Emails -> Receiving -> add a webhook with this URL:"
+Write-Host "  Next, and this is the only step left:" -ForegroundColor Green
 Write-Host ""
-Write-Host "     $URL" -ForegroundColor Yellow
+Write-Host "     powershell -ExecutionPolicy Bypass -File supabase\functions\inbound-email\make-gmail-script.ps1"
 Write-Host ""
-Write-Host "  Copy that line now - it is not saved anywhere. If you lose it, run this script again"
-Write-Host "  and it will make a new one (paste the new URL into Resend when you do)."
+Write-Host "  That writes a finished Gmail collector to your Desktop with its own key already in"
+Write-Host "  it, and opens it. Copy the whole file, paste it over the code in script.google.com,"
+Write-Host "  save, and run testConnection. There is nothing to edit by hand."
 Write-Host ""
-Write-Host "  Then in the app: Settings -> Invoice ingestion -> Receiving address, and press Check now."
+Write-Host "  (It mints its own key, which retires the one above - so do not paste that anywhere.)" -ForegroundColor DarkGray
 Write-Host ""
