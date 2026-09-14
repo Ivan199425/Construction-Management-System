@@ -1976,6 +1976,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                     <sc-if value="{{ r.hasVarAdj }}" hint-placeholder-val="{{ true }}"><div class="mono" style="font-size:12.5px;font-weight:600;color:#15803d">{{ r.varAdj }}</div><div style="font-size:9px;color:#8894a2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">🔗 {{ r.varRefs }}</div></sc-if>
                     <sc-if value="{{ r.noVarAdj }}" hint-placeholder-val="{{ false }}"><span style="color:#c0c8d1;font-size:12.5px">—</span></sc-if>
                   </div>
+                  <div class="mono" title="Budgeted plus approved change, including approved variations on this code" style="text-align:right;font-size:12.5px;font-weight:600;color:#0f1720;padding:6px 8px;{{ r.bc.revised }}">{{ r.revised }}</div>
                   <div style="display:flex;flex-direction:column;gap:4px;{{ r.bc.committed }}">
                     <select value="{{ r.linkedId }}" onChange="{{ r.onLink }}" title="Link this cost line to a commitment" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:4px 5px;font-size:10.5px;font-family:inherit;color:#0f1720;background:#fff;cursor:pointer" style-focus="border-color:#2b59c3;outline:none">
                       <option value="">Manual entry</option>
@@ -2098,19 +2099,30 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
           </div>
           <sc-if value="{{ budgetVarHas }}" hint-placeholder-val="{{ true }}">
             <div style="background:#fff;border:1px solid #e4e8ee;border-radius:12px;overflow:hidden">
-              <div style="overflow-x:auto"><div style="min-width:1560px">
-                <div class="colhdr dark" style="display:grid;grid-template-columns:84px 1.2fr 116px 132px 74px 132px 100px 168px 176px 104px;padding:11px 16px;background:#2A3580;border-bottom:1px solid #e4e8ee;font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#fff;text-transform:uppercase;gap:10px">
-                  <div>Variation</div><div>Description</div><div style="text-align:right">Budget</div><div>Start date</div><div style="text-align:right">Duration</div><div>Finish date</div><div style="text-align:center">Status</div><div>Linked cost code</div><div>Client response</div><div style="text-align:right;position:sticky;right:0;background:#fafbfc;padding-left:6px">Actions</div>
+              <div style="overflow-x:auto"><div style="min-width:2000px">
+                <div class="colhdr dark" style="display:grid;grid-template-columns:84px 1.4fr 116px 104px 124px 132px 132px 132px 140px 168px 176px 156px;padding:11px 16px;background:#2A3580;border-bottom:1px solid #e4e8ee;font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#fff;text-transform:uppercase;gap:10px">
+                  <div>Variation</div><div>Subject &amp; description</div><div style="text-align:right">Budget</div><div style="text-align:right">GST</div><div style="text-align:right">Total incl. GST</div><div>Start date</div><div style="text-align:right">Time delay</div><div>Finish date</div><div style="text-align:center">Status</div><div>Linked cost code</div><div>Client response</div><div style="text-align:right;position:sticky;right:0;background:#fafbfc;padding-left:6px">Actions</div>
                 </div>
                 <sc-for list="{{ budgetVarRows }}" as="v" hint-placeholder-count="3">
-                  <div style="display:grid;grid-template-columns:84px 1.2fr 116px 132px 74px 132px 100px 168px 176px 104px;padding:9px 16px;border-bottom:1px solid #eef1f4;align-items:center;gap:10px" style-hover="background:#f9fafc">
+                  <div style="display:grid;grid-template-columns:84px 1.4fr 116px 104px 124px 132px 132px 132px 140px 168px 176px 156px;padding:9px 16px;border-bottom:1px solid #eef1f4;align-items:center;gap:10px" style-hover="background:#f9fafc">
                     <div class="mono" style="font-size:12px;font-weight:600;color:#0f1720">{{ v.ref }}</div>
-                    <input value="{{ v.desc }}" onInput="{{ v.onDesc }}" placeholder="Describe the variation" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 8px;font-size:12px;font-family:inherit;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none">
+                    <div style="display:flex;flex-direction:column;gap:5px;min-width:0">
+                      <input value="{{ v.subject }}" onInput="{{ v.onSubject }}" placeholder="Subject" title="A short name for the variation" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 8px;font-size:12px;font-weight:600;font-family:inherit;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none">
+                      <textarea value="{{ v.desc }}" onInput="{{ v.onDesc }}" placeholder="Describe the variation" rows="3" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 8px;font-size:12px;line-height:1.45;font-family:inherit;color:#0f1720;background:#fff;resize:vertical" style-focus="border-color:#2b59c3;outline:none"></textarea>
+                    </div>
                     <div><input value="{{ v.valueInput }}" onInput="{{ v.onValue }}" onFocus="{{ v.onValueFocus }}" onBlur="{{ v.onValueBlur }}" inputmode="decimal" placeholder="0.00" title="Budget impact in dollars — you can type 3,400 or $3,400.00" class="mono" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 8px;font-size:12px;text-align:right;font-family:'IBM Plex Mono',monospace;color:{{ v.valColor }};background:#fff" style-focus="border-color:#2b59c3;outline:none"><sc-if value="{{ v.hasValue }}" hint-placeholder-val="{{ true }}"><div class="mono" style="font-size:10px;font-weight:600;text-align:right;color:{{ v.valColor }};margin-top:3px">{{ v.valueFmt }}</div></sc-if></div>
+                    <div class="mono" style="text-align:right;font-size:12px;color:#4a5765">{{ v.gstFmt }}<span style="display:block;font-size:9.5px;color:#8894a2">{{ v.gstLabel }}</span></div>
+                    <div class="mono" style="text-align:right;font-size:12.5px;font-weight:700;color:#0f1720">{{ v.totalFmt }}</div>
                     <input value="{{ v.startDate }}" onInput="{{ v.onStart }}" type="date" title="Start date" class="mono" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 6px;font-size:10.5px;font-family:'IBM Plex Mono',monospace;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none">
-                    <div style="display:flex;align-items:center;flex-wrap:var(--cpms-wrap,nowrap);justify-content:flex-end;gap:2px"><input value="{{ v.timeInput }}" onInput="{{ v.onTime }}" type="number" placeholder="0" title="Duration in working days" class="mono" style="width:44px;border:1px solid #e4e8ee;border-radius:6px;padding:6px 5px;font-size:12px;text-align:right;font-family:'IBM Plex Mono',monospace;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none"><span style="font-size:10.5px;color:#8894a2">d</span></div>
+                    <div style="display:flex;align-items:center;justify-content:flex-end;gap:4px">
+                      <select value="{{ v.delayChoice }}" onChange="{{ v.onDelay }}" title="Does this variation delay the works?" style="border:1px solid #e4e8ee;border-radius:6px;padding:6px 4px;font-size:11.5px;font-family:inherit;color:#0f1720;background:#fff;cursor:pointer"><option value="no">No</option><option value="yes">Yes</option></select>
+                      <sc-if value="{{ v.delayed }}" hint-placeholder-val="{{ false }}"><input value="{{ v.timeInput }}" onInput="{{ v.onTime }}" type="number" min="0" placeholder="0" title="Days delayed, in working days" class="mono" style="width:46px;border:1px solid #e4e8ee;border-radius:6px;padding:6px 5px;font-size:12px;text-align:right;font-family:'IBM Plex Mono',monospace;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none"><span style="font-size:10.5px;color:#8894a2">days</span></sc-if>
+                    </div>
                     <div class="mono" style="font-size:11px;color:#0f1720">{{ v.finishDate }}<sc-if value="{{ v.hasFinish }}" hint-placeholder-val="{{ true }}"><span style="display:block;font-size:8.5px;color:#8894a2">working days</span></sc-if></div>
-                    <div style="text-align:center"><span style="font-size:10.5px;font-weight:600;padding:2px 8px;border-radius:14px;background:{{ v.statusBg }};color:{{ v.statusColor }}">{{ v.statusLabel }}</span></div>
+                    <div style="text-align:center">
+                      <sc-if value="{{ v.canSetStatus }}" hint-placeholder-val="{{ true }}"><select value="{{ v.statusChoice }}" onChange="{{ v.onStatus }}" title="Approved and linked to a cost code, the variation goes into the budget as approved change" style="width:100%;border:1px solid {{ v.statusColor }};border-radius:14px;padding:5px 6px;font-size:11px;font-weight:600;font-family:inherit;color:{{ v.statusColor }};background:{{ v.statusBg }};cursor:pointer"><option value="pending">Pending</option><option value="approved">Approved</option><option value="rejected">Rejected</option></select></sc-if>
+                      <sc-if value="{{ v.cannotSetStatus }}" hint-placeholder-val="{{ false }}"><span title="Your role cannot approve variations. An administrator can allow it in Settings, Roles and permissions." style="font-size:10.5px;font-weight:600;padding:2px 8px;border-radius:14px;background:{{ v.statusBg }};color:{{ v.statusColor }}">{{ v.statusLabel }}</span></sc-if>
+                    </div>
                     <select value="{{ v.costCode }}" onChange="{{ v.onLinkCode }}" title="Link this variation to a budget cost code" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 6px;font-size:11px;font-family:inherit;color:#0f1720;background:#fff;cursor:pointer" style-focus="border-color:#2b59c3;outline:none"><option value="">— Not linked —</option><sc-for list="{{ v.codeOptions }}" as="o" hint-placeholder-count="4"><option value="{{ o.code }}">{{ o.label }}</option></sc-for></select>
                     <div>
                       <sc-if value="{{ v.canRespond }}" hint-placeholder-val="{{ true }}">
@@ -2122,9 +2134,10 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                       </sc-if>
                       <div style="font-size:10px;font-weight:600;color:{{ v.stateColor }};margin-top:3px">{{ v.stateLabel }}</div>
                       <sc-if value="{{ v.hasResponse }}" hint-placeholder-val="{{ false }}"><div style="font-size:9.5px;color:#8894a2">{{ v.clientResponse }}</div></sc-if>
-                      <sc-if value="{{ v.hasAtt }}" hint-placeholder-val="{{ false }}"><div style="font-size:9.5px;color:#8894a2">📎 {{ v.attCount }} file(s)</div></sc-if>
+                      <sc-if value="{{ v.hasAtt }}" hint-placeholder-val="{{ false }}"><button onClick="{{ v.onDetail }}" title="Open the attached documents" style="border:0;background:transparent;padding:0;margin-top:2px;font-size:10px;font-weight:600;color:#2b59c3;cursor:pointer;font-family:inherit">📎 {{ v.attCount }} file(s)</button></sc-if>
                     </div>
                     <div style="display:flex;align-items:center;flex-wrap:var(--cpms-wrap,nowrap);justify-content:flex-end;gap:4px;position:sticky;right:0;background:#fff;padding-left:6px">
+                      <button onClick="{{ v.onDetail }}" title="Open the full variation: subject, description, GST, time delay and documents" style="border:1px solid #cfd8e2;background:#fff;color:#2b59c3;border-radius:6px;padding:5px 9px;font-size:11.5px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap" style-hover="border-color:#2b59c3;background:#f2f6fd">Details</button>
                       <button onClick="{{ v.onPreview }}" title="Preview the variation document" style="border:1px solid #e4e8ee;background:#fff;color:#4a5765;border-radius:6px;padding:5px 7px;font-size:12px;cursor:pointer;font-family:inherit" style-hover="border-color:#2b59c3;color:#2b59c3">⤢</button>
                       <button onClick="{{ v.onSend }}" title="Send for approval" style="border:0;background:#2b59c3;color:#fff;border-radius:6px;padding:5px 9px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="background:#244dab">✉</button>
                       <button onClick="{{ v.onDelete }}" title="Delete variation" style="border:0;background:transparent;color:#c0c8d1;cursor:pointer;min-width:var(--cpms-tap,auto);min-height:var(--cpms-tap,auto);font-size:13px;padding:2px;line-height:1" style-hover="color:#b91c1c">✕</button>
@@ -3928,6 +3941,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
               <div style="display:flex;align-items:center;gap:10px;border:1px solid #eef1f4;border-radius:9px;padding:9px 12px;margin-bottom:7px;background:#fff">
                 <span style="font-size:16px">{{ a.icon }}</span>
                 <div style="flex:1;overflow:hidden"><div style="font-size:12.5px;color:#0f1720;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ a.name }}</div><div style="font-size:10.5px;color:#a4afba">{{ a.sizeLabel }}</div></div>
+                <button onClick="{{ a.onOpen }}" title="Open this document" style="border:1px solid #cfd8e2;background:#fff;color:#2b59c3;border-radius:6px;padding:4px 10px;font-size:11.5px;font-weight:600;cursor:pointer;font-family:inherit;flex:0 0 auto" style-hover="background:#f2f6fd">Open</button>
                 <button onClick="{{ a.onRemove }}" title="Remove" style="border:0;background:transparent;color:#c0c8d1;cursor:pointer;min-width:var(--cpms-tap,auto);min-height:var(--cpms-tap,auto);font-size:14px;padding:2px;line-height:1" style-hover="color:#b91c1c">✕</button>
               </div>
             </sc-for>
@@ -4287,6 +4301,92 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
       <span style="font-size:14px;line-height:1.4;flex:0 0 auto">ℹ</span>
       <span style="flex:1;font-size:12.5px;line-height:1.55">{{ apNoticeV.text }}</span>
       <button onClick="{{ apNoticeV.onClose }}" style="border:0;background:transparent;color:#9aa8b6;cursor:pointer;font-size:15px;padding:0;line-height:1;flex:0 0 auto" style-hover="color:#fff">✕</button>
+    </div>
+  </sc-if>
+
+  <!-- VARIATION DETAILS: subject, description, GST and total, time delay, documents -->
+  <sc-if value="{{ varDetailV.open }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ varDetailV.onClose }}" class="cpms-modal" style="position:fixed;inset:0;background:rgba(15,23,32,.42);display:flex;align-items:center;justify-content:center;z-index:52;padding:24px;animation:fadeUp .15s ease">
+      <div onClick="{{ stop }}" style="background:#fff;border-radius:14px;width:900px;max-width:96vw;max-height:92vh;box-shadow:0 24px 60px rgba(15,23,32,.28);overflow:hidden;display:flex;flex-direction:column">
+        <div style="padding:16px 22px;border-bottom:1px solid #eef1f4;display:flex;align-items:center;flex-wrap:var(--cpms-wrap,nowrap);justify-content:space-between;gap:12px">
+          <div style="display:flex;align-items:center;gap:10px;min-width:0">
+            <span class="mono" style="font-size:12px;font-weight:700;color:#2b59c3;background:#e7eefc;border-radius:6px;padding:3px 9px;flex:0 0 auto">{{ varDetailV.ref }}</span>
+            <div style="font-size:15.5px;font-weight:600;color:#0f1720;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ varDetailV.title }}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;flex:0 0 auto">
+            <button onClick="{{ varDetailV.onPreview }}" title="Preview the Variation Order PDF" style="border:1px solid #cfd8e2;background:#fff;color:#4a5765;border-radius:7px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="border-color:#2b59c3;color:#2b59c3">⤢ PDF</button>
+            <button onClick="{{ varDetailV.onClose }}" title="Close" style="border:1px solid #cfd8e2;background:#fff;color:#4a5765;border-radius:7px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="background:#f6f8fb">✕ Close</button>
+          </div>
+        </div>
+        <div style="flex:1;overflow-y:auto;padding:0 24px 24px">
+
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:20px 0 12px;border-bottom:1px solid #e4e8ee">
+            <div style="display:flex;align-items:center;gap:12px"><span style="width:36px;height:36px;border-radius:50%;background:#e7eefc;display:flex;align-items:center;justify-content:center;font-size:17px;flex:0 0 auto">📝</span><div style="font-size:15.5px;font-weight:600;color:#0f1720">General</div></div>
+          </div>
+
+          <div style="display:flex;flex-wrap:wrap;align-items:flex-start;gap:6px 24px;padding:14px 0;border-bottom:1px solid #f2f4f7">
+            <div style="flex:0 0 170px;font-size:13.5px;font-weight:600;color:#6b7787;padding-top:2px">Subject</div>
+            <div style="flex:1 1 320px;min-width:0"><sc-if value="{{ varDetailV.canEdit }}" hint-placeholder-val="{{ true }}"><input value="{{ varDetailV.subject }}" onInput="{{ varDetailV.onSubject }}" placeholder="A short name for the variation" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:8px 10px;font-size:13.5px;font-family:inherit;color:#0f1720;background:#fff;font-weight:600" style-focus="border-color:#2b59c3;outline:none"></sc-if><sc-if value="{{ varDetailV.readOnly }}" hint-placeholder-val="{{ false }}"><div style="font-size:14px;font-weight:600;color:#0f1720">{{ varDetailV.subjectText }}</div></sc-if></div>
+          </div>
+
+          <div style="display:flex;flex-wrap:wrap;align-items:flex-start;gap:6px 24px;padding:14px 0;border-bottom:1px solid #f2f4f7">
+            <div style="flex:0 0 170px;font-size:13.5px;font-weight:600;color:#6b7787;padding-top:2px">Status</div>
+            <div style="flex:1 1 320px;min-width:0"><sc-if value="{{ varDetailV.canSetStatus }}" hint-placeholder-val="{{ true }}"><select value="{{ varDetailV.statusChoice }}" onChange="{{ varDetailV.onStatus }}" style="border:1px solid {{ varDetailV.statusColor }};border-radius:16px;padding:6px 12px;font-size:13px;font-weight:600;font-family:inherit;color:{{ varDetailV.statusColor }};background:{{ varDetailV.statusBg }};cursor:pointer"><option value="pending">Pending</option><option value="approved">Approved</option><option value="rejected">Rejected</option></select></sc-if><sc-if value="{{ varDetailV.cannotSetStatus }}" hint-placeholder-val="{{ false }}"><span title="Your role cannot approve variations. An administrator can allow it in Settings, Roles and permissions." style="font-size:12.5px;font-weight:600;padding:4px 12px;border-radius:16px;background:{{ varDetailV.statusBg }};color:{{ varDetailV.statusColor }}">{{ varDetailV.statusLabel }}</span></sc-if><div style="font-size:12.5px;color:{{ varDetailV.budgetColor }};margin-top:8px;line-height:1.5">{{ varDetailV.budgetNote }}</div></div>
+          </div>
+
+          <div style="display:flex;flex-wrap:wrap;align-items:flex-start;gap:6px 24px;padding:14px 0;border-bottom:1px solid #f2f4f7">
+            <div style="flex:0 0 170px;font-size:13.5px;font-weight:600;color:#6b7787;padding-top:2px">Time delay</div>
+            <div style="flex:1 1 320px;min-width:0"><sc-if value="{{ varDetailV.canEdit }}" hint-placeholder-val="{{ true }}"><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><select value="{{ varDetailV.delayChoice }}" onChange="{{ varDetailV.onDelay }}" style="border:1px solid #cfd8e2;border-radius:8px;padding:8px 10px;font-size:13.5px;font-family:inherit;color:#0f1720;background:#fff;cursor:pointer"><option value="no">No</option><option value="yes">Yes</option></select><sc-if value="{{ varDetailV.delayed }}" hint-placeholder-val="{{ false }}"><span style="font-size:13px;color:#6b7787">Days delayed</span><input value="{{ varDetailV.days }}" onInput="{{ varDetailV.onDays }}" type="number" min="0" placeholder="0" style="width:90px;border:1px solid #cfd8e2;border-radius:8px;padding:8px 10px;font-size:13.5px;font-family:inherit;color:#0f1720;background:#fff;text-align:right" style-focus="border-color:#2b59c3;outline:none"><span style="font-size:12px;color:#8894a2">working days</span></sc-if></div></sc-if><sc-if value="{{ varDetailV.readOnly }}" hint-placeholder-val="{{ false }}"><div style="font-size:14px;color:#0f1720">{{ varDetailV.delayText }}</div></sc-if></div>
+          </div>
+
+          <div style="display:flex;flex-wrap:wrap;align-items:flex-start;gap:6px 24px;padding:14px 0;border-bottom:1px solid #f2f4f7">
+            <div style="flex:0 0 170px;font-size:13.5px;font-weight:600;color:#6b7787;padding-top:2px">Cost code</div>
+            <div style="flex:1 1 320px;min-width:0"><div style="font-size:14px;color:#0f1720">{{ varDetailV.codeLabel }}</div></div>
+          </div>
+
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:20px 0 12px;border-bottom:1px solid #e4e8ee">
+            <div style="display:flex;align-items:center;gap:12px"><span style="width:36px;height:36px;border-radius:50%;background:#e7eefc;display:flex;align-items:center;justify-content:center;font-size:17px;flex:0 0 auto">📄</span><div style="font-size:15.5px;font-weight:600;color:#0f1720">Description</div></div><sc-if value="{{ varDetailV.canEdit }}" hint-placeholder-val="{{ true }}"><button onClick="{{ varDetailV.onToggleEdit }}" style="border:1px solid #cfd8e2;background:#fff;color:#4a5765;border-radius:7px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="border-color:#2b59c3;color:#2b59c3">{{ varDetailV.editLabel }}</button></sc-if>
+          </div>
+
+          <div style="display:flex;flex-wrap:wrap;align-items:flex-start;gap:6px 24px;padding:14px 0;border-bottom:1px solid #f2f4f7">
+            <div style="flex:0 0 170px;font-size:13.5px;font-weight:600;color:#6b7787;padding-top:2px">Description</div>
+            <div style="flex:1 1 320px;min-width:0"><sc-if value="{{ varDetailV.viewing }}" hint-placeholder-val="{{ true }}"><sc-if value="{{ varDetailV.hasDesc }}" hint-placeholder-val="{{ true }}"><div style="font-size:14.5px;line-height:1.75;color:#3A4152;white-space:pre-wrap;word-break:break-word">{{ varDetailV.desc }}</div></sc-if><sc-if value="{{ varDetailV.noDesc }}" hint-placeholder-val="{{ false }}"><div style="font-size:13.5px;color:#a4afba">No description yet.</div></sc-if></sc-if><sc-if value="{{ varDetailV.editing }}" hint-placeholder-val="{{ false }}"><textarea value="{{ varDetailV.desc }}" onInput="{{ varDetailV.onDesc }}" rows="12" placeholder="Describe the variation" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:8px 10px;font-size:13.5px;font-family:inherit;color:#0f1720;background:#fff;line-height:1.65;resize:vertical" style-focus="border-color:#2b59c3;outline:none"></textarea></sc-if></div>
+          </div>
+
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:20px 0 12px;border-bottom:1px solid #e4e8ee">
+            <div style="display:flex;align-items:center;gap:12px"><span style="width:36px;height:36px;border-radius:50%;background:#e7eefc;display:flex;align-items:center;justify-content:center;font-size:17px;flex:0 0 auto">💲</span><div style="font-size:15.5px;font-weight:600;color:#0f1720">Amount</div></div>
+          </div>
+
+          <div style="display:flex;flex-wrap:wrap;align-items:flex-start;gap:6px 24px;padding:14px 0;border-bottom:1px solid #f2f4f7">
+            <div style="flex:0 0 170px;font-size:13.5px;font-weight:600;color:#6b7787;padding-top:2px">Budget (ex GST)</div>
+            <div style="flex:1 1 320px;min-width:0"><div style="font-family:'IBM Plex Mono',monospace;font-size:14px;color:#0f1720">{{ varDetailV.net }}</div></div>
+          </div>
+
+          <div style="display:flex;flex-wrap:wrap;align-items:flex-start;gap:6px 24px;padding:14px 0;border-bottom:1px solid #f2f4f7">
+            <div style="flex:0 0 170px;font-size:13.5px;font-weight:600;color:#6b7787;padding-top:2px">{{ varDetailV.gstLabel }}</div>
+            <div style="flex:1 1 320px;min-width:0"><div style="font-family:'IBM Plex Mono',monospace;font-size:14px;color:#0f1720">{{ varDetailV.gst }}</div></div>
+          </div>
+
+          <div style="display:flex;flex-wrap:wrap;align-items:flex-start;gap:6px 24px;padding:14px 0;border-bottom:1px solid #f2f4f7">
+            <div style="flex:0 0 170px;font-size:13.5px;font-weight:600;color:#6b7787;padding-top:2px">Total incl. GST</div>
+            <div style="flex:1 1 320px;min-width:0"><div style="font-family:'IBM Plex Mono',monospace;font-size:14px;color:#0f1720;font-weight:700;font-size:15px">{{ varDetailV.total }}</div></div>
+          </div>
+
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:20px 0 12px;border-bottom:1px solid #e4e8ee">
+            <div style="display:flex;align-items:center;gap:12px"><span style="width:36px;height:36px;border-radius:50%;background:#e7eefc;display:flex;align-items:center;justify-content:center;font-size:17px;flex:0 0 auto">📎</span><div style="font-size:15.5px;font-weight:600;color:#0f1720">Documents ({{ varDetailV.attCount }})</div></div>
+          </div>
+          <sc-for list="{{ varDetailV.attachments }}" as="a" hint-placeholder-count="0">
+            <div style="display:flex;align-items:center;gap:12px;border:1px solid #e4e8ee;border-radius:10px;padding:10px 12px;margin-top:10px;background:#fff">
+              <span style="font-size:20px;flex:0 0 auto">{{ a.icon }}</span>
+              <button onClick="{{ a.onOpen }}" title="Open this document" style="flex:1;min-width:0;text-align:left;border:0;background:transparent;padding:0;cursor:pointer;font-family:inherit"><span style="display:block;font-size:13.5px;font-weight:600;color:#0f1720;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ a.name }}</span><span style="display:block;font-size:11px;color:#a4afba">{{ a.sizeLabel }}</span></button>
+              <button onClick="{{ a.onOpen }}" title="Open this document" style="border:1px solid #cfd8e2;background:#fff;color:#2b59c3;border-radius:7px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;flex:0 0 auto" style-hover="background:#f2f6fd">Open</button>
+              <sc-if value="{{ a.canEdit }}" hint-placeholder-val="{{ false }}"><button onClick="{{ a.onRemove }}" title="Remove this document" style="border:0;background:transparent;color:#c0c8d1;cursor:pointer;font-size:15px;padding:4px;line-height:1;flex:0 0 auto" style-hover="color:#b91c1c">✕</button></sc-if>
+            </div>
+          </sc-for>
+          <sc-if value="{{ varDetailV.noAttachments }}" hint-placeholder-val="{{ true }}"><div style="font-size:13px;color:#8894a2;padding:14px 0 4px">No documents attached yet.</div></sc-if>
+          <sc-if value="{{ varDetailV.canEdit }}" hint-placeholder-val="{{ true }}"><label style="display:inline-flex;align-items:center;gap:7px;border:1px dashed #cfd8e2;background:#fff;color:#2b59c3;border-radius:9px;padding:10px 16px;font-size:13px;font-weight:600;cursor:pointer;margin-top:12px" style-hover="border-color:#2b59c3;background:#f2f6fd">＋ Attach documents<input type="file" multiple="multiple" accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,image/*,application/pdf" onChange="{{ varDetailV.onAdd }}" style="display:none"></label></sc-if>
+        </div>
+      </div>
     </div>
   </sc-if>
 
@@ -5407,6 +5507,7 @@ class Component extends DCLogic {
       apNotice: '', apAuditOpen: '', apEmailOpen: false,
       apMail: { at: '', n: 0, busy: false, err: '', ok: false, off: false },
       logoBusy: false, logoNote: '',
+      varDetail: null,
       anim: 0,
     };
     this._SB = { url: 'https://vzxenkijxzzrgnmopnxh.supabase.co', key: 'sb_publishable_dqhiUAGqlZ6gSt-INv1KNA_kJeRNimR', emailFn: 'resend-email', smsFn: 'send-sms' };
@@ -7385,7 +7486,7 @@ class Component extends DCLogic {
   lineCurrent(l, p) { return (Number(l.orig) || 0) + (Number(l.adj) || 0) + this.lineVarAdj(l, p); }
   setVariationCostCode(vid, code) { if (!this.can('variations', 'edit')) return; this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, contract: { ...p.contract, variations: p.contract.variations.map(v => v.id === vid ? { ...v, costCode: code } : v) } }) })); }
   setVariationField(vid, field, val) { if (!this.can('variations', 'edit')) return; this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, contract: { ...p.contract, variations: p.contract.variations.map(v => v.id === vid ? { ...v, [field]: val } : v) } }) })); }
-  addVariation() { if (!this.can('variations', 'edit')) return; const p = this.proj(this.state.pid); if (!p) return; const ref = this.nextSeqRef((p.contract && p.contract.variations) || [], 'ref', 'VO-', 3); const v = { id: this._rid('vo'), ref, desc: '', value: 0, time: 0, status: 'draft', costCode: '', attachments: [], sentForApprovalAt: '' }; this.setState(s => ({ projects: s.projects.map(x => x.id !== s.pid ? x : { ...x, contract: { ...x.contract, variations: [...x.contract.variations, v] } }) })); }
+  addVariation() { if (!this.can('variations', 'edit')) return; const p = this.proj(this.state.pid); if (!p) return; const ref = this.nextSeqRef((p.contract && p.contract.variations) || [], 'ref', 'VO-', 3); const v = { id: this._rid('vo'), ref, subject: '', desc: '', value: 0, time: 0, timeDelay: 'no', status: 'draft', costCode: '', attachments: [], sentForApprovalAt: '' }; this.setState(s => ({ projects: s.projects.map(x => x.id !== s.pid ? x : { ...x, contract: { ...x.contract, variations: [...x.contract.variations, v] } }) })); }
   deleteVariation(vid) { this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, contract: { ...p.contract, variations: p.contract.variations.filter(v => v.id !== vid) } }) })); }
   eotCauseList() { return ['Variation / change order', 'Inclement weather', 'Latent site condition', 'Client instruction / delay', 'Access / possession delay', 'Suspension of works', 'Industrial action', 'Utility / authority delay', 'Other']; }
   docCategories() {
@@ -8251,8 +8352,49 @@ class Component extends DCLogic {
     this._openPrintDoc(html, 'EOT PDF');
   }
   clientRespondVariation(vid, decision) { if (!this.can('variations', 'approve')) return; const u = this.currentUser(); const pj = this.proj(this.state.pid); const vv = pj && pj.contract && (pj.contract.variations || []).find(x => x.id === vid); if (u && u.role === 'Superintendent' && decision === 'approved' && vv && this._num(vv.value) !== 0) return; const status = decision === 'approved' ? 'approved' : decision === 'rejected' ? 'rejected' : 'info'; const label = decision === 'approved' ? 'Client approved' : decision === 'rejected' ? 'Client rejected' : 'Client requested more information'; const note = label + ' on ' + this.fmtDate(this.todayLocal()); this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, contract: { ...p.contract, variations: p.contract.variations.map(v => v.id !== vid ? v : { ...v, status, clientResponse: note }) } }) })); }
-  addVariationAttachment(vid, e) { const files = Array.from((e.target && e.target.files) || []); if (!files.length) return; files.forEach(file => { this._sbUploadFile(file, 'variations').then(url => { if (!url) return; const att = { id: 'att' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), name: file.name || 'file', type: file.type || '', size: file.size || 0, url }; this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, contract: { ...p.contract, variations: p.contract.variations.map(v => v.id === vid ? { ...v, attachments: [...(v.attachments || []), att] } : v) } }) })); }); }); if (e.target) e.target.value = ''; }
-  removeVariationAttachment(vid, aid) { this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, contract: { ...p.contract, variations: p.contract.variations.map(v => v.id === vid ? { ...v, attachments: (v.attachments || []).filter(a => a.id !== aid) } : v) } }) })); }
+  addVariationAttachment(vid, e) { if (!this.can('variations', 'edit')) return; const files = Array.from((e.target && e.target.files) || []); if (!files.length) return; files.forEach(file => { this._sbUploadFile(file, 'variations').then(url => { if (!url) return; const att = { id: 'att' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), name: file.name || 'file', type: file.type || '', size: file.size || 0, url }; this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, contract: { ...p.contract, variations: p.contract.variations.map(v => v.id === vid ? { ...v, attachments: [...(v.attachments || []), att] } : v) } }) })); }); }); if (e.target) e.target.value = ''; }
+  removeVariationAttachment(vid, aid) { if (!this.can('variations', 'edit')) return; this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, contract: { ...p.contract, variations: p.contract.variations.map(v => v.id === vid ? { ...v, attachments: (v.attachments || []).filter(a => a.id !== aid) } : v) } }) })); }
+  // Net, GST and total for a variation, on the project's GST rate - the same basis the Variation
+  // Order PDF uses, so the screen and the document the client receives cannot disagree.
+  variationMoney(v, p) {
+    const proj = p || this.proj(this.state.pid) || {};
+    const rate = this._num(proj.gstRate);
+    const net = this._r2(this._num(v && v.value));
+    const tax = this._r2(net * rate / 100);
+    return { rate: rate, net: net, tax: tax, total: this._r2(net + tax) };
+  }
+  // Delayed if somebody said so. A variation raised before the question existed counts as delayed
+  // if it carries days.
+  variationDelayed(v) {
+    if (!v) return false;
+    if (v.timeDelay === 'yes') return true;
+    if (v.timeDelay === 'no') return false;
+    return this._num(v.time) !== 0;
+  }
+  setVariationTimeDelay(vid, yn) {
+    if (!this.can('variations', 'edit')) return;
+    const yes = yn === 'yes';
+    // No clears the days too: the Variation Order prints them as time impact, and a delay answered
+    // No must not still show one there.
+    this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, contract: { ...p.contract, variations: p.contract.variations.map(v => v.id !== vid ? v : Object.assign({}, v, { timeDelay: yes ? 'yes' : 'no' }, yes ? {} : { time: 0 })) } }) }));
+  }
+  variationStatusChoice(v) { const st = (v && v.status) || ''; return st === 'approved' ? 'approved' : (st === 'rejected' ? 'rejected' : 'pending'); }
+  // Pending, approved or rejected. The last two go through the client-response path, so the note,
+  // the approve permission and the superintendent rule still apply.
+  setVariationStatus(vid, choice) {
+    if (choice === 'approved' || choice === 'rejected') { this.clientRespondVariation(vid, choice); return; }
+    if (!this.can('variations', 'approve')) return;
+    const when = this.fmtDate(this.todayLocal());
+    this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, contract: { ...p.contract, variations: p.contract.variations.map(v => {
+      if (v.id !== vid) return v;
+      if (v.status !== 'approved' && v.status !== 'rejected') return v;
+      // Back to where it stood before the decision: submitted if it went to the client, draft if not.
+      return Object.assign({}, v, { status: v.sentForApprovalAt ? 'submitted' : 'draft', clientResponse: 'Decision withdrawn on ' + when });
+    }) } }) }));
+  }
+  openVariationDetail(vid) { this.setState({ varDetail: { vid: vid, editing: false } }); }
+  closeVariationDetail() { this.setState({ varDetail: null }); }
+  toggleVariationDescEdit() { this.setState(s => (s.varDetail ? { varDetail: Object.assign({}, s.varDetail, { editing: !s.varDetail.editing }) } : {})); }
   // variation review & send for approval
   openVariationSend(vid) {
     const p = this.proj(this.state.pid); if (!p) return;
@@ -13604,7 +13746,7 @@ class Component extends DCLogic {
   startEdit(key) { this.setState({ editCell: key }); }
   endEdit() { this.setState({ editCell: '' }); }
   // ----- Budget: resizable columns (widths persisted per browser, across projects) -----
-  _budgetColDefs() { return [{ id: 'parentCode', label: 'Parent code', align: 'left', w: 130 }, { id: 'code', label: 'Child code', align: 'left', w: 96 }, { id: 'desc', label: 'Description', align: 'left', w: 220 }, { id: 'cat', label: 'Category', align: 'left', w: 128 }, { id: 'orig', label: 'Budgeted', align: 'right', w: 122 }, { id: 'adj', label: 'Approved change', align: 'right', w: 130 }, { id: 'committed', label: 'Committed', align: 'right', w: 150 }, { id: 'actual', label: 'Actual', align: 'right', w: 122 }, { id: 'prog', label: '% complete', align: 'right', w: 104 }, { id: 'cpi', label: 'CPI', align: 'right', w: 84 }, { id: 'ftc', label: 'FTC', align: 'right', w: 118 }, { id: 'eac', label: 'Est. at completion', align: 'right', w: 138 }, { id: 'variance', label: 'Variance', align: 'right', w: 122 }, { id: 'pct', label: '% spent', align: 'right', w: 96 }, { id: 'del', label: '', align: 'left', w: 42 }]; }
+  _budgetColDefs() { return [{ id: 'parentCode', label: 'Parent code', align: 'left', w: 130 }, { id: 'code', label: 'Child code', align: 'left', w: 96 }, { id: 'desc', label: 'Description', align: 'left', w: 220 }, { id: 'cat', label: 'Category', align: 'left', w: 128 }, { id: 'orig', label: 'Budgeted', align: 'right', w: 122 }, { id: 'adj', label: 'Approved change', align: 'right', w: 130 }, { id: 'revised', label: 'Revised budget', align: 'right', w: 136 }, { id: 'committed', label: 'Committed', align: 'right', w: 150 }, { id: 'actual', label: 'Actual', align: 'right', w: 122 }, { id: 'prog', label: '% complete', align: 'right', w: 104 }, { id: 'cpi', label: 'CPI', align: 'right', w: 84 }, { id: 'ftc', label: 'FTC', align: 'right', w: 118 }, { id: 'eac', label: 'Est. at completion', align: 'right', w: 138 }, { id: 'variance', label: 'Variance', align: 'right', w: 122 }, { id: 'pct', label: '% spent', align: 'right', w: 96 }, { id: 'del', label: '', align: 'left', w: 42 }]; }
   _loadBudgetColW() { try { if (typeof localStorage === 'undefined') return {}; const raw = localStorage.getItem('cubicBudgetColW'); const o = raw ? JSON.parse(raw) : {}; return (o && typeof o === 'object') ? o : {}; } catch (e) { return {}; } }
   _saveBudgetColW(obj) { try { if (typeof localStorage !== 'undefined') localStorage.setItem('cubicBudgetColW', JSON.stringify(obj || {})); } catch (e) {} }
   _colW(id) { const o = this.state.budgetColW || {}; if (o[id] != null) return o[id]; const d = this._budgetColDefs().find(c => c.id === id); return d ? d.w : 100; }
@@ -13624,7 +13766,7 @@ class Component extends DCLogic {
   _saveBudgetColOrder(a) { try { if (typeof localStorage !== 'undefined') localStorage.setItem('cubicBudgetColOrder', JSON.stringify(Array.isArray(a) ? a : [])); } catch (e) {} }
   _loadBudgetColHidden() { try { if (typeof localStorage === 'undefined') return {}; const raw = localStorage.getItem('cubicBudgetColHidden'); const o = raw ? JSON.parse(raw) : {}; return (o && typeof o === 'object') ? o : {}; } catch (e) { return {}; } }
   _saveBudgetColHidden(o) { try { if (typeof localStorage !== 'undefined') localStorage.setItem('cubicBudgetColHidden', JSON.stringify(o || {})); } catch (e) {} }
-  _orderedColDefs() { const defs = this._budgetColDefs(); const order = this.state.budgetColOrder; if (!Array.isArray(order) || !order.length) return defs; const byId = {}; defs.forEach(d => { byId[d.id] = d; }); const seen = {}, out = []; order.forEach(id => { if (byId[id] && !seen[id]) { out.push(byId[id]); seen[id] = true; } }); defs.forEach(d => { if (!seen[d.id]) out.push(d); }); return out; }
+  _orderedColDefs() { const defs = this._budgetColDefs(); const order = this.state.budgetColOrder; if (!Array.isArray(order) || !order.length) return defs; const byId = {}; defs.forEach(d => { byId[d.id] = d; }); const seen = {}, out = []; order.forEach(id => { if (byId[id] && !seen[id]) { out.push(byId[id]); seen[id] = true; } }); defs.forEach((d, i) => { if (seen[d.id]) return; let at = out.length; for (let j = i - 1; j >= 0; j--) { const k = out.indexOf(byId[defs[j].id]); if (k >= 0) { at = k + 1; break; } } out.splice(at, 0, d); seen[d.id] = true; }); return out; }
   _visibleColDefs() { const h = this.state.budgetColHidden || {}; return this._orderedColDefs().filter(d => !h[d.id]); }
   colResizeDown(id, e) {
     if (!e) return; e.preventDefault();
@@ -14810,6 +14952,7 @@ class Component extends DCLogic {
       // Approved change carries the manual adjustment plus every approved variation on this
       // code, so Budgeted + Approved change always equals the current budget.
       adj: l => (Number(l.adj) || 0) + this.lineVarAdj(l, p),
+      revised: l => this.lineCurrent(l, p),
       committed: l => this.lineCommitted(l, p),
       actual: l => this.lineActual(l, p),
       ftc: l => Number(l.ftc) || 0,
@@ -14820,7 +14963,7 @@ class Component extends DCLogic {
       cpi: l => { const c = this.lineCPI(l, p); return c == null ? '\u2014' : c.toFixed(2); },
       pct: l => { const v = this.linePctSpent(l, p); return v == null ? '\u2014' : v + '%'; },
     };
-    const NUM = { orig: 1, adj: 1, committed: 1, actual: 1, ftc: 1, eac: 1, variance: 1 };
+    const NUM = { orig: 1, adj: 1, revised: 1, committed: 1, actual: 1, ftc: 1, eac: 1, variance: 1 };
     const SIGNED = { adj: 1, variance: 1 };
     const defs = (defsOverride || this._visibleColDefs()).filter(d => val[d.id]);
     const meta = defs.map(d => ({ id: d.id, label: d.label, align: d.align || (NUM[d.id] ? 'right' : 'left'),
@@ -14842,7 +14985,7 @@ class Component extends DCLogic {
     T.current = T.orig + T.adj;
     // % complete is actual against the forecast, the same basis every row uses.
     const totalPct = T.eac > 0 ? Math.round(T.act / T.eac * 100) + '%' : '\u2014';
-    const totalBy = { orig: T.orig, adj: T.adj, committed: T.com, actual: T.act, ftc: T.ftc, eac: T.eac, variance: T.varc, pct: totalPct };
+    const totalBy = { orig: T.orig, adj: T.adj, revised: T.current, committed: T.com, actual: T.act, ftc: T.ftc, eac: T.eac, variance: T.varc, pct: totalPct };
     let labelled = false;
     const total = meta.map(c => {
       if (totalBy[c.id] != null) return totalBy[c.id];
@@ -16146,7 +16289,7 @@ class Component extends DCLogic {
         const line = (p.costLines || []).find(l => l.code === vsel.costCode); const codeLabel = line ? (vsel.costCode + ' — ' + line.desc) : (vsel.costCode || '— not linked —');
         const fmtSize = b => b >= 1048576 ? (b / 1048576).toFixed(1) + ' MB' : (b >= 1024 ? Math.round(b / 1024) + ' KB' : b + ' B');
         const typeIcon = t => /pdf/.test(t) ? '📄' : (/(sheet|excel|csv)/.test(t) ? '📊' : (/image/.test(t) ? '🖼' : '📎'));
-        const attachments = (vsel.attachments || []).map(a => ({ id: a.id, name: a.name, sizeLabel: fmtSize(a.size || 0), icon: typeIcon(a.type || ''), isImage: /image/.test(a.type || ''), url: a.url, onRemove: () => this.removeVariationAttachment(vsel.id, a.id) }));
+        const attachments = (vsel.attachments || []).map(a => ({ id: a.id, name: a.name, sizeLabel: fmtSize(a.size || 0), icon: typeIcon(a.type || ''), isImage: /image/.test(a.type || ''), url: a.url, onOpen: () => this.openAttachment(a), onRemove: () => this.removeVariationAttachment(vsel.id, a.id) }));
         const cust = (p.customers && p.customers[0]) || null;
         variationSendV = {
           open: true, contacts, custom, hasCustom: custom.length > 0,
@@ -16183,6 +16326,56 @@ class Component extends DCLogic {
           })(),
           onClose: () => this.closeVariationSend(), onConfirm: () => this.confirmSendVariation(), onPreviewPdf: () => this.previewVariationPdf(vsel.id),
           onDownloadPdf: () => this.downloadVariationPdf(vsel.id),
+        };
+      }
+    }
+
+    // variation details - the whole variation in one place, documents included
+    let varDetailV = { open: false };
+    if (S.varDetail && p && p.contract) {
+      const vd = (p.contract.variations || []).find(x => x.id === S.varDetail.vid);
+      if (vd) {
+        const vsm = this.statusMeta(vd.status);
+        const vmo = this.variationMoney(vd, p);
+        const vCan = this.can('variations', 'edit');
+        const vCanStatus = this.can('variations', 'approve');
+        const vDelayed = this.variationDelayed(vd);
+        const vSize = b => b >= 1048576 ? (b / 1048576).toFixed(1) + ' MB' : (b >= 1024 ? Math.round(b / 1024) + ' KB' : (b > 0 ? b + ' B' : ''));
+        const vIcon = t => /pdf/i.test(t) ? '\ud83d\udcc4' : (/(sheet|excel|csv)/i.test(t) ? '\ud83d\udcca' : (/image/i.test(t) ? '\ud83d\uddbc' : '\ud83d\udcce'));
+        const vAtts = (vd.attachments || []).map(a => ({ name: a.name || 'document', sizeLabel: vSize(a.size || 0), icon: vIcon(a.type || ''), canEdit: vCan,
+          onOpen: () => this.openAttachment(a), onRemove: () => this.removeVariationAttachment(vd.id, a.id) }));
+        const vLine = (p.costLines || []).find(l => vd.costCode && l.code === vd.costCode);
+        const vSubject = String(vd.subject || '').trim();
+        const vDesc = String(vd.desc || '');
+        const vEditing = !!S.varDetail.editing && vCan;
+        // Whether this variation is in the budget, said plainly, because the rule has two halves:
+        // it must be approved, and it must be on a cost code, or there is no line to add it to.
+        let vBudget = 'Not in the budget until it is approved.', vBudgetColor = '#8894a2';
+        if (vd.status === 'rejected') { vBudget = 'Rejected - not in the budget.'; vBudgetColor = '#b91c1c'; }
+        else if (vd.status === 'approved' && vLine) { vBudget = 'In the budget as approved change on ' + vd.costCode + ' - revised budget for that line ' + this.money(this.lineCurrent(vLine, p)) + '.'; vBudgetColor = '#15803d'; }
+        else if (vd.status === 'approved') { vBudget = 'Approved, but not in the budget yet - link it to a cost code in the Variations table.'; vBudgetColor = '#b45309'; }
+        varDetailV = {
+          open: true, ref: vd.ref || '', title: vSubject || 'Variation',
+          canEdit: vCan, readOnly: !vCan,
+          subject: vd.subject || '', subjectText: vSubject || 'No subject yet',
+          onSubject: e => this.setVariationField(vd.id, 'subject', e.target.value),
+          desc: vDesc, hasDesc: vDesc.trim() !== '', noDesc: vDesc.trim() === '',
+          onDesc: e => this.setVariationField(vd.id, 'desc', e.target.value),
+          editing: vEditing, viewing: !vEditing, editLabel: vEditing ? 'Done' : 'Edit', onToggleEdit: () => this.toggleVariationDescEdit(),
+          statusLabel: vsm.label, statusColor: vsm.color, statusBg: vsm.bg,
+          statusChoice: this.variationStatusChoice(vd), canSetStatus: vCanStatus, cannotSetStatus: !vCanStatus,
+          onStatus: e => this.setVariationStatus(vd.id, e.target.value),
+          delayChoice: vDelayed ? 'yes' : 'no', delayed: vDelayed,
+          days: String(vd.time == null ? '' : vd.time),
+          onDelay: e => this.setVariationTimeDelay(vd.id, e.target.value),
+          onDays: e => this.setVariationField(vd.id, 'time', e.target.value),
+          delayText: vDelayed ? (this._num(vd.time) + ' working day(s)') : 'No',
+          net: this.money(vmo.net), gstLabel: 'GST ' + vmo.rate + '%', gst: this.money(vmo.tax), total: this.money(vmo.total),
+          codeLabel: vLine ? (vd.costCode + ' \u2014 ' + (vLine.desc || '')) : 'Not linked to a cost code',
+          budgetNote: vBudget, budgetColor: vBudgetColor,
+          attachments: vAtts, hasAttachments: vAtts.length > 0, noAttachments: vAtts.length === 0, attCount: String(vAtts.length),
+          onAdd: e => this.addVariationAttachment(vd.id, e),
+          onPreview: () => this.previewVariationPdf(vd.id), onClose: () => this.closeVariationDetail(),
         };
       }
     }
@@ -16581,6 +16774,7 @@ class Component extends DCLogic {
             case 'cat': return catOrder[l.cat] == null ? 99 : catOrder[l.cat];
             case 'orig': return Number(l.orig) || 0;
             case 'adj': return this.lineVarAdj(l, p);
+            case 'revised': return this.lineCurrent(l, p);
             case 'committed': return this.lineCommitted(l, p);
             case 'actual': return this.lineActual(l);
             case 'ftc': return Number(l.ftc) || 0;
@@ -16618,7 +16812,7 @@ class Component extends DCLogic {
           ftcDisp: (ec === l.id + ':ftc') ? String(l.ftc == null ? '' : l.ftc) : (this._num(l.ftc) > 0 ? this.money(this._num(l.ftc)) : ''),
           ftcPlaceholder: this.money(Math.max(0, this.lineForecast(l, p) - this.lineActual(l, p))),
           onOrigFocus: () => this.startEdit(l.id + ':orig'), onCommittedFocus: () => this.startEdit(l.id + ':committed'), onActualFocus: () => this.startEdit(l.id + ':actual'), onFtcFocus: () => this.startEdit(l.id + ':ftc'), onCellBlur: () => this.endEdit(),
-          varAdj: this.signed(varAdjRaw), hasVarAdj: varAdjRaw !== 0, noVarAdj: varAdjRaw === 0, varRefs,
+          revised: this.money(this.lineCurrent(l, p)), varAdj: this.signed(varAdjRaw), hasVarAdj: varAdjRaw !== 0, noVarAdj: varAdjRaw === 0, varRefs,
           commitmentOptions, linkedId: l.commitmentId || '', linked, invoiced, manual: !invoiced,
           actualPaid: this.money(this.lineActual(l, p)), actualSource: this.lineActualSource(l, p),
           actualAuto: this.lineActualPaid(l, p) > 0 || this.lineLabourCost(l, p) > 0,
@@ -16680,7 +16874,7 @@ class Component extends DCLogic {
         estCost: this.money(mkTotCost), markupAmt: this.money(mkMarkupTot), markupPct: mkMarkupPct.toFixed(1) + '%', subTotal: this.money(mkTotSell), gstRate: String(gstR), gst: this.money(mkGst), grandTotal: this.money(mkGrand), profit: this.money(mkMarkupTot), profitPct: mkMargin.toFixed(1) + '%' };
       budgetColTemplate = _visCols.map(c => this._colW(c.id) + 'px').join(' ');
       budgetMinWidth = (_visCols.reduce((a, c) => a + this._colW(c.id), 0) + Math.max(0, _visCols.length - 1) * 8 + 32) + 'px';
-      const _sortableCols = { parentCode: 1, code: 1, desc: 1, cat: 1, orig: 1, adj: 1, committed: 1, actual: 1, ftc: 1, eac: 1, variance: 1, pct: 1 };
+      const _sortableCols = { parentCode: 1, code: 1, desc: 1, cat: 1, orig: 1, adj: 1, revised: 1, committed: 1, actual: 1, ftc: 1, eac: 1, variance: 1, pct: 1 };
       budgetHeaderCols = _visCols.map(c => {
         const active = sortCol === c.id; const sortable = !!_sortableCols[c.id];
         return { id: c.id, label: c.label, align: c.align, onDown: e => this.colResizeDown(c.id, e),
@@ -16688,7 +16882,7 @@ class Component extends DCLogic {
           cursor: sortable ? 'pointer' : 'default', onSort: sortable ? () => this.sortBudget(c.id) : (() => {}) };
       });
       // totals row: one cell per visible column, in order (money totals + a single total label in the first non-money column)
-      const _totMap = { orig: { v: costTotals.orig, c: '#fff' }, adj: { v: costTotals.adj, c: '#5fd68a' }, committed: { v: costTotals.committed, c: '#fff' }, actual: { v: costTotals.actual, c: '#fff' }, ftc: { v: costTotals.ftc, c: '#fff' }, eac: { v: costTotals.eac, c: '#fff' }, variance: { v: costTotals.variance, c: costTotals.varColor }, pct: { v: costTotals.pct, c: '#fff' } };
+      const _totMap = { orig: { v: costTotals.orig, c: '#fff' }, adj: { v: costTotals.adj, c: '#5fd68a' }, revised: { v: costTotals.current, c: '#fff' }, committed: { v: costTotals.committed, c: '#fff' }, actual: { v: costTotals.actual, c: '#fff' }, ftc: { v: costTotals.ftc, c: '#fff' }, eac: { v: costTotals.eac, c: '#fff' }, variance: { v: costTotals.variance, c: costTotals.varColor }, pct: { v: costTotals.pct, c: '#fff' } };
       let _labelPlaced = false;
       budgetTotalCols = _visCols.map(c => {
         const t = _totMap[c.id];
@@ -16821,8 +17015,9 @@ class Component extends DCLogic {
       const codeOpts = p.costLines.map(l => ({ code: l.code, label: l.code + ' — ' + l.desc }));
       let vlist2 = (p.contract && p.contract.variations) || [];
       const _varAll = vlist2.length; const _vq2 = this._q('variations');
-      if (_vq2) vlist2 = vlist2.filter(v => [v.ref, v.desc, v.status, v.costCode].join(' ').toLowerCase().indexOf(_vq2) >= 0);
+      if (_vq2) vlist2 = vlist2.filter(v => [v.ref, v.subject, v.desc, v.status, v.costCode].join(' ').toLowerCase().indexOf(_vq2) >= 0);
       varSearchV = { value: S.search.variations || '', has: !!_vq2, shown: vlist2.length, total: _varAll, onInput: e => this.setSearch('variations', e.target.value) };
+      const _vCanStatus = this.can('variations', 'approve');
       budgetVarRows = vlist2.map(v => {
         const sm = this.statusMeta(v.status); const approved = v.status === 'approved'; const linkedCode = v.costCode || '';
         const applied = approved && !!linkedCode; const atts = (v.attachments || []).length;
@@ -16830,6 +17025,14 @@ class Component extends DCLogic {
         const _su = this.currentUser(); const _sb = _su && _su.role === 'Superintendent' && this._num(v.value) !== 0;
         const canRespond = (v.status === 'submitted' || v.status === 'info') && this.can('variations', 'approve') && !_sb;
         return {
+          subject: v.subject || '', onSubject: e => this.setVariationField(v.id, 'subject', e.target.value),
+          gstFmt: this.money(this.variationMoney(v, p).tax), gstLabel: 'GST ' + this.variationMoney(v, p).rate + '%',
+          totalFmt: this.money(this.variationMoney(v, p).total),
+          delayChoice: this.variationDelayed(v) ? 'yes' : 'no', delayed: this.variationDelayed(v),
+          onDelay: e => this.setVariationTimeDelay(v.id, e.target.value),
+          statusChoice: this.variationStatusChoice(v), canSetStatus: _vCanStatus, cannotSetStatus: !_vCanStatus,
+          onStatus: e => this.setVariationStatus(v.id, e.target.value),
+          onDetail: () => this.openVariationDetail(v.id),
           ref: v.ref, desc: v.desc || '', valueInput: this._mdisp(v.id + ":value", v.value), onValueFocus: () => this.startEdit(v.id + ":value"), onValueBlur: () => this.endEdit(),
           valColor: this._num(v.value) < 0 ? '#b91c1c' : '#0f1720',
           valueFmt: this.money(this._num(v.value)), hasValue: String(v.value == null ? '' : v.value).trim() !== '',
@@ -18458,7 +18661,7 @@ class Component extends DCLogic {
       claimRows, claimTotals, claimSearchV, onAddClaim: () => this.addClaim(),
       moduleCommitments, subModalV, signModalV, shareModalV, acctSendV, paymentModalV, mailHandoffV, deleteConfirmV, invoiceEditV, invoicePayV, pdfPreviewV,
       onAddContractVar: () => this.openModal('contract'),
-      projDescription, clientRepRows, teamRows, clientNameV, scheduleSummary, detailsV, contactsV, filesV, scheduleV, reportV, invoiceV, invoiceSendV, variationSendV, eotV, eotSendV, documentsV, rfiSendV, meetingSendV,
+      projDescription, clientRepRows, teamRows, clientNameV, scheduleSummary, detailsV, contactsV, filesV, scheduleV, reportV, invoiceV, invoiceSendV, variationSendV, varDetailV, eotV, eotSendV, documentsV, rfiSendV, meetingSendV,
       docViewerV: S.docViewer ? { open: true, name: S.docViewer.curName, url: S.docViewer.curUrl, isPdf: S.docViewer.curKind === 'pdf', isImage: S.docViewer.curKind === 'image', isOther: S.docViewer.curKind === 'other', hasNav: (S.docViewer.items || []).length > 1, position: (S.docViewer.index + 1) + ' / ' + (S.docViewer.items || []).length, onPrev: () => this.docViewerNav(-1), onNext: () => this.docViewerNav(1), onClose: () => this.closeDocViewer(), onNewTab: () => this.docViewerNewTab() } : { open: false },
       onDescInput: e => this.setProjectField('description', e.target.value),
       onAddClientRep: () => this.addClientRep(), onAddPersonnel: () => this.addPersonnel(),
