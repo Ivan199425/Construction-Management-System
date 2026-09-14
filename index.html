@@ -3377,7 +3377,8 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                 <div style="font-size:24px">🗓</div>
                 <div style="min-width:0"><div style="font-size:13.5px;font-weight:600;color:#0f1720;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ scheduleV.fileName }}</div><div style="font-size:11.5px;color:#8894a2">{{ scheduleV.version }} · uploaded {{ scheduleV.uploadedAt }}<sc-if value="{{ scheduleV.hasVersions }}" hint-placeholder-val="{{ false }}"> · {{ scheduleV.count }} activities</sc-if></div></div>
               </div>
-              <div style="display:flex;gap:8px;align-items:center">
+              <div style="display:flex;flex-wrap:var(--cpms-wrap,nowrap);gap:8px;align-items:center">
+                <sc-if value="{{ scheduleV.canReadFile }}" hint-placeholder-val="{{ false }}"><button onClick="{{ scheduleV.onReadFile }}" title="Read the activities in this programme PDF into the schedule" style="border:1px solid #dbe3ee;background:#f2f6fd;color:#2b59c3;border-radius:8px;padding:8px 13px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap" style-hover="border-color:#2b59c3">⤓ Read activities</button></sc-if>
                 <sc-if value="{{ scheduleV.canPreview }}" hint-placeholder-val="{{ false }}"><button onClick="{{ scheduleV.onPreview }}" style="border:1px solid #dbe3ee;background:#f2f6fd;color:#2b59c3;border-radius:8px;padding:8px 13px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="border-color:#2b59c3">👁 Preview file</button></sc-if>
                 <label style="display:inline-flex;align-items:center;gap:6px;border:1px solid #2b59c3;background:#2b59c3;color:#fff;border-radius:8px;padding:8px 13px;font-size:12.5px;font-weight:600;cursor:pointer;white-space:nowrap" style-hover="background:#244dab">⟳ Replace with new version<input type="file" accept=".mpp,.mpx,.xer,.pp,.xml,.ppx,.pdf" onChange="{{ scheduleV.onUpload }}" style="display:none"></label>
               </div>
@@ -3387,6 +3388,19 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
               <label style="display:inline-flex;align-items:center;gap:6px;border:1px solid #2b59c3;background:#2b59c3;color:#fff;border-radius:8px;padding:8px 14px;font-size:12.5px;font-weight:600;cursor:pointer" style-hover="background:#244dab">＋ Upload schedule<input type="file" accept=".mpp,.mpx,.xer,.pp,.xml,.ppx,.pdf" onChange="{{ scheduleV.onUpload }}" style="display:none"></label>
             </sc-if>
           </div>
+
+          <!-- What reading the programme file found -->
+          <sc-if value="{{ scheduleV.imp.show }}" hint-placeholder-val="{{ false }}">
+            <div style="border:1px solid {{ scheduleV.imp.border }};background:{{ scheduleV.imp.bg }};border-radius:12px;padding:12px 16px;margin-bottom:16px;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 16px">
+              <div style="min-width:0;flex:1 1 320px"><div style="font-size:13px;font-weight:600;color:{{ scheduleV.imp.color }}">{{ scheduleV.imp.title }}</div><sc-if value="{{ scheduleV.imp.note }}" hint-placeholder-val="{{ false }}"><div style="font-size:12px;color:#4a5765;margin-top:3px;line-height:1.5">{{ scheduleV.imp.note }}</div></sc-if></div>
+              <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px">
+                <sc-if value="{{ scheduleV.imp.canReplace }}" hint-placeholder-val="{{ false }}"><button onClick="{{ scheduleV.imp.onReplace }}" style="border:0;background:#2b59c3;color:#fff;border-radius:8px;padding:8px 14px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit">Replace programme</button></sc-if>
+                <sc-if value="{{ scheduleV.imp.canCancel }}" hint-placeholder-val="{{ false }}"><button onClick="{{ scheduleV.imp.onCancel }}" style="border:1px solid #cfd8e2;background:#fff;color:#4a5765;border-radius:8px;padding:8px 14px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit">Keep current</button></sc-if>
+                <sc-if value="{{ scheduleV.imp.canUndo }}" hint-placeholder-val="{{ false }}"><button onClick="{{ scheduleV.imp.onUndo }}" title="Put back the activities from before the import" style="border:1px solid #cfd8e2;background:#fff;color:#2b59c3;border-radius:8px;padding:8px 14px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit">Undo</button></sc-if>
+                <sc-if value="{{ scheduleV.imp.canDismiss }}" hint-placeholder-val="{{ false }}"><button onClick="{{ scheduleV.imp.onDismiss }}" title="Close this note" style="border:0;background:transparent;color:#8894a2;font-size:15px;cursor:pointer;font-family:inherit;padding:4px 6px">✕</button></sc-if>
+              </div>
+            </div>
+          </sc-if>
 
           <!-- KPI strip -->
           <div style="display:grid;grid-template-columns:var(--cpms-5col,repeat(5,1fr));gap:12px;margin-bottom:16px">
@@ -3535,6 +3549,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                   <div style="text-align:center">#</div><div>Activity</div><div>Start</div><div>Finish</div><div style="text-align:center">Dur</div><div>% complete</div><div>Budget line</div><div style="text-align:center">Status</div><div>Predecessors</div><div style="text-align:center">Crit</div><div></div>
                 </div>
                 <sc-for list="{{ scheduleV.rows }}" as="r" hint-placeholder-count="6">
+                  <sc-if value="{{ r.hasGroupHead }}" hint-placeholder-val="{{ false }}"><div style="padding:9px 16px 5px 61px;font-size:10.5px;font-weight:700;letter-spacing:.35px;color:#2A3580;text-transform:uppercase;background:#f7f9fc;border-bottom:1px solid #eef1f4">{{ r.groupHead }}</div></sc-if>
                   <div style="display:grid;grid-template-columns:36px 1.5fr 116px 116px 58px 132px 132px 118px 108px 54px 30px;gap:9px;align-items:center;padding:8px 16px;border-bottom:1px solid #f4f6f9">
                     <div class="mono" style="font-size:11px;color:#8894a2;text-align:center">{{ r.num }}</div>
                     <input value="{{ r.name }}" onInput="{{ r.onName }}" placeholder="Activity name" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 8px;font-size:12px;font-family:inherit;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none">
@@ -7856,7 +7871,466 @@ class Component extends DCLogic {
   addProjectPhoto(e) { if (!this.can('documents', 'edit')) return; const files = Array.from((e.target && e.target.files) || []); if (!files.length) return; files.forEach(file => { this._sbUploadFile(file, 'photos').then(url => { if (!url) return; const ph = { id: 'ph' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), name: file.name || 'photo', url, type: file.type || '', at: this.todayLocal(), desc: '' }; this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, photos: [...(p.photos || []), ph] }) })); }); }); if (e.target) e.target.value = ''; }
   removeProjectPhoto(id) { if (!this._delGate('photo', this._delTarget('photo', id), () => this.removeProjectPhoto(id))) return; this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, photos: (p.photos || []).filter(ph => ph.id !== id) }) })); }
   // ---- Schedule ----
-  uploadSchedule(e) { if (!this.can('schedule', 'edit')) return; const file = e.target && e.target.files && e.target.files[0]; if (!file) return; if (e.target) e.target.value = ''; this._sbUploadFile(file, 'schedule').then(url => { if (!url) return; this.setState(s => ({ projects: s.projects.map(p => { if (p.id !== s.pid) return p; const sc = p.schedule || { activities: [], versions: [], version: 0 }; const versions = sc.fileName ? [{ name: sc.fileName, version: sc.version || 0, at: sc.uploadedAt || '' }, ...(sc.versions || [])] : (sc.versions || []); return { ...p, schedule: { ...sc, fileName: file.name, fileType: file.type || '', fileUrl: url, uploadedAt: this.todayLocal(), version: (Number(sc.version) || 0) + 1, versions } }; }) })); }); }
+  uploadSchedule(e) {
+    if (!this.can('schedule', 'edit')) return;
+    const file = e.target && e.target.files && e.target.files[0]; if (!file) return;
+    if (e.target) e.target.value = '';
+    const pid = this.state.pid;
+    this._sbUploadFile(file, 'schedule').then(url => { if (!url) return; this.setState(s => ({ projects: s.projects.map(p => { if (p.id !== pid) return p; const sc = p.schedule || { activities: [], versions: [], version: 0 }; const versions = sc.fileName ? [{ name: sc.fileName, version: sc.version || 0, at: sc.uploadedAt || '' }, ...(sc.versions || [])] : (sc.versions || []); return { ...p, schedule: { ...sc, fileName: file.name, fileType: file.type || '', fileUrl: url, uploadedAt: this.todayLocal(), version: (Number(sc.version) || 0) + 1, versions } }; }) })); });
+    this.readScheduleFile(file, pid, file.name);
+  }
+  // ---- a programme file read into the schedule ---------------------------------------------------------
+  _schedFileKind(name, type) {
+    const n = String(name || '').toLowerCase(), t = String(type || '').toLowerCase();
+    if (/pdf/.test(t) || /\.pdf$/.test(n)) return 'pdf';
+    const m = /\.(mpp|mpx|xer|pp|ppx|xml)$/.exec(n);
+    return m ? m[1] : 'other';
+  }
+  // file: a File or Blob. Reads it and either fills the programme (none yet), asks (one already there) or says why not.
+  readScheduleFile(file, pid, fileName) {
+    const kind = this._schedFileKind(fileName || (file && file.name), file && file.type);
+    const say = (status, extra) => this.setState({ schedImport: Object.assign({ pid: pid, status: status, fileName: fileName || '', kind: kind }, extra || {}) });
+    if (kind !== 'pdf') { say('unreadable'); return Promise.resolve(); }
+    say('reading');
+    return this._apReadBuffer(file).then(buf => {
+      if (!buf) return { rows: [], warnings: ['no-file'], text: '' };
+      const pages = [];
+      return this._apPdfText(buf, pages).then(text => Object.assign(this.readSchedulePages(pages), { text: text || '', pagesRead: pages.length, pagesTotal: pages.total || pages.length }));
+    }).then(res => this._schedOffer(pid, fileName || '', res))
+      .catch(() => say('error'));
+  }
+  // The stored programme file, read again - for a PDF uploaded before the reader existed.
+  readStoredScheduleFile() {
+    if (!this.can('schedule', 'edit')) return Promise.resolve();
+    const pid = this.state.pid, p = this.proj(pid), sc = p && p.schedule;
+    if (!sc || !sc.fileUrl || typeof fetch === 'undefined') return Promise.resolve();
+    this.setState({ schedImport: { pid: pid, status: 'reading', fileName: sc.fileName || '', kind: 'pdf' } });
+    const signed = this._sbIsPrivateDoc(sc.fileUrl) ? this._sbSignedUrl(sc.fileUrl) : Promise.resolve(sc.fileUrl);
+    return signed.then(u => fetch(u)).then(r => (r.ok ? r.blob() : null))
+      .then(blob => (blob ? this.readScheduleFile(blob, pid, sc.fileName || 'programme.pdf') : this.setState({ schedImport: { pid: pid, status: 'error', fileName: sc.fileName || '', kind: 'pdf', why: 'open' } })))
+      .catch(() => this.setState({ schedImport: { pid: pid, status: 'error', fileName: sc.fileName || '', kind: 'pdf', why: 'open' } }));
+  }
+  // Task rows become activities; summary rows become the group of the tasks under them.
+  // A task that is an activity already stays that activity: same id, and what was entered in the app - % complete,
+  // budget line, critical flag - is kept. Which activity it is: the same group and name, paired in order when both
+  // sides have as many; failing that the same name, only where the name is unique on both sides. Each current
+  // activity is matched once at most, so a trade repeated level by level never hands one level's progress to another.
+  // Keeping the ids also lets the shared-save merge treat a revision as edits, not as a delete plus an add.
+  scheduleActivitiesFrom(rows, existing) {
+    const norm = v => String(v || '').toLowerCase().replace(/\s+/g, ' ').trim();
+    const clamp = v => Math.max(0, Math.min(100, Number(v) || 0));
+    const tasks = (rows || []).filter(r => !r.summary && r.start);
+    const ex = (existing || []).filter(a => a && norm(a.name));
+    const bucket = (list, keyOf) => { const m = {}; list.forEach(x => { const k = keyOf(x); (m[k] = m[k] || []).push(x); }); return m; };
+    const wasOf = {}, used = new Set();
+    const byGroup = x => norm(x.group) + '|' + norm(x.name);
+    const eG = bucket(ex, byGroup), tG = bucket(tasks, byGroup);
+    Object.keys(tG).forEach(k => { const e = eG[k] || []; if (e.length === tG[k].length) tG[k].forEach((r, i) => { wasOf[r.wbs] = e[i]; used.add(e[i]); }); });
+    const eN = bucket(ex.filter(a => !used.has(a)), a => norm(a.name)), tN = bucket(tasks.filter(r => !wasOf[r.wbs]), r => norm(r.name));
+    Object.keys(tN).forEach(k => { const e = eN[k] || []; if (e.length === 1 && tN[k].length === 1) { wasOf[tN[k][0].wbs] = e[0]; used.add(e[0]); } });
+    const stamp = Date.now().toString(36);
+    const idOf = {}, taken = new Set();
+    tasks.forEach((r, i) => { const was = wasOf[r.wbs]; const id = (was && was.id && !taken.has(was.id)) ? was.id : 'ac' + stamp + '_' + i; taken.add(id); idOf[r.wbs] = id; });
+    let carried = 0, links = 0;
+    const acts = tasks.map(r => {
+      const was = wasOf[r.wbs];
+      if (was) carried++;
+      const seen = {};
+      const preds = (r.preds || []).map(pr => {
+        const id = idOf[pr.wbs];
+        if (!id || id === idOf[r.wbs] || seen[id]) return null;
+        seen[id] = 1;
+        return { id: id, type: pr.type || 'FS', lag: Number(pr.lag) || 0 };
+      }).filter(Boolean);
+      links += preds.length;
+      const a = { id: idOf[r.wbs], name: r.name, start: r.start, finish: r.finish || r.start,
+        // Progress entered in the app stays; the PDF's % complete is taken only for a task that is new.
+        pct: was ? clamp(was.pct) : (r.pct != null ? clamp(r.pct) : 0),
+        critical: was ? !!was.critical : false, preds: preds, group: r.group || '', wbs: String(r.wbs) };
+      if (was && was.costCode) a.costCode = was.costCode;
+      return a;
+    });
+    return { acts: acts, carried: carried, links: links, groups: new Set(acts.map(a => a.group).filter(Boolean)).size,
+      pdfPct: tasks.some(r => r.pct != null) };
+  }
+  _schedOffer(pid, fileName, res) {
+    const p = this.proj(pid);
+    if (!p) return;
+    const existing = (p.schedule && p.schedule.activities) || [];
+    const built = this.scheduleActivitiesFrom(res.rows, existing);
+    const count = key => Number(((res.warnings || []).find(w => w.indexOf(key + ':') === 0) || ':0').split(':')[1]) || 0;
+    const base = { pid: pid, fileName: fileName, kind: 'pdf', project: res.project || '',
+      inferred: count('years-inferred'), fromDays: count('finish-from-duration'),
+      pagesRead: res.pagesRead || 0, pagesTotal: res.pagesTotal || 0 };
+    if (!built.acts.length) {
+      const noText = !String(res.text || '').replace(/\s/g, '').length;
+      // No text and no pages found: the reader could not open the file's pages, which is not the same as a scan.
+      const why = noText ? (res.pagesRead ? 'scan' : 'unopened') : ((res.warnings || []).indexOf('no-table') >= 0 ? 'no-table' : 'no-rows');
+      this.setState({ schedImport: Object.assign(base, { status: 'empty', why: why }) });
+      return;
+    }
+    // Only the rows are kept: the activities are built again from the programme as it is when Replace is pressed.
+    this._schedPending = { pid: pid, rows: res.rows };
+    const info = { count: built.acts.length, groups: built.groups, links: built.links, carried: built.carried, pdfPct: built.pdfPct, prevCount: existing.length };
+    if (!existing.length) { this.applyScheduleImport(Object.assign(base, info)); return; }
+    this.setState({ schedImport: Object.assign(base, info, { status: 'confirm' }) });
+  }
+  applyScheduleImport(info) {
+    if (!this.can('schedule', 'edit')) return;
+    const pend = this._schedPending; if (!pend) return;
+    const imp = info || this.state.schedImport; if (!imp || imp.pid !== pend.pid) return;
+    const p = this.proj(pend.pid); if (!p) return;
+    const current = (p.schedule && p.schedule.activities) || [];
+    const built = this.scheduleActivitiesFrom(pend.rows, current);
+    this._schedUndo = { pid: pend.pid, activities: current.slice(), applied: built.acts };
+    this._schedPending = null;
+    this.setState(s => ({
+      projects: s.projects.map(x => x.id !== pend.pid ? x : { ...x, schedule: { ...(x.schedule || { versions: [], version: 0 }), activities: built.acts } }),
+      schedImport: Object.assign({}, imp, { status: 'done', count: built.acts.length, groups: built.groups, links: built.links, carried: built.carried, pdfPct: built.pdfPct }),
+    }));
+  }
+  cancelScheduleImport() { this._schedPending = null; this.setState({ schedImport: null }); }
+  // Undo only while the programme is exactly what the import wrote: once anyone has changed it, putting the
+  // old list back would throw that work away.
+  canUndoScheduleImport(pid) {
+    const u = this._schedUndo, p = this.proj(pid);
+    return !!(u && u.pid === pid && p && p.schedule && p.schedule.activities === u.applied);
+  }
+  undoScheduleImport() {
+    if (!this.can('schedule', 'edit')) return;
+    const u = this._schedUndo, imp = this.state.schedImport; if (!u || !this.canUndoScheduleImport(u.pid)) return;
+    this._schedUndo = null;
+    this.setState(s => ({
+      projects: s.projects.map(x => x.id !== u.pid ? x : { ...x, schedule: { ...(x.schedule || {}), activities: u.activities } }),
+      schedImport: { pid: u.pid, status: 'undone', fileName: imp ? imp.fileName : '', kind: 'pdf', prevCount: u.activities.length },
+    }));
+  }
+  dismissScheduleImport() { this.setState({ schedImport: null }); }
+  // ---- reading a programme exported from Microsoft Project ----------------------------------------
+  // pages is what _apPdfText(buffer, pages) fills: every line of text and where it sits on the page.
+  // Returns { rows, columns, project, warnings }. A row is one line of the programme's table:
+  // { wbs, name, level, summary, group, start, finish, days, pct, preds: [{ wbs, type, lag }], inferred }.
+  // The export is a table - ID, name, duration, start, finish and whatever columns were showing - printed
+  // one cell at a time, often on a rotated page and often with columns too narrow for what is in them.
+  // Positions settle what the text alone cannot: which cell belongs to which row, and how far a name is
+  // indented, which is the only mark of a summary row. Nothing is guessed except a year cut off by a
+  // narrow column, which is worked out from the dates around it, and said so.
+  readSchedulePages(pages) {
+    const out = { rows: [], columns: [], project: '', warnings: [] };
+    const WD = '(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun)';
+    const reWeekday = new RegExp('^' + WD + '\\.?,?$', 'i');
+    const reDate = new RegExp('^(?:' + WD + '\\.?,?\\s*)?(\\d{1,2})[\\/.-](\\d{1,2})[\\/.-](\\d{0,4})$', 'i');
+    const UNIT = '(e?)(mins?|minutes?|hrs?|hours?|days?|dys?|d|wks?|weeks?|w|mons?|months?|mo|yrs?|years?|y)';
+    const reDur = new RegExp('^(\\d+(?:\\.\\d+)?)\\s*' + UNIT + '(\\?)?$', 'i');
+    const reInt = /^\d{1,5}$/;
+    const rePct = /^(\d{1,3})\s?%$/;
+    const reCost = /^-?\$\s?[\d,]+(?:\.\d+)?$/;
+    // No optional space at the end of an item, so a long list cannot make the pattern backtrack.
+    const PRED = '\\d+(?:\\s*(?:FS|SS|FF|SF))?(?:\\s*[+-]\\s*\\d+(?:\\.\\d+)?(?:\\s*(?:e?(?:mins?|hrs?|days?|d|wks?|w|mons?|mo)|%))?)?';
+    const rePreds = new RegExp('^' + PRED + '(?:\\s*[,;]\\s*' + PRED + ')*$', 'i');
+    const LEGEND = /^(Task|Split|Milestone|Summary|Project Summary|Inactive (Task|Milestone|Summary)|Manual (Task|Summary( Rollup)?|Progress)|Duration-only|Start-only|Finish-only|External (Tasks|Milestone)|Deadline|Progress|Critical( Split)?|Baseline.*|Slack|Page \d+|Project:.*|Date:.*)$/i;
+    const unitDays = (n, e, u) => {
+      const k = u.toLowerCase();
+      const base = /^(mins?|minutes?)$/.test(k) ? 1 / 480 : /^(hrs?|hours?)$/.test(k) ? 1 / 8 : /^(wks?|weeks?|w)$/.test(k) ? 5
+        : /^(mons?|months?|mo)$/.test(k) ? 20 : /^(yrs?|years?|y)$/.test(k) ? 260 : 1;
+      return Math.round(n * base * (e && base === 1 ? 5 / 7 : 1) * 100) / 100;
+    };
+    const nameLike = t => !!t && !reInt.test(t) && !reDur.test(t) && !reDate.test(t) && !reWeekday.test(t) && !rePct.test(t) && !reCost.test(t) && !LEGEND.test(t) && /[A-Za-z]/.test(t);
+    const COLS = [['pct', /%\s*Complete/i], ['res', /Resource\s*Names?/i], ['pred', /Predecessors/i], ['succ', /Successors/i],
+      ['bstart', /Baseline\s*Start/i], ['bfinish', /Baseline\s*Finish/i], ['astart', /Actual\s*Start/i], ['afinish', /Actual\s*Finish/i],
+      ['name', /Task\s*Name/i], ['duration', /\bDuration\b/i], ['start', /\bStart\b/i], ['finish', /\bFinish\b/i],
+      ['cost', /\bCost\b/i], ['work', /\bWork\b/i], ['wbs', /\bWBS\b/i], ['notes', /\bNotes\b/i]];
+    const DATE_COLS = { start: 1, finish: 1, bstart: 1, bfinish: 1, astart: 1, afinish: 1 };
+    const columnsOf = text => {
+      let s = String(text); const found = [];
+      COLS.forEach(([key, re]) => { const m = re.exec(s); if (m) { found.push([key, m.index]); s = s.slice(0, m.index) + ' '.repeat(m[0].length) + s.slice(m.index + m[0].length); } });
+      return found.sort((a, b) => a[1] - b[1]).map(f => f[0]);
+    };
+
+    // A line that runs several cells together (see below) is read with these.
+    const DUR = '\\d+(?:\\.\\d+)?\\s*' + UNIT.replace(/\((?!\?)/g, '(?:') + '\\??', DATE = '(?:' + WD + '\\.?,?\\s*)?\\d{1,2}[\\/.-]\\d{1,2}[\\/.-]\\d{0,4}|' + WD + '\\.?,?';
+    // The run's items cannot overlap (a weekday and its date are separate items here), so it cannot backtrack.
+    const ITEM = WD + '\\.?,?|\\d{1,2}[\\/.-]\\d{1,2}[\\/.-]\\d{0,4}';
+    const reRun = new RegExp('^(?:(.*?\\S)\\s+)?(' + DUR + '(?:\\s+(?:' + ITEM + '))*)$', 'i');
+    const reCell = new RegExp('^\\s*(' + DUR + '|' + DATE + ')(?=\\s|$)', 'i');
+    // Some fonts space words with control codes (NUL, ETX) where a space should be.
+    const CTRL = new RegExp('[' + String.fromCharCode(0) + '-' + String.fromCharCode(31) + String.fromCharCode(127) + ']+', 'g');
+    const clean = v => String(v == null ? '' : v).replace(CTRL, ' ').replace(/\s+/g, ' ').trim();
+    const parsed = [];        // rows before dates are settled, in the order read
+    const used = [];          // per page: token indexes that belong to a table row
+    const yearHints = [];
+    let columns = null, rotatedSeen = 0, pagesWithTable = 0;
+    // Years the file shows whole - in dates, the print date, the timescale - before any row is read.
+    const preYears = new Set();
+    (pages || []).forEach(pg => (pg && pg.lines || []).forEach(l => {
+      const t = clean(l.t);
+      const m = /\d{1,2}[\/.-]\d{1,2}[\/.-](\d{4}|\d{2})$/.exec(t) || /'(\d{2})$/.exec(t) || /^(?:Qtr \d, |Half \d, )?((?:19|20)\d{2})$/.exec(t);
+      if (m) preYears.add(m[1].length === 2 ? 2000 + Number(m[1]) : Number(m[1]));
+    }));
+    (pages || []).forEach((pg, pi) => {
+      const toks = (pg && pg.lines || []).map((l, k) => ({ t: clean(l.t), x: l.x, y: l.y, k: k })).filter(k => k.t);
+      // Some exports run neighbouring cells together: "Demolition 1 wk", "2 wks Mon", "1 wk Thu 2/12/21".
+      // Such a line is taken apart when all that follows the name is a duration and then weekdays and dates -
+      // and, when it ends at the duration, only if a date comes next, so a name like "Cure 7 days" stays whole.
+      for (let i = toks.length - 1; i >= 0; i--) {
+        const t = toks[i].t, m = t.length <= 200 ? reRun.exec(t) : null;
+        if (!m || reDur.test(t) || m[1] && !nameLike(m[1])) continue;
+        const cells = [];
+        for (let s = m[2], c; s && (c = reCell.exec(s)); s = s.slice(c[0].length)) cells.push(c[1]);
+        const next = toks.slice(i + 1, i + 3).map(n => n.t);
+        if (cells.length === 1 && !(reDate.test(next[0]) || reWeekday.test(next[0]) && /^\d/.test(next[1]) && reDate.test(next[1]))) continue;
+        toks.splice(i, 1, ...(m[1] ? [m[1]] : []).concat(cells).map(v => ({ t: v, x: toks[i].x, y: toks[i].y, k: toks[i].k })));
+      }
+      used[pi] = new Set();
+      const use = k => used[pi].add(toks[k].k);
+      toks.forEach(k => {
+        const m = /^Date:\s*(?:\w+\s+)?\d{1,2}\/\d{1,2}\/(\d{2,4})$/i.exec(k.t) || /'(\d{2})$/.exec(k.t) || /^(?:Qtr \d, |Half \d, )?((?:19|20)\d{2})$/.exec(k.t);
+        if (m) yearHints.push(m[1].length === 2 ? 2000 + Number(m[1]) : Number(m[1]));
+      });
+      // The column header: a "Task Name" cell, and the header cells either side of it.
+      let h = toks.findIndex(k => /\bTask\s*Name\b/i.test(k.t));
+      let pageCols = null, start = 0;
+      if (h >= 0) {
+        let a = h, b = h + 1;
+        while (a > 0 && h - a < 8 && !reInt.test(toks[a - 1].t) && /^(ID|Task|Mode|Ta|s|M|o|Indicators|i|%\s*Complete|WBS)$/i.test(toks[a - 1].t)) a--;
+        while (b < toks.length && b - h < 12 && !reInt.test(toks[b].t) && columnsOf(toks[b].t).length) b++;
+        pageCols = columnsOf(toks.slice(a, b).map(k => k.t).join(' '));
+        if (pageCols.indexOf('duration') < 0 || pageCols.indexOf('start') < 0) pageCols = null;
+        else { columns = pageCols; start = b; }
+      } else if (columns) { pageCols = columns; start = 0; }
+      if (!pageCols) return;
+      const hasPos = toks.length > 0 && toks.every(k => typeof k.x === 'number' && typeof k.y === 'number');
+
+      // Where rows start: an ID, then a name, then a duration. A predecessor or the tail of a wrapped date
+      // is a number too, but a number is never followed straight away by another number before its name.
+      const cands = [];
+      for (let i = start; i < toks.length; i++) {
+        if (!reInt.test(toks[i].t)) continue;
+        let j = i + 1; const names = [];
+        while (j < toks.length && j <= i + 8 && !reDur.test(toks[j].t)) { if (!nameLike(toks[j].t)) break; names.push(j); j++; }
+        if (!names.length || j >= toks.length || !reDur.test(toks[j].t)) continue;
+        cands.push({ i: i, names: names, dur: j });
+        i = j;
+      }
+      if (!cands.length) return;
+      // Which way the page runs: along the axis on which the IDs move from row to row.
+      let rowAxis = 'y';
+      if (hasPos) {
+        let dx = 0, dy = 0;
+        // Counted a step at a time, so one ID printed at a stray position cannot outweigh the rest.
+        for (let k = 1; k < cands.length && k < 12; k++) { const sx = Math.abs(toks[cands[k].i].x - toks[cands[k - 1].i].x), sy = Math.abs(toks[cands[k].i].y - toks[cands[k - 1].i].y); if (sx > sy) dx++; else if (sy > sx) dy++; }
+        if (cands.length === 1) { dx = Math.abs(toks[cands[0].dur].y - toks[cands[0].i].y); dy = Math.abs(toks[cands[0].dur].x - toks[cands[0].i].x); }
+        rowAxis = dx > dy ? 'x' : 'y';
+      }
+      const colAxis = rowAxis === 'x' ? 'y' : 'x';
+      if (rowAxis === 'x') rotatedSeen++;
+      const rc = k => toks[k][rowAxis];
+      const gaps = [];
+      for (let k = 1; k < cands.length; k++) { const g = Math.abs(rc(cands[k].i) - rc(cands[k - 1].i)); if (g > 0.5) gaps.push(g); }
+      gaps.sort((p, q) => p - q);
+      const pitch = gaps.length ? gaps[Math.floor(gaps.length / 2)] : 12;
+      const tol = Math.max(3, pitch * 0.45);
+      // A cell's second line sits on the far side of its row's line, in the direction the rows run.
+      const rowDir = Math.sign(rc(cands[cands.length - 1].i) - rc(cands[0].i));
+      const wrapped = (k, home) => { const d = (rc(k) - home) * (rowDir || 1); return !hasPos || (rowDir ? d > 0 : d !== 0) && Math.abs(d) <= pitch * 1.5; };
+      pagesWithTable++;
+
+      cands.forEach((c, ci) => {
+        const end = ci + 1 < cands.length ? cands[ci + 1].i : toks.length;
+        const home = rc(c.dur);
+        const sameRow = k => !hasPos || Math.abs(rc(k) - home) <= tol;
+        if (hasPos && Math.abs(rc(c.names[0]) - home) > tol) return;   // a name that is not on its duration's line
+        const row = { page: pi, wbs: Number(toks[c.i].t), name: '', nameAt: null, durText: toks[c.dur].t, dates: {}, pct: null, predText: '', cost: null };
+        let name = '';
+        c.names.forEach(k => { const t = toks[k].t; name = !name ? t : (/[A-Za-z]-$/.test(name) ? name + t : name + ' ' + t); use(k); });
+        row.name = name.replace(/\s+/g, ' ').trim();
+        // Measured in reading order: on a page turned the other way the columns run towards smaller numbers.
+        if (hasPos) { const dir = toks[c.dur][colAxis] < toks[c.names[0]][colAxis] ? -1 : 1; row.nameAt = dir * toks[c.names[0]][colAxis]; row.durAt = dir * toks[c.dur][colAxis]; }
+        use(c.i); use(c.dur);
+        const dm = reDur.exec(row.durText);
+        row.days = dm ? unitDays(Number(dm[1]), dm[2], dm[3]) : null;
+        let q = c.dur + 1;
+        const after = pageCols.slice(pageCols.indexOf('duration') + 1);
+        row.noFinishCol = after.indexOf('finish') < 0;
+        after.forEach(col => {
+          if (q >= end) return;
+          if (DATE_COLS[col]) {
+            let k = q;
+            if (reWeekday.test(toks[k].t) && k + 1 < end) k++;
+            // A date cut before the separator of its year: "Mon 09/09" | "/".
+            const cut = !reDate.test(toks[k].t) && k + 1 < end && /^[\/.-]\d{0,4}$/.test(toks[k + 1].t) && sameRow(k + 1);
+            const m = reDate.exec(cut ? toks[k].t + toks[k + 1].t : toks[k].t);
+            // "Mon" on the row's line and "13/05/24" wrapped to the line below it, in the same column.
+            const wrap = hasPos && k > q && sameRow(q) && /^\d/.test(toks[k].t) && wrapped(k, home) && Math.abs(toks[k][colAxis] - toks[q][colAxis]) <= Math.max(2, tol);
+            if (!m || !(sameRow(k) || wrap)) return;
+            let y = m[3]; use(q); use(k); k++;
+            if (cut) { use(k); k++; }
+            // The rest of a cut year sits in the next piece - unless that piece is a predecessor. Joined, it
+            // must make a year the programme uses; an empty year takes a digit or two either way.
+            if (y.length < 2 && k < end && /^\d{1,3}$/.test(toks[k].t) && (y + toks[k].t).length <= 4 && (sameRow(k) || wrap && Math.abs(rc(k) - rc(k - 1)) <= tol)) {
+              const joined = y + toks[k].t;
+              const yr = joined.length === 2 ? 2000 + Number(joined) : joined.length === 4 ? Number(joined) : null;
+              const fits = yr == null ? y === '' : (!preYears.size || preYears.has(yr) || preYears.has(yr - 1) || preYears.has(yr + 1));
+              if (fits) { y = joined; use(k); k++; }
+            }
+            row.dates[col] = { a: Number(m[1]), b: Number(m[2]), y: y, w: (new RegExp('^' + WD, 'i').exec(toks[q].t) || [''])[0].toLowerCase() };
+            q = k;
+            return;
+          }
+          const t = toks[q].t;
+          if (!sameRow(q)) return;
+          if (col === 'pred' || col === 'succ') {
+            if (!rePreds.test(t)) return;
+            let p = t; use(q); q++;
+            // "2SS+2 wks" wrapped after its lag.
+            if (q < end && !sameRow(q) && wrapped(q, home) && rePreds.test(p + ' ' + toks[q].t)) { p += ' ' + toks[q].t; use(q); q++; }
+            if (col === 'pred') row.predText = p;
+            return;
+          }
+          if (col === 'pct') { const m = rePct.exec(t); if (m) { row.pct = Math.min(100, Number(m[1])); use(q); q++; } return; }
+          if (col === 'cost') { if (reCost.test(t)) { row.cost = Number(t.replace(/[^\d.-]/g, '')); use(q); q++; } return; }
+          if (col === 'res' && nameLike(t)) { use(q); q++; }
+        });
+        parsed.push(row);
+      });
+    });
+    out.columns = columns || [];
+    if (!parsed.length) { out.warnings.push(columns ? 'no-rows' : 'no-table'); return out; }
+
+    // Day and month: Australian exports are day first; a date whose first number is over 12 settles it.
+    let aOver = false, bOver = false;
+    parsed.forEach(r => Object.keys(r.dates).forEach(k => { const d = r.dates[k]; if (d.a > 12) aOver = true; if (d.b > 12) bOver = true; }));
+    const dayFirst = aOver || !bOver;
+    const full = y => (y.length === 4 ? (Number(y) >= 1900 && Number(y) <= 2099 ? Number(y) : null) : y.length === 2 ? 2000 + Number(y) : null);
+    const known = new Set(yearHints);
+    parsed.forEach(r => Object.keys(r.dates).forEach(k => { const y = full(r.dates[k].y); if (y) known.add(y); }));
+    const iso = (d, y) => { const day = dayFirst ? d.a : d.b, mon = dayFirst ? d.b : d.a; if (!(mon >= 1 && mon <= 12 && day >= 1 && day <= 31)) return ''; return y + '-' + String(mon).padStart(2, '0') + '-' + String(day).padStart(2, '0'); };
+    const ms = s => (s ? Date.UTC(Number(s.slice(0, 4)), Number(s.slice(5, 7)) - 1, Number(s.slice(8, 10))) : NaN);
+    const choices = (d, ref) => {
+      const pre = d.y.length === 3 ? d.y.slice(2) : d.y;   // "202" of a cut "2026" reads as "2"
+      const ys = new Set(known);
+      const r = ref ? Number(ref.slice(0, 4)) : null;
+      if (r) { ys.add(r - 1); ys.add(r); ys.add(r + 1); }
+      const all = [...ys].filter(y => y >= 1990 && y <= 2099 && String(y).slice(2).indexOf(pre) === 0).map(y => iso(d, y)).filter(Boolean);
+      // A weekday printed with the date settles which of those years it is.
+      const sameDay = all.filter(o => d.w && ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'].indexOf(d.w) === new Date(ms(o)).getUTCDay());
+      return sameDay.length ? sameDay : all;
+    };
+    let inferred = 0, lastStart = '';
+    // Until a row has settled a start, the first whole start in the table is the date to be near.
+    parsed.some(r => { const d = r.dates.start; lastStart = d && full(d.y) ? iso(d, full(d.y)) : ''; return lastStart; });
+    parsed.forEach(r => {
+      const s = r.dates.start, f = r.dates.finish;
+      let si = s && full(s.y) ? iso(s, full(s.y)) : '', fi = f && full(f.y) ? iso(f, full(f.y)) : '';
+      if (s && !si) {
+        const opts = choices(s, fi || lastStart);
+        // Worked back from the finish by the task's own duration when the finish is whole.
+        const ref = fi ? ms(fi) - (r.days || 0) * 7 / 5 * 864e5 : (lastStart ? ms(lastStart) : NaN);
+        const ok = opts.filter(o => !fi || ms(o) <= ms(fi));
+        const pool = ok.length ? ok : opts;
+        si = pool.sort((p, q) => Math.abs(ms(p) - ref) - Math.abs(ms(q) - ref))[0] || '';
+        if (si) { inferred++; r.inferred = true; }
+      }
+      if (f && !fi) {
+        const opts = choices(f, si || lastStart);
+        const span = (r.days || 0) * 7 / 5 * 864e5;
+        const ok = opts.filter(o => !si || ms(o) >= ms(si));
+        const pool = ok.length ? ok : opts;
+        const target = si ? ms(si) + span : (lastStart ? ms(lastStart) : NaN);
+        fi = pool.sort((p, q) => Math.abs(ms(p) - target) - Math.abs(ms(q) - target))[0] || '';
+        if (fi) { inferred++; r.inferred = true; }
+      }
+      // A table printed without its Finish column: the start carried on by the task's own duration, Monday to Friday.
+      if (si && !f && r.noFinishCol && r.days >= 1 && r.days <= 5000 && Number.isFinite(ms(si))) {
+        let t = ms(si);
+        for (let n = Math.ceil(r.days) - 1; n > 0; ) { t += 864e5; const w = new Date(t).getUTCDay(); if (w && w !== 6) n--; }
+        fi = new Date(t).toISOString().slice(0, 10); r.finishFromDays = true;
+      }
+      r.start = si; r.finish = fi || si;
+      if (!r.start && fi) r.start = fi;
+      if (si) lastStart = si;
+    });
+    if (inferred) out.warnings.push('years-inferred:' + inferred);
+    if (parsed.some(r => r.finishFromDays)) out.warnings.push('finish-from-duration:' + parsed.filter(r => r.finishFromDays).length);
+
+    // Rows in ID order, each ID once.
+    const seen = new Set();
+    let rows = parsed.filter(r => { if (seen.has(r.wbs)) return false; seen.add(r.wbs); return true; }).sort((p, q) => p.wbs - q.wbs);
+
+    // Summary rows. The indent of a name says it outright; when positions are missing or do not fall into
+    // indent steps, a row whose dates span exactly the run of rows after it is taken as their summary.
+    const coords = rows.map(r => r.nameAt).filter(v => typeof v === 'number').sort((p, q) => p - q);
+    // Positions come in points, where a name column is rarely 300 wide; an export drawn in a scaled space has
+    // a name column thousands wide, and its indent steps are larger in proportion.
+    const durAt = rows.map(r => r.durAt).filter(v => typeof v === 'number').sort((p, q) => p - q);
+    const sc = coords.length && durAt.length ? Math.max(1, (durAt[durAt.length >> 1] - coords[0]) / 300) : 1;
+    const steps = [];
+    coords.forEach(v => { if (!steps.length || v - steps[steps.length - 1] > 1.5 * sc) steps.push(v); });
+    const indentOk = coords.length === rows.length && steps.length >= 1 && steps.length <= 10 && steps.every((v, k) => !k || (v - steps[k - 1] >= 3 * sc && v - steps[k - 1] <= 40 * sc));
+    if (indentOk) {
+      rows.forEach(r => { let lv = 0; steps.forEach((v, k) => { if (r.nameAt >= v - 1.5 * sc) lv = k; }); r.level = lv; });
+    } else {
+      const stack = [];
+      rows.forEach((r, i) => {
+        while (stack.length && !(r.start >= stack[stack.length - 1].start && r.finish <= stack[stack.length - 1].finish)) stack.pop();
+        r.level = stack.length;
+        let j = i + 1, lo = null, hi = null, n = 0, cost = 0;
+        while (j < rows.length && rows[j].start >= r.start && rows[j].finish <= r.finish) { lo = lo == null || rows[j].start < lo ? rows[j].start : lo; hi = hi == null || rows[j].finish > hi ? rows[j].finish : hi; cost += rows[j].cost || 0; n++; j++; }
+        const costOk = r.cost == null || Math.abs(cost - r.cost) <= Math.max(1, r.cost * 0.001);
+        r.containsNext = n >= 2 && lo === r.start && hi === r.finish && costOk;
+        if (r.containsNext) stack.push(r);
+      });
+    }
+    rows.forEach((r, i) => { r.summary = indentOk ? (i + 1 < rows.length && rows[i + 1].level > r.level) : !!r.containsNext; });
+    if (!indentOk) out.warnings.push('levels-from-dates');
+    // The project's own summary row, when there is one, names the project rather than a group.
+    const top = rows[0];
+    if (top && top.summary && rows.slice(1).every(r => r.level > top.level)) { out.project = top.name; top.root = true; }
+    const parents = [];
+    rows.forEach(r => {
+      while (parents.length && parents[parents.length - 1].level >= r.level) parents.pop();
+      const p = parents.filter(x => !x.root);
+      r.group = p.length ? p[p.length - 1].name : '';
+      if (r.summary) parents.push(r);
+    });
+
+    // A name cut short by its cell is often printed in full beside its bar: "5 days Demolition of Existing
+    // Garages", "0% Kitchen Tiling". Such a label also carries % complete when the table does not.
+    const labels = [];
+    (pages || []).forEach((pg, pi) => (pg && pg.lines || []).forEach((l, k) => {
+      if (used[pi] && used[pi].has(k)) return;
+      const t = clean(l.t);
+      const m = new RegExp('^(?:(\\d{1,3})%\\s*|\\d+(?:\\.\\d+)?\\s*' + UNIT + '\\??\\s*)?(.{3,})$', 'i').exec(t);
+      if (m && /[A-Za-z]/.test(m[4])) labels.push({ name: m[4].trim(), pct: m[1] != null ? Number(m[1]) : null });
+    }));
+    const lower = s => s.toLowerCase();
+    // A duration, percentage or date printed after the name in a bar label, whole or cut off.
+    const tail = new RegExp('(?:\\s+(?:\\d+(?:\\.\\d+)?\\s*(?:' + UNIT + ')?\\??|\\d{1,3}%|' + WD + '?\\s*\\d{1,2}\\/\\d{1,2}(?:\\/\\d{0,4})?))+$', 'i');
+    const names = new Set(rows.map(r => lower(r.name)));
+    let completed = 0;
+    rows.forEach(r => {
+      const mine = lower(r.name);
+      // Only a label that goes on in words: "Roof Finalisation 1 wk" is the name with its duration after it.
+      const longer = [...new Set(labels.filter(l => !names.has(lower(l.name))).map(l => l.name.replace(tail, '').trim())
+        .filter(n => lower(n).indexOf(mine) === 0 && n.length > r.name.length && /^\s+[A-Za-z(&]/.test(n.slice(r.name.length)) && !names.has(lower(n))))];
+      if (longer.length === 1 && r.name.length >= 4) { r.name = longer[0]; completed++; }
+      if (r.pct == null && out.columns.indexOf('pct') < 0) { const hit = labels.find(l => l.pct != null && lower(l.name) === lower(r.name)); if (hit) r.pct = Math.min(100, hit.pct); }
+    });
+    if (completed) out.warnings.push('names-completed:' + completed);
+
+    const predsOf = text => String(text || '').split(/[,;]/).map(p => {
+      const m = /^\s*(\d+)\s*(FS|SS|FF|SF)?\s*(?:([+-])\s*(\d+(?:\.\d+)?)\s*(e?)(mins?|hrs?|days?|d|wks?|w|mons?|mo)?)?\s*$/i.exec(p);
+      if (!m) return null;
+      const lag = m[4] ? Math.round((m[3] === '-' ? -1 : 1) * unitDays(Number(m[4]), m[5], m[6] || 'd')) : 0;
+      return { wbs: Number(m[1]), type: (m[2] || 'FS').toUpperCase(), lag: lag };
+    }).filter(Boolean);
+    out.rows = rows.filter(r => r.start).map(r => ({ wbs: r.wbs, name: r.name, level: r.level, summary: !!r.summary, root: !!r.root, group: r.group,
+      start: r.start, finish: r.finish, days: r.days, pct: r.pct, preds: predsOf(r.predText), inferred: !!r.inferred }));
+    if (rows.some(r => !r.start)) out.warnings.push('rows-without-dates:' + rows.filter(r => !r.start).length);
+    if (rotatedSeen) out.rotated = true;
+    return out;
+  }
+
   previewScheduleFile() { const p = this.proj(this.state.pid); if (!p || !p.schedule || !p.schedule.fileUrl) return; this.openAttachment({ name: p.schedule.fileName, url: p.schedule.fileUrl, type: p.schedule.fileType }); }
   setScheduleActivity(id, field, val) { if (!this.can('schedule', 'edit')) return; this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, schedule: { ...(p.schedule || {}), activities: ((p.schedule || {}).activities || []).map(a => a.id === id ? { ...a, [field]: val } : a) } }) })); }
   // working days (Mon–Fri per the Defaults working week, minus project holidays) between two ISO dates, inclusive
@@ -11153,10 +11627,13 @@ class Component extends DCLogic {
   // operators, the three ways of moving the text cursor, and the font switch. A drop in the Y
   // position starts a new line; a gap in X becomes a space, which is what keeps "Total" and its
   // amount apart when they are drawn as two separate strings.
-  _apRunContent(content, fonts) {
+  // sink, when given, receives { t, x, y } for every line pushed: where its first character was placed.
+  _apRunContent(content, fonts, sink) {
     const lines = [];
     let cur = '', curY = null, lastX = null, font = null;
-    const flush = () => { const t = cur.replace(/[ \t]+/g, ' ').trim(); if (t) lines.push(t); cur = ''; lastX = null; };
+    let tx = 0, ty = 0, lineX = null, lineY = null;
+    const flush = () => { const t = cur.replace(/[ \t]+/g, ' ').trim(); if (t) { lines.push(t); if (sink) sink.push({ t: t, x: lineX, y: lineY }); } cur = ''; lastX = null; lineX = null; lineY = null; };
+    const mark = () => { if (sink && lineX == null) { lineX = Math.round(tx * 10) / 10; lineY = Math.round(ty * 10) / 10; } };
     const decode = s => {
       const f = font && fonts[font];
       if (f && f.map) {
@@ -11212,13 +11689,15 @@ class Component extends DCLogic {
 
       const num = k => { const it = stack[stack.length - k]; return it && it.t === 'num' ? it.v : 0; };
       if (op === 'Tf') { const it = stack[stack.length - 2]; if (it && it.t === 'n') font = it.v; }
-      else if (op === 'Tm') { const y = num(1), x = num(2); if (curY != null && (Math.abs(y - curY) > 1.5 || (lastX != null && Math.abs(x - lastX) > 1.5))) flush(); curY = y; lastX = x; }
-      else if (op === 'Td' || op === 'TD') { const y = num(1); if (y !== 0) flush(); curY = (curY || 0) + y; }
+      else if (op === 'Tm') { const y = num(1), x = num(2); if (curY != null && (Math.abs(y - curY) > 1.5 || (lastX != null && Math.abs(x - lastX) > 1.5))) flush(); curY = y; lastX = x; tx = x; ty = y; }
+      else if (op === 'Td' || op === 'TD') { const y = num(1); if (y !== 0) flush(); curY = (curY || 0) + y; tx += num(2); ty += y; }
+      else if (op === 'BT') { tx = 0; ty = 0; }
       else if (op === 'T*' || op === 'ET') flush();
-      else if (op === 'Tj' || op === "'" || op === '"') { const it = stack[stack.length - 1]; if (it && it.t === 's') cur += decode(it.v); if (op !== 'Tj') flush(); }
+      else if (op === 'Tj' || op === "'" || op === '"') { const it = stack[stack.length - 1]; if (it && it.t === 's') { mark(); cur += decode(it.v); } if (op !== 'Tj') flush(); }
       else if (op === 'TJ') {
         const it = stack[stack.length - 1];
         if (it && it.t === 'a') {
+          mark();
           const partRe = /\((?:\\.|[^\\()])*\)|<[0-9A-Fa-f\s]*>|[-+]?[\d.]+/g;
           let p;
           while ((p = partRe.exec(it.v))) {
@@ -11235,7 +11714,8 @@ class Component extends DCLogic {
     return lines.join('\n');
   }
 
-  _apPdfText(arrayBuffer) {
+  // pagesOut, when given, is filled with { page, lines: [{ t, x, y }] } for each page read.
+  _apPdfText(arrayBuffer, pagesOut) {
     try {
       const u8 = new Uint8Array(arrayBuffer);
       if (u8.length > 25 * 1024 * 1024) return Promise.resolve('');
@@ -11253,11 +11733,13 @@ class Component extends DCLogic {
           const contents = this._apDictGet(po.dict, 'Contents');
           const refs = (String(contents).match(/(\d+)\s+\d+\s+R/g) || []).map(s => Number(s.match(/\d+/)[0]));
           if (!refs.length) return '';
+          const sink = Array.isArray(pagesOut) ? [] : null;
           return Promise.all(refs.map(r => this._apObjText(u8, raw, objs, r)))
-            .then(parts => this._apRunContent(parts.join('\n'), fonts));
+            .then(parts => { const t = this._apRunContent(parts.join('\n'), fonts, sink); if (sink) pagesOut.push({ page: pnum, lines: sink }); return t; });
         }).catch(() => '');
       };
-      return pages.slice(0, 20).reduce(
+      if (Array.isArray(pagesOut)) pagesOut.total = pages.length;
+      return pages.slice(0, Array.isArray(pagesOut) ? 60 : 20).reduce(
         (chain, pnum) => chain.then(acc => readPage(pnum).then(t => acc.concat(t ? [t] : []))),
         Promise.resolve([])
       ).then(all => all.join('\n')).catch(() => '');
@@ -16275,6 +16757,9 @@ class Component extends DCLogic {
           onPct: e => this.setScheduleActivity(a.id, 'pct', Number(e.target.value) || 0), onCritical: () => this.toggleActivityCritical(a.id), onDelete: () => this.deleteActivity(a.id) };
       };
       const rows = shown.map(rowOf);
+      // A caption where a group starts, and "Other activities" where tasks without a group follow a group, so no
+      // task reads as part of the group above it.
+      rows.forEach((r, i) => { const g = String(shown[i].group || ''), before = i ? String(shown[i - 1].group || '') : ''; r.groupHead = g ? (g !== before ? g : '') : (before ? 'Other activities' : ''); r.hasGroupHead = !!r.groupHead; });
       // dependency links between shown activities (drawn as Gantt connectors, per relationship type)
       const rowH = 30; const idToShown = {}; shown.forEach((a, i) => idToShown[a.id] = i);
       const depLinks = [];
@@ -16348,6 +16833,61 @@ class Component extends DCLogic {
       scheduleV = {
         show: true, hasFile, noFile: !hasFile, fileName: sc.fileName || '', version: 'v' + (sc.version || 1), uploadedAt: sc.uploadedAt ? this.fmtDate(sc.uploadedAt) : '',
         canPreview: hasFile && !!sc.fileUrl, isPdf, versions, hasVersions: versions.length > 0,
+        canReadFile: hasFile && isPdf && !!sc.fileUrl && this.can('schedule', 'edit') && !(S.schedImport && S.schedImport.pid === p.id && S.schedImport.status === 'reading'),
+        onReadFile: () => this.readStoredScheduleFile(),
+        imp: (() => {
+          const im = S.schedImport;
+          const none = { show: false, title: '', note: '', color: '', bg: '', border: '', canReplace: false, canCancel: false, canUndo: false, canDismiss: false, onReplace: () => {}, onCancel: () => {}, onUndo: () => {}, onDismiss: () => {} };
+          if (!im || im.pid !== p.id) return none;
+          const tone = t => (t === 'warn' ? { color: '#8a5a1a', bg: '#fdf6ec', border: '#efd9c0' } : t === 'ok' ? { color: '#15803d', bg: '#eef8f1', border: '#cfe8d7' } : { color: '#0f1720', bg: '#f7f9fc', border: '#e4e8ee' });
+          const box = (t, title, note) => Object.assign({}, none, tone(t), { show: true, title: title, note: note || '', onReplace: () => this.applyScheduleImport(), onCancel: () => this.cancelScheduleImport(), onUndo: () => this.undoScheduleImport(), onDismiss: () => this.dismissScheduleImport() });
+          const plural = (n, one, many) => n + ' ' + (n === 1 ? one : many);
+          const file = im.fileName || 'the file';
+          const inGroups = im.groups ? ' in ' + plural(im.groups, 'group', 'groups') : '';
+          const yearNote = im.inferred ? plural(im.inferred, 'date had its', 'dates had their') + ' year cut off by a narrow column in the PDF and ' + (im.inferred === 1 ? 'was' : 'were') + ' worked out from the dates around ' + (im.inferred === 1 ? 'it' : 'them') + ' \u2014 worth a check.' : '';
+          const cutNote = (im.pagesTotal && im.pagesRead && im.pagesTotal > im.pagesRead) ? 'The PDF has ' + im.pagesTotal + ' pages and only the first ' + im.pagesRead + ' were read, so activities on the later pages are not included.' : '';
+          const newPct = im.pdfPct ? 'New activities take the % complete printed in the PDF.' : '';
+          if (im.status === 'reading') return box('', 'Reading the programme\u2026', file);
+          if (im.status === 'confirm') {
+            const b = box(cutNote ? 'warn' : '', 'Found ' + plural(im.count, 'activity', 'activities') + inGroups + ' in ' + file,
+              ['Replace the ' + plural(im.prevCount, 'activity', 'activities') + ' in the programme with these?',
+                im.carried ? (im.carried === 1 ? '1 activity is already in the programme and keeps its' : im.carried + ' activities are already in the programme and keep their') + ' % complete, budget line and critical flag.' :'None of them matches an activity already in the programme, so nothing entered on the current activities comes across.',
+                newPct, cutNote].filter(Boolean).join(' '));
+            b.canReplace = true; b.canCancel = true; return b;
+          }
+          if (im.status === 'done') {
+            const bits = [];
+            if (cutNote) bits.push(cutNote);
+            if (im.links) bits.push(plural(im.links, 'link', 'links') + ' between activities read.');
+            if (im.carried) bits.push(plural(im.carried, 'activity was', 'activities were') + ' already in the programme and kept % complete, budget line and critical flag.');
+            if (newPct) bits.push(newPct);
+            if (yearNote) bits.push(yearNote);
+            if (im.fromDays) bits.push('The PDF has no Finish column, so ' + plural(im.fromDays, 'finish was', 'finishes were') + ' worked out from the start and duration, Monday to Friday — worth a check against holidays.');
+            const b = box('ok', 'Read ' + plural(im.count, 'activity', 'activities') + inGroups + ' from ' + file, bits.join(' '));
+            b.canUndo = this.canUndoScheduleImport(p.id); b.canDismiss = true; return b;
+          }
+          if (im.status === 'undone') { const b = box('', 'Import undone', 'The programme is back to its ' + plural(im.prevCount || 0, 'activity', 'activities') + ' from before.'); b.canDismiss = true; return b; }
+          if (im.status === 'unreadable') {
+            const fromProject = ['mpp', 'mpx', 'xml'].indexOf(im.kind) >= 0;
+            const b = box('warn', 'Activities cannot be read from ' + (im.kind === 'other' ? 'this kind of file' : 'an .' + im.kind + ' file') + ' here',
+              fromProject ? 'The file is stored as the programme. To fill in the activities, open it in Microsoft Project, choose File \u2192 Export \u2192 Create PDF, and upload that PDF with Replace with new version.'
+                : 'The file is stored as the programme. Activities are read from a PDF exported from Microsoft Project; this file has come from other scheduling software, so add the activities with \uff0b Activity or ask for the programme as a Microsoft Project PDF.');
+            b.canDismiss = true; return b;
+          }
+          if (im.status === 'empty') {
+            if (im.why === 'unopened') {
+              const u = box('warn', 'No activities could be read from ' + file, 'Its pages are saved in a way this reader cannot open. Export it from Microsoft Project again (File \u2192 Export \u2192 Create PDF) and upload that, or add activities with \uFF0B Activity.');
+              u.canDismiss = true; return u;
+            }
+            const why = im.why === 'scan' ? 'This PDF is a scan or picture of the programme, so there is no text in it to read.'
+              : im.why === 'no-table' ? 'No Microsoft Project task table (ID, Task Name, Duration, Start, Finish) was found in it.'
+              : 'The task table was found, but no task rows with dates could be read from it.';
+            const b = box('warn', 'No activities could be read from ' + file, why + ' Add activities with \uFF0B Activity, or upload the PDF exported straight from Microsoft Project.');
+            b.canDismiss = true; return b;
+          }
+          const b = box('warn', 'The programme could not be read', im.why === 'open' ? 'The stored file could not be opened. Try uploading it again.' : 'Something in ' + file + ' stopped it being read. Try uploading it again, or add activities with \uFF0B Activity.');
+          b.canDismiss = true; return b;
+        })(),
         onUpload: e => this.uploadSchedule(e), onPreview: () => this.previewScheduleFile(),
         hasActivities: acts.length > 0, noActivities: acts.length === 0, rows, hasRows: rows.length > 0, count: String(acts.length),
         ticks, todayPct: todayPct, todayIn, todayLabel: this.fmtDate(today),
