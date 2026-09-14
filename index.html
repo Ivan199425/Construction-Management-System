@@ -4719,6 +4719,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                 <option value="">Select code…</option>
                 <sc-for list="{{ subModalV.costCatalog }}" as="o" hint-placeholder-count="3"><option value="{{ o.code }}">{{ o.label }}</option></sc-for>
               </select>
+              <sc-if value="{{ subModalV.noProjectCodes }}" hint-placeholder-val="{{ false }}"><div style="font-size:11.5px;color:#8a96a3;margin-top:5px">This project’s budget has no cost codes yet. Add them in Budget first.</div></sc-if>
             </div>
             <div><label style="font-size:12px;font-weight:600;color:#4a5765;display:block;margin-bottom:5px">Agreement value (ex-GST)</label><input value="{{ subModalV.value }}" onInput="{{ subModalV.onValue }}" disabled="{{ subModalV.locked }}" class="mono" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:'IBM Plex Mono',monospace;background:{{ subModalV.inputBg }}"></div>
             <div><label style="font-size:12px;font-weight:600;color:#4a5765;display:block;margin-bottom:5px">GST / Tax %</label><input value="{{ subModalV.taxRate }}" onInput="{{ subModalV.onTax }}" disabled="{{ subModalV.locked }}" class="mono" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:'IBM Plex Mono',monospace;background:{{ subModalV.inputBg }}"></div>
@@ -14201,6 +14202,31 @@ class Component extends DCLogic {
     return [...map.values()].sort((a, b) => ((a.parentCode || '') + '~' + a.code).localeCompare((b.parentCode || '') + '~' + b.code));
   }
   costCodeOptions() { return this.costCodeCatalog().map(c => ({ code: c.code, label: (c.parentCode ? c.parentCode + ' · ' : '') + c.code + (c.name ? ' — ' + c.name : '') })); }
+  // The codes in one project's budget, each once, labelled and ordered as costCodeOptions() labels and
+  // orders them - the same name the agreement preview and PDF print for the code, so the form and the
+  // document agree. `keep` is a code already saved on a record: if it has left the budget it stays on
+  // the list, marked (stale), so a dropdown never shows a saved value as blank.
+  projectCodeOptions(pid, keep) {
+    const p = this.proj(pid);
+    const meta = {}; this.costCodeCatalog().forEach(c => { meta[String(c.code).trim()] = c; });
+    const seen = {}, rows = [];
+    ((p && p.costLines) || []).forEach(l => {
+      const code = String(l.code == null ? '' : l.code).trim();
+      if (!code || seen[code]) return;
+      seen[code] = 1;
+      const m = meta[code]; const pc = (m && m.parentCode) || '';
+      const name = (m && m.name) || String(l.desc || '').trim();
+      rows.push({ code, sortKey: pc + '~' + code, label: (pc ? pc + ' · ' : '') + code + (name ? ' — ' + name : '') });
+    });
+    rows.sort((a, b) => a.sortKey.localeCompare(b.sortKey));
+    const out = rows.map(r => ({ code: r.code, label: r.label, stale: false }));
+    const k = String(keep == null ? '' : keep).trim();
+    if (k && !seen[k]) {
+      const m = meta[k]; const pc = (m && m.parentCode) || '';
+      out.push({ code: k, label: (pc ? pc + ' · ' : '') + k + ((m && m.name) ? ' — ' + m.name : '') + ' (not in this project’s budget)', stale: true });
+    }
+    return out;
+  }
   costCodeGroups() {
     const groups = []; const byKey = new Map();
     this.costCodeCatalog().forEach(c => {
@@ -17603,13 +17629,13 @@ class Component extends DCLogic {
       const status = agr ? agr.status : 'draft';
       const editable = status === 'draft';
       const vendorOptions = [...S.vendors].sort((a, b) => a.company.localeCompare(b.company)).map(v => ({ id: v.id, label: v.company + ' · ' + this.vendorTypeLabel(v.type) }));
-      const costCatalog = this.costCodeOptions();
+      const costCatalog = this.projectCodeOptions(S.pid, f.costCode);
       subModalV = {
         open: true, isCreate, mode: S.subModal.mode, cmId: S.subModal.cmId,
         title: isCreate ? 'New subcontract agreement' : (cm ? cm.vendor + ' · ' + cm.ref : 'Subcontract'),
         status, statusLabel: this.agrLabel(status), statusColor: this.agrMeta(status).color, statusBg: this.agrMeta(status).bg,
         editable, locked: status === 'signed', showCreate: isCreate, manageDraft: editable && !isCreate,
-        vendorId: f.vendorId, vendorOptions, costCode: f.costCode, costCatalog, value: f.value, taxRate: f.taxRate, retainagePct: f.retainagePct,
+        vendorId: f.vendorId, vendorOptions, costCode: f.costCode, costCatalog, noProjectCodes: !costCatalog.some(o => !o.stale), value: f.value, taxRate: f.taxRate, retainagePct: f.retainagePct,
         netAgreed: this.money(Number(f.value) || 0), taxAgreed: this.money((Number(f.value) || 0) * (Number(f.taxRate) || 0) / 100),
         totalAgreed: this.money((Number(f.value) || 0) * (1 + (Number(f.taxRate) || 0) / 100)),
         onTax: e => this.setSubForm('taxRate', e.target.value),
