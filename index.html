@@ -6127,7 +6127,7 @@ class Component extends DCLogic {
     P.projectSetup = { _default: 1, PM: 2, Superintendent: 2, Admin: 2, HR: 0, Architect: 1 };
     P.financial = { _default: 0, Field: 1, Employee: 1, PM: 3, Superintendent: 3, Finance: 3, Admin: 2, ContractAdmin: 1 };
     P.agreements = { _default: 0, PM: 2, Superintendent: 2, Finance: 1, Admin: 2, ContractAdmin: 1 };
-    P.variations = { _default: 0, Field: 2, Employee: 2, PM: 3, Superintendent: 3, Finance: 3, Admin: 2, ContractAdmin: 1, ClientSuper: 1 };
+    P.variations = { _default: 0, Field: 2, Employee: 2, PM: 3, Superintendent: 3, Finance: 3, Admin: 3, ContractAdmin: 1, ClientSuper: 1 };
     P.documents = { _default: 0, Field: 2, Employee: 2, PM: 2, Superintendent: 2, Finance: 1, Admin: 2, Architect: 1, ContractAdmin: 1, ClientSuper: 1, Student: 1 };
     P.rfis = { _default: 0, Field: 2, Employee: 2, PM: 3, Superintendent: 3, Admin: 2, Architect: 3, ClientSuper: 1, Student: 1 };
     P.punchList = { _default: 0, Field: 2, Employee: 2, PM: 3, Superintendent: 3, Admin: 2, ClientSuper: 1, Student: 1 };
@@ -6143,8 +6143,8 @@ class Component extends DCLogic {
     P.labour = { _default: 0, Field: 2, Employee: 2, PM: 3, Superintendent: 3, Finance: 3, HR: 3, Admin: 3, ContractAdmin: 1 };
     P.admin = { _default: 0, Admin: 2 };
     return P; }
-  _loadPerms() { const def = this._buildPerms(); try { if (typeof localStorage === 'undefined') return def; const raw = localStorage.getItem('cubicPerms'); if (!raw) return def; const saved = JSON.parse(raw); if (!saved || typeof saved !== 'object') return def; const out = {}; Object.keys(def).forEach(k => { out[k] = Object.assign({}, def[k], saved[k] || {}); }); Object.keys(saved).forEach(k => { if (!out[k]) out[k] = saved[k]; }); return out; } catch (e) { return def; } }
-  _savePerms(p) { try { if (typeof localStorage !== 'undefined') localStorage.setItem('cubicPerms', JSON.stringify(p)); } catch (e) {} }
+  _loadPerms() { const def = this._buildPerms(); try { if (typeof localStorage === 'undefined') return def; const raw = localStorage.getItem('cubicPerms'); if (!raw) return def; const saved = JSON.parse(raw); if (!saved || typeof saved !== 'object') return def; const rev = Number(localStorage.getItem('cubicPermsRev')) || 1; if (rev < 2 && saved.variations && saved.variations.Admin === 2) saved.variations = Object.assign({}, saved.variations, { Admin: 3 }); const out = {}; Object.keys(def).forEach(k => { out[k] = Object.assign({}, def[k], saved[k] || {}); }); Object.keys(saved).forEach(k => { if (!out[k]) out[k] = saved[k]; }); return out; } catch (e) { return def; } }
+  _savePerms(p) { try { if (typeof localStorage !== 'undefined') { localStorage.setItem('cubicPerms', JSON.stringify(p)); localStorage.setItem('cubicPermsRev', '2'); } } catch (e) {} }
   _normCodes(arr) {
     if (!Array.isArray(arr)) return [];
     return arr.map(p => ({ id: p.id || this._cid(), parentCode: p.parentCode || '', parentDesc: p.parentDesc || '', children: Array.isArray(p.children) ? p.children.map(c => ({ id: c.id || this._cid(), childCode: c.childCode || '', childDesc: c.childDesc || '' })) : [] }));
