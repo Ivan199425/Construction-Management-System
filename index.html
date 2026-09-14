@@ -4706,9 +4706,10 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
 
           <div style="display:grid;grid-template-columns:var(--cpms-2col,1fr 1fr);gap:14px">
             <sc-if value="{{ subModalV.showCreate }}" hint-placeholder-val="{{ true }}">
-              <div style="grid-column:1 / 3"><label style="font-size:12px;font-weight:600;color:#4a5765;display:block;margin-bottom:5px">Subcontractor</label>
+              <div style="grid-column:1 / 3"><div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:5px"><label style="font-size:12px;font-weight:600;color:#4a5765">Subcontractor</label><button onClick="{{ subModalV.onNewVendor }}" title="Add a vendor to the directory without leaving this agreement" style="border:0;background:transparent;color:#2b59c3;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;padding:0">＋ New vendor</button></div>
                 <select value="{{ subModalV.vendorId }}" onChange="{{ subModalV.onVendor }}" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:inherit;background:#fff;cursor:pointer">
                   <option value="">Select vendor…</option>
+                  <option value="__new__">＋ New vendor…</option>
                   <sc-for list="{{ subModalV.vendorOptions }}" as="o" hint-placeholder-count="3"><option value="{{ o.id }}">{{ o.label }}</option></sc-for>
                 </select>
               </div>
@@ -4734,7 +4735,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
             <div style="text-align:right"><div style="font-size:11px;color:#7b8b9b;letter-spacing:.3px;text-transform:uppercase">Total agreed value</div><div class="mono" style="font-size:22px;font-weight:600;letter-spacing:-.5px">{{ subModalV.totalAgreed }}</div></div>
           </div>
 
-          <div><label style="font-size:12px;font-weight:600;color:#4a5765;display:block;margin-bottom:5px">Scope summary</label><input value="{{ subModalV.scope }}" onInput="{{ subModalV.onScope }}" disabled="{{ subModalV.locked }}" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:inherit;background:{{ subModalV.inputBg }}"></div>
+          <div><label style="font-size:12px;font-weight:600;color:#4a5765;display:block;margin-bottom:5px">Scope of works</label><textarea value="{{ subModalV.scope }}" onInput="{{ subModalV.onScope }}" disabled="{{ subModalV.locked }}" rows="3" placeholder="Upload the quote below and this is read from it" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;line-height:1.5;font-family:inherit;background:{{ subModalV.inputBg }};resize:vertical"></textarea></div>
 
           <div>
             <div style="display:flex;align-items:center;flex-wrap:var(--cpms-wrap,nowrap);justify-content:space-between;margin-bottom:5px"><label style="font-size:12px;font-weight:600;color:#4a5765">Special conditions <span style="color:#a4afba;font-weight:400">· project-specific only — the standard T&amp;Cs attach automatically as Annexure A</span></label>
@@ -4753,13 +4754,29 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
             </div>
           </div>
 
-          <div style="display:flex;align-items:center;gap:12px;background:#f7f9fb;border:1px solid #e4e8ee;border-radius:9px;padding:12px 14px">
-            <div style="flex:1;font-size:12.5px;color:#4a5765"><strong>Quote</strong> <span style="color:#a4afba">— mandatory before sending</span><sc-if value="{{ subModalV.hasQuote }}" hint-placeholder-val="{{ false }}"><div class="mono" style="font-size:12px;color:#15803d;margin-top:2px">🧾 {{ subModalV.quote }}</div></sc-if></div>
+          <div style="display:flex;flex-wrap:var(--cpms-wrap,nowrap);align-items:center;gap:12px;background:#f7f9fb;border:1px solid #e4e8ee;border-radius:9px;padding:12px 14px">
+            <div style="flex:1;font-size:12.5px;color:#4a5765"><strong>Quote</strong> <span style="color:#a4afba">— mandatory before sending. A PDF is read and fills in the scope, inclusions and exclusions.</span><sc-if value="{{ subModalV.hasQuote }}" hint-placeholder-val="{{ false }}"><div class="mono" style="font-size:12px;color:#15803d;margin-top:2px">🧾 {{ subModalV.quote }}</div></sc-if></div>
             <div style="display:flex;flex-wrap:var(--cpms-wrap,nowrap);align-items:center;gap:8px;flex:0 0 var(--cpms-grow,auto)">
               <sc-if value="{{ subModalV.hasQuoteFile }}" hint-placeholder-val="{{ false }}"><button onClick="{{ subModalV.onViewQuote }}" title="View the attached quote" style="border:1px solid #cfd8e2;background:#fff;color:#2b59c3;border-radius:7px;padding:7px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="border-color:#2b59c3">👁 View</button></sc-if>
               <sc-if value="{{ subModalV.editable }}" hint-placeholder-val="{{ true }}"><label style="border:1px solid #cfd8e2;background:#fff;color:#2b59c3;border-radius:7px;padding:7px 13px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap;display:inline-block" style-hover="border-color:#2b59c3">{{ subModalV.quoteBtnLabel }}<input type="file" accept="application/pdf,image/*" onChange="{{ subModalV.onAttachQuote }}" style="display:none"></label></sc-if>
             </div>
           </div>
+
+          <sc-if value="{{ subModalV.qr.show }}" hint-placeholder-val="{{ false }}">
+            <div style="border:1px solid {{ subModalV.qr.border }};background:{{ subModalV.qr.bg }};border-radius:9px;padding:12px 14px">
+              <div style="font-size:12.5px;font-weight:600;color:{{ subModalV.qr.color }}">{{ subModalV.qr.title }}</div>
+              <sc-for list="{{ subModalV.qr.rows }}" as="r" hint-placeholder-count="6">
+                <div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;padding:7px 0;border-top:1px solid rgba(15,23,32,.07);margin-top:6px;font-size:12.5px">
+                  <div style="flex:0 0 84px;color:#6b7787;font-weight:600">{{ r.label }}</div>
+                  <div style="flex:1 1 240px;min-width:0;color:{{ r.textColor }};word-break:break-word">{{ r.text }}</div>
+                  <div style="flex:0 0 auto;font-size:11.5px;font-weight:600;color:{{ r.stateColor }}">{{ r.state }}</div>
+                  <sc-if value="{{ r.canUse }}" hint-placeholder-val="{{ false }}"><button onClick="{{ r.onUse }}" title="Replace what you typed with what the quote says" style="border:1px solid #cfd8e2;background:#fff;color:#2b59c3;border-radius:6px;padding:4px 10px;font-size:11.5px;font-weight:600;cursor:pointer;font-family:inherit">Use the quote’s</button></sc-if>
+                  <sc-if value="{{ r.canAddVendor }}" hint-placeholder-val="{{ false }}"><button onClick="{{ r.onAddVendor }}" title="Add this supplier to the vendor directory, filled in from the quote" style="border:1px solid #2b59c3;background:#2b59c3;color:#fff;border-radius:6px;padding:4px 10px;font-size:11.5px;font-weight:600;cursor:pointer;font-family:inherit">＋ Add as new vendor</button></sc-if>
+                </div>
+              </sc-for>
+              <sc-if value="{{ subModalV.qr.note }}" hint-placeholder-val="{{ false }}"><div style="font-size:11.5px;color:#6b7787;margin-top:8px;line-height:1.5">{{ subModalV.qr.note }}</div></sc-if>
+            </div>
+          </sc-if>
 
           <sc-if value="{{ subModalV.locked }}" hint-placeholder-val="{{ false }}">
             <div style="border-top:1px solid #eef1f4;padding-top:14px">
@@ -11194,7 +11211,7 @@ class Component extends DCLogic {
 
       const num = k => { const it = stack[stack.length - k]; return it && it.t === 'num' ? it.v : 0; };
       if (op === 'Tf') { const it = stack[stack.length - 2]; if (it && it.t === 'n') font = it.v; }
-      else if (op === 'Tm') { const y = num(2), x = num(6); if (curY != null && Math.abs(y - curY) > 1.5) flush(); curY = y; lastX = x; }
+      else if (op === 'Tm') { const y = num(1), x = num(2); if (curY != null && (Math.abs(y - curY) > 1.5 || (lastX != null && Math.abs(x - lastX) > 1.5))) flush(); curY = y; lastX = x; }
       else if (op === 'Td' || op === 'TD') { const y = num(1); if (y !== 0) flush(); curY = (curY || 0) + y; }
       else if (op === 'T*' || op === 'ET') flush();
       else if (op === 'Tj' || op === "'" || op === '"') { const it = stack[stack.length - 1]; if (it && it.t === 's') cur += decode(it.v); if (op !== 'Tj') flush(); }
@@ -11551,8 +11568,212 @@ class Component extends DCLogic {
   setSubForm(k, v) { this.setState(s => ({ subForm: { ...s.subForm, [k]: v } })); }
   attachQuote(e) {
     const f = (e && e.target && e.target.files && e.target.files[0]); if (e && e.target) e.target.value = ''; if (!f) return;
-    this.setState(s => (s.subForm ? { subForm: { ...s.subForm, quote: f.name } } : {}));
+    const isPdf = /pdf$/i.test(f.type || '') || /\.pdf$/i.test(f.name || '');
+    this.setState(s => (s.subForm ? { subForm: { ...s.subForm, quote: f.name, quoteRead: { status: isPdf ? 'reading' : 'image' } } } : {}));
     this._sbUploadFile(f, 'quotes').then(url => { if (url) this.setState(s => (s.subForm ? { subForm: { ...s.subForm, quoteUrl: url, quoteType: f.type || '' } } : {})); });
+    // A photo has no text in it to read. A PDF usually does, and the same reader the supplier
+    // invoices use gets it out.
+    if (!isPdf) return;
+    this._apReadBuffer(f).then(buf => (buf ? this._apPdfText(buf) : ''))
+      .then(text => this.applyQuoteRead(this.readQuoteText(text)))
+      .catch(() => this.setState(s => (s.subForm ? { subForm: { ...s.subForm, quoteRead: { status: 'error' } } } : {})));
+  }
+  // Fill what is empty, keep what is typed, and remember which was which so the panel can say so.
+  applyQuoteRead(q) {
+    this.setState(s => {
+      const f = s.subForm; if (!f) return {};
+      if (!q || !q.hasText) return { subForm: { ...f, quoteRead: { status: 'notext' } } };
+      const empty = v => { const x = String(v == null ? '' : v).trim(); return !x || x === '0'; };
+      const next = { ...f }; const filled = {}, kept = {};
+      const offer = (key, val) => {
+        if (val == null || String(val).trim() === '') return;
+        if (empty(f[key])) { next[key] = val; filled[key] = 1; }
+        else if (String(f[key]).trim() !== String(val).trim()) kept[key] = 1;
+      };
+      offer('scope', q.scope);
+      offer('inclusions', (q.inclusions || []).join('\n'));
+      offer('exclusions', (q.exclusions || []).join('\n'));
+      offer('value', q.valueEx != null ? String(q.valueEx) : '');
+      // A name worked out from an email address is too loose to match on; ABN and email are not.
+      const v = this.apMatchVendor({ abn: q.abn, supplierName: q.supplierGuess ? '' : q.supplierName }, q.email || '');
+      if (v && !f.vendorId) { next.vendorId = v.id; filled.vendorId = 1; }
+      next.quoteRead = { status: 'done', q: q, filled: filled, kept: kept, vendorId: v ? v.id : '' };
+      return { subForm: next };
+    });
+  }
+  // Take the quote's version over what was typed, for one field.
+  useQuoteField(key) {
+    this.setState(s => {
+      const f = s.subForm, r = f && f.quoteRead; if (!r || !r.q) return {};
+      const q = r.q;
+      const val = key === 'inclusions' ? (q.inclusions || []).join('\n') : key === 'exclusions' ? (q.exclusions || []).join('\n')
+        : key === 'value' ? (q.valueEx != null ? String(q.valueEx) : null) : key === 'scope' ? q.scope : null;
+      if (val == null) return {};
+      const kept = Object.assign({}, r.kept); delete kept[key];
+      return { subForm: { ...f, [key]: val, quoteRead: Object.assign({}, r, { kept: kept, filled: Object.assign({}, r.filled, { [key]: 1 }) }) } };
+    });
+  }
+  pickSubVendor(val) { if (val === '__new__') { this.openSubVendor(); return; } this.setSubForm('vendorId', val); }
+  // A new vendor from inside the agreement, with whatever the quote said about the supplier already in.
+  openSubVendor() {
+    const r = (this.state.subForm || {}).quoteRead; const q = (r && r.q) || {};
+    this.setState({ vendorModal: { sub: true }, vendorForm: { type: 'contractor', company: q.supplierName || '', rep: '',
+      abn: q.abn ? this.apAbnFormat(q.abn) : '', phone: q.phone || '', email: q.email || '', address: q.address || '' } });
+  }
+  // ---- reading a subcontractor's quote ----------------------------------------------------------
+  // Returns what could be found, and nothing that could not. Every field is a suggestion for the
+  // person filling in the agreement, who sees where each one came from before anything is sent.
+  readQuoteText(text) {
+    const raw = String(text || '');
+    const out = { hasText: raw.replace(/\s/g, '').length > 40, supplierName: '', abn: '', email: '', phone: '', address: '',
+      quoteNo: '', validity: '', subtotal: null, gst: null, total: null, valueEx: null, valueFrom: '',
+      scope: '', inclusions: [], exclusions: [] };
+    if (!out.hasText) return out;
+
+    const lines = raw.split(/\r?\n/).map(l => l.replace(/&nbsp;|\u00a0/g, ' ').replace(/\s+/g, ' ').trim());
+    const co = this.state.company || {};
+    const ours = String(co.name || '').trim().toLowerCase();
+
+    // ---- who it is from ----
+    const base = (this.apExtractFields(raw) || {}).fields || {};
+    if (base.abn) out.abn = base.abn;
+    // The invoice reader's letterhead guess, unless it is a word every quote prints ("Quote"), a line
+    // of work ("1Remove all sealant"), or the company the quote is addressed to.
+    const notAName = n => { const x = String(n || '').trim(); return !x || x.length > 60 || /^\d/.test(x) || /@/.test(x)
+      || /^(?:tax\s+)?(?:quote|quotation|invoice|estimate|proposal|tender|date|expiry|reference|attention|description|page|abn)\b/i.test(x)
+      || (ours && x.toLowerCase() === ours); };
+    if (!notAName(base.supplierName)) out.supplierName = String(base.supplierName).trim();
+    const emails = raw.match(/[\w.+-]+@[\w-]+(?:\.[\w-]+)+/g) || [];
+    out.email = emails.find(e => !(this.apIsInternal && this.apIsInternal(e))) || '';
+    if (!out.supplierName) {
+      const firm = /\b(?:pty\.?\s*ltd|pty\s+limited|limited|ltd|trust|group|services|electrical|plumbing|construction|builders|air\s*conditioning|aircon|landscap\w*|roofing|painting|carpentry|concrete|steel|glazing|scaffold\w*|demolition|hire)\b/i;
+      const hit = lines.slice(0, 30).find(l => firm.test(l) && !notAName(l) && !/\b(?:street|road|avenue|nsw|vic|qld)\b/i.test(l));
+      if (hit) out.supplierName = hit;
+    }
+    // Last resort, and said to be one: the name on the email address, if it is a business's own.
+    if (!out.supplierName && out.email && !/@(?:gmail|googlemail|hotmail|outlook|live|yahoo|bigpond|icloud|me|optusnet|tpg|iinet)\./i.test(out.email)) {
+      const d = out.email.split('@')[1].split('.')[0];
+      out.supplierName = d.charAt(0).toUpperCase() + d.slice(1); out.supplierGuess = true;
+    }
+    const phone = raw.match(/(?:\+?61[\s-]?|\b0)[2-478](?:[\s-]?\d){8}\b/);
+    if (phone) out.phone = phone[0].trim();
+    const street = /\d+[A-Za-z]?(?:\/\d+)?\s+[A-Za-z' ]+\b(street|st|road|rd|avenue|ave|place|pl|drive|dr|lane|ln|way|parade|pde|highway|hwy|court|ct|crescent|cres|close|cl|boulevard|blvd|terrace|tce)\b/i;
+    const locality = /\b(NSW|VIC|QLD|SA|WA|TAS|ACT|NT|New South Wales|Victoria|Queensland|South Australia|Western Australia|Tasmania)\b[\s,]*\d{4}\b/i;
+    for (let i = 0; i < lines.length && i < 40; i++) {
+      if (locality.test(lines[i])) { out.address = (i > 0 && street.test(lines[i - 1]) ? lines[i - 1] + ', ' : '') + lines[i]; break; }
+      if (street.test(lines[i]) && locality.test(lines[i])) { out.address = lines[i]; break; }
+    }
+
+    // ---- which quote, and for how long ----
+    const qn = raw.match(/\bquot(?:e|ation)\s*(?:no\.?|number|#|ref(?:erence)?)?\s*[:#]?\s*([A-Z]{0,4}[-\/]?\d[\w\-\/]{0,20})/i);
+    if (qn) out.quoteNo = qn[1];
+    const valid = raw.match(/\b(?:quote|quotation|price|prices|tender|offer)\s+(?:is\s+|are\s+)?valid\s+(?:for\s+|until\s+|to\s+|till\s+)?([^\n.;]{2,30})/i);
+    if (valid) out.validity = valid[1].trim();
+
+    // ---- the money: the last figure of each kind is the one that covers everything ----
+    const money = v => { const n = Number(String(v).replace(/[^0-9.]/g, '')); return isFinite(n) && n > 0 ? Math.round(n * 100) / 100 : null; };
+    const lastOf = re => { let m, v = null; const g = new RegExp(re.source, re.flags.indexOf('g') >= 0 ? re.flags : re.flags + 'g'); while ((m = g.exec(raw))) v = money(m[1]); return v; };
+    out.subtotal = lastOf(/\b(?:sub\s*-?\s*total|total\s*\(?\s*ex(?:cl)?(?:\.|uding)?\s*(?:of\s*)?g\.?s\.?t\.?\s*\)?|net\s+total)\s*[:#]?\s*\$?\s*([\d,]+\.\d{2})/i);
+    out.gst = lastOf(/\bg\.?s\.?t\.?\s*(?:\(?\d{1,2}\s*%\)?)?\s*[:#]?\s*\$?\s*([\d,]+\.\d{2})/i);
+    out.total = lastOf(/\btotal\s*(?:\(?\s*inc(?:l|luding)?\.?\s*g\.?s\.?t\.?\s*\)?|aud|amount|price|payable)?\s*[:#]?\s*\$?\s*([\d,]+\.\d{2})/i);
+    if (out.subtotal != null) { out.valueEx = out.subtotal; out.valueFrom = 'subtotal'; }
+    else if (out.total != null && out.gst != null && out.total > out.gst) { out.valueEx = Math.round((out.total - out.gst) * 100) / 100; out.valueFrom = 'total less GST'; }
+    else if (out.total != null) { out.valueEx = Math.round(out.total / 1.1 * 100) / 100; out.valueFrom = 'total including GST, less 10%'; }
+
+    // ---- the words: sections where there are headings, sentences where there are not ----
+    const heading = l => {
+      if (!l || l.length > 90) return '';
+      const h = l.replace(/\s*\((?:where relevant|unless specified|if applicable|as applicable)[^)]*\)\s*$/i, '').replace(/[\s:.\-–—]+$/, '').trim();
+      if (/^(?:common\s+|general\s+|standard\s+)?(?:inclusions?|included(?:\s+items?)?|what'?s\s+included|(?:our\s+|this\s+)?(?:price|quote|quotation|tender)\s+includes?)$/i.test(h)) return 'inc';
+      if (/^(?:common\s+|general\s+|standard\s+)?(?:exclusions?|excluded(?:\s+items?)?|not\s+included|items?\s+not\s+included|what'?s\s+not\s+included|(?:our\s+|this\s+)?(?:price|quote|quotation|tender)\s+(?:excludes?|does\s+not\s+include))$/i.test(h)) return 'exc';
+      if (/^(?:job\s+description|scope(?:\s+of\s+(?:the\s+)?works?)?|description\s+of\s+(?:the\s+)?works?|works?\s+description|project\s+scope|(?:priced\s+)?quotation\s*[-–]\s*scope\s+of\s+works?)$/i.test(h)) return 'scope';
+      if (/^(?:(?:quotation\s+)?terms(?:\s*(?:and|&)\s*conditions)?|general\s+conditions|conditions(?:\s+of\s+\w+)?|payment(?:\s+terms)?|notes?(?:,?\s+assumptions.*)?|assumptions|clarifications|qualifications|warranty|validity|acceptance|signature|sub\s*-?\s*total|total\b.*|g\.?s\.?t|pricing|price|programme|program|schedule(?:\s+of\s+rates)?|important\s+information|declaration)$/i.test(h)) return 'stop';
+      return '';
+    };
+    const inline = l => { const m = l.match(/^(inclusions?|exclusions?|scope(?:\s+of\s+works?)?)\s*:\s*(.{3,})$/i); return m ? { kind: /^inc/i.test(m[1]) ? 'inc' : (/^exc/i.test(m[1]) ? 'exc' : 'scope'), rest: m[2] } : null; };
+    const marker = /^(?:[•\-\*·▪●○◦–]|\(?\d{1,2}[.)]|\(?[a-z][.)])\s+/i;
+    const tableWord = /^(?:description|qty|quantity|unit\s*price|total\s*price|amount|rate|item|price|unit|each|ea)$/i;
+    const priceOnly = /^\$?\s*[\d,]+(?:\.\d{2})?\s*\$?$/;
+    const tidy = x => x.replace(marker, '').replace(/\s*\$\s*[\d,]+\.\d{2}\s*\$?\s*$/, '').replace(/\s+/g, ' ').trim();
+
+    const used = {};
+    const sections = { inc: [], exc: [], scope: [] };
+    for (let i = 0; i < lines.length; i++) {
+      const il = inline(lines[i]);
+      if (il) { il.rest.split(/;\s*/).map(tidy).filter(Boolean).forEach(x => sections[il.kind].push(x)); used[i] = 1; continue; }
+      const kind = heading(lines[i]);
+      if (kind !== 'inc' && kind !== 'exc' && kind !== 'scope') continue;
+      used[i] = 1;
+      const items = [];
+      let marked = null;
+      for (let j = i + 1; j < lines.length; j++) {
+        const l = lines[j];
+        if (!l) { if (items.length && !marked) break; continue; }
+        if (heading(l) || inline(l)) break;
+        const starts = marker.test(l);
+        if (marked === null) marked = starts;
+        const last = items.length ? items[items.length - 1] : '';
+        const continues = last && (/^[a-z(]/.test(l) || /[,\-–&]$|\b(?:and|or|of|the|to|for|with)$/i.test(last));
+        if (kind === 'scope' && (tableWord.test(l) || priceOnly.test(l) || /^\d+(?:\.\d+)?\s*(?:item|items|ea|each|no|m2|m|lm|hrs?)?$/i.test(l))) { used[j] = 1; continue; }
+        if (starts) items.push(tidy(l));
+        else if (continues) items[items.length - 1] = last + ' ' + l;
+        else if (marked) break;
+        else if (items.length >= 30) break;
+        else items.push(tidy(l));
+        used[j] = 1;
+        if (kind !== 'scope' && items.length > 40) break;
+      }
+      items.filter(Boolean).forEach(x => sections[kind].push(x));
+    }
+
+    // Sentences that say what is or is not included, wherever they are.
+    const priceBasis = /\b(?:ex(?:cl)?(?:\.|uding)?|inc(?:l)?(?:\.|uding|usive)?)\s*(?:of\s+)?g\.?s\.?t\b|\bg\.?s\.?t\.?\s*(?:ex|inc)/i;
+    const excStart = /^(?:no\s+allowance|allowance\s+has\s+not\s+been\s+made|excludes?\b|excluding\b|we\s+do\s+not\s+include|does\s+not\s+include|client\s+to\s+(?:supply|provide|arrange)|owner\s+to\s+(?:supply|provide|arrange))/i;
+    const excAnywhere = /\b(?:not\s+included|by\s+others|sold\s+separately)\b/i;
+    // "Microwave not included" is an exclusion. "Please ensure pets are kept out and not included in
+    // the work area" is an instruction that happens to contain the words. The difference is length
+    // and how the sentence opens.
+    const prose = /^(?:please|we|if|it|this|our|you|note\s+that|should|where|when|although|however|in\s+the\s+event)\b/i;
+    const excSentence = { test: l => excStart.test(l) || (excAnywhere.test(l) && l.length <= 80 && !prose.test(l)) };
+    const incSentence = /^(?:includes?\b|including\b|inclusive\s+of\b|(?:our\s+)?(?:price|quote|quotation)\s+includes\b|allowance\s+(?:has\s+been\s+made\s+)?for\b|supply\s+(?:and|&)\s+install\b)/i;
+    const scopeSentence = /^scope\s+(?:only\s+)?(?:consists?|comprises?|includes?)\s+(?:of\s+)?/i;
+    const scopeBits = [];
+    // Terms and conditions are full of "not responsible" and "by others" that are about liability,
+    // not about what was priced. Sentences are not collected from inside them.
+    const termsHead = /^(?:(?:quotation\s+|general\s+)?terms(?:\s*(?:and|&)\s*conditions)?|general\s+conditions|conditions(?:\s+of\s+\w+)?|warranty|acceptance|declaration|signature)[\s:.]*$/i;
+    let inTerms = false;
+    const products = {};
+    lines.forEach((l, i) => {
+      if (!l) return;
+      if (termsHead.test(l)) { inTerms = true; return; }
+      const hk = heading(l);
+      if (hk === 'inc' || hk === 'exc' || hk === 'scope') inTerms = false;
+      if (used[i] || inTerms) return;
+      const pr = l.match(/^(?:product|service|works?)\s*:\s*(.{3,60})$/i);
+      if (pr) { products[pr[1].trim()] = 1; return; }
+      // A sentence that wraps carries on into the next line.
+      const whole = () => { let x = l; for (let j = i + 1; j < lines.length && j < i + 3; j++) { const n = lines[j]; if (!n || used[j] || heading(n)) break; if (/^[a-z(]/.test(n) || /\b(?:for|to|of|and|or|the|with|a|an|in|on)$/i.test(x)) { x += ' ' + n; used[j] = 1; } else break; } return x; };
+      const g = l.match(/^_{3,}\s*(.+?)\s*_{3,}$/);
+      if (g) { if (!/^general\s+items?$/i.test(g[1])) scopeBits.push(g[1]); return; }
+      const it = l.match(/^item\s+\d+\s*[-–:]\s*(.+)$/i);
+      if (it) { scopeBits.push(it[1]); return; }
+      if (scopeSentence.test(l)) { scopeBits.unshift(l.replace(/\s+/g, ' ')); return; }
+      if (priceBasis.test(l) && !/\b(?:not\s+included|by\s+others|sold\s+separately|no\s+allowance)\b/i.test(l)) return;
+      const clean = x => tidy(x.replace(/^\((?:sold\s+separately)\)\s*/i, '').replace(/^note\s*:\s*/i, ''));
+      // A line that starts in lower case is the middle of somebody's paragraph, and "not included"
+      // halfway through a paragraph about ceilings is not an exclusion list.
+      if (/^[a-z]/.test(l)) return;
+      if (excSentence.test(l)) sections.exc.push(clean(whole()));
+      else if (incSentence.test(l)) sections.inc.push(clean(whole()));
+    });
+    Object.keys(products).forEach(x => scopeBits.push(x));
+
+    const uniq = list => { const seen = {}; return list.map(x => x.replace(/\s+/g, ' ').trim()).filter(x => { const k = x.toLowerCase(); if (!x || x.length < 3 || seen[k]) return false; seen[k] = 1; return true; }); };
+    out.inclusions = uniq(sections.inc);
+    out.exclusions = uniq(sections.exc);
+    const scopeText = uniq(scopeBits.concat(sections.scope)).join('. ').replace(/\.\s*\./g, '.');
+    out.scope = scopeText.length > 900 ? scopeText.slice(0, 897).replace(/\s+\S*$/, '') + '...' : scopeText;
+    return out;
   }
   viewSubQuote() { const f = this.state.subForm; if (f && f.quoteUrl) this.openAttachment({ name: f.quote || 'quote', url: f.quoteUrl, type: f.quoteType || '' }); }
   viewCommitmentQuote(cmId) { const cm = (this.proj(this.state.pid).commitments || []).find(c => c.id === cmId); const a = cm && this.getAgr(cm); if (a && a.quoteUrl) this.openAttachment({ name: a.quote || 'quote', url: a.quoteUrl, type: a.quoteType || '' }); }
@@ -13721,6 +13942,7 @@ class Component extends DCLogic {
       return {
         vendors: nextVendors,
         vendorModal: null,
+        subForm: (vendorModal.sub && s.subForm) ? { ...s.subForm, vendorId: id } : s.subForm,
         projects: vendorModal.billId ? s.projects.map(p => p.id !== s.pid ? p : { ...p, bills: (p.bills || []).map(x => x.id === vendorModal.billId ? { ...x, vendorId: id } : x) }) : s.projects,
       };
     }, () => { if (vendorModal.apId) this._apCommit(vendorModal.apId, { vendorId: id }, 'Supplier added to the Directory', vendor.company); }));
@@ -17400,6 +17622,41 @@ class Component extends DCLogic {
         sendBg: (status === 'draft' && !!f.quote && this.canIssue()) ? '#2b59c3' : '#c7d0db',
         sendCursor: (status === 'draft' && !!f.quote && this.canIssue()) ? 'pointer' : 'not-allowed',
         quoteBtnLabel: f.quote ? 'Replace quote' : 'Upload quote',
+        qr: (() => {
+          const r = f.quoteRead;
+          if (!r || !editable) return { show: false, rows: [] };
+          const box = (title, tone, note) => ({ show: true, rows: [], title: title, note: note || '',
+            color: tone === 'warn' ? '#b45309' : '#4a5765', bg: tone === 'warn' ? '#fbf1e3' : '#f7f9fb', border: tone === 'warn' ? '#eddcc0' : '#e4e8ee' });
+          if (r.status === 'reading') return box('Reading the quote\u2026', '', '');
+          if (r.status === 'image') return box('A photo or scan has no text to read', 'warn', 'The quote is attached. Fill in the scope, inclusions and exclusions by hand \u2014 or upload the PDF the supplier sent, which usually has the text inside it.');
+          if (r.status === 'notext') return box('Nothing could be read from this PDF', 'warn', 'It looks like a scan, so there is no text inside it. The quote is attached; fill the fields in by hand.');
+          if (r.status === 'error') return box('The quote could not be read', 'warn', 'It is attached. Fill the fields in by hand.');
+          const q = r.q || {};
+          const cut = (x, n) => { x = String(x || ''); return x.length > n ? x.slice(0, n - 1) + '\u2026' : x; };
+          const state = key => (r.filled || {})[key] ? ['Filled in', '#15803d'] : ((r.kept || {})[key] ? ['Kept yours', '#b45309'] : ['', '#8894a2']);
+          const row = (label, text, key) => {
+            const st = key ? state(key) : ['', '#8894a2'];
+            return { label: label, text: text || 'Not found in the quote', muted: !text, textColor: text ? '#0f1720' : '#a4afba',
+              state: text ? st[0] : '', stateColor: st[1], canUse: !!(key && (r.kept || {})[key]), onUse: () => this.useQuoteField(key),
+              canAddVendor: false, onAddVendor: () => {} };
+          };
+          const matched = r.vendorId ? (S.vendors || []).find(v => v.id === r.vendorId) : null;
+          const who = [q.supplierName ? q.supplierName + (q.supplierGuess ? ' (from the email address)' : '') : '', q.abn ? 'ABN ' + this.apAbnFormat(q.abn) : ''].filter(Boolean).join(' \u00b7 ');
+          const supplier = row('Supplier', who, '');
+          if (matched) { supplier.state = (r.filled || {}).vendorId ? 'Selected: ' + matched.company : 'In your vendors: ' + matched.company; supplier.stateColor = '#15803d'; }
+          else if (who || q.email) { supplier.text = who || q.email; supplier.textColor = '#0f1720'; supplier.state = 'Not in your vendors'; supplier.stateColor = '#b45309'; supplier.canAddVendor = true; supplier.onAddVendor = () => this.openSubVendor(); }
+          const list = xs => (xs && xs.length) ? xs.length + (xs.length === 1 ? ' item \u2014 ' : ' items \u2014 ') + cut(xs[0], 90) : '';
+          const out = box('Read from the quote \u2014 check each field before sending', '', 'Only empty fields were filled. Anything you had already typed is kept, with the quote\u2019s version one click away.');
+          out.rows = [
+            supplier,
+            row('Quote', [q.quoteNo ? 'No. ' + q.quoteNo : '', q.validity ? 'valid ' + q.validity : ''].filter(Boolean).join(' \u00b7 '), ''),
+            row('Value', q.valueEx != null ? this.money(q.valueEx) + ' ex GST (from the ' + q.valueFrom + ')' : '', 'value'),
+            row('Scope', cut(q.scope, 150), 'scope'),
+            row('Inclusions', list(q.inclusions), 'inclusions'),
+            row('Exclusions', list(q.exclusions), 'exclusions'),
+          ];
+          return out;
+        })(),
         isSent: status === 'sent', isSigned: status === 'signed', isRejected: status === 'rejected', isVoided: status === 'voided',
         sentAt: agr ? agr.sentAt : null, sentTo: agr ? agr.sentTo : null, signedAt: agr ? agr.signedAt : null, signedBy: agr ? agr.signedBy : null,
         hasSentRecord: !!(agr && (agr.sentMessage || (agr.sentRecipients || []).length)),
@@ -17410,7 +17667,7 @@ class Component extends DCLogic {
         rejectedReason: agr ? agr.rejectedReason : null,
         activity: agr ? agr.activity : [], amendments: agr ? agr.amendments : [],
         canAmend: status === 'signed' && this.canIssue(), canIssue: this.canIssue(),
-        onVendor: e => this.setSubForm('vendorId', e.target.value), onCode: e => this.setSubForm('costCode', e.target.value),
+        onVendor: e => this.pickSubVendor(e.target.value), onNewVendor: () => this.openSubVendor(), onCode: e => this.setSubForm('costCode', e.target.value),
         onValue: e => this.setSubForm('value', e.target.value), onRetainage: e => this.setSubForm('retainagePct', e.target.value),
         onScope: e => this.setSubForm('scope', e.target.value), onTerms: e => this.setSubForm('terms', e.target.value),
         onIncl: e => this.setSubForm('inclusions', e.target.value), onExcl: e => this.setSubForm('exclusions', e.target.value),
