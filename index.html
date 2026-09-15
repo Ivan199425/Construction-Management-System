@@ -5554,6 +5554,7 @@ class Component extends DCLogic {
   }
 
   componentDidMount() {
+    this._logoArt();   // trimmed and ready before the first document is built
     this._colResizeInit();
     this._initExitGuards();
     this._loadSharedData();
@@ -7431,7 +7432,7 @@ class Component extends DCLogic {
     const body = list.length ? list.map(block).join('') : '<div style="color:#6b7787;font-style:italic;padding:24px 0">No defects recorded for this project.</div>';
     const today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
     const orgName = this.props.orgName ?? 'Cubic';
-    const logo = this.brandLogo();
+    const logo = this._letterheadLogo();
     const logoHtml = logo ? '<img src="' + logo + '" alt="' + esc(orgName) + '" style="height:52px;width:auto;display:block;margin-bottom:14px">' : '';
     const st = '<style>*{box-sizing:border-box}body{font-family:Arial,Helvetica,sans-serif;color:#0f1720;margin:0;padding:40px 44px;max-width:900px;margin:0 auto}h1{font-size:20px;margin:0}.sub{color:#6b7787;font-size:12px;margin:2px 0 18px}.summary{display:flex;gap:10px;margin-bottom:22px}.kp{flex:1;border:1px solid #e4e8ee;border-radius:8px;padding:9px 12px}.kp .k{font-size:9.5px;text-transform:uppercase;letter-spacing:.4px;color:#8894a2;font-weight:700}.kp .v{font-size:20px;font-weight:700;margin-top:2px}.defect{border:1px solid #e4e8ee;border-radius:8px;padding:13px 15px;margin-bottom:12px;page-break-inside:avoid}.dhead{display:flex;align-items:center;gap:8px;margin-bottom:5px}.ref{font-family:monospace;font-weight:700;font-size:13px}.due{margin-left:auto;font-size:11px;font-weight:600}.dtitle{font-size:14px;font-weight:700;margin:5px 0 3px;color:#0f1720}.loc{font-size:11.5px;color:#455565;margin-bottom:3px}.wf{font-size:10.5px;color:#6b7787;margin-bottom:6px}.desc{font-size:12.5px;line-height:1.5}.note{font-size:12px;color:#374151;margin-top:5px;line-height:1.5}.lbl{font-weight:700;color:#0f1a24;font-size:10.5px;text-transform:uppercase;letter-spacing:.3px}.photos{margin-top:9px}@media print{@page{size:A4 landscape;margin:11mm}body{padding:0}}</style>';
     const scr = '<' + 'script>window.onload=function(){window.print();};<' + '/script>';
@@ -8413,8 +8414,8 @@ class Component extends DCLogic {
     lines.push([q('Programme file'), q(r.fileName + ' (v' + r.version + ')')].join(',')); lines.push([q('Overall % complete'), q(r.overall + '%')].join(',')); lines.push([q('Planned % (today)'), q(r.planned + '%')].join(',')); lines.push([q('Schedule variance'), q((r.varPP > 0 ? '+' : '') + r.varPP + '% — ' + r.status)].join(',')); lines.push([q('Project start'), q(r.startFmt)].join(',')); lines.push([q('Baseline finish'), q(r.baselineFmt)].join(',')); lines.push([q('Revised finish (incl. EOT)'), q(r.revisedFmt + (r.grantedEot ? ' (+' + r.grantedEot + ' d EOT)' : ''))].join(',')); lines.push('');
     lines.push(['#', 'Activity', 'Start', 'Finish', 'Duration (d)', '% complete', 'Planned %', 'Variance', 'Status', 'Critical'].map(q).join(','));
     r.rows.forEach((a, i) => lines.push([q(i + 1), q(a.name), q(a.start), q(a.finish), q(a.dur), q(a.pct + '%'), q(a.exp + '%'), q((a.variance > 0 ? '+' : '') + a.variance + '%'), q(a.status), q(a.critical ? 'Yes' : '')].join(',')));
-    const csv = '﻿' + lines.join('\r\n'); const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = (p.code || 'schedule') + '-programme-report.csv'; a.click(); setTimeout(() => URL.revokeObjectURL(url), 5000); }
-  exportSchedulePdf() { const p = this.proj(this.state.pid); if (!p) return; const r = this._scheduleReport(p); const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); const logo = this.brandLogo();
+    const csv = '﻿' + lines.join('\r\n'); const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = this._fileName('Schedule Report', '', 'csv', p); a.click(); setTimeout(() => URL.revokeObjectURL(url), 5000); }
+  exportSchedulePdf() { const p = this.proj(this.state.pid); if (!p) return; const r = this._scheduleReport(p); const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); const logo = this._letterheadLogo();
     const stColor = st => st === 'Complete' ? '#15803d' : st === 'Overdue' ? '#b91c1c' : st === 'Behind' ? '#b45309' : st === 'In progress' ? '#1d4ed8' : '#6b7787';
     const barPct = r.varPP > 3 ? '#15803d' : r.varPP < -3 ? '#b91c1c' : '#1d4ed8';
     const rowsHtml = r.rows.map((a, i) => '<tr><td style="text-align:center;color:#8894a2">' + (i + 1) + (a.critical ? ' ◆' : '') + '</td><td>' + esc(a.name) + '</td><td class="m">' + esc(this.fmtDate(a.start)) + '</td><td class="m">' + esc(this.fmtDate(a.finish)) + '</td><td style="text-align:center">' + a.dur + 'd</td><td style="text-align:center">' + a.pct + '%</td><td style="text-align:center;color:#8894a2">' + a.exp + '%</td><td style="text-align:center;color:' + (a.variance < -4 ? '#b91c1c' : a.variance > 4 ? '#15803d' : '#8894a2') + '">' + (a.variance > 0 ? '+' : '') + a.variance + '%</td><td style="text-align:center"><span style="color:' + stColor(a.status) + '">' + esc(a.status) + '</span></td></tr>').join('');
@@ -8695,7 +8696,7 @@ class Component extends DCLogic {
     const p = this.proj(this.state.pid); if (!p) return;
     const c = this._reportDesignContext(p);
     const esc = v => String(v == null ? '' : v).replace(/[&<>"]/g, x => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[x]));
-    const logo = this.brandLogo();
+    const logo = this._letterheadLogo();
     const NAVY = '#2A3580', LINE = '#C9CDD6', MUTED = '#6E7480', BAD = '#B3261E', GOODB = '#2A6FD6';
     const meta = c.m.meta, wSum = meta.reduce((a, x) => a + (x.w || 100), 0) || 1;
     const th = meta.map(x => '<th style="width:' + (Math.round((x.w || 100) / wSum * 1000) / 10) + '%'
@@ -8761,7 +8762,7 @@ class Component extends DCLogic {
     lines.push(m.sel.map(c => q(c.label)).join(','));
     p.costLines.forEach(l => lines.push(m.sel.map(c => { if (c.num) { const n = c.num(l); return q(c.signed ? this.signed(n) : this.money(n)); } return q(c.text(l)); }).join(',')));
     let placed = false; lines.push(m.sel.map(c => { if (c.num) { const s = (p.costLines || []).reduce((a, l) => a + c.num(l), 0); return q(c.signed ? this.signed(s) : this.money(s)); } const lbl = !placed ? 'TOTAL' : ''; placed = true; return q(lbl); }).join(','));
-    const csv = '﻿' + lines.join('\r\n'); const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = (p.code || 'report') + '-cost-report.csv'; a.click(); setTimeout(() => URL.revokeObjectURL(url), 5000); }
+    const csv = '﻿' + lines.join('\r\n'); const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = this._fileName(this._reportDocTitle(p), '', 'csv', p); a.click(); setTimeout(() => URL.revokeObjectURL(url), 5000); }
   openReportEmail() { const p = this.proj(this.state.pid); if (!p) return; const freq = ['weekly', 'fortnightly', 'monthly'].indexOf(this.state.reportFreq) >= 0 ? this.state.reportFreq : 'monthly'; const title = (this._reportSettings(p).title); const r = this.rollup(p); const emails = (p.customers || []).map(c => c.email).filter(Boolean).concat((p.clientReps || []).map(c => c.email).filter(Boolean)); const seen = {}; const to = emails.filter(e => e && !seen[e] && (seen[e] = 1)); const from = p.senderEmail || 'ivan@cubiccm.com'; const subject = p.name + ' — ' + title; const msg = 'Please find the ' + freq + ' cost report for ' + p.name + ' (as at ' + this.fmtDate(this.todayLocal()) + ').\n\nContract value: ' + this.money(r.contract) + '\nForecast final cost: ' + this.money(r.forecast) + '\nVariance: ' + this.signed(r.variance) + '.\n\nThe full report (PDF / Excel) is attached.'; this.setState({ emailCompose: { to, from, subject, message: msg, newEmail: '', sent: false, sentCount: 0 } }); }
   postRfiMessage(id, dir, author, text) { if (!text || !text.trim()) return; const msg = { id: 'm' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), dir, author, text: text.trim(), at: this.todayLocal() }; this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, docs: (p.docs || []).map(d => d.id === id ? { ...d, thread: [...(d.thread || []), msg] } : d) }) })); }
   setRfiDraft(id, v) { this.setState(s => ({ rfiDraft: { ...(s.rfiDraft || {}), [id]: v } })); }
@@ -8809,7 +8810,7 @@ class Component extends DCLogic {
     const today = new Date().toLocaleDateString('en-GB', { year: 'numeric', month: 'long', day: 'numeric' });
     const impact = d.costSchedImpact === 'yes';
     const cline = (p.costLines || []).find(l => l.code === d.costCode); const codeLabel = cline ? (d.costCode + ' — ' + cline.desc) : (d.costCode || '—');
-    const logo = this.brandLogo();
+    const logo = this._letterheadLogo();
     const logoHtml = logo ? '<img src="' + logo + '" style="height:52px">' : '<div style="font-weight:700;font-size:22px;color:#1d4ed8">CUBIC</div>';
     const atts = (d.attachments || []); const attHtml = atts.length ? '<div style="margin-top:22px"><div class="lbl">Attached drawings / documents</div><ul style="margin:6px 0 0;padding-left:18px;font-size:12.5px;line-height:1.8">' + atts.map(a => '<li>' + esc(a.name) + '</li>').join('') + '</ul></div>' : '';
     const respHtml = (d.response && d.response.trim()) ? ('<div style="font-size:12.5px;line-height:1.6;white-space:pre-wrap">' + esc(d.response) + '</div>') : '<div style="border-bottom:1px solid #cfd8e2;height:22px"></div><div style="border-bottom:1px solid #cfd8e2;height:22px"></div><div style="border-bottom:1px solid #cfd8e2;height:22px"></div>';
@@ -8853,7 +8854,7 @@ class Component extends DCLogic {
     const claimFinish = e.startDate ? this.addWorkingDays(e.startDate, claimed) : '';
     const cust = (p.customers && p.customers[0]) || null; const billLines = cust ? [cust.name, cust.company, cust.email].filter(Boolean).map(esc).join('<br>') : esc(p.client);
     const today = new Date().toLocaleDateString('en-GB', { year: 'numeric', month: 'long', day: 'numeric' });
-    const logo = this.brandLogo();
+    const logo = this._letterheadLogo();
     const logoHtml = logo ? '<img src="' + logo + '" style="height:52px">' : '<div style="font-weight:700;font-size:22px;color:#1d4ed8">CUBIC</div>';
     const atts = (e.attachments || []); const attHtml = atts.length ? '<div style="margin-top:22px"><div class="lbl">Supporting documents</div><ul style="margin:6px 0 0;padding-left:18px;font-size:12.5px;line-height:1.8">' + atts.map(a => '<li>' + esc(a.name) + '</li>').join('') + '</ul></div>' : '';
     const st = '<style>body{font-family:Arial,Helvetica,sans-serif;color:#0f1720;margin:34px}.top{display:flex;flex-wrap:var(--cpms-wrap,nowrap);justify-content:space-between;align-items:flex-start;border-bottom:2px solid #0f1a24;padding-bottom:16px;margin-bottom:20px}.tt{font-size:22px;font-weight:800;letter-spacing:1px;color:#0f1a24}.meta{font-size:12px;color:#4a5765;text-align:right;line-height:1.7}.grid{display:flex;gap:40px;margin-bottom:18px}.lbl{font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:#8894a2;margin-bottom:4px}.val{font-size:13px;line-height:1.6}table{border-collapse:collapse;width:100%;margin-top:6px}th{background:#0f1a24;color:#fff;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.4px;padding:8px 9px}td{padding:8px 9px;border-bottom:1px solid #e4e8ee;font-size:12.5px}.r{text-align:right}.imp{margin-top:18px;display:flex;gap:14px}.imp>div{flex:1;border:1px solid #e4e8ee;border-radius:8px;padding:12px 14px}.big{font-size:15px;font-weight:800}.sign{margin-top:44px;display:flex;gap:40px}.sign>div{flex:1;border-top:1px solid #333;padding-top:6px;font-size:12px;color:#555}.pbtn{position:fixed;top:16px;right:16px;background:#2b59c3;color:#fff;border:0;border-radius:8px;padding:10px 16px;font-size:13px;font-weight:600;cursor:pointer}@media print{.pbtn{display:none}@page{size:A4;margin:14mm}}</style>';
@@ -9349,8 +9350,7 @@ class Component extends DCLogic {
   agreementPdfName(cmId) {
     const p = this.proj(this.state.pid);
     const cm = p ? (p.commitments || []).find(c => c.id === cmId) : null;
-    const slug = String((p && (p.code || p.name)) || 'project').replace(/[^A-Za-z0-9]+/g, '-').replace(/^-|-$/g, '');
-    return ((cm && cm.ref) || 'subcontract') + '_' + slug + '.pdf';
+    return this._fileName('Sub-contract', (cm && cm.ref) || '', 'pdf', p || false);
   }
   downloadAgreementPdf(cmId) {
     const name = this.agreementPdfName(cmId);
@@ -9578,8 +9578,7 @@ class Component extends DCLogic {
   variationPdfName(vid) {
     const p = this.proj(this.state.pid);
     const v = p ? (((p.contract || {}).variations) || []).find(x => x.id === vid) : null;
-    const slug = String((p && (p.code || p.name)) || 'project').replace(/[^A-Za-z0-9]+/g, '-').replace(/^-|-$/g, '');
-    return ((v && v.ref) || 'variation') + '_' + slug + '.pdf';
+    return this._fileName('Variation', (v && v.ref) || '', 'pdf', p || false);
   }
   downloadVariationPdf(vid) {
     const name = this.variationPdfName(vid);
@@ -9644,7 +9643,7 @@ class Component extends DCLogic {
     const coAddr = this._coAddress();
     const acct = (this._accountsEmail && this._accountsEmail()) || '';
     const coContact = [co.phone, acct, co.website].filter(Boolean).map(esc).join(' &nbsp;&middot;&nbsp; ');
-    const logo = this.brandLogo();
+    const logo = this._letterheadLogo();
     const logoHtml = logo ? '<img src="' + logo + '" alt="' + esc(coName) + '" style="height:92px;width:auto;max-width:320px;object-fit:contain;display:block">' : '<div style="font-weight:700;font-size:13pt;color:#2A3580">' + esc(coName.toUpperCase()) + '</div>';
 
     const gst = this._num(p.gstRate), value = this._num(v.value);
@@ -11453,7 +11452,7 @@ class Component extends DCLogic {
     const csv = rows.map(r => r.map(c => '"' + String(c == null ? '' : c).replace(/"/g, '""') + '"').join(',')).join('\r\n');
     try {
       const url = URL.createObjectURL(new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' }));
-      const a = document.createElement('a'); a.href = url; a.download = 'invoices.csv'; a.click();
+      const a = document.createElement('a'); a.href = url; a.download = this._fileName('Supplier Invoices', '', 'csv', false); a.click();
       setTimeout(() => URL.revokeObjectURL(url), 4000);
     } catch (e) {}
   }
@@ -12420,7 +12419,7 @@ class Component extends DCLogic {
       + 'if(!w){var d=document.createElement("a");d.href=o;d.download=a.getAttribute("data-name")||"quotation.pdf";d.click();}'
       + '}catch(err){}});})();'
       + '<' + '/script>';
-    const logo = this.brandLogo();
+    const logo = this._letterheadLogo();
     const logoHtml = logo ? '<img src="' + logo + '" alt="' + esc(coName) + '" style="height:92px;width:auto;max-width:320px;object-fit:contain;display:block">' : '<div style="font-weight:700;font-size:13pt;color:#2A3580">' + esc(coName.toUpperCase()) + '</div>';
     const html = '<!doctype html><html><head><meta charset="utf-8"><title>Subcontract Agreement — ' + esc(ref) + '</title>' + st + '</head><body>'
       + '<div class="hdr">' + logoHtml + '<div class="co"><strong>' + esc(coName.toUpperCase()) + '</strong>' + (coSlogan ? '<div style="font-size:6.5pt;font-weight:400;letter-spacing:.18em;text-transform:uppercase;color:#6E7480;margin-top:1px;margin-bottom:2px">' + esc(coSlogan) + '</div>' : '') + 'ABN ' + esc(coAbn) + '<br>' + esc(coAddr)
@@ -13394,8 +13393,7 @@ class Component extends DCLogic {
     r = push([{ v: 'This is a payment claim made under the Building and Construction Industry Security of Payment Act applicable in the State or Territory in which the works are carried out. A payment schedule must be provided within the statutory period.', s: S.note }]);
     mg(r, 0, 6); heights[r] = 30;
 
-    const slug = String(p.code || p.name || 'project').replace(/[^A-Za-z0-9]+/g, '-').replace(/^-|-$/g, '');
-    this._xlsxDownload({ sheet: 'Tax Invoice', cols: [15, 46, 17, 12, 20, 16, 15], rows: R, merges, heights, filename: (m.no || 'invoice') + '_' + slug + '.xlsx' });
+    this._xlsxDownload({ sheet: 'Tax Invoice', cols: [15, 46, 17, 12, 20, 16, 15], rows: R, merges, heights, filename: this._fileName('Tax Invoice', m.no, 'xlsx', p) });
   }
   _downloadCsv(text, filename) {
     try {
@@ -13411,8 +13409,7 @@ class Component extends DCLogic {
   // If the PDF or the upload fails the email still goes out, with a note in place of the file.
   _emailInvoiceWithPdf(recips, subject, text, invoiceId, refNo) {
     const send = atts => this._sendEmailNow({ to: recips, subject, text, attachments: atts || [] });
-    const slug = (() => { const pr = this.proj(this.state.pid); return String((pr && (pr.code || pr.name)) || 'project').replace(/[^A-Za-z0-9]+/g, '-').replace(/^-|-$/g, ''); })();
-    const name = (refNo || 'invoice') + '_' + slug + '.pdf';
+    const name = refNo ? this._fileName('Tax Invoice', refNo, 'pdf') : this.invoicePdfName(invoiceId || null);
     let blobP;
     try { blobP = this.invoicePdfBlob(invoiceId || null); } catch (e) { blobP = Promise.resolve(null); }
     return blobP.then(blob => {
@@ -13533,34 +13530,77 @@ class Component extends DCLogic {
     return new Blob([out], { type: 'application/pdf' });
   }
   // The letterhead logo: PNG -> JPEG via canvas, so it can be embedded with DCTDecode.
-  _pdfLogo() {
+  // The logo as a letterhead wants it: the artwork with the empty background trimmed off, centred in a block twice
+  // as wide as it is high, on the logo's own background colour. An uploaded logo is often a square photo with the
+  // wordmark in a band across the middle, which prints tiny; this makes the mark as large as the space allows without
+  // stretching it. Read once per logo and kept.
+  _logoArt() {
     const url = this.brandLogo();
     if (!url || typeof document === 'undefined') return Promise.resolve(null);
-    if (this.__pdfLogo && this.__pdfLogoUrl === url) return Promise.resolve(this.__pdfLogo);
-    return new Promise(res => {
+    if (this.__logoArtFor === url && this.__logoArtP) return this.__logoArtP;
+    const p = new Promise(res => {
       let done = false;
-      const finish = v => { if (done) return; done = true; this.__pdfLogo = v; this.__pdfLogoUrl = url; res(v); };
+      const finish = v => { if (done) return; done = true; this.__logoArt = v; this.__logoArtUrl = v ? v.dataUrl : ''; res(v); };
       setTimeout(() => finish(null), 6000);
       try {
         const img = new Image();
         img.crossOrigin = 'anonymous';
         img.onload = () => {
           try {
-            const c = document.createElement('canvas');
-            c.width = img.naturalWidth || img.width; c.height = img.naturalHeight || img.height;
-            const g = c.getContext('2d');
-            g.fillStyle = '#ffffff'; g.fillRect(0, 0, c.width, c.height);
-            g.drawImage(img, 0, 0);
-            const b64 = c.toDataURL('image/jpeg', 0.92).split(',')[1];
-            const bin = atob(b64); const bytes = new Uint8Array(bin.length);
+            const W = img.naturalWidth || img.width, H = img.naturalHeight || img.height;
+            if (!W || !H) { finish(null); return; }
+            // find the artwork on a small copy: a 4000px photo does not need reading pixel by pixel
+            const sc = Math.min(1, 480 / Math.max(W, H));
+            const sw = Math.max(1, Math.round(W * sc)), sh = Math.max(1, Math.round(H * sc));
+            const sm = document.createElement('canvas'); sm.width = sw; sm.height = sh;
+            const sg = sm.getContext('2d'); sg.drawImage(img, 0, 0, sw, sh);
+            const d = sg.getImageData(0, 0, sw, sh).data;
+            const at = (x, y) => { const i = (y * sw + x) * 4; return [d[i], d[i + 1], d[i + 2], d[i + 3]]; };
+            const cn = [at(0, 0), at(sw - 1, 0), at(0, sh - 1), at(sw - 1, sh - 1)];
+            const bg = [0, 1, 2, 3].map(k => Math.round((cn[0][k] + cn[1][k] + cn[2][k] + cn[3][k]) / 4));
+            const clear = bg[3] < 24;
+            const isBg = (x, y) => { const c = at(x, y); if (c[3] < 24) return true; if (clear) return false;
+              return (Math.abs(c[0] - bg[0]) + Math.abs(c[1] - bg[1]) + Math.abs(c[2] - bg[2])) < 40; };
+            let x0 = sw, y0 = sh, x1 = -1, y1 = -1;
+            for (let y = 0; y < sh; y++) for (let x = 0; x < sw; x++) if (!isBg(x, y)) {
+              if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y;
+            }
+            if (x1 < x0 || y1 < y0) { x0 = 0; y0 = 0; x1 = sw - 1; y1 = sh - 1; }   // nothing but background: keep it whole
+            const pad = Math.max(x1 - x0, y1 - y0) * 0.04;
+            const cx = Math.max(0, Math.round((x0 - pad) / sc)), cy = Math.max(0, Math.round((y0 - pad) / sc));
+            const cw = Math.max(1, Math.min(W - cx, Math.round((x1 - x0 + 1 + pad * 2) / sc)));
+            const ch = Math.max(1, Math.min(H - cy, Math.round((y1 - y0 + 1 + pad * 2) / sc)));
+            const OH = 300, OW = OH * 2;
+            const out = document.createElement('canvas'); out.width = OW; out.height = OH;
+            const og = out.getContext('2d');
+            og.fillStyle = clear ? '#ffffff' : ('rgb(' + bg[0] + ',' + bg[1] + ',' + bg[2] + ')');
+            og.fillRect(0, 0, OW, OH);
+            const k = Math.min(OW * 0.94 / cw, OH * 0.86 / ch);
+            const dw = Math.max(1, Math.round(cw * k)), dh = Math.max(1, Math.round(ch * k));
+            og.drawImage(img, cx, cy, cw, ch, Math.round((OW - dw) / 2), Math.round((OH - dh) / 2), dw, dh);
+            const dataUrl = out.toDataURL('image/jpeg', 0.92);
+            const bin = atob(dataUrl.split(',')[1]); const bytes = new Uint8Array(bin.length);
             for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-            finish({ bytes, w: c.width, h: c.height });
+            finish({ dataUrl, bytes, w: OW, h: OH });
           } catch (e) { finish(null); }
         };
         img.onerror = () => finish(null);
         img.src = url;
       } catch (e) { finish(null); }
     });
+    this.__logoArtFor = url; this.__logoArtP = p;
+    return p;
+  }
+  // For the documents built as a page: the trimmed logo once it has been read, the logo as it is until then.
+  _letterheadLogo() {
+    const url = this.brandLogo();
+    if (!url) return '';
+    if (this.__logoArtFor === url && this.__logoArtUrl) return this.__logoArtUrl;
+    this._logoArt();
+    return url;
+  }
+  _pdfLogo() {
+    return this._logoArt().then(a => (a ? { bytes: a.bytes, w: a.w, h: a.h } : null)).catch(() => null);
   }
   // Snapshot everything the PDF needs, synchronously, so a later state change can't alter it.
   _invoicePdfContext(invoiceId) {
@@ -13797,8 +13837,7 @@ class Component extends DCLogic {
   invoicePdfName(invoiceId) {
     const p = this.proj(this.state.pid); if (!p) return 'invoice.pdf';
     const m = this._invoiceModel(p, invoiceId);
-    const slug = String(p.code || p.name || 'project').replace(/[^A-Za-z0-9]+/g, '-').replace(/^-|-$/g, '');
-    return (m.no || 'invoice') + '_' + slug + '.pdf';
+    return this._fileName('Tax Invoice', m.no, 'pdf', p);
   }
   downloadInvoicePdf(invoiceId) {
     const name = this.invoicePdfName(invoiceId);
@@ -13826,7 +13865,7 @@ class Component extends DCLogic {
     const coAddr = this._coAddress();
     const cust = (p.customers && p.customers[0]) || null;
     const pm = ((p.team || []).find(t => /project\s*manager/i.test(t.role || '')) || (p.team || [])[0] || null);
-    const logo = this.brandLogo();
+    const logo = this._letterheadLogo();
     const logoHtml = logo ? '<img src="' + logo + '" alt="' + esc(coName) + '" style="height:92px;width:auto;max-width:320px;object-fit:contain;display:block">' : '<div style="font-weight:700;font-size:13pt;color:#2A3580">' + esc(coName.toUpperCase()) + '</div>';
     const cellK = 'style="width:27%;background:#F4F5F8;font-weight:600"';
     const r2 = (k, v) => '<tr><td ' + cellK + '>' + esc(k) + '</td><td>' + v + '</td></tr>';
@@ -15454,9 +15493,8 @@ class Component extends DCLogic {
     // the 30pt it always had, and Excel needs about 16pt a line beyond that
     const footLines = Math.ceil(foot.length * 5.2 / Math.max(1, widths.reduce((a, w) => a + w * 7, 0) - 8));
     heights[footRow] = footLines <= 2 ? 30 : footLines * 16 + 6;
-    const slug = String(p.code || p.name || 'project').replace(/[^A-Za-z0-9]+/g, '-').replace(/^-|-$/g, '');
     this._xlsxDownload({
-      filename: 'Cost-Report_' + slug + '.xlsx', sheet: 'Cost report',
+      filename: this._fileName('Cost Report', '', 'xlsx', p), sheet: 'Cost report',
       rows: R, cols: widths, merges, heights, orientation: 'landscape',
     });
   }
@@ -15700,6 +15738,16 @@ class Component extends DCLogic {
     footer();
   }
   // ---- Report Design: the configurable cost report, same house style ------------
+  // The Report Design document's title: what you typed, else what was saved, else the frequency and "cost report".
+  _reportDocTitle(p) {
+    const rs = this._reportSettings(p) || {};
+    const live = this.state.reportTitle;
+    if (live != null && String(live).trim()) return String(live).trim();
+    const saved = String(rs.title || '').trim();
+    if (saved) return saved;
+    const freq = { weekly: 'Weekly', fortnightly: 'Fortnightly', monthly: 'Monthly' }[rs.freq] || '';
+    return (freq ? freq + ' ' : '') + 'cost report';
+  }
   _reportDesignContext(p) {
     const co = this.state.company || {};
     const addr = this._coAddress();
@@ -15734,13 +15782,7 @@ class Component extends DCLogic {
       m: { meta, rows, total }, T,
       showKpi: false, cats: null, notes: null,        // this template carries neither
       // resolved exactly as the Report Design header resolves it, so the two agree
-      docTitle: (() => {
-        const freq = { weekly: 'Weekly', fortnightly: 'Fortnightly', monthly: 'Monthly' }[rm.freq] || '';
-        const live = this.state.reportTitle;
-        if (live != null && String(live).trim()) return String(live).trim();
-        const saved = String(this._reportSettings(p).title || '').trim();
-        return saved || ((freq ? freq + ' ' : '') + 'cost report');
-      })(),
+      docTitle: this._reportDocTitle(p),
       freqLabel: { weekly: 'Weekly', fortnightly: 'Fortnightly', monthly: 'Monthly' }[rm.freq] || '',
       coName: (co.name || '').toUpperCase(),
       coAbn: this._abn(), coAddr: addr, coContact: contact,
@@ -15750,8 +15792,7 @@ class Component extends DCLogic {
   }
   reportPdfName() {
     const p = this.proj(this.state.pid);
-    const slug = String((p && (p.code || p.name)) || 'project').replace(/[^A-Za-z0-9]+/g, '-').replace(/^-|-$/g, '');
-    return 'Cost-Report_' + slug + '.pdf';
+    return this._fileName(p ? this._reportDocTitle(p) : 'Cost Report', '', 'pdf', p || false);
   }
   reportPdfBlob() {
     const p = this.proj(this.state.pid); if (!p) return Promise.resolve(null);
@@ -15817,16 +15858,23 @@ class Component extends DCLogic {
 
     const widths = meta.map(col => col.id === 'desc' ? 46 : (col.id === 'code' ? 12 : 16));
     while (widths.length < N) widths.push(16);
-    const slug = String(p.code || p.name || 'project').replace(/[^A-Za-z0-9]+/g, '-').replace(/^-|-$/g, '');
     this._xlsxDownload({
-      filename: 'Cost-Report_' + slug + '.xlsx', sheet: 'Cost report',
+      filename: this._fileName(this._reportDocTitle(p), '', 'xlsx', p), sheet: 'Cost report',
       rows: R, cols: widths, merges, heights, orientation: 'landscape',
     });
   }
+  // What a downloaded document is called: the screen it comes from, its own reference where it has one, then the
+  // project - "Cost Report - Riverside Tower.pdf", "Tax Invoice INV-0001 - Riverside Tower.pdf". Pass false as the
+  // project for a document that covers more than one. The project's name is used, or its code where it has no name.
+  _fileName(section, ref, ext, project) {
+    const pr = project === false ? null : (project || this.proj(this.state.pid));
+    const clean = t => String(t == null ? '' : t).replace(/[\\/:*?"<>|\u0000-\u001f]+/g, ' ').replace(/\s+/g, ' ').trim();
+    const head = [clean(section), clean(ref)].filter(Boolean).join(' ');
+    const base = [head, clean(pr && (pr.name || pr.code))].filter(Boolean).join(' - ').replace(/\.+$/, '').trim();
+    return (base || 'document') + '.' + ext;
+  }
   costReportPdfName() {
-    const p = this.proj(this.state.pid);
-    const slug = String((p && (p.code || p.name)) || 'project').replace(/[^A-Za-z0-9]+/g, '-').replace(/^-|-$/g, '');
-    return 'Cost-Report_' + slug + '.pdf';
+    return this._fileName('Cost Report', '', 'pdf');
   }
   costReportPdfBlob() {
     const p = this.proj(this.state.pid); if (!p) return Promise.resolve(null);
@@ -15912,7 +15960,7 @@ class Component extends DCLogic {
     // The BOM is what stops Excel reading UTF-8 as ANSI and showing "a EUR" for a dash.
     const blob = new Blob(['\ufeff' + lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a'); a.href = url; a.download = p.code + '-cost-report.csv';
+    const a = document.createElement('a'); a.href = url; a.download = this._fileName('Cost Report', '', 'csv', p);
     document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
   }
   // ---- Cost report, laid out to the Cost Report.dc house style -------------------
@@ -15968,7 +16016,7 @@ class Component extends DCLogic {
     const { meta, cols, rows, total, T } = this.costMatrix(p);
     const esc = v => String(v == null ? '' : v).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
     const co = this.state.company || {};
-    const logo = this.brandLogo();
+    const logo = this._letterheadLogo();
     const NAVY = '#2A3580', LINE = '#C9CDD6', MUTED = '#6E7480', GOOD = '#1E7A4B', BAD = '#B3261E';
     const dataDate = new Date().toLocaleDateString('en-AU', { year: 'numeric', month: 'long', day: 'numeric' });
 
