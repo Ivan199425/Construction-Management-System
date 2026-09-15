@@ -528,7 +528,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                 <div style="grid-column:1 / -1"><div style="font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#6b7787;text-transform:uppercase;margin-bottom:5px">Account name</div><input value="{{ settingsV.company.accountName }}" onInput="{{ settingsV.company.onAccountName }}" placeholder="e.g. Cubic Construction Management" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:inherit;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none"></div>
                 <div><div style="font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#6b7787;text-transform:uppercase;margin-bottom:5px">BSB</div><input value="{{ settingsV.company.bsb }}" onInput="{{ settingsV.company.onBsb }}" placeholder="000-000" class="mono" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:'IBM Plex Mono',monospace;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none"></div>
                 <div><div style="font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#6b7787;text-transform:uppercase;margin-bottom:5px">Account number</div><input value="{{ settingsV.company.bankAccount }}" onInput="{{ settingsV.company.onBankAccount }}" placeholder="00 000 0000" class="mono" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:'IBM Plex Mono',monospace;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none"></div>
-                <div style="grid-column:1 / -1"><div style="font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#6b7787;text-transform:uppercase;margin-bottom:5px">Accounts email <span style="font-weight:400;text-transform:none;letter-spacing:0;color:#a4afba">&middot; bills &amp; claims are sent here for payment</span></div><input value="{{ settingsV.company.accountsEmail }}" onInput="{{ settingsV.company.onAccountsEmail }}" placeholder="accounts@cubiccm.com" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:inherit;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none"></div>
+                <div style="grid-column:1 / -1"><div style="font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#6b7787;text-transform:uppercase;margin-bottom:5px">Accounts email <span style="font-weight:400;text-transform:none;letter-spacing:0;color:#a4afba">&middot; commitments &amp; claims are sent here for payment</span></div><input value="{{ settingsV.company.accountsEmail }}" onInput="{{ settingsV.company.onAccountsEmail }}" placeholder="accounts@cubiccm.com" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:inherit;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none"></div>
               </div>
             </div>
           </sc-if>
@@ -579,7 +579,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                 <div>
                   <div style="font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#6b7787;text-transform:uppercase;margin-bottom:5px">Default payment term</div>
                   <select value="{{ settingsV.financial.defaultTerm }}" onChange="{{ settingsV.financial.onTerm }}" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 10px;font-size:13px;font-family:inherit;color:#0f1720;background:#fff;cursor:pointer" style-focus="border-color:#2b59c3;outline:none"><sc-for list="{{ settingsV.financial.termOptions }}" as="o" hint-placeholder-count="5"><option value="{{ o.v }}">{{ o.l }}</option></sc-for></select>
-                  <div style="font-size:11px;color:#8894a2;margin-top:6px">Default due date for new bills and invoices.</div>
+                  <div style="font-size:11px;color:#8894a2;margin-top:6px">Default due date for new commitments and invoices.</div>
                 </div>
               </div>
             </div>
@@ -1074,7 +1074,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                   <input value="{{ r.phone }}" onInput="{{ r.onPhone }}" placeholder="+1 …" class="mono" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 8px;font-size:11.5px;font-family:'IBM Plex Mono',monospace;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none">
                   <input value="{{ r.email }}" onInput="{{ r.onEmail }}" placeholder="email@company.com" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 9px;font-size:12px;font-family:inherit;color:#2b59c3;background:#fff" style-focus="border-color:#2b59c3;outline:none">
                   <input value="{{ r.address }}" onInput="{{ r.onAddress }}" placeholder="Street, city" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 9px;font-size:12px;font-family:inherit;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none">
-                  <div style="text-align:right"><div class="mono" style="font-size:12.5px;font-weight:600;color:#0f1720">{{ r.billTotal }}</div><div style="font-size:10.5px;color:#8894a2">{{ r.billCount }} bills · {{ r.projectCount }} projects</div></div>
+                  <div style="text-align:right"><div class="mono" style="font-size:12.5px;font-weight:600;color:#0f1720">{{ r.billTotal }}</div><div style="font-size:10.5px;color:#8894a2">{{ r.billCount }} commitments · {{ r.projectCount }} projects</div></div>
                   <div style="display:flex;align-items:center;gap:4px;flex-wrap:var(--cpms-wrap,nowrap);justify-content:flex-end">
                     <sc-if value="{{ r.canMessage }}" hint-placeholder-val="{{ true }}"><button onClick="{{ r.onMessage }}" title="{{ r.messageTitle }}" style="border:1px solid #cdddf8;background:#f2f6fd;color:#2b59c3;border-radius:6px;padding:4px 8px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;line-height:1.3" style-hover="background:#e8eefc">✉</button></sc-if>
                     <button onClick="{{ r.onDelete }}" title="Delete vendor" style="border:0;background:transparent;color:#c0c8d1;cursor:pointer;min-width:var(--cpms-tap,auto);min-height:var(--cpms-tap,auto);font-size:15px;padding:2px;line-height:1" style-hover="color:#b91c1c">✕</button>
@@ -1085,7 +1085,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
           </div>
           <div style="display:flex;align-items:center;flex-wrap:var(--cpms-wrap,nowrap);justify-content:space-between;gap:16px;margin-top:14px">
             <button onClick="{{ primaryAction.onClick }}" style="border:1px dashed #2b59c3;background:#f2f6fd;color:#2b59c3;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="background:#e8eefc">＋ Add vendor</button>
-            <div style="font-size:12px;color:#8894a2;line-height:1.5;text-align:right">The directory is shared across all projects — edits here update every bill referencing the vendor. Billed totals aggregate each vendor's bills (incl. tax) across the portfolio.</div>
+            <div style="font-size:12px;color:#8894a2;line-height:1.5;text-align:right">The directory is shared across all projects — edits here update every commitment referencing the vendor. Billed totals aggregate each vendor's commitments (incl. tax) across the portfolio.</div>
           </div>
         </sc-if>
 
@@ -1154,7 +1154,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                       <div class="mono" style="font-size:11.5px;font-weight:600;color:#2b59c3">{{ r.ref }}</div>
                       <sc-if value="{{ r.fromEmail }}" hint-placeholder-val="{{ false }}"><span title="Captured from an email" style="font-size:8.5px;font-weight:700;letter-spacing:.3px;color:#6b7787">✉ EMAIL</span></sc-if>
                       <sc-if value="{{ r.isForward }}" hint-placeholder-val="{{ false }}"><span title="{{ r.forwardNote }}" style="display:block;font-size:8.5px;font-weight:700;letter-spacing:.3px;color:#2b59c3">↪ FORWARDED</span></sc-if>
-                      <sc-if value="{{ r.inBills }}" hint-placeholder-val="{{ false }}"><span title="{{ r.inBillsNote }}" style="display:inline-block;margin-top:2px;font-size:8.5px;font-weight:700;letter-spacing:.3px;color:#b91c1c;background:#fbeef0;border-radius:4px;padding:1px 5px">⚠ IN BILLS</span></sc-if>
+                      <sc-if value="{{ r.inBills }}" hint-placeholder-val="{{ false }}"><span title="{{ r.inBillsNote }}" style="display:inline-block;margin-top:2px;font-size:8.5px;font-weight:700;letter-spacing:0;white-space:nowrap;color:#b91c1c;background:#fbeef0;border-radius:4px;padding:1px 4px">⚠ IN COMMITMENTS</span></sc-if>
                     </div>
                     <div class="mono" style="font-size:11.5px;color:#4a5765">{{ r.when }}<span style="color:#a4afba"> {{ r.time }}</span></div>
                     <div style="min-width:0">
@@ -1216,7 +1216,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
               </div>
             </sc-if>
 
-            <div style="font-size:12px;color:#8894a2;line-height:1.6;margin-top:14px">Every invoice is read on arrival, matched to a supplier in the <strong style="color:#6b7787">Directory</strong> and to a project by the rules in <strong style="color:#6b7787">Settings → Invoice ingestion</strong>. Approving one opens cost coding; coding it posts a vendor bill per cost code, so the <strong style="color:#6b7787">Budget</strong> and the cost report move the moment it is coded — and nothing is counted twice.</div>
+            <div style="font-size:12px;color:#8894a2;line-height:1.6;margin-top:14px">Every invoice is read on arrival, matched to a supplier in the <strong style="color:#6b7787">Directory</strong> and to a project by the rules in <strong style="color:#6b7787">Settings → Invoice ingestion</strong>. Approving one opens cost coding; coding it posts a commitment per cost code, so the <strong style="color:#6b7787">Budget</strong> and the cost report move the moment it is coded — and nothing is counted twice.</div>
           </sc-if>
 
           <!-- ---------- REVIEW ---------- -->
@@ -1368,7 +1368,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                   <sc-if value="{{ apReviewV.showCoding }}" hint-placeholder-val="{{ true }}">
                     <div style="grid-column:1 / -1;height:1px;background:#eef1f4;margin:2px 0"></div>
                     <div style="grid-column:1 / -1">
-                      <label style="font-size:11px;font-weight:600;color:#4a5765;display:block;margin-bottom:5px">Cost code <span style="font-weight:400;color:#a4afba">· approving posts a vendor bill against this code</span></label>
+                      <label style="font-size:11px;font-weight:600;color:#4a5765;display:block;margin-bottom:5px">Cost code <span style="font-weight:400;color:#a4afba">· approving posts a commitment against this code</span></label>
                       <select value="{{ apReviewV.quickCode }}" onChange="{{ apReviewV.onQuickCode }}" style="width:100%;border:1px solid {{ apReviewV.quickCodeBorder }};border-radius:7px;padding:8px 9px;font-size:12.5px;font-family:inherit;color:#0f1720;background:{{ apReviewV.quickCodeBg }};cursor:pointer" style-focus="border-color:#2b59c3;outline:none">
                         <option value="">— Unassigned —</option>
                         <sc-for list="{{ apReviewV.codeGroups }}" as="grp" hint-placeholder-count="3"><optgroup label="{{ grp.label }}"><sc-for list="{{ grp.options }}" as="o" hint-placeholder-count="3"><option value="{{ o.code }}">{{ o.label }}</option></sc-for></optgroup></sc-for>
@@ -1546,7 +1546,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                 </sc-if>
               </div>
             </div>
-            <div style="font-size:12px;color:#8894a2;line-height:1.6;margin-top:12px">Amounts are exclusive of GST and must add up to the invoice subtotal. Saving posts one vendor bill per cost code into the project, so the <strong style="color:#6b7787">Budget</strong>, the cost report and the S-curve all move immediately — and re-coding replaces those bills rather than adding to them.</div>
+            <div style="font-size:12px;color:#8894a2;line-height:1.6;margin-top:12px">Amounts are exclusive of GST and must add up to the invoice subtotal. Saving posts one commitment per cost code into the project, so the <strong style="color:#6b7787">Budget</strong>, the cost report and the S-curve all move immediately — and re-coding replaces those commitments rather than adding to them.</div>
           </sc-if>
         </sc-if>
 
@@ -1784,7 +1784,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                       </div>
                     </sc-for>
                     <div style="display:flex;flex-wrap:var(--cpms-wrap,nowrap);justify-content:space-between;font-size:13px;font-weight:600;padding:10px 0 2px"><span style="color:#0f1720">Current committed value</span><span class="mono">{{ c.current }}</span></div>
-                    <div style="display:flex;flex-wrap:var(--cpms-wrap,nowrap);justify-content:space-between;font-size:12.5px;padding:7px 0 2px;color:#6b7787"><span>Billed to date <span style="color:#a4afba">({{ c.billCount }} bills)</span></span><span class="mono">{{ c.billed }}</span></div>
+                    <div style="display:flex;flex-wrap:var(--cpms-wrap,nowrap);justify-content:space-between;font-size:12.5px;padding:7px 0 2px;color:#6b7787"><span>Billed to date <span style="color:#a4afba">({{ c.billCount }} commitments)</span></span><span class="mono">{{ c.billed }}</span></div>
                     <div style="display:flex;flex-wrap:var(--cpms-wrap,nowrap);justify-content:space-between;font-size:12.5px;padding:2px 0;font-weight:600"><span style="color:#4a5765">Remaining to bill</span><span class="mono" style="color:{{ c.remainingColor }}">{{ c.remaining }}</span></div>
                   </div>
                 </sc-if>
@@ -1990,7 +1990,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                     </sc-if>
                     <sc-if value="{{ r.invoiced }}" hint-placeholder-val="{{ false }}">
                       <div title="Auto-summed from invoices assigned to this cost code">
-                        <div class="mono" style="display:flex;align-items:center;flex-wrap:var(--cpms-wrap,nowrap);justify-content:flex-end;gap:5px;padding:6px 8px;border:1px solid #cfe6d6;border-radius:6px;background:#eef8f1;font-size:12.5px;font-weight:600;color:#15803d" title="Bills and progress claims raised against this cost code, at any stage"><span style="font-size:10px">🧾</span>{{ r.committedLinked }}</div>
+                        <div class="mono" style="display:flex;align-items:center;flex-wrap:var(--cpms-wrap,nowrap);justify-content:flex-end;gap:5px;padding:6px 8px;border:1px solid #cfe6d6;border-radius:6px;background:#eef8f1;font-size:12.5px;font-weight:600;color:#15803d" title="Commitments and progress claims raised against this cost code, at any stage"><span style="font-size:10px">🧾</span>{{ r.committedLinked }}</div>
                         <div style="text-align:right;font-size:10px;color:#8894a2;margin-top:2px">{{ r.invoiceLabel }} · auto</div>
                       </div>
                     </sc-if>
@@ -2274,10 +2274,10 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
         <!-- ============ BILLS ============ -->
         <sc-if value="{{ showBills }}" hint-placeholder-val="{{ true }}">
           <div style="display:flex;align-items:center;flex-wrap:var(--cpms-wrap,nowrap);justify-content:space-between;gap:12px;margin-bottom:12px">
-            <div style="display:flex;align-items:center;gap:9px;width:100%;max-width:460px;border:1.5px solid #b9c3d0;border-radius:10px;background:#fff;padding:10px 14px"><span style="font-size:15px;line-height:1;flex:0 0 auto">🔍</span><input value="{{ billSearchV.value }}" onInput="{{ billSearchV.onInput }}" placeholder="Search bills — vendor, bill #, cost code, description" style="flex:1;min-width:0;border:0;outline:none;background:transparent;font-size:14px;color:#0f1720;font-family:inherit"></div>
+            <div style="display:flex;align-items:center;gap:9px;width:100%;max-width:460px;border:1.5px solid #b9c3d0;border-radius:10px;background:#fff;padding:10px 14px"><span style="font-size:15px;line-height:1;flex:0 0 auto">🔍</span><input value="{{ billSearchV.value }}" onInput="{{ billSearchV.onInput }}" placeholder="Search commitments — vendor, bill #, cost code, description" style="flex:1;min-width:0;border:0;outline:none;background:transparent;font-size:14px;color:#0f1720;font-family:inherit"></div>
             <div style="display:flex;flex-wrap:var(--cpms-wrap,nowrap);align-items:center;gap:8px;flex:0 0 var(--cpms-grow,auto)">
               <span style="font-size:11.5px;color:#8894a2;white-space:nowrap">Order</span>
-              <select value="{{ billFilterV.sort }}" onChange="{{ billFilterV.onSort }}" title="Order the bills" style="border:1px solid #cfd8e2;border-radius:9px;background:#fff;color:#0f1720;padding:9px 11px;font-size:12.5px;font-family:inherit;cursor:pointer">
+              <select value="{{ billFilterV.sort }}" onChange="{{ billFilterV.onSort }}" title="Order the commitments" style="border:1px solid #cfd8e2;border-radius:9px;background:#fff;color:#0f1720;padding:9px 11px;font-size:12.5px;font-family:inherit;cursor:pointer">
                 <sc-for list="{{ billFilterV.sortOptions }}" as="o" hint-placeholder-count="7"><option value="{{ o.v }}">{{ o.label }}</option></sc-for>
               </select>
               <span style="font-size:11.5px;color:#8894a2;white-space:nowrap">Vendor</span>
@@ -2287,7 +2287,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
               </select>
               <sc-if value="{{ billFilterV.filtered }}" hint-placeholder-val="{{ false }}"><button onClick="{{ billFilterV.onClear }}" title="Show every vendor again" style="border:1px solid #cfd8e2;background:#fff;color:#4a5765;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">Clear</button></sc-if>
             </div>
-            <sc-if value="{{ billSearchV.has }}" hint-placeholder-val="{{ false }}"><span style="font-size:12px;color:#8894a2;white-space:nowrap">{{ billSearchV.shown }} of {{ billSearchV.total }} bills</span></sc-if>
+            <sc-if value="{{ billSearchV.has }}" hint-placeholder-val="{{ false }}"><span style="font-size:12px;color:#8894a2;white-space:nowrap">{{ billSearchV.shown }} of {{ billSearchV.total }} commitments</span></sc-if>
           </div>
           <div style="background:#fff;border:1px solid #e4e8ee;border-radius:12px;overflow:hidden">
             <div style="overflow-x:auto"><div style="min-width:1980px">
@@ -2321,19 +2321,19 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                   <div class="mono" style="text-align:right;font-weight:600;font-size:12.5px;color:#0f1720">{{ r.total }}</div>
                   <div style="display:flex;align-items:center;gap:3px;margin-top:1px"><sc-if value="{{ r.hasInvoiceFile }}" hint-placeholder-val="{{ false }}"><button onClick="{{ r.onViewInvoice }}" title="View invoice" style="border:1px solid #cfd8e2;background:#fff;color:#2b59c3;border-radius:6px;padding:6px 7px;font-size:10.5px;font-weight:700;cursor:pointer;flex:0 0 auto" style-hover="border-color:#2b59c3">👁</button></sc-if><label title="Attach the vendor invoice (PDF/image)" style="display:flex;align-items:center;gap:4px;border:1px dashed #cfd8e2;background:#fff;color:#6b7787;border-radius:6px;padding:6px 7px;font-size:10.5px;font-weight:600;cursor:pointer;overflow:hidden" style-hover="border-color:#2b59c3;color:#2b59c3"><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.invoiceLabel }}</span><input type="file" accept="application/pdf,image/*" onChange="{{ r.onAttachInvoice }}" style="display:none"></label></div>
                   <div style="display:flex;flex-direction:column;gap:3px">
-                    <span style="align-self:flex-start;font-size:10px;font-weight:600;padding:1px 8px;border-radius:12px;background:{{ r.statusBg }};color:{{ r.statusColor }}">{{ r.statusLabel }}</span><sc-if value="{{ r.hasPaidOn }}" hint-placeholder-val="{{ false }}"><span class="mono" title="Date this bill was marked paid" style="font-size:9px;color:#15803d;margin-top:2px">✓ {{ r.paidOn }}</span></sc-if>
+                    <span style="align-self:flex-start;font-size:10px;font-weight:600;padding:1px 8px;border-radius:12px;background:{{ r.statusBg }};color:{{ r.statusColor }}">{{ r.statusLabel }}</span><sc-if value="{{ r.hasPaidOn }}" hint-placeholder-val="{{ false }}"><span class="mono" title="Date this commitment was marked paid" style="font-size:9px;color:#15803d;margin-top:2px">✓ {{ r.paidOn }}</span></sc-if>
                     <div style="display:flex;gap:4px;align-items:center">
                       <input value="{{ r.paid }}" onInput="{{ r.onPaid }}" onFocus="{{ r.onPaidFocus }}" onBlur="{{ r.onCellBlur }}" readOnly="{{ r.paidLocked }}" title="{{ r.paidTitle }}" class="mono" style="flex:1;min-width:0;border:1px solid #e4e8ee;border-radius:6px;padding:4px 6px;font-size:11px;text-align:right;font-family:'IBM Plex Mono',monospace;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none">
                       <button onClick="{{ r.onPayFull }}" title="Record payment in full" style="border:1px solid #bfe3cc;background:#e9f6ee;color:#15803d;border-radius:5px;padding:4px 7px;font-size:10.5px;font-weight:600;cursor:pointer;font-family:inherit">Pay</button><button onClick="{{ r.onAddPayment }}" title="Add a payment with method, date, cheque no., notes and attachments" style="border:1px solid #cdddf8;background:#f2f6fd;color:#2b59c3;border-radius:5px;padding:4px 7px;font-size:10.5px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap">＋ Pmt</button>
                     </div>
-                    <span style="font-size:9.5px;color:{{ r.outstandingColor }}">Outstanding {{ r.outstanding }}</span><sc-if value="{{ r.hasPayments }}" hint-placeholder-val="{{ false }}"><button onClick="{{ r.onViewPayments }}" title="View the payments recorded against this bill" style="align-self:flex-start;border:0;background:transparent;color:#2b59c3;padding:0;font-size:9.5px;font-weight:600;cursor:pointer;font-family:inherit;text-decoration:underline">{{ r.paymentsLabel }} &#9656;</button></sc-if>
+                    <span style="font-size:9.5px;color:{{ r.outstandingColor }}">Outstanding {{ r.outstanding }}</span><sc-if value="{{ r.hasPayments }}" hint-placeholder-val="{{ false }}"><button onClick="{{ r.onViewPayments }}" title="View the payments recorded against this commitment" style="align-self:flex-start;border:0;background:transparent;color:#2b59c3;padding:0;font-size:9.5px;font-weight:600;cursor:pointer;font-family:inherit;text-decoration:underline">{{ r.paymentsLabel }} &#9656;</button></sc-if>
                     <sc-if value="{{ r.overdue }}" hint-placeholder-val="{{ false }}"><span style="font-size:9px;font-weight:700;letter-spacing:.3px;color:#b91c1c">⚠ OVERDUE</span></sc-if>
                   </div>
                   <div style="display:flex;flex-direction:column;gap:3px;margin-top:1px">
-                    <button onClick="{{ r.onSend }}" title="Email this bill to the vendor" style="border:1px solid #cdddf8;background:#f2f6fd;color:#2b59c3;border-radius:5px;padding:5px 6px;font-size:10.5px;font-weight:600;cursor:pointer;font-family:inherit">✉ Send</button>
+                    <button onClick="{{ r.onSend }}" title="Send this commitment's invoice to accounts for payment" style="border:1px solid #cdddf8;background:#f2f6fd;color:#2b59c3;border-radius:5px;padding:5px 6px;font-size:10.5px;font-weight:600;cursor:pointer;font-family:inherit">✉ Send</button>
                     <sc-if value="{{ r.sent }}" hint-placeholder-val="{{ false }}"><span title="{{ r.sentAt }}" style="font-size:8.5px;color:#15803d;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">✓ sent</span></sc-if>
                   </div>
-                  <button onClick="{{ r.onDelete }}" title="Delete bill" style="border:0;background:transparent;color:#c0c8d1;cursor:pointer;min-width:var(--cpms-tap,auto);min-height:var(--cpms-tap,auto);font-size:15px;padding:2px;line-height:1;margin-top:5px" style-hover="color:#b91c1c">✕</button>
+                  <button onClick="{{ r.onDelete }}" title="Delete commitment" style="border:0;background:transparent;color:#c0c8d1;cursor:pointer;min-width:var(--cpms-tap,auto);min-height:var(--cpms-tap,auto);font-size:15px;padding:2px;line-height:1;margin-top:5px" style-hover="color:#b91c1c">✕</button>
                 </div>
               </sc-for>
               <div style="display:grid;grid-template-columns:112px 1.1fr 1.1fr 1.1fr 1fr 104px 104px .85fr 58px .85fr 100px 156px 96px 40px;padding:13px 16px;background:#0f1a24;color:#fff;font-size:13px;font-weight:600;align-items:center;gap:9px">
@@ -2343,8 +2343,8 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
             </div></div>
           </div>
           <div style="display:flex;align-items:center;flex-wrap:var(--cpms-wrap,nowrap);justify-content:space-between;gap:16px;margin-top:14px">
-            <button onClick="{{ onAddBill }}" style="border:1px dashed #2b59c3;background:#f2f6fd;color:#2b59c3;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="background:#e8eefc">＋ Add bill</button>
-            <div style="font-size:12px;color:#8894a2;line-height:1.5;text-align:right">Create a vendor (contractor, supplier or service) inline via the vendor dropdown — details are saved to the directory. Assigning a bill to a cost code feeds its total into that line's <strong style="color:#6b7787">Committed</strong> cost (🧾).</div>
+            <button onClick="{{ onAddBill }}" style="border:1px dashed #2b59c3;background:#f2f6fd;color:#2b59c3;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="background:#e8eefc">＋ Add commitment</button>
+            <div style="font-size:12px;color:#8894a2;line-height:1.5;text-align:right">Create a vendor (contractor, supplier or service) inline via the vendor dropdown — details are saved to the directory. Assigning a commitment to a cost code feeds its total into that line's <strong style="color:#6b7787">Committed</strong> cost (🧾).</div>
           </div>
         </sc-if>
 
@@ -2382,7 +2382,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
               </sc-if>
             </div></div>
           </div>
-          <div style="font-size:12px;color:#8894a2;line-height:1.6;margin-top:12px">An approved, coded invoice posts a vendor bill against each of its cost codes, which is what moves <strong style="color:#6b7787">Committed</strong>; marking it paid moves <strong style="color:#6b7787">Actual</strong>. Rejected, duplicate and voided invoices carry no money at all.</div>
+          <div style="font-size:12px;color:#8894a2;line-height:1.6;margin-top:12px">An approved, coded invoice posts a commitment against each of its cost codes, which is what moves <strong style="color:#6b7787">Committed</strong>; marking it paid moves <strong style="color:#6b7787">Actual</strong>. Rejected, duplicate and voided invoices carry no money at all.</div>
         </sc-if>
 
         <!-- ============ DEFECTS ============ -->
@@ -3624,7 +3624,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                   </div>
                 </sc-for>
               </sc-if>
-              <sc-if value="{{ filesV.billNoMatch }}" hint-placeholder-val="{{ false }}"><div style="padding:24px;text-align:center;color:#8894a2;font-size:12.5px">No bills or progress claims match this filter.</div></sc-if>
+              <sc-if value="{{ filesV.billNoMatch }}" hint-placeholder-val="{{ false }}"><div style="padding:24px;text-align:center;color:#8894a2;font-size:12.5px">No commitments or progress claims match this filter.</div></sc-if>
             </sc-if>
 
             <!-- PERMITS (attached documents) -->
@@ -5092,7 +5092,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
           </sc-for>
         </div>
         <div style="padding:15px 22px;border-top:1px solid #eef1f4;display:flex;flex-wrap:var(--cpms-wrap,nowrap);justify-content:flex-end;flex:0 0 auto">
-          <button onClick="{{ paymentsViewV.onAddAnother }}" title="Record another payment against this bill" style="margin-right:auto;border:1px solid #cdddf8;background:#f2f6fd;color:#2b59c3;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Add another payment</button>
+          <button onClick="{{ paymentsViewV.onAddAnother }}" title="Record another payment against this commitment" style="margin-right:auto;border:1px solid #cdddf8;background:#f2f6fd;color:#2b59c3;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Add another payment</button>
           <button onClick="{{ paymentsViewV.onClose }}" style="border:1px solid #cfd8e2;background:#fff;color:#4a5765;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Close</button>
         </div>
       </div>
@@ -5231,7 +5231,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
               <sc-if value="{{ acctSendV.hasInvoiceFile }}" hint-placeholder-val="{{ false }}"><button onClick="{{ acctSendV.onViewInvoice }}" style="border:1px solid #cfd8e2;background:#fff;color:#2b59c3;border-radius:6px;padding:3px 9px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="border-color:#2b59c3">👁 View</button></sc-if>
             </div>
             <sc-if value="{{ acctSendV.missingInvoice }}" hint-placeholder-val="{{ false }}">
-              <div style="font-size:11.5px;color:#b45309;margin-top:6px">No invoice file is attached to this bill — attach one on the bill row (＋ Invoice) so it travels with the email.</div>
+              <div style="font-size:11.5px;color:#b45309;margin-top:6px">No invoice file is attached yet — attach one on its row (＋ Invoice) so it travels with the email.</div>
             </sc-if>
           </div>
 
@@ -5369,7 +5369,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
   <sc-if value="{{ vendorModal.open }}" hint-placeholder-val="{{ false }}">
     <div onClick="{{ onCloseVendorModal }}" style="position:fixed;inset:0;background:rgba(15,23,32,.42);display:flex;align-items:center;justify-content:center;z-index:50;animation:fadeUp .15s ease">
       <div onClick="{{ stop }}" style="background:#fff;border-radius:14px;width:520px;max-width:92vw;box-shadow:0 24px 60px rgba(15,23,32,.28);overflow:hidden">
-        <div style="padding:18px 22px;border-bottom:1px solid #eef1f4"><div style="font-size:16px;font-weight:600;color:#0f1720">New vendor</div><div style="font-size:12.5px;color:#8894a2;margin-top:2px">Saved to the vendor directory and applied to this bill</div></div>
+        <div style="padding:18px 22px;border-bottom:1px solid #eef1f4"><div style="font-size:16px;font-weight:600;color:#0f1720">New vendor</div><div style="font-size:12.5px;color:#8894a2;margin-top:2px">Saved to the vendor directory and selected where you opened this</div></div>
         <div style="padding:20px 22px;display:flex;flex-direction:column;gap:15px">
           <div><label style="font-size:12px;font-weight:600;color:#4a5765;display:block;margin-bottom:5px">Vendor type</label>
             <select value="{{ vendorModal.type }}" onChange="{{ onVendorType }}" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:inherit;background:#fff;cursor:pointer">
@@ -7204,7 +7204,7 @@ class Component extends DCLogic {
     { key: 'dashboard', label: 'Dashboard' }, { key: 'directory', label: 'Directory' }, { key: 'projectSetup', label: 'Project Setup' },
     { key: 'financial', label: 'Financial / Estimates' }, { key: 'agreements', label: 'Subcontractor & Vendor Agreements' }, { key: 'variations', label: 'SoV / Variations' },
     { key: 'documents', label: 'Document Management' }, { key: 'rfis', label: 'RFIs' }, { key: 'punchList', label: 'Punch List' }, { key: 'reporting', label: 'Reporting' },
-    { key: 'schedule', label: 'Schedule' }, { key: 'eot', label: 'EOT' }, { key: 'invoices', label: 'Invoices' }, { key: 'bills', label: 'Bills' }, { key: 'claims', label: 'Progress Claims' }, { key: 'apInvoices', label: 'Invoice Management (AP)' }, { key: 'apAllocate', label: 'Allocate Unassigned Invoices' }, { key: 'labour', label: 'Labour Hours' }, { key: 'messaging', label: 'Send Messages' }, { key: 'admin', label: 'User Administration' },
+    { key: 'schedule', label: 'Schedule' }, { key: 'eot', label: 'EOT' }, { key: 'invoices', label: 'Invoices' }, { key: 'bills', label: 'Commitments' }, { key: 'claims', label: 'Progress Claims' }, { key: 'apInvoices', label: 'Invoice Management (AP)' }, { key: 'apAllocate', label: 'Allocate Unassigned Invoices' }, { key: 'labour', label: 'Labour Hours' }, { key: 'messaging', label: 'Send Messages' }, { key: 'admin', label: 'User Administration' },
   ]; }
   permBadge(lv) { return lv >= 3 ? { t: 'Approve', s: 'A', c: '#15803d', bg: '#e6f4ea' } : lv === 2 ? { t: 'Edit', s: 'E', c: '#1d4ed8', bg: '#e7eefc' } : lv === 1 ? { t: 'View', s: 'V', c: '#6b7787', bg: '#eef1f5' } : { t: 'No access', s: '—', c: '#c0c8d1', bg: 'transparent' }; }
   currentUser() { const s = this.state.session; return (s && s.profile && s.profile.status === 'active') ? s.profile : null; }
@@ -7512,7 +7512,7 @@ class Component extends DCLogic {
     const paid = this.lineActualPaid(l, proj), lab = this.lineLabourCost(l, proj);
     const typed = Number(l.actual) || 0;
     const parts = [];
-    if (paid > 0) parts.push(this.money(paid) + ' paid on bills and claims against this cost code');
+    if (paid > 0) parts.push(this.money(paid) + ' paid on commitments and claims against this cost code');
     else if (typed > 0) parts.push(this.money(typed) + ' entered by hand');
     if (lab > 0) parts.push(this.money(lab) + ' of hours recorded on Labour hours');
     return parts.length ? parts.join(', plus ') + '.' : 'Nothing recorded against this cost code yet.';
@@ -10045,7 +10045,7 @@ class Component extends DCLogic {
     if (already.length) {
       const tot = this._r2(already.reduce((s, x) => s + this.billTotal(x.bill), 0));
       const codes = already.map(x => x.bill.code).filter(Boolean).join(', ');
-      const where = 'Bills on ' + already[0].project + ' — ' + already.length
+      const where = 'Commitments on ' + already[0].project + ' — ' + already.length
         + (already.length === 1 ? ' line' : ' lines') + ' totalling ' + this.money(tot)
         + (codes ? ' against ' + codes : '');
       // Once this invoice has posted its own bill the two are both in the cost report, which is
@@ -10054,7 +10054,7 @@ class Component extends DCLogic {
       out.push({ key: 'inbills', block: true, ok: false,
         text: posted
           ? ('Invoice ' + inv.invoiceNo + ' is ALSO entered by hand in ' + where
-             + '. Both are in the cost report, so this money is counted twice — void this invoice or delete the hand-entered bill.')
+             + '. Both are in the cost report, so this money is counted twice — void this invoice or delete the hand-entered commitment.')
           : ('Invoice ' + inv.invoiceNo + ' is already entered by hand in ' + where
              + '. Approving this one would post the same money a second time.') });
     }
@@ -12012,7 +12012,7 @@ class Component extends DCLogic {
   // the same seven screens, so they read their names from one place.
   _commitTabDefs() { return [
     { key: 'budget', label: 'Budget' }, { key: 'agreements', label: 'Sub-contracts' },
-    { key: 'bills', label: 'Bills' }, { key: 'claims', label: 'Progress claims' },
+    { key: 'bills', label: 'Commitments' }, { key: 'claims', label: 'Progress claims' },
     { key: 'variations', label: 'Variations' }, { key: 'invoices', label: 'Invoices' },
     { key: 'apreg', label: 'Invoice register' },
   ]; }
@@ -12760,7 +12760,7 @@ class Component extends DCLogic {
     const add = (n, one, many) => { if (n > 0) bits.push(n + ' ' + (n === 1 ? one : (many || one + 's'))); };
     add((p.costLines || []).length, 'budget line');
     add((p.commitments || []).length, 'subcontract');
-    add((p.bills || []).length, 'bill');
+    add((p.bills || []).length, 'commitment');
     add((p.claims || []).length, 'progress claim');
     add((p.invoices || []).length, 'invoice');
     add(((p.contract || {}).variations || []).length, 'variation');
@@ -14025,7 +14025,7 @@ class Component extends DCLogic {
   askRemovePayment(payId) { this.setState({ payConfirm: payId }); }
   cancelRemovePayment() { this.setState({ payConfirm: "" }); }
   removePayment(billId, payId) {
-    if (!this._delGate('payment', this._delTarget('payment', billId, payId), () => this.removePayment(billId, payId), 'The bill goes back to unpaid or part paid to match what is left.')) return; 
+    if (!this._delGate('payment', this._delTarget('payment', billId, payId), () => this.removePayment(billId, payId), 'The commitment goes back to unpaid or part paid to match what is left.')) return; 
     this.setState(s => ({ payConfirm: "", projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, bills: (p.bills || []).map(x => {
       if (x.id !== billId) return x;
       const tot = this.billTotal(x);
@@ -16195,13 +16195,13 @@ class Component extends DCLogic {
       if (showInvoices) { pageTitle = 'Financial'; pageSub = 'Invoices — customer billing & receivables — ' + p.name; crumb2 = 'Financial'; }
       if (showVariations) { pageTitle = 'Financial'; pageSub = 'Variations — change orders sent to the client for approval — ' + p.name; crumb2 = 'Financial'; }
       if (showDefects) { pageTitle = 'Defects'; pageSub = 'Defect register & rectification tracking — ' + p.name; crumb2 = 'Defects'; if (this.can('punchList', 'edit')) primaryAction = { show: true, label: '＋ Raise defect', onClick: () => this.addDefect() }; }
-      if (showBills) { pageTitle = 'Financial'; pageSub = 'Vendor bills — planned spend per cost code — ' + p.name; if (this.can('bills', 'edit')) primaryAction = { show: true, label: '＋ Add bill', onClick: () => this.addBill() }; }
+      if (showBills) { pageTitle = 'Financial'; pageSub = 'Commitments — planned spend per cost code — ' + p.name; if (this.can('bills', 'edit')) primaryAction = { show: true, label: '＋ Add commitment', onClick: () => this.addBill() }; }
       if (showApReg) { pageTitle = 'Financial'; pageSub = 'Supplier invoice register — every AP invoice allocated to ' + p.name; crumb2 = 'Financial'; }
       if (showDetails) { pageTitle = 'Details'; pageSub = 'Project details — type, address, customer & key information — ' + p.name; crumb2 = 'Details'; }
       if (showEot) { pageTitle = 'EOT — Extension of Time'; pageSub = 'Delay events & time-extension claims against the completion date — ' + p.name; crumb2 = 'EOT'; }
       if (showDocuments) { pageTitle = 'Documents'; pageSub = 'RFIs · Permits · To-Do’s · Drawings · Meetings · Inspections · Incidents — ' + p.name; crumb2 = 'Documents'; }
       if (showContacts) { pageTitle = 'Contacts'; pageSub = 'Everyone on the project — client, team, representatives & subcontractors — ' + p.name; crumb2 = 'Contacts'; primaryAction = { show: true, label: '✉ Compose email', onClick: () => this.openEmailCompose('') }; }
-      if (showFiles) { pageTitle = 'Files & Photos'; pageSub = 'Invoices · Drawings · Photos · Bills & claims — auto-populated from the project — ' + p.name; crumb2 = 'Files & Photos'; }
+      if (showFiles) { pageTitle = 'Files & Photos'; pageSub = 'Invoices · Drawings · Photos · Commitments & claims — auto-populated from the project — ' + p.name; crumb2 = 'Files & Photos'; }
       if (showSchedule) { pageTitle = 'Schedule'; pageSub = 'Project programme, critical path & progress — ' + p.name; crumb2 = 'Schedule'; }
       if (showLabour) { pageTitle = 'Labour hours'; pageSub = 'Hours worked on the job, week by week, against what each person is allowed — ' + p.name; crumb2 = 'Labour hours'; }
       if (showReport) { pageTitle = 'Report Design'; pageSub = 'Build, schedule & send cost reports — ' + p.name; crumb2 = 'Report Design'; }
@@ -16449,9 +16449,9 @@ class Component extends DCLogic {
       const overdue = overdueBills.reduce((s, x) => s + this.billTotal(x), 0);
       const uncoded = bills.filter(x => !x.code).length;
       kpis = [
-        kpiCard('Total (incl. tax)', this.money(gross), bills.length + ' bills'),
-        kpiCard('Paid', this.money(paid), bills.filter(x => this.billStatusFor(x) === 'paid').length + ' bills', '#15803d'),
-        kpiCard('Outstanding', this.money(outstanding), bills.filter(x => this.billStatusFor(x) !== 'paid').length + ' bills', outstanding ? '#b45309' : '#15803d'),
+        kpiCard('Total (incl. tax)', this.money(gross), bills.length + (bills.length === 1 ? ' commitment' : ' commitments')),
+        kpiCard('Paid', this.money(paid), ((n) => n + (n === 1 ? ' commitment' : ' commitments'))(bills.filter(x => this.billStatusFor(x) === 'paid').length), '#15803d'),
+        kpiCard('Outstanding', this.money(outstanding), ((n) => n + (n === 1 ? ' commitment' : ' commitments'))(bills.filter(x => this.billStatusFor(x) !== 'paid').length), outstanding ? '#b45309' : '#15803d'),
         kpiCard('Overdue', this.money(overdue), overdueBills.length + ' past due', overdue ? '#b91c1c' : '#15803d'),
         kpiCard('Unassigned', String(uncoded), uncoded ? 'need a cost code' : 'all coded', uncoded ? '#b45309' : '#15803d'),
         kpiCard('Vendors', String(new Set(bills.map(x => x.vendorId).filter(Boolean)).size), 'directory: ' + S.vendors.length),
@@ -16593,7 +16593,7 @@ class Component extends DCLogic {
       const subs = Object.keys(extMap).sort((a, b) => extMap[a].order - extMap[b].order).map(k => {
         const e = extMap[k]; const parts = [];
         if (e.refs.length) parts.push(e.refs.join(', '));
-        if (e.billCount) parts.push(e.billCount + ' bill' + (e.billCount > 1 ? 's' : ''));
+        if (e.billCount) parts.push(e.billCount + ' commitment' + (e.billCount > 1 ? 's' : ''));
         return { company: e.company, initials: initialsOf(e.company), typeLabel: this.vendorTypeLabel(e.type) || 'Vendor',
           engagement: parts.join(' · ') || '—', rep: e.rep, phone: e.phone, email: e.email, hasContact: e.hasVendor,
           hasEmail: !!e.email, hasPhone: !!e.phone, mailto: mailHref(e.email), tel: telHref(e.phone), onCompose: () => this.openEmailCompose(e.email) };
@@ -16628,7 +16628,7 @@ class Component extends DCLogic {
       const billItems = billsSrc.map(b => {
         const vn = this.vendorName(b.vendorId) || b.vendorId || 'Vendor'; const st = b.status || 'unpaid';
         const sm = st === 'paid' ? { c: '#15803d', bg: '#e6f4ea', l: 'Paid' } : st === 'partial' ? { c: '#b45309', bg: '#fbf1e3', l: 'Partial' } : { c: '#6b7787', bg: '#eef1f5', l: 'Unpaid' };
-        return { id: b.id, kind: 'Bill', kindColor: '#2b59c3', kindBg: '#e7eefc', icon: '📄', title: b.billNo, sub: vn + (b.desc ? ' · ' + b.desc : ''), meta: b.billDate ? this.fmtDate(b.billDate) : '—', amount: this.money(this.billTotal(b)), statusLabel: sm.l, statusColor: sm.c, statusBg: sm.bg , hasFile: !!b.invoiceUrl, fileName: b.invoice || '', onViewFile: () => this.viewBillInvoice(b.id), sortKey: b.billDate || '' };
+        return { id: b.id, kind: 'Commitment', kindColor: '#2b59c3', kindBg: '#e7eefc', icon: '📄', title: b.billNo, sub: vn + (b.desc ? ' · ' + b.desc : ''), meta: b.billDate ? this.fmtDate(b.billDate) : '—', amount: this.money(this.billTotal(b)), statusLabel: sm.l, statusColor: sm.c, statusBg: sm.bg , hasFile: !!b.invoiceUrl, fileName: b.invoice || '', onViewFile: () => this.viewBillInvoice(b.id), sortKey: b.billDate || '' };
       });
       // Progress claims belong beside the bills they will become - same folder, one story.
       let claimsSrc = (p.claims || []).slice();
@@ -16681,7 +16681,7 @@ class Component extends DCLogic {
       const photoView = []; photoGroups.forEach(g => g.items.forEach(it => { it._vi = photoView.length; photoView.push({ name: it.name, url: it.url, type: it.type }); }));
       photoGroups.forEach(g => g.items.forEach(it => { it.onView = () => this.openGallery(photoView, it._vi); it.onDesc = e => this.setPhotoDesc(it.id, e.target.value); it.canRemove = !!it.isUploaded; it.onRemove = it.isUploaded ? () => this.removeProjectPhoto(it.id) : (() => {}); }));
       const counts = { invoices: invItems.length, permits: permitItems.length, drawings: drawFiles.length, photos: photos.length, bills: totalBills };
-      const metaF = [ { key: 'invoices', label: 'Invoices', icon: '🧾', hint: 'sent to the client' }, { key: 'permits', label: 'Permits', icon: '📋', hint: 'permit documents' }, { key: 'drawings', label: 'Drawings', icon: '📐', hint: 'by specialty' }, { key: 'photos', label: 'Photos', icon: '🖼', hint: 'by date' }, { key: 'bills', label: 'Bills & Progress claims', icon: '📄', hint: 'vendor bills & subcontractor claims' } ];
+      const metaF = [ { key: 'invoices', label: 'Invoices', icon: '🧾', hint: 'sent to the client' }, { key: 'permits', label: 'Permits', icon: '📋', hint: 'permit documents' }, { key: 'drawings', label: 'Drawings', icon: '📐', hint: 'by specialty' }, { key: 'photos', label: 'Photos', icon: '🖼', hint: 'by date' }, { key: 'bills', label: 'Commitments & Progress claims', icon: '📄', hint: 'commitments & subcontractor claims' } ];
       const folders = metaF.map(m => ({ key: m.key, label: m.label, icon: m.icon, hint: m.hint, count: String(counts[m.key]), active: m.key === folderKey, borderC: m.key === folderKey ? '#2b59c3' : '#e4e8ee', bgC: m.key === folderKey ? '#f2f6fd' : '#fff', fgC: m.key === folderKey ? '#2b59c3' : '#0f1720', onClick: () => this.setFileFolder(m.key) }));
       const activeMeta = metaF.find(m => m.key === folderKey); const hasItems = counts[folderKey] > 0;
       const pgOpt = (v, l) => ({ v, l, active: photoGroup === v, bg: photoGroup === v ? '#2b59c3' : '#fff', fg: photoGroup === v ? '#fff' : '#4a5765', onClick: () => this.setPhotoGroup(v) });
@@ -17680,7 +17680,7 @@ class Component extends DCLogic {
           actualManual: !(this.lineActualPaid(l, p) > 0 || this.lineLabourCost(l, p) > 0),
           committedLinked: this.money(this.lineCommitted(l, p)),
           invoiceCount: bills.length,
-          invoiceLabel: [bills.length ? bills.length + (bills.length === 1 ? ' bill' : ' bills') : '', lineCls.length ? lineCls.length + (lineCls.length === 1 ? ' claim' : ' claims') : ''].filter(Boolean).join(' + '),
+          invoiceLabel: [bills.length ? bills.length + (bills.length === 1 ? ' commitment' : ' commitments') : '', lineCls.length ? lineCls.length + (lineCls.length === 1 ? ' claim' : ' claims') : ''].filter(Boolean).join(' + '),
           onLink: e => this.setLineField(l.id, 'commitmentId', e.target.value),
           current: this.money(this.lineCurrent(l, p)), eac: this.money(this.lineForecast(l, p)), variance: this.signed(variance), varColor: this.varColor(variance),
           pct: (() => { const v = this.linePctSpent(l, p); return v == null ? '—' : v + '%'; })(),
@@ -18392,7 +18392,7 @@ class Component extends DCLogic {
       const ok = String(d.typed || '').trim().toLowerCase() === 'delete';
       deleteConfirmV = {
         open: true, label: d.label || '', note: d.note || '', typed: d.typed || '',
-        kindLabel: d.kind === 'tplfile' ? 'file' : d.kind,
+        kindLabel: d.kind === 'tplfile' ? 'file' : d.kind === 'bill' ? 'commitment' : d.kind,
         canDelete: ok, cannotDelete: !ok,
         delBg: ok ? '#b91c1c' : '#e3c8c8', delCursor: ok ? 'pointer' : 'not-allowed',
         onType: e => this.setDeleteConfirmText(e.target.value),
@@ -18410,7 +18410,7 @@ class Component extends DCLogic {
         const pvList = pvBill.payments || [];
         paymentsViewV = {
           open: true,
-          billLabel: (pvBill.billNo || "Bill") + " - " + ((pvVen && pvVen.company) || pvBill.vendor || ""),
+          billLabel: (pvBill.billNo || "Commitment") + " - " + ((pvVen && pvVen.company) || pvBill.vendor || ""),
           billTotal: this.money(pvTot), paidTotal: this.money(pvPaid),
           outstanding: this.money(this.billOutstanding(pvBill)),
           countLabel: pvList.length === 1 ? "1 payment recorded" : pvList.length + " payments recorded",
@@ -18454,7 +18454,7 @@ class Component extends DCLogic {
           open: true,
           title: S.paymentModal.payId ? "Edit payment" : "Add payment",
           saveLabel: S.paymentModal.payId ? "Save" : "Add",
-          billLabel: (bill.billNo || 'Bill') + ' · ' + ((ven && ven.company) || bill.vendor || ''),
+          billLabel: (bill.billNo || 'Commitment') + ' · ' + ((ven && ven.company) || bill.vendor || ''),
           billTotal: this.money(tot), alreadyPaid: this.money(already), outstanding: this.money(Math.max(0, tot - already)),
           claimOptions: (p.claims || []).map(c => ({ id: c.id, label: (c.claimNo || 'Claim') + ' · ' + this.money(this._num(c.thisClaim)) + (c.period ? ' · ' + c.period : '') })),
           claimId: f.claimId || '', paymentNo: f.paymentNo || '', method: f.method || '', methodOptions: this.paymentMethods().map(m => ({ v: m })),
@@ -18804,7 +18804,7 @@ class Component extends DCLogic {
             isForward: !!(x.source && x.source.forwardedBy),
             forwardNote: (() => { const u = this.apUserByEmail((x.source && x.source.forwardedBy) || ''); return 'Forwarded by ' + ((u && u.name) || (x.source && x.source.forwardedBy) || ''); })(),
             inBills: this.apExistingBills(x).length > 0,
-            inBillsNote: (() => { const e = this.apExistingBills(x); return e.length ? ('Already entered in Bills on ' + e[0].project + ' — ' + e.length + (e.length === 1 ? ' line' : ' lines')) : ''; })(),
+            inBillsNote: (() => { const e = this.apExistingBills(x); return e.length ? ('Already entered in Commitments on ' + e[0].project + ' — ' + e.length + (e.length === 1 ? ' line' : ' lines')) : ''; })(),
             sel, selStyle: _chk(sel), selTick: sel ? '✓' : '', onSel: () => this.toggleApSel(x.id), canPick,
             onOpen: () => (x.status === 'approved' ? this.openApAlloc(x.id) : this.openApReview(x.id)),
             openLabel: x.status === 'approved' ? 'Code ›' : (this.apLocked(x) ? 'View ›' : 'Review ›'),
