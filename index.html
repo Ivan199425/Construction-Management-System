@@ -2286,7 +2286,11 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                 <option value="">All vendors</option>
                 <sc-for list="{{ billFilterV.vendorOptions }}" as="o" hint-placeholder-count="4"><option value="{{ o.id }}">{{ o.label }}</option></sc-for>
               </select>
-              <sc-if value="{{ billFilterV.filtered }}" hint-placeholder-val="{{ false }}"><button onClick="{{ billFilterV.onClear }}" title="Show every vendor again" style="border:1px solid #cfd8e2;background:#fff;color:#4a5765;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">Clear</button></sc-if>
+              <span style="font-size:11.5px;color:#8894a2;white-space:nowrap">Status</span>
+              <select value="{{ billFilterV.pay }}" onChange="{{ billFilterV.onPay }}" title="Show commitments by how much is paid" style="border:1px solid #cfd8e2;border-radius:9px;background:#fff;color:#0f1720;padding:9px 11px;font-size:12.5px;font-family:inherit;cursor:pointer">
+                <sc-for list="{{ billFilterV.payOptions }}" as="o" hint-placeholder-count="5"><option value="{{ o.v }}">{{ o.label }}</option></sc-for>
+              </select>
+              <sc-if value="{{ billFilterV.filtered }}" hint-placeholder-val="{{ false }}"><button onClick="{{ billFilterV.onClear }}" title="Show every commitment again" style="border:1px solid #cfd8e2;background:#fff;color:#4a5765;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">Clear</button></sc-if>
             </div>
             <sc-if value="{{ billSearchV.has }}" hint-placeholder-val="{{ false }}"><span style="font-size:12px;color:#8894a2;white-space:nowrap">{{ billSearchV.shown }} of {{ billSearchV.total }} commitments</span></sc-if>
           </div>
@@ -5486,6 +5490,7 @@ class Component extends DCLogic {
       photoMeta: "",
       billSort: "newest",
       billVendor: "",
+      billPay: "",
       payConfirm: "",
       budgetColW: this._loadBudgetColW(),
       budgetColOrder: this._loadBudgetColOrder(),
@@ -14022,6 +14027,7 @@ class Component extends DCLogic {
   // These open a read-only view of what was recorded against one bill.
   setBillSort(v) { this.setState({ billSort: v }); }
   setBillVendor(v) { this.setState({ billVendor: v }); }
+  setBillPay(v) { this.setState({ billPay: v }); }
   openPaymentsView(billId) { this.setState({ paymentsView: billId, payConfirm: "" }); }
   askRemovePayment(payId) { this.setState({ payConfirm: payId }); }
   cancelRemovePayment() { this.setState({ payConfirm: "" }); }
@@ -18023,10 +18029,13 @@ class Component extends DCLogic {
       bills.forEach(x => { const k = x.vendorId || ("~" + (x.vendor || "")); _vcount[k] = (_vcount[k] || 0) + 1; });
       const _bven = S.billVendor || "";
       if (_bven) bills = bills.filter(x => (x.vendorId || ("~" + (x.vendor || ""))) === _bven);
+      // by how much is paid - the same status each row shows; "outstanding" is anything not paid in full
+      const _bpay = ["paid", "outstanding", "partial", "unpaid"].indexOf(S.billPay) >= 0 ? S.billPay : "";
+      if (_bpay) bills = bills.filter(x => { const st = this.billStatusFor(x); return _bpay === "outstanding" ? st !== "paid" : st === _bpay; });
       const _bq = this._q("bills");
       if (_bq) bills = bills.filter(x => [x.billNo, _vendorName(x.vendorId), x.vendor, x.code, x.desc].join(' ').toLowerCase().indexOf(_bq) >= 0);
       const today = new Date().toISOString().slice(0, 10);
-      billSearchV = { value: S.search.bills || "", has: !!_bq, shown: bills.length, total: _billAll, onInput: e => this.setSearch("bills", e.target.value) };
+      billSearchV = { value: S.search.bills || "", has: !!_bq || !!_bven || !!_bpay, shown: bills.length, total: _billAll, onInput: e => this.setSearch("bills", e.target.value) };
       billFilterV = {
         sort: _bsort,
         sortOptions: [
@@ -18041,10 +18050,13 @@ class Component extends DCLogic {
           label: (k.charAt(0) === "~" ? (k.slice(1) || "No vendor") : (_vendorName(k) || "No vendor")) + " (" + _vcount[k] + ")",
           sortKey: (k.charAt(0) === "~" ? k.slice(1) : _vendorName(k) || "").toLowerCase(),
         })).sort((a, b) => a.sortKey.localeCompare(b.sortKey)),
-        filtered: !!_bven,
+        pay: _bpay,
+        payOptions: [{ v: "", label: "All" }, { v: "paid", label: "Paid" }, { v: "outstanding", label: "Outstanding" }, { v: "partial", label: "Part paid" }, { v: "unpaid", label: "Unpaid" }],
+        onPay: e => this.setBillPay(e.target.value),
+        filtered: !!_bven || !!_bpay,
         onSort: e => this.setBillSort(e.target.value),
         onVendor: e => this.setBillVendor(e.target.value),
-        onClear: () => this.setBillVendor(""),
+        onClear: () => this.setState({ billVendor: "", billPay: "" }),
       };
       billRows = bills.map(x => {
         const amt = this._num(x.amount), tax = amt * this._num(x.taxRate) / 100, tot = amt + tax;
