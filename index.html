@@ -2078,7 +2078,6 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                   <div style="display:flex;flex-wrap:var(--cpms-wrap,nowrap);justify-content:space-between;padding:9px 0;border-top:1px solid #e4e8ee;font-weight:700;color:#0f1720"><span>Sub total</span><span class="mono">{{ markupSummary.subTotal }}</span></div>
                   <div style="display:flex;flex-wrap:var(--cpms-wrap,nowrap);justify-content:space-between;padding:6px 0;color:#4a5765"><span>GST ({{ markupSummary.gstRate }}%)</span><span class="mono" style="font-weight:600;color:#0f1720">{{ markupSummary.gst }}</span></div>
                   <div style="display:flex;flex-wrap:var(--cpms-wrap,nowrap);justify-content:space-between;align-items:center;padding:11px 14px;margin-top:8px;background:#0f1a24;color:#fff;border-radius:9px;font-weight:700;font-size:14px"><span>Grand total (incl. GST)</span><span class="mono">{{ markupSummary.grandTotal }}</span></div>
-                  <div style="display:flex;flex-wrap:var(--cpms-wrap,nowrap);justify-content:space-between;padding:10px 0 2px;color:#4a5765"><span>Profit margin</span><span class="mono" style="font-weight:600;color:#15803d">{{ markupSummary.profit }} ({{ markupSummary.profitPct }})</span></div>
                 </div>
               </div>
             </div>
@@ -14761,7 +14760,6 @@ class Component extends DCLogic {
       { label: 'Sub total', v: k.sell, strong: true },
       { label: 'GST (' + String(k.gstRate) + '%)', v: k.gst },
       { label: 'Grand total (incl. GST)', v: k.grand, grand: true },
-      { label: 'Profit margin', v: k.markup, note: ' (' + k.margin.toFixed(1) + '%)', good: true },
     ] };
   }
   setProjectMarkup(cat, val) { if (!this.can('financial', 'edit')) return; const v = String(val).replace(/[^0-9.\-]/g, ''); this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, markups: { ...(p.markups || {}), [cat]: v } }) })); }
@@ -17884,7 +17882,7 @@ class Component extends DCLogic {
       const mkRows = mk.rows.map(c => ({ key: c.key, label: c.label, pctValue: c.pctValue, fromDefault: c.fromDefault, cost: this.money(c.cost), markup: this.money(c.markup), sell: this.money(c.sell), onMarkup: e => this.setProjectMarkup(c.key, e.target.value) }));
       const mkCanEdit = this.can('financial', 'edit');
       markupSummary = { show: mk.cost > 0, rows: mkRows, canEdit: mkCanEdit, readOnly: !mkCanEdit, totalCost: this.money(mk.cost), totalMarkup: this.money(mk.markup), totalSell: this.money(mk.sell), margin: mk.margin.toFixed(1) + '% margin',
-        estCost: this.money(mk.cost), markupAmt: this.money(mk.markup), markupPct: mk.markupPct.toFixed(1) + '%', subTotal: this.money(mk.sell), gstRate: String(mk.gstRate), gst: this.money(mk.gst), grandTotal: this.money(mk.grand), profit: this.money(mk.markup), profitPct: mk.margin.toFixed(1) + '%' };
+        estCost: this.money(mk.cost), markupAmt: this.money(mk.markup), markupPct: mk.markupPct.toFixed(1) + '%', subTotal: this.money(mk.sell), gstRate: String(mk.gstRate), gst: this.money(mk.gst), grandTotal: this.money(mk.grand) };
       budgetColTemplate = _visCols.map(c => this._colW(c.id) + 'px').join(' ');
       budgetMinWidth = (_visCols.reduce((a, c) => a + this._colW(c.id), 0) + Math.max(0, _visCols.length - 1) * 8 + 32) + 'px';
       const _sortableCols = { parentCode: 1, code: 1, desc: 1, cat: 1, orig: 1, adj: 1, revised: 1, committed: 1, actual: 1, ftc: 1, eac: 1, variance: 1, pct: 1 };
