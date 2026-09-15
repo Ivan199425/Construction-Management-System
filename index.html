@@ -323,7 +323,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
     <sc-if value="{{ projPickV.open }}" hint-placeholder-val="{{ false }}">
       <div onClick="{{ projPickV.onClose }}" style="position:fixed;inset:0;z-index:28"></div>
       <div style="position:absolute;top:100%;left:var(--cpms-hpad,20px);z-index:31;min-width:264px;max-width:calc(100vw - 24px);background:#132330;border:1px solid rgba(255,255,255,.10);border-radius:10px;box-shadow:0 18px 44px rgba(0,0,0,.45);padding:8px;max-height:70vh;overflow-y:auto">
-        <div style="font-size:10px;font-weight:700;letter-spacing:.9px;color:#5f7080;text-transform:uppercase;padding:2px 10px 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Projects</div>
+        <div style="font-size:10px;font-weight:700;letter-spacing:.9px;color:#fbbf24;text-transform:uppercase;padding:2px 10px 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Projects</div>
         <sc-for list="{{ switcherProjects }}" as="p" hint-placeholder-count="3">
           <button onClick="{{ p.onOpen }}" style="width:100%;display:flex;align-items:center;gap:9px;padding:8px 10px;border:0;background:{{ p.bg }};color:{{ p.fg }};border-radius:7px;cursor:pointer;text-align:left;margin-bottom:2px;font-family:inherit" style-hover="background:rgba(255,255,255,.06)">
             <span style="width:6px;height:6px;border-radius:50%;background:{{ p.dot }};flex:0 0 auto"></span>
@@ -341,7 +341,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
       <div onClick="{{ secPickV.onClose }}" style="position:fixed;inset:0;z-index:28"></div>
       <div class="cpms-secmenu" style="position:absolute;top:100%;left:var(--cpms-hpad,20px);right:var(--cpms-hpad,20px);z-index:31;background:#132330;border:1px solid rgba(255,255,255,.10);border-radius:10px;box-shadow:0 18px 44px rgba(0,0,0,.45);padding:14px;max-height:74vh;overflow-y:auto;display:grid;grid-template-columns:var(--cpms-3col,repeat(3,1fr));gap:10px 22px">
         <div style="min-width:0">
-          <div style="font-size:10px;font-weight:700;letter-spacing:.9px;color:#5f7080;text-transform:uppercase;padding:2px 10px 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Company</div>
+          <div style="font-size:10px;font-weight:700;letter-spacing:.9px;color:#fbbf24;text-transform:uppercase;padding:2px 10px 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Company</div>
           <sc-for list="{{ secPickV.company }}" as="l" hint-placeholder-count="4">
             <button onClick="{{ l.onClick }}" style="width:100%;display:flex;align-items:center;gap:8px;padding:7px 10px;border:0;background:{{ l.bg }};color:{{ l.fg }};border-radius:6px;cursor:pointer;text-align:left;font-family:inherit;font-size:13px;margin-bottom:1px" style-hover="background:rgba(255,255,255,.07)">
               <span style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ l.label }}</span>
@@ -351,7 +351,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
         </div>
         <sc-if value="{{ secPickV.hasProject }}" hint-placeholder-val="{{ true }}">
           <div style="min-width:0">
-            <div style="font-size:10px;font-weight:700;letter-spacing:.9px;color:#5f7080;text-transform:uppercase;padding:2px 10px 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ secPickV.projectHeading }}</div>
+            <div style="font-size:10px;font-weight:700;letter-spacing:.9px;color:#fbbf24;text-transform:uppercase;padding:2px 10px 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ secPickV.projectHeading }}</div>
             <sc-for list="{{ secPickV.project }}" as="l" hint-placeholder-count="8">
               <button onClick="{{ l.onClick }}" style="width:100%;display:flex;align-items:center;gap:8px;padding:7px 10px;border:0;background:{{ l.bg }};color:{{ l.fg }};border-radius:6px;cursor:pointer;text-align:left;font-family:inherit;font-size:13px;margin-bottom:1px" style-hover="background:rgba(255,255,255,.07)">
                 <span style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ l.label }}</span>
@@ -362,9 +362,9 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
         </sc-if>
         <sc-if value="{{ secPickV.hasFinancial }}" hint-placeholder-val="{{ true }}">
           <div style="min-width:0">
-            <div style="font-size:10px;font-weight:700;letter-spacing:.9px;color:#5f7080;text-transform:uppercase;padding:2px 10px 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Financial</div>
+            <div style="font-size:10px;font-weight:700;letter-spacing:.9px;color:#fbbf24;text-transform:uppercase;padding:2px 10px 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Financial</div>
             <sc-for list="{{ secPickV.financial }}" as="l" hint-placeholder-count="7">
-              <sc-if value="{{ l.headShow }}" hint-placeholder-val="{{ false }}"><div style="font-size:10px;font-weight:700;letter-spacing:.9px;color:#5f7080;text-transform:uppercase;padding:14px 10px 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ l.head }}</div></sc-if>
+              <sc-if value="{{ l.headShow }}" hint-placeholder-val="{{ false }}"><div style="font-size:10px;font-weight:700;letter-spacing:.9px;color:#fbbf24;text-transform:uppercase;padding:14px 10px 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ l.head }}</div></sc-if>
               <button onClick="{{ l.onClick }}" style="width:100%;display:flex;align-items:center;gap:8px;padding:7px 10px;border:0;background:{{ l.bg }};color:{{ l.fg }};border-radius:6px;cursor:pointer;text-align:left;font-family:inherit;font-size:13px;margin-bottom:1px" style-hover="background:rgba(255,255,255,.07)">
                 <span style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ l.label }}</span>
               </button>
