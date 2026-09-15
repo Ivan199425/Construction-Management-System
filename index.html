@@ -15523,6 +15523,7 @@ class Component extends DCLogic {
       cats: this._costReportCategories(p),
       notes: this._costReportNotes(p, m.T),
       pricing: this._costPricingLines(p),
+      fitCols: true,
     };
   }
   _layoutCostReportPdf(d, c, logo) {
@@ -15530,8 +15531,69 @@ class Component extends DCLogic {
     const NAVY = [0.165, 0.208, 0.502], MUT = [0.431, 0.455, 0.502], BORD = [0.788, 0.804, 0.839];
     const GREY = [0.957, 0.961, 0.973], WHITE = [1, 1, 1], GOOD = [0.118, 0.478, 0.294], BAD = [0.702, 0.149, 0.145];
     const meta = c.m.meta;
-    const wSum = meta.reduce((a, x) => a + (x.w || 100), 0) || 1;
-    const colW = meta.map(x => (x.w || 100) / wSum * CW);
+    // What a heading needs: one word on one line, more than one word split over two lines as evenly as it can be.
+    const headNeed = i => {
+      const words = String(meta[i].label || '').toUpperCase().split(/\s+/).filter(Boolean);
+      if (!words.length) return 8;
+      if (words.length === 1) return d.width(words[0], 6.2, true) + 8;
+      let best = Infinity;
+      for (let k = 1; k < words.length; k++) {
+        best = Math.min(best, Math.max(d.width(words.slice(0, k).join(' '), 6.2, true), d.width(words.slice(k).join(' '), 6.2, true)));
+      }
+      return best + 8;
+    };
+    // What the column holds: figures and codes have to fit on their line; text can wrap, so it only asks for a share.
+    const cellNeed = i => {
+      let w = 0;
+      c.m.rows.concat([c.m.total]).forEach(r => {
+        const v = r[i];
+        const t = typeof v === 'number' ? (meta[i].signed ? this.signed(v) : this.money(v)) : String(v == null ? '' : v);
+        w = Math.max(w, d.width(t, 7, false));
+      });
+      return w + 8;
+    };
+    // a column that wraps still cannot break a word, so it never goes narrower than its longest one
+    const wordNeed = i => {
+      let w = 0;
+      c.m.rows.concat([c.m.total]).forEach(r => {
+        const v = r[i];
+        if (typeof v === 'number') return;
+        String(v == null ? '' : v).split(/\s+/).forEach(word => { if (word) w = Math.max(w, d.width(word, 7, false)); });
+      });
+      return w + 8;
+    };
+    const WRAPS = { desc: 1, cat: 1 };
+    let colW;
+    if (c.fitCols === false) {
+      const wSum = meta.reduce((a, x) => a + (x.w || 100), 0) || 1;
+      colW = meta.map(x => (x.w || 100) / wSum * CW);
+    } else {
+      const head = meta.map((col, i) => headNeed(i));
+      const least = meta.map((col, i) => (WRAPS[col.id] ? Math.max(head[i], wordNeed(i)) : head[i]));
+      const need = meta.map((col, i) => WRAPS[col.id]
+        ? Math.max(least[i], Math.min(cellNeed(i), CW * 0.2))
+        : Math.max(head[i], cellNeed(i)));
+      const total = need.reduce((a, w) => a + w, 0);
+      if (total <= CW) {
+        // the room left over goes to the columns that can wrap, else it is shared out
+        const flex = meta.map(col => (WRAPS[col.id] ? (col.id === 'desc' ? 2 : 1) : 0));
+        const flexSum = flex.reduce((a, x) => a + x, 0);
+        const slack = CW - total;
+        colW = need.map((w, i) => w + (flexSum ? slack * flex[i] / flexSum : slack * w / total));
+      } else {
+        // too much to fit: the wrapping columns give up their slack first, then everything is scaled
+        let over = total - CW;
+        const give = meta.map((col, i) => (WRAPS[col.id] ? Math.max(0, need[i] - least[i]) : 0));
+        const giveSum = give.reduce((a, x) => a + x, 0);
+        colW = need.slice();
+        if (giveSum > 0) {
+          const take = Math.min(over, giveSum);
+          colW = colW.map((w, i) => w - take * give[i] / giveSum);
+          over -= take;
+        }
+        if (over > 0) { const k = CW / colW.reduce((a, w) => a + w, 0); colW = colW.map(w => w * k); }
+      }
+    }
     let y = M, pageNo = 0;
 
     const footer = () => {
@@ -15778,7 +15840,7 @@ class Component extends DCLogic {
     }, { current: 0, com: 0, act: 0, eac: 0, varc: 0 });
     return {
       m: { meta, rows, total }, T,
-      showKpi: false, cats: null, notes: null,        // this template carries neither
+      showKpi: false, cats: null, notes: null, fitCols: false,   // this template carries neither, and sets its own widths
       // resolved exactly as the Report Design header resolves it, so the two agree
       docTitle: this._reportDocTitle(p),
       freqLabel: { weekly: 'Weekly', fortnightly: 'Fortnightly', monthly: 'Monthly' }[rm.freq] || '',
