@@ -704,7 +704,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                     <sc-if value="{{ settingsV.ingestion.hasClashingRefs }}" hint-placeholder-val="{{ false }}"><div style="font-size:11px;color:#b45309;margin-top:6px;line-height:1.55">{{ settingsV.ingestion.clashingRefs }} — used on more than one open project. An invoice quoting one of these can only be placed if the supplier matches a subcontract; otherwise it waits under Unallocated. Numbering subcontracts uniquely across projects makes the strongest matching rule work again.</div></sc-if>
                     <sc-if value="{{ settingsV.ingestion.hasSkipped }}" hint-placeholder-val="{{ false }}">
                       <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:6px">
-                        <div style="font-size:11px;color:#8894a2">Set aside so far: <strong style="color:#4a5765">{{ settingsV.ingestion.skippedCount }}</strong> — see the <strong style="color:#4a5765">Not collected</strong> tab on the Invoices screen.</div>
+                        <div style="font-size:11px;color:#8894a2">Set aside so far: <strong style="color:#4a5765">{{ settingsV.ingestion.skippedCount }}</strong> — see the <strong style="color:#4a5765">Not collected</strong> tab on the Supplier Invoices screen.</div>
                         <sc-if value="{{ settingsV.ingestion.canRecollect }}" hint-placeholder-val="{{ false }}"><button onClick="{{ settingsV.ingestion.onRecollect }}" title="Match them again against the projects as they stand now, and take back anything that fits" style="border:1px solid #cfd8e2;background:#fff;color:#4a5765;border-radius:7px;padding:5px 11px;font-size:11.5px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="border-color:#2b59c3;color:#2b59c3">Check them again</button></sc-if>
                       </div>
                     </sc-if>
@@ -2298,7 +2298,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                 <div style="display:grid;grid-template-columns:112px 1.1fr 1.1fr 1.1fr 1fr 104px 104px .85fr 58px .85fr 100px 156px 96px 40px;padding:8px 16px;border-bottom:1px solid #eef1f4;align-items:start;gap:9px" style-hover="background:#f9fafc">
                   <div>
                     <input value="{{ r.billNo }}" onInput="{{ r.onBillNo }}" placeholder="BILL-0000" class="mono" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 8px;font-size:12px;font-family:'IBM Plex Mono',monospace;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none">
-                    <sc-if value="{{ r.fromClaim }}" hint-placeholder-val="{{ false }}"><span title="Auto-posted from a certified progress claim" style="display:inline-block;margin-top:3px;font-size:8.5px;font-weight:700;letter-spacing:.3px;color:#15803d;background:#e6f4ea;border-radius:4px;padding:1px 5px">↩ FROM CLAIM</span></sc-if><sc-if value="{{ r.fromAp }}" hint-placeholder-val="{{ false }}"><span title="Posted automatically from an approved supplier invoice — edit it in Invoices, not here" style="display:inline-block;margin-top:3px;font-size:8.5px;font-weight:700;letter-spacing:.3px;color:#2b59c3;background:#e7eefc;border-radius:4px;padding:1px 5px">🧾 FROM INVOICE</span></sc-if>
+                    <sc-if value="{{ r.fromClaim }}" hint-placeholder-val="{{ false }}"><span title="Auto-posted from a certified progress claim" style="display:inline-block;margin-top:3px;font-size:8.5px;font-weight:700;letter-spacing:.3px;color:#15803d;background:#e6f4ea;border-radius:4px;padding:1px 5px">↩ FROM CLAIM</span></sc-if><sc-if value="{{ r.fromAp }}" hint-placeholder-val="{{ false }}"><span title="Posted automatically from an approved supplier invoice — edit it in Company → Supplier Invoices, not here" style="display:inline-block;margin-top:3px;font-size:8.5px;font-weight:700;letter-spacing:.3px;color:#2b59c3;background:#e7eefc;border-radius:4px;padding:1px 5px">🧾 FROM INVOICE</span></sc-if>
                   </div>
                   <select value="{{ r.vendorId }}" onChange="{{ r.onVendor }}" title="Select or create a vendor" style="width:100%;border:1px solid {{ r.vendorBorder }};border-radius:6px;padding:6px 6px;font-size:12px;font-family:inherit;color:#0f1720;background:{{ r.vendorBg }};cursor:pointer" style-focus="border-color:#2b59c3;outline:none">
                     <option value="">— Select vendor —</option>
@@ -2351,7 +2351,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
         <!-- ============ SUPPLIER INVOICE REGISTER (PROJECT) ============ -->
         <sc-if value="{{ showApReg }}" hint-placeholder-val="{{ false }}">
           <div style="display:flex;align-items:center;flex-wrap:var(--cpms-wrap,nowrap);justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px">
-            <div style="font-size:12.5px;color:#8894a2;line-height:1.5;max-width:640px">The same invoices as the company-wide inbox, filtered to this project. Read and review here; the processing happens in <strong style="color:#6b7787">Invoices</strong>.</div>
+            <div style="font-size:12.5px;color:#8894a2;line-height:1.5;max-width:640px">The same invoices as the company-wide inbox, filtered to this project. Read and review here; the processing happens in <strong style="color:#6b7787">Company → Supplier Invoices</strong>.</div>
             <div style="display:flex;gap:8px;flex-wrap:wrap">
               <button onClick="{{ apRegV.onGoInbox }}" style="border:1px solid #cfd8e2;background:#fff;color:#4a5765;border-radius:8px;padding:9px 14px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="border-color:#2b59c3;color:#2b59c3">Invoice inbox ↗</button>
               <button onClick="{{ apRegV.onExport }}" style="border:1px solid #cfd8e2;background:#fff;color:#4a5765;border-radius:8px;padding:9px 14px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="border-color:#15803d;color:#15803d">📊 Export</button>
@@ -10558,7 +10558,7 @@ class Component extends DCLogic {
       parts.push(n === 1 ? 'An invoice has arrived that could not be matched to a project.'
                          : n + ' invoices have arrived that could not be matched to a project.');
       parts.push('');
-      parts.push('Open Invoices and clear the Unallocated tab — assigning a project moves each one straight into review.');
+      parts.push('Open Supplier Invoices and clear the Unallocated tab — assigning a project moves each one straight into review.');
       parts.push('');
       parts.push.apply(parts, lines);
     }
@@ -16178,7 +16178,7 @@ class Component extends DCLogic {
     else if (showUsers) { pageTitle = 'Users & access'; crumb1 = 'Company'; crumb2 = 'Users & access'; pageSub = 'Create and manage user accounts, roles and project assignments'; primaryAction = { show: true, label: '＋ Create user', onClick: () => this.openUserCreate() }; }
     else if (showSettings) { pageTitle = 'Settings'; crumb1 = 'Company'; crumb2 = 'Settings'; pageSub = 'Your account details, plus company-wide settings for administrators'; }
     else if (showApSection) {
-      pageTitle = 'Invoices'; crumb1 = 'Accounts payable';
+      pageTitle = 'Supplier Invoices'; crumb1 = 'Accounts payable';
       crumb2 = showApReview ? 'Review' : (showApAlloc ? 'Cost allocation' : '');
       pageSub = 'Supplier invoices — captured, reviewed, approved, coded and sent for payment, across every project';
       if (showApInbox && this.can('apInvoices', 'edit')) primaryAction = { show: true, label: '＋ Add invoice by hand', onClick: () => this.addApInvoice('') };
@@ -16335,7 +16335,7 @@ class Component extends DCLogic {
       badgeShow: !!badge, badge: badge || '' });
 
     const _companyLinks = [];
-    if (navAp.show) _companyLinks.push(_secLink('Invoices', S.view === 'apinbox', () => this.goApInvoices(), _apPending > 0 ? String(_apPending) : ''));
+    if (navAp.show) _companyLinks.push(_secLink('Supplier Invoices', S.view === 'apinbox', () => this.goApInvoices(), _apPending > 0 ? String(_apPending) : ''));
     _companyLinks.push(_secLink('Portfolio overview', S.view === 'portfolio', () => this.goPortfolio()));
     if (navVendors.show) _companyLinks.push(_secLink('Vendor directory', S.view === 'vendors', () => this.goVendors()));
     if (navUsers.show) _companyLinks.push(_secLink('Users & access', S.view === 'users', () => this.goUsers()));
@@ -16350,7 +16350,7 @@ class Component extends DCLogic {
     // The button wears the name of the screen you are looking at, so the bar always answers
     // "where am I" without being asked.
     let _secLabel = 'Sections';
-    if (S.view === 'apinbox') _secLabel = 'Invoices';
+    if (S.view === 'apinbox') _secLabel = 'Supplier Invoices';
     else if (S.view === 'portfolio') _secLabel = 'Portfolio overview';
     else if (S.view === 'vendors') _secLabel = 'Vendor directory';
     else if (S.view === 'users') _secLabel = 'Users & access';
