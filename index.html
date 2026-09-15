@@ -7204,7 +7204,7 @@ class Component extends DCLogic {
     { key: 'dashboard', label: 'Dashboard' }, { key: 'directory', label: 'Directory' }, { key: 'projectSetup', label: 'Project Setup' },
     { key: 'financial', label: 'Financial / Estimates' }, { key: 'agreements', label: 'Subcontractor & Vendor Agreements' }, { key: 'variations', label: 'SoV / Variations' },
     { key: 'documents', label: 'Document Management' }, { key: 'rfis', label: 'RFIs' }, { key: 'punchList', label: 'Punch List' }, { key: 'reporting', label: 'Reporting' },
-    { key: 'schedule', label: 'Schedule' }, { key: 'eot', label: 'EOT' }, { key: 'invoices', label: 'Invoices' }, { key: 'bills', label: 'Commitments' }, { key: 'claims', label: 'Progress Claims' }, { key: 'apInvoices', label: 'Invoice Management (AP)' }, { key: 'apAllocate', label: 'Allocate Unassigned Invoices' }, { key: 'labour', label: 'Labour Hours' }, { key: 'messaging', label: 'Send Messages' }, { key: 'admin', label: 'User Administration' },
+    { key: 'schedule', label: 'Schedule' }, { key: 'eot', label: 'EOT' }, { key: 'invoices', label: 'Client Invoices' }, { key: 'bills', label: 'Commitments' }, { key: 'claims', label: 'Progress Claims' }, { key: 'apInvoices', label: 'Invoice Management (AP)' }, { key: 'apAllocate', label: 'Allocate Unassigned Invoices' }, { key: 'labour', label: 'Labour Hours' }, { key: 'messaging', label: 'Send Messages' }, { key: 'admin', label: 'User Administration' },
   ]; }
   permBadge(lv) { return lv >= 3 ? { t: 'Approve', s: 'A', c: '#15803d', bg: '#e6f4ea' } : lv === 2 ? { t: 'Edit', s: 'E', c: '#1d4ed8', bg: '#e7eefc' } : lv === 1 ? { t: 'View', s: 'V', c: '#6b7787', bg: '#eef1f5' } : { t: 'No access', s: '—', c: '#c0c8d1', bg: 'transparent' }; }
   currentUser() { const s = this.state.session; return (s && s.profile && s.profile.status === 'active') ? s.profile : null; }
@@ -12012,9 +12012,9 @@ class Component extends DCLogic {
   // the same seven screens, so they read their names from one place.
   _commitTabDefs() { return [
     { key: 'budget', label: 'Budget' }, { key: 'agreements', label: 'Sub-contracts' },
-    { key: 'bills', label: 'Commitments' }, { key: 'claims', label: 'Progress claims' },
-    { key: 'variations', label: 'Variations' }, { key: 'invoices', label: 'Invoices' },
-    { key: 'apreg', label: 'Invoice register' },
+    { key: 'apreg', label: 'Supplier Invoices' }, { key: 'bills', label: 'Commitments' },
+    { key: 'claims', label: 'Progress claims' }, { key: 'variations', label: 'Variations' },
+    { key: 'invoices', label: 'Client Invoices' },
   ]; }
   // From the menu, a Financial screen is a place you go to, not a tab you switch: the project
   // screen has to be Financial before the tab means anything.
@@ -16192,11 +16192,11 @@ class Component extends DCLogic {
       if (showBills) { crumb2 = 'Financial'; }
       if (showClaims) { pageTitle = 'Financial'; crumb2 = 'Financial'; pageSub = 'Progress claims — subcontractor payment applications — ' + p.name; if (this.can('claims', 'edit')) primaryAction = { show: true, label: '＋ Add progress claim', onClick: () => this.addClaim() }; }
       if (showCost) { pageTitle = 'Financial'; pageSub = 'Budget — budget vs committed vs actual vs forecast — ' + p.name; crumb2 = 'Financial'; }
-      if (showInvoices) { pageTitle = 'Financial'; pageSub = 'Invoices — customer billing & receivables — ' + p.name; crumb2 = 'Financial'; }
+      if (showInvoices) { pageTitle = 'Financial'; pageSub = 'Client Invoices — customer billing & receivables — ' + p.name; crumb2 = 'Financial'; }
       if (showVariations) { pageTitle = 'Financial'; pageSub = 'Variations — change orders sent to the client for approval — ' + p.name; crumb2 = 'Financial'; }
       if (showDefects) { pageTitle = 'Defects'; pageSub = 'Defect register & rectification tracking — ' + p.name; crumb2 = 'Defects'; if (this.can('punchList', 'edit')) primaryAction = { show: true, label: '＋ Raise defect', onClick: () => this.addDefect() }; }
       if (showBills) { pageTitle = 'Financial'; pageSub = 'Commitments — planned spend per cost code — ' + p.name; if (this.can('bills', 'edit')) primaryAction = { show: true, label: '＋ Add commitment', onClick: () => this.addBill() }; }
-      if (showApReg) { pageTitle = 'Financial'; pageSub = 'Supplier invoice register — every AP invoice allocated to ' + p.name; crumb2 = 'Financial'; }
+      if (showApReg) { pageTitle = 'Financial'; pageSub = 'Supplier Invoices — every supplier invoice allocated to ' + p.name; crumb2 = 'Financial'; }
       if (showDetails) { pageTitle = 'Details'; pageSub = 'Project details — type, address, customer & key information — ' + p.name; crumb2 = 'Details'; }
       if (showEot) { pageTitle = 'EOT — Extension of Time'; pageSub = 'Delay events & time-extension claims against the completion date — ' + p.name; crumb2 = 'EOT'; }
       if (showDocuments) { pageTitle = 'Documents'; pageSub = 'RFIs · Permits · To-Do’s · Drawings · Meetings · Inspections · Incidents — ' + p.name; crumb2 = 'Documents'; }
