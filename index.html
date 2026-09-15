@@ -364,6 +364,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
           <div style="min-width:0">
             <div style="font-size:10px;font-weight:700;letter-spacing:.9px;color:#5f7080;text-transform:uppercase;padding:2px 10px 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Financial</div>
             <sc-for list="{{ secPickV.financial }}" as="l" hint-placeholder-count="7">
+              <sc-if value="{{ l.headShow }}" hint-placeholder-val="{{ false }}"><div style="font-size:10px;font-weight:700;letter-spacing:.9px;color:#5f7080;text-transform:uppercase;padding:14px 10px 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ l.head }}</div></sc-if>
               <button onClick="{{ l.onClick }}" style="width:100%;display:flex;align-items:center;gap:8px;padding:7px 10px;border:0;background:{{ l.bg }};color:{{ l.fg }};border-radius:6px;cursor:pointer;text-align:left;font-family:inherit;font-size:13px;margin-bottom:1px" style-hover="background:rgba(255,255,255,.07)">
                 <span style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ l.label }}</span>
               </button>
@@ -12014,7 +12015,7 @@ class Component extends DCLogic {
     { key: 'budget', label: 'Budget' }, { key: 'agreements', label: 'Sub-contracts' },
     { key: 'apreg', label: 'Supplier Invoices' }, { key: 'bills', label: 'Commitments' },
     { key: 'claims', label: 'Progress claims' }, { key: 'variations', label: 'Variations' },
-    { key: 'invoices', label: 'Client Invoices' },
+    { key: 'invoices', label: 'Client Invoices', group: 'Client' },
   ]; }
   // From the menu, a Financial screen is a place you go to, not a tab you switch: the project
   // screen has to be Financial before the tab means anything.
@@ -16345,7 +16346,7 @@ class Component extends DCLogic {
       .map(m => _secLink(m.label, inProject && S.module === m.key, m.onClick, m.badgeShow ? 'SOON' : ''));
     const _finOn = !!p && this.moduleVisible('commitments');
     const _finLinks = _finOn ? this._commitTabDefs().map(t =>
-      _secLink(t.label, inProject && S.module === 'commitments' && S.commitTab === t.key, () => this.goCommitTab(t.key))) : [];
+      Object.assign(_secLink(t.label, inProject && S.module === 'commitments' && S.commitTab === t.key, () => this.goCommitTab(t.key)), { head: t.group || '', headShow: !!t.group })) : [];
 
     // The button wears the name of the screen you are looking at, so the bar always answers
     // "where am I" without being asked.
@@ -16358,7 +16359,7 @@ class Component extends DCLogic {
     else if (inProject) {
       if (S.module === 'commitments') {
         const _t = this._commitTabDefs().find(x => x.key === S.commitTab);
-        _secLabel = 'Financial \u2014 ' + (_t ? _t.label : 'Budget');
+        _secLabel = ((_t && _t.group) || 'Financial') + ' \u2014 ' + (_t ? _t.label : 'Budget');
       } else {
         const _m = moduleNav.find(x => x.key === S.module);
         _secLabel = _m ? _m.label : 'Summary';
