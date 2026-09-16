@@ -14694,7 +14694,24 @@ class Component extends DCLogic {
       budgetOrder: this._loadBudgetColOrder() || [],
       budgetHidden: this._loadBudgetColHidden(),
       tables: this._tblColW || {},
-    } };
+    }, at: this._prefsAt() };
+  }
+  // When each part of the layout was last changed on purpose on this computer: { budgetW, budgetOrder, budgetHidden,
+  // tables: { <table>: time } }. A part with no time was never changed here.
+  _prefsAt() {
+    try {
+      const o = JSON.parse((typeof localStorage !== 'undefined' && localStorage.getItem('cubicColPrefsAt')) || '{}');
+      if (o && typeof o === 'object' && !Array.isArray(o)) return Object.assign({ tables: {} }, o, { tables: (o.tables && typeof o.tables === 'object') ? o.tables : {} });
+    } catch (e) {}
+    return { tables: {} };
+  }
+  _prefsAtSave(at) { try { if (typeof localStorage !== 'undefined') localStorage.setItem('cubicColPrefsAt', JSON.stringify(at || { tables: {} })); } catch (e) {} }
+  _prefsStamp(part, tableIds) {
+    if (this._prefsApplying) return;   // taking the account's copy is not a change made here
+    const at = this._prefsAt(), now = Date.now();
+    if (part === 'tables') (tableIds || []).forEach(id => { at.tables[id] = now; });
+    else at[part] = now;
+    this._prefsAtSave(at);
   }
   _applyPrefs(data) {
     const c = (data && data.cols) || {};
@@ -14708,6 +14725,7 @@ class Component extends DCLogic {
       if (Object.keys(patch).length) this.setState(patch);
       const tb = obj(c.tables);
       if (tb) { this._tblColW = tb; this._tblColSave(); this._tblColPaint(); }
+      if (data && data.at && typeof data.at === 'object') this._prefsAtSave(data.at);
     } catch (e) {}
     this._prefsApplying = false;
   }
@@ -14756,19 +14774,62 @@ class Component extends DCLogic {
   _mergePrefs(server, local) {
     const sv = (server && server.cols) || {}, lc = (local && local.cols) || {};
     const obj = v => (v && typeof v === 'object' && !Array.isArray(v)) ? v : null;
-    return { cols: {
-      budgetW: Object.assign({}, obj(lc.budgetW) || {}, obj(sv.budgetW) || {}),
-      budgetOrder: Array.isArray(sv.budgetOrder) ? sv.budgetOrder : (Array.isArray(lc.budgetOrder) ? lc.budgetOrder : []),
-      budgetHidden: obj(sv.budgetHidden) || obj(lc.budgetHidden) || {},
-      tables: Object.assign({}, obj(lc.tables) || {}, obj(sv.tables) || {}),
-    } };
+    const sa = obj(server && server.at) || {}, la = obj(local && local.at) || {};
+    const size = v => Array.isArray(v) ? v.length : (obj(v) ? Object.keys(v).length : 0);
+    const num = v => (typeof v === 'number' && isFinite(v)) ? v : 0;
+    // The part changed most recently wins. With no dates to go on, a part that was set beats one never touched;
+    // when both were set, the account's copy wins.
+    const pick = (sVal, lVal, sAt, lAt, ok) => {
+      const sHas = ok(sVal), lHas = ok(lVal);
+      if (!sHas && !lHas) return { v: undefined, at: 0 };
+      if (!sHas) return { v: lVal, at: num(lAt) };
+      if (!lHas) return { v: sVal, at: num(sAt) };
+      if (num(sAt) !== num(lAt)) return num(sAt) > num(lAt) ? { v: sVal, at: num(sAt) } : { v: lVal, at: num(lAt) };
+      if (size(sVal) === 0 && size(lVal) > 0) return { v: lVal, at: num(lAt) };
+      return { v: sVal, at: num(sAt) };
+    };
+    const isObj = v => !!obj(v);
+    const w = pick(sv.budgetW, lc.budgetW, sa.budgetW, la.budgetW, isObj);
+    const o = pick(sv.budgetOrder, lc.budgetOrder, sa.budgetOrder, la.budgetOrder, Array.isArray);
+    const h = pick(sv.budgetHidden, lc.budgetHidden, sa.budgetHidden, la.budgetHidden, isObj);
+    // each other table on its own; a table reset on one computer carries a date and no widths, so the reset travels
+    const sT = obj(sv.tables) || {}, lT = obj(lc.tables) || {}, sTA = obj(sa.tables) || {}, lTA = obj(la.tables) || {};
+    const tables = {}, tablesAt = {};
+    Object.keys(Object.assign({}, sT, lT, sTA, lTA)).forEach(id => {
+      const sAt = num(sTA[id]), lAt = num(lTA[id]);
+      const inS = typeof sT[id] === 'string', inL = typeof lT[id] === 'string';
+      let useLocal;
+      if (sAt !== lAt) useLocal = lAt > sAt;
+      else useLocal = !inS && inL;
+      const val = useLocal ? lT[id] : sT[id], at = useLocal ? lAt : sAt;
+      if (typeof val === 'string') tables[id] = val;
+      if (at) tablesAt[id] = at;
+    });
+    const at = { tables: tablesAt };
+    if (w.at) at.budgetW = w.at;
+    if (o.at) at.budgetOrder = o.at;
+    if (h.at) at.budgetHidden = h.at;
+    return { cols: { budgetW: w.v || {}, budgetOrder: o.v || [], budgetHidden: h.v || {}, tables }, at };
+  }
+  // Two copies hold the same layout: the same widths, order and hidden columns, and the same dates, whatever order
+  // the keys were written in and whether an empty date set was written at all.
+  _prefsSame(a, b) {
+    const sorted = o => { const r = {}; Object.keys((o && typeof o === 'object') ? o : {}).sort().forEach(k => { r[k] = o[k]; }); return r; };
+    const norm = p => {
+      const c = (p && p.cols) || {}, at = (p && p.at) || {};
+      const t = {}; Object.keys(at.tables || {}).sort().forEach(k => { if (at.tables[k]) t[k] = at.tables[k]; });
+      return JSON.stringify({ w: sorted(c.budgetW), o: Array.isArray(c.budgetOrder) ? c.budgetOrder : [], h: sorted(c.budgetHidden), tables: sorted(c.tables),
+        aw: at.budgetW || 0, ao: at.budgetOrder || 0, ah: at.budgetHidden || 0, t });
+    };
+    return norm(a) === norm(b);
   }
   _prefsEmpty(p) {
     const c = (p && p.cols) || {};
     const n = o => (o && typeof o === 'object' && !Array.isArray(o)) ? Object.keys(o).length : 0;
     return !n(c.budgetW) && !n(c.budgetHidden) && !n(c.tables) && !(Array.isArray(c.budgetOrder) && c.budgetOrder.length);
   }
-  _sbLoadPrefs() {
+  _sbLoadPrefs() { return this._prefsSync(); }
+  _prefsSync() {
     const c = this._SB, uid = this._prefsUser();
     if (!c || !c.url || !c.key || !uid || typeof fetch === 'undefined') return Promise.resolve(false);
     return this._prefsFetch(c.url + '/rest/v1/user_prefs?select=data&user_id=eq.' + encodeURIComponent(uid), {})
@@ -14777,17 +14838,18 @@ class Component extends DCLogic {
         return r.json();
       })
       .then(rows => {
-        if (!Array.isArray(rows)) return false;   // no answer: leave this computer's layout as it is
+        if (!Array.isArray(rows)) return false;   // no answer: change nothing, and write nothing over the account blind
         const local = this._prefsPayload();
-        const row = rows[0];
-        if (row && row.data) {
-          const merged = this._mergePrefs(row.data, local);
-          this._applyPrefs(merged);
-          if (JSON.stringify(merged) !== JSON.stringify(row.data)) this._sbSavePrefs(0);   // send up what only this computer had
-          return true;
-        }
-        if (!this._prefsEmpty(local)) this._sbSavePrefs(0);   // nothing saved yet: this computer's layout becomes the account's
-        return false;
+        const row = rows[0] && rows[0].data ? rows[0] : null;
+        if (!row && this._prefsEmpty(local)) return false;   // nothing anywhere yet
+        const merged = row ? this._mergePrefs(row.data, local) : local;
+        if (row && !this._prefsSame(merged, local)) this._applyPrefs(merged);   // take what changed on another computer
+        if (row && this._prefsSame(merged, row.data)) return true;   // the account already has all of it
+        return this._prefsFetch(c.url + '/rest/v1/user_prefs', {
+          method: 'POST',
+          body: JSON.stringify({ user_id: this._prefsUser() || uid, data: merged, updated_at: new Date().toISOString() }),
+        }, { 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates,return=minimal' })
+          .then(w => { if (!w.ok) this._prefsWarn('save', w); return !!row; });
       })
       .catch(() => false);
   }
@@ -14795,19 +14857,10 @@ class Component extends DCLogic {
     const c = this._SB, uid = this._prefsUser();
     if (!c || !c.url || !c.key || !uid || typeof fetch === 'undefined' || this._prefsApplying) return;
     if (this._prefsTimer) clearTimeout(this._prefsTimer);
-    this._prefsTimer = setTimeout(() => {
-      try {
-        this._prefsFetch(c.url + '/rest/v1/user_prefs', {
-          method: 'POST',
-          body: JSON.stringify({ user_id: this._prefsUser() || uid, data: this._prefsPayload(), updated_at: new Date().toISOString() }),
-        }, { 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates,return=minimal' })
-          .then(r => { if (!r.ok) this._prefsWarn('save', r); })
-          .catch(() => {});
-      } catch (e) {}
-    }, delay == null ? 800 : delay);
+    this._prefsTimer = setTimeout(() => { try { this._prefsSync(); } catch (e) {} }, delay == null ? 800 : delay);
   }
   _loadBudgetColW() { try { if (typeof localStorage === 'undefined') return {}; const raw = localStorage.getItem('cubicBudgetColW'); const o = raw ? JSON.parse(raw) : {}; return (o && typeof o === 'object') ? o : {}; } catch (e) { return {}; } }
-  _saveBudgetColW(obj) { try { if (typeof localStorage !== 'undefined') localStorage.setItem('cubicBudgetColW', JSON.stringify(obj || {})); } catch (e) {} this._sbSavePrefs(); }
+  _saveBudgetColW(obj) { try { if (typeof localStorage !== 'undefined') localStorage.setItem('cubicBudgetColW', JSON.stringify(obj || {})); } catch (e) {} this._prefsStamp('budgetW'); this._sbSavePrefs(); }
   _colW(id) { const o = this.state.budgetColW || {}; if (o[id] != null) return o[id]; const d = this._budgetColDefs().find(c => c.id === id); return d ? d.w : 100; }
   _loadBudgetColOrder() { try { if (typeof localStorage === 'undefined') return null; const raw = localStorage.getItem('cubicBudgetColOrder'); const a = raw ? JSON.parse(raw) : null; return Array.isArray(a) ? this._migrateColOrder(a) : null; } catch (e) { return null; } }
   // A column order saved before a column existed does not mention it, and the merge appends
@@ -14822,9 +14875,9 @@ class Component extends DCLogic {
     }
     return out;
   }
-  _saveBudgetColOrder(a) { try { if (typeof localStorage !== 'undefined') localStorage.setItem('cubicBudgetColOrder', JSON.stringify(Array.isArray(a) ? a : [])); } catch (e) {} this._sbSavePrefs(); }
+  _saveBudgetColOrder(a) { try { if (typeof localStorage !== 'undefined') localStorage.setItem('cubicBudgetColOrder', JSON.stringify(Array.isArray(a) ? a : [])); } catch (e) {} this._prefsStamp('budgetOrder'); this._sbSavePrefs(); }
   _loadBudgetColHidden() { try { if (typeof localStorage === 'undefined') return {}; const raw = localStorage.getItem('cubicBudgetColHidden'); const o = raw ? JSON.parse(raw) : {}; return (o && typeof o === 'object') ? o : {}; } catch (e) { return {}; } }
-  _saveBudgetColHidden(o) { try { if (typeof localStorage !== 'undefined') localStorage.setItem('cubicBudgetColHidden', JSON.stringify(o || {})); } catch (e) {} this._sbSavePrefs(); }
+  _saveBudgetColHidden(o) { try { if (typeof localStorage !== 'undefined') localStorage.setItem('cubicBudgetColHidden', JSON.stringify(o || {})); } catch (e) {} this._prefsStamp('budgetHidden'); this._sbSavePrefs(); }
   _orderedColDefs() { const defs = this._budgetColDefs(); const order = this.state.budgetColOrder; if (!Array.isArray(order) || !order.length) return defs; const byId = {}; defs.forEach(d => { byId[d.id] = d; }); const seen = {}, out = []; order.forEach(id => { if (byId[id] && !seen[id]) { out.push(byId[id]); seen[id] = true; } }); defs.forEach((d, i) => { if (seen[d.id]) return; let at = out.length; for (let j = i - 1; j >= 0; j--) { const k = out.indexOf(byId[defs[j].id]); if (k >= 0) { at = k + 1; break; } } out.splice(at, 0, d); seen[d.id] = true; }); return out; }
   _visibleColDefs() { const h = this.state.budgetColHidden || {}; return this._orderedColDefs().filter(d => !h[d.id]); }
   colResizeDown(id, e) {
@@ -14841,7 +14894,16 @@ class Component extends DCLogic {
      change. Drag a column boundary to resize, double-click one to reset that table.
      The budget table is skipped, it has its own column manager. */
   _tblColLoad() { try { if (typeof localStorage === 'undefined') return {}; const o = JSON.parse(localStorage.getItem('cubicTableColW') || '{}'); return (o && typeof o === 'object') ? o : {}; } catch (e) { return {}; } }
-  _tblColSave() { try { if (typeof localStorage !== 'undefined') localStorage.setItem('cubicTableColW', JSON.stringify(this._tblColW || {})); } catch (e) {} this._sbSavePrefs(); }
+  _tblColSave() {
+    let prev = {};
+    try { prev = JSON.parse((typeof localStorage !== 'undefined' && localStorage.getItem('cubicTableColW')) || '{}') || {}; } catch (e) {}
+    try { if (typeof localStorage !== 'undefined') localStorage.setItem('cubicTableColW', JSON.stringify(this._tblColW || {})); } catch (e) {}
+    // date only the tables that actually changed, a width dragged or a table reset
+    const cur = this._tblColW || {};
+    const changed = Object.keys(Object.assign({}, prev, cur)).filter(id => prev[id] !== cur[id]);
+    if (changed.length) this._prefsStamp('tables', changed);
+    this._sbSavePrefs();
+  }
   _tblColSelf(hdr) { return !!(hdr && hdr.querySelector('.rsz')); } // header that resizes itself
   _tblColId(hdr) {
     const k = Array.prototype.map.call(hdr.children, c => (c.textContent || '').trim().toLowerCase().replace(/[^a-z0-9%]/g, '').slice(0, 10)).join('|');
