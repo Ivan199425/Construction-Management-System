@@ -1751,6 +1751,9 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                         <sc-if value="{{ c.canVoid }}" hint-placeholder-val="{{ false }}">
                           <button onClick="{{ c.onVoid }}" title="Void — issued in error (PM/Admin, before signature)" style="border:1px solid #efd0d0;background:#fff;color:#b91c1c;border-radius:7px;padding:6px 11px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">Void</button>
                         </sc-if>
+                        <sc-if value="{{ c.canDelete }}" hint-placeholder-val="{{ false }}">
+                          <button onClick="{{ c.onDelete }}" title="Delete this sub-contract — you are asked to type delete first" style="border:1px solid #efd0d0;background:#fff;color:#b91c1c;border-radius:7px;padding:6px 11px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">🗑 Delete</button>
+                        </sc-if>
                       </div>
                     </div>
                     <sc-if value="{{ c.hasSentRecord }}" hint-placeholder-val="{{ false }}">
@@ -7460,6 +7463,38 @@ class Component extends DCLogic {
       return { ...cm, agr: { ...base, ...patch, activity } };
     }) }) }));
   }
+  // Removing a sub-contract takes its agreement, its quote and its variations with it, and the committed value it
+  // was holding comes off the budget. Anything with money against it is left alone and says so: a sub-contract that
+  // has been billed, claimed against, or has a supplier invoice allocated to it has to be dealt with first, so no
+  // record is left pointing at a sub-contract that is not there.
+  deleteCommitment(cmId) {
+    if (!this.can('agreements', 'edit') || !this.canIssue()) return;
+    const p = this.proj(this.state.pid); if (!p) return;
+    const cm = (p.commitments || []).find(c => c.id === cmId); if (!cm) return;
+    const many = (n, one, more) => n + ' ' + (n === 1 ? one : more);
+    const bills = (p.bills || []).filter(b => b.commitmentId === cmId).length;
+    const claims = (p.claims || []).filter(c => c.commitmentId === cmId).length;
+    const ap = (this.state.apInvoices || []).filter(a => a && a.commitmentId === cmId).length;
+    const held = [];
+    if (bills) held.push(many(bills, 'commitment', 'commitments'));
+    if (claims) held.push(many(claims, 'progress claim', 'progress claims'));
+    if (ap) held.push(many(ap, 'supplier invoice', 'supplier invoices'));
+    if (held.length) {
+      alert((cm.ref || 'This sub-contract') + ' cannot be deleted yet: it has ' + held.join(' and ') + ' against it.'
+        + String.fromCharCode(10) + String.fromCharCode(10) + 'Delete those or move them to another sub-contract first.');
+      return;
+    }
+    const vs = (cm.variations || []).length;
+    const value = this._num(cm.original) + (cm.variations || []).reduce((t, v) => t + (v.status === 'approved' ? this._num(v.value) : 0), 0);
+    const note = 'Removes ' + (cm.ref || 'this sub-contract') + (vs ? ' and ' + many(vs, 'variation', 'variations') : '')
+      + ', with its agreement, quote and history. ' + this.money(value) + ' of committed value comes off the budget; the cost code keeps its budget.';
+    if (!this._delGate('sub-contract', this._delTarget('sub-contract', cmId), () => this.deleteCommitment(cmId), note)) return;
+    this.setState(s => ({ projects: s.projects.map(pr => pr.id !== s.pid ? pr : Object.assign({}, pr, {
+      commitments: (pr.commitments || []).filter(c => c.id !== cmId),
+      costLines: (pr.costLines || []).map(l => (l.commitmentId === cmId ? Object.assign({}, l, { commitmentId: '' }) : l)),
+      defects: (pr.defects || []).map(d => (d.commitmentId === cmId ? Object.assign({}, d, { commitmentId: '' }) : d)),
+    })) }));
+  }
   sendToSub(cmId) {
     const cm = (this.proj(this.state.pid).commitments || []).find(c => c.id === cmId); if (!cm) return;
     const agr = this.getAgr(cm); if (!agr.quote || !this.canIssue()) return;
@@ -12856,6 +12891,7 @@ class Component extends DCLogic {
       const file = o => ({ label: (o && (o.name || o.fileName)) || '', blank: false });
       const vars = (p.contract || {}).variations;
       switch (kind) {
+        case 'sub-contract': { const cm = byId(p.commitments, a); return { label: cm ? [cm.ref, cm.vendor].filter(Boolean).join(' \u2014 ') : '', blank: false }; }
         case 'bill': return rec(byId(p.bills, a));
         case 'progress claim': return rec(byId(p.claims, a));
         case 'variation': return rec(byId(vars, a));
@@ -17859,6 +17895,8 @@ class Component extends DCLogic {
           onSend: (e) => { e.stopPropagation(); this.openShare(cm.id); },
           onReview: (e) => { e.stopPropagation(); this.openSign(cm.id); },
           onVoid: (e) => { e.stopPropagation(); this.voidAgreement(cm.id); },
+          canDelete: this.can('agreements', 'edit') && this.canIssue(),
+          onDelete: (e) => { e.stopPropagation(); this.deleteCommitment(cm.id); },
           expanded: exp, caret: exp ? 'rotate(90deg)' : 'rotate(0deg)', onToggle: () => this.toggle(cm.id), onAdd: (e) => { e.stopPropagation(); this.openModal('commit', cm.id); },
           variations: cm.variations.map(v => { const vm = this.statusMeta(v.status); const cd = v.status === 'draft' || v.status === 'submitted';
             return { ref: v.ref, desc: v.desc, value: this.signed(v.value), valColor: v.value < 0 ? '#b91c1c' : '#0f1720', statusLabel: vm.label, statusColor: vm.color, statusBg: vm.bg,
