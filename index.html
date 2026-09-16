@@ -1825,7 +1825,9 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                   <div class="mono" style="text-align:right;font-size:12px;color:#0f1720;padding-top:7px">{{ r.pctToDate }}</div>
                   <div class="mono" style="font-size:11px;color:#0f1720">{{ r.submitted }}</div>
                   <div class="mono" style="font-size:11px;color:{{ r.payDueColor }}">{{ r.paymentDue }}</div>
-                  <div><span style="font-size:10.5px;font-weight:600;padding:2px 8px;border-radius:16px;background:{{ r.statusBg }};color:{{ r.statusColor }}">{{ r.statusLabel }}</span><sc-if value="{{ r.hasPaidOn }}" hint-placeholder-val="{{ false }}"><div class="mono" title="Date this claim was marked paid" style="font-size:9px;color:#15803d;margin-top:2px">✓ paid {{ r.paidOn }}</div></sc-if></div>
+                  <div><select value="{{ r.status }}" onChange="{{ r.onStatus }}" disabled="{{ r.statusLocked }}" title="{{ r.statusTitle }}" style="font-size:10.5px;font-weight:600;padding:2px 6px;border-radius:16px;border:1px solid {{ r.statusBg }};background:{{ r.statusBg }};color:{{ r.statusColor }};font-family:inherit;cursor:pointer;max-width:100%">
+                    <sc-for list="{{ r.statusOptions }}" as="o" hint-placeholder-count="6"><option value="{{ o.v }}">{{ o.label }}</option></sc-for>
+                  </select><sc-if value="{{ r.hasPaidOn }}" hint-placeholder-val="{{ false }}"><div class="mono" title="Date this claim was marked paid" style="font-size:9px;color:#15803d;margin-top:2px">✓ paid {{ r.paidOn }}</div></sc-if></div>
                   <div style="text-align:center">
                     <sc-if value="{{ r.isSubmitted }}" hint-placeholder-val="{{ true }}">
                       <span style="display:inline-flex;gap:5px;justify-content:center">
@@ -12624,6 +12626,28 @@ class Component extends DCLogic {
       return { ...p, claims, bills: this.reconcileClaimBill(p, claim, p.bills || [], s.vendors) };
     }) }));
   }
+  // The Status dropdown on a progress claim. Each status goes through the same path as its button, so the claim's
+  // figures and the commitment posted from it always match the status it is showing.
+  setClaimStatus(id, status) {
+    if (!this.can('claims', 'edit')) return;
+    const p = this.proj(this.state.pid); if (!p) return;
+    const claim = (p.claims || []).find(x => x.id === id); if (!claim || claim.status === status) return;
+    if (status === 'paid') { this.payClaim(id); return; }
+    if (status === 'approved' || status === 'modified' || status === 'rejected') { this.decideClaim(id, status); return; }
+    if (status !== 'submitted' && status !== 'draft') return;
+    // back to submitted or draft: the assessment and the payment are undone, so nothing is left certified or paid
+    this.setState(s => ({ projects: s.projects.map(pr => {
+      if (pr.id !== s.pid) return pr;
+      const claims = (pr.claims || []).map(x => {
+        if (x.id !== id) return x;
+        const up = Object.assign({}, x, { status, assessed: '', certified: 0, paymentDue: '', paidAt: '',
+          submitted: status === 'submitted' ? (x.submitted || this.todayLocal()) : '' });
+        return Object.assign({}, up, { toDate: this.claimToDate(pr, up) });
+      });
+      const cl = claims.find(x => x.id === id);
+      return Object.assign({}, pr, { claims, bills: this.reconcileClaimBill(pr, cl, pr.bills || [], s.vendors) });
+    }) }));
+  }
   payClaim(id) {
     this.setState(s => ({ projects: s.projects.map(p => {
       if (p.id !== s.pid) return p;
@@ -18281,6 +18305,10 @@ class Component extends DCLogic {
           invoice: x.invoice || '', hasInvoice: !!x.invoice, invoiceLabel: x.invoice ? x.invoice : '＋ Invoice', hasInvoiceFile: !!x.invoiceUrl, onViewInvoice: () => this.viewClaimInvoice(x.id),
           sentAt: x.sentAt || '', sent: !!x.sentAt,
           statusLabel: sm.label, statusColor: sm.color, statusBg: sm.bg,
+          status: x.status || 'draft', statusLocked: !this.can('claims', 'edit'),
+          statusTitle: this.can('claims', 'edit') ? 'Set the status of this claim' : 'Status of this claim',
+          statusOptions: ['draft', 'submitted', 'approved', 'modified', 'rejected', 'paid'].map(v => ({ v, label: this.statusMeta(v).label })),
+          onStatus: e => this.setClaimStatus(x.id, e.target.value),
           submitted: x.submitted, paymentDue: x.paymentDue || '—', payDueColor: (x.status === 'approved' && x.paymentDue && x.paymentDue < today) ? '#b91c1c' : '#6b7787',
           paidOn: x.paidAt ? this.fmtDate(x.paidAt) : '', hasPaidOn: x.status === 'paid' && !!x.paidAt,
           isSubmitted: x.status === 'submitted', isApproved: x.status === 'approved', canPay: x.status === 'approved',
