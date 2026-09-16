@@ -2166,6 +2166,54 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
             <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><button onClick="{{ invoiceV.onPreviewPdf }}" title="Preview this claim as the Tax Invoice PDF" style="border:1px solid #2b59c3;background:#fff;color:#2b59c3;border-radius:8px;padding:9px 14px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="background:#f2f6fd">📄 Preview PDF</button><button onClick="{{ invoiceV.onExportExcel }}" title="Export this claim to Excel in the same template" style="border:1px solid #cfd8e2;background:#fff;color:#15803d;border-radius:8px;padding:9px 14px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="background:#f2fbf5;border-color:#15803d">📊 Export Excel</button><button onClick="{{ invoiceV.onSend }}" style="border:0;background:#2b59c3;color:#fff;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="background:#244dab">✉ Send to client</button></div>
           </div>
 
+          <!-- Invoice register & payment tracking -->
+          <sc-if value="{{ invoiceV.show }}" hint-placeholder-val="{{ false }}">
+            <div style="display:grid;grid-template-columns:var(--cpms-3col,repeat(3,1fr));gap:12px;margin-top:26px;margin-bottom:14px">
+              <div style="background:#fff;border:1px solid #e4e8ee;border-radius:11px;padding:13px 15px"><div style="font-size:10.5px;font-weight:600;letter-spacing:.4px;color:#8894a2;text-transform:uppercase">Invoiced</div><div class="mono" style="font-size:19px;font-weight:600;color:#0f1720;margin-top:5px">{{ invoiceV.invoicedTotal }}</div></div>
+              <div style="background:#fff;border:1px solid #e4e8ee;border-radius:11px;padding:13px 15px"><div style="font-size:10.5px;font-weight:600;letter-spacing:.4px;color:#8894a2;text-transform:uppercase">Paid</div><div class="mono" style="font-size:19px;font-weight:600;color:#15803d;margin-top:5px">{{ invoiceV.paidTotal }}</div></div>
+              <div style="background:#fff;border:1px solid #e4e8ee;border-radius:11px;padding:13px 15px"><div style="font-size:10.5px;font-weight:600;letter-spacing:.4px;color:#8894a2;text-transform:uppercase">Outstanding</div><div class="mono" style="font-size:19px;font-weight:600;color:#b45309;margin-top:5px">{{ invoiceV.outstandingTotal }}</div></div>
+            </div>
+            <div style="display:flex;align-items:baseline;flex-wrap:var(--cpms-wrap,nowrap);justify-content:space-between;gap:12px;margin-bottom:8px"><div style="font-size:13px;font-weight:600;color:#0f1720">Invoice register <span style="font-weight:500;color:#8894a2;font-size:12px">· {{ invoiceV.ledgerCount }} issued</span></div><div style="font-size:12px;color:#8894a2">Next to be issued: <strong class="mono" style="color:#2b59c3">{{ invoiceV.invoiceNo }}</strong></div></div>
+            <div style="background:#fff;border:1px solid #e4e8ee;border-radius:12px;overflow:hidden">
+              <div style="overflow-x:auto"><div style="min-width:820px">
+                <div class="colhdr dark" style="display:grid;grid-template-columns:110px 120px 120px 150px 110px 1fr 140px;padding:11px 16px;background:#2A3580;border-bottom:1px solid #e4e8ee;font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#fff;text-transform:uppercase;gap:10px">
+                  <div>Invoice</div><div>Date</div><div>Due date</div><div style="text-align:right">Amount</div><div style="text-align:center">Status</div><div style="text-align:right">Payment</div><div></div>
+                </div>
+                <sc-for list="{{ invoiceV.ledger }}" as="iv" hint-placeholder-count="1">
+                  <div style="display:grid;grid-template-columns:110px 120px 120px 150px 110px 1fr 140px;padding:10px 16px;border-bottom:1px solid #eef1f4;align-items:center;gap:10px">
+                    <div class="mono" style="font-size:12px;font-weight:600;color:#0f1720">{{ iv.no }}<sc-if value="{{ iv.hasRev }}" hint-placeholder-val="{{ false }}"><span style="display:block;font-size:10px;font-weight:600;color:#b45309;font-family:Archivo,system-ui,sans-serif">{{ iv.revLabel }}</span></sc-if></div>
+                    <div class="mono" style="font-size:11.5px;color:#0f1720">{{ iv.date }}</div>
+                    <div class="mono" style="font-size:11.5px;color:#0f1720">{{ iv.due }}</div>
+                    <div class="mono" style="font-size:12.5px;font-weight:600;color:#0f1720;text-align:right">{{ iv.total }}</div>
+                    <div style="text-align:center"><span style="font-size:11px;font-weight:600;padding:2px 10px;border-radius:14px;background:{{ iv.statusBg }};color:{{ iv.statusColor }}">{{ iv.statusLabel }}</span></div>
+                    <div style="text-align:right">
+                      <sc-if value="{{ iv.hasPayments }}" hint-placeholder-val="{{ true }}">
+                        <button onClick="{{ iv.onPay }}" title="See, correct or remove the payments received against this invoice" style="border:1px solid #e4e8ee;background:#fff;border-radius:8px;padding:5px 10px;cursor:pointer;font-family:inherit;text-align:right" style-hover="border-color:#15803d">
+                          <span class="mono" style="display:block;font-size:11.5px;font-weight:600;color:#15803d">{{ iv.receivedLabel }} received</span>
+                          <span style="display:block;font-size:10px;color:#8894a2;margin-top:1px">{{ iv.owingLabel }} outstanding · {{ iv.payCountLabel }}</span>
+                        </button>
+                      </sc-if>
+                      <sc-if value="{{ iv.noPayments }}" hint-placeholder-val="{{ false }}"><button onClick="{{ iv.onPay }}" style="border:0;background:#15803d;color:#fff;border-radius:7px;padding:6px 13px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="background:#0f6b31">＋ Record payment</button></sc-if>
+                    </div>
+                    <div style="display:flex;align-items:center;flex-wrap:var(--cpms-wrap,nowrap);justify-content:flex-end;gap:4px"><button onClick="{{ iv.onViewPdf }}" title="Open the Tax Invoice PDF" style="border:0;background:transparent;color:#8894a2;cursor:pointer;font-size:13px;padding:2px;line-height:1" style-hover="color:#2b59c3">📄</button><button onClick="{{ iv.onDownloadPdf }}" title="Download this invoice as a PDF file" style="border:0;background:transparent;color:#8894a2;cursor:pointer;font-size:13px;padding:2px;line-height:1" style-hover="color:#b91c1c">⬇</button><button onClick="{{ iv.onViewExcel }}" title="Export this invoice to Excel (.xlsx, same template)" style="border:0;background:transparent;color:#8894a2;cursor:pointer;font-size:13px;padding:2px;line-height:1" style-hover="color:#15803d">📊</button><sc-if value="{{ iv.canEdit }}" hint-placeholder-val="{{ true }}"><button onClick="{{ iv.onEdit }}" title="Edit &amp; re-send this invoice" style="border:0;background:transparent;color:#8894a2;cursor:pointer;font-size:13px;padding:2px;line-height:1" style-hover="color:#2b59c3">✎</button></sc-if><sc-if value="{{ iv.canDelete }}" hint-placeholder-val="{{ true }}"><button onClick="{{ iv.onDelete }}" title="Delete this invoice" style="border:0;background:transparent;color:#c0c8d1;cursor:pointer;min-width:var(--cpms-tap,auto);min-height:var(--cpms-tap,auto);font-size:14px;padding:2px;line-height:1" style-hover="color:#b91c1c">✕</button></sc-if></div>
+                  </div>
+                </sc-for>
+                <sc-if value="{{ invoiceV.noLedger }}" hint-placeholder-val="{{ false }}">
+                  <div style="padding:20px 16px;text-align:center;font-size:12.5px;color:#8894a2">No invoices issued yet — the first one will be <strong class="mono" style="color:#4a5765">{{ invoiceV.invoiceNo }}</strong>.</div>
+                </sc-if>
+                <div style="display:grid;grid-template-columns:110px 120px 120px 150px 110px 1fr 140px;padding:10px 16px;border-top:1px dashed #cfd8e2;background:#f7f9fc;align-items:center;gap:10px">
+                  <div class="mono" style="font-size:12px;font-weight:600;color:#2b59c3">{{ invoiceV.invoiceNo }}</div>
+                  <div style="font-size:11.5px;color:#8894a2">—</div>
+                  <div style="font-size:11.5px;color:#8894a2">—</div>
+                  <div class="mono" style="font-size:12.5px;font-weight:600;color:#0f1720;text-align:right">{{ invoiceV.total }}</div>
+                  <div style="text-align:center"><span style="font-size:11px;font-weight:600;padding:2px 10px;border-radius:14px;background:#eef1f5;color:#6b7787">Draft</span></div>
+                  <div style="text-align:right;font-size:11.5px;color:#8894a2">next to be issued</div>
+                  <div></div>
+                </div>
+              </div></div>
+            </div>
+            <div style="font-size:12px;color:#8894a2;line-height:1.5;margin-top:10px">Record what the client actually pays, whenever it arrives — a part payment leaves the rest <strong style="color:#6b7787">outstanding</strong>, and the Paid / Outstanding totals above follow. Any payment can be corrected or removed. Due date is <strong style="color:#6b7787">15 days</strong> from the sent date.</div>
+          </sc-if>
           <sc-if value="{{ invoiceV.payMissing }}" hint-placeholder-val="{{ false }}">
             <div style="background:#fff7e6;border:1px solid #f3dfae;border-radius:9px;padding:10px 14px;margin-bottom:14px;display:flex;align-items:center;flex-wrap:var(--cpms-wrap,nowrap);justify-content:space-between;gap:12px;flex-wrap:wrap">
               <div style="font-size:12.5px;color:#8a6d00;line-height:1.5">&#9888; <strong>No payment details set</strong> &mdash; every invoice prints with blank bank details, so the client has nowhere to pay.</div>
@@ -2221,54 +2269,6 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
           </div>
           <div style="font-size:12px;color:#8894a2;line-height:1.5;margin-top:12px">Each selected line claims <strong style="color:#6b7787">(approved budget × progress %) − previously invoiced</strong>. <strong style="color:#6b7787">Outstanding %</strong> is the budget not yet invoiced. On <strong style="color:#6b7787">Send</strong>, this claim is locked in as previously-invoiced so the next invoice bills only new progress. GST uses the rate in <strong style="color:#6b7787">Details</strong>.</div>
 
-          <!-- Invoice register & payment tracking -->
-          <sc-if value="{{ invoiceV.show }}" hint-placeholder-val="{{ false }}">
-            <div style="display:grid;grid-template-columns:var(--cpms-3col,repeat(3,1fr));gap:12px;margin-top:26px;margin-bottom:14px">
-              <div style="background:#fff;border:1px solid #e4e8ee;border-radius:11px;padding:13px 15px"><div style="font-size:10.5px;font-weight:600;letter-spacing:.4px;color:#8894a2;text-transform:uppercase">Invoiced</div><div class="mono" style="font-size:19px;font-weight:600;color:#0f1720;margin-top:5px">{{ invoiceV.invoicedTotal }}</div></div>
-              <div style="background:#fff;border:1px solid #e4e8ee;border-radius:11px;padding:13px 15px"><div style="font-size:10.5px;font-weight:600;letter-spacing:.4px;color:#8894a2;text-transform:uppercase">Paid</div><div class="mono" style="font-size:19px;font-weight:600;color:#15803d;margin-top:5px">{{ invoiceV.paidTotal }}</div></div>
-              <div style="background:#fff;border:1px solid #e4e8ee;border-radius:11px;padding:13px 15px"><div style="font-size:10.5px;font-weight:600;letter-spacing:.4px;color:#8894a2;text-transform:uppercase">Outstanding</div><div class="mono" style="font-size:19px;font-weight:600;color:#b45309;margin-top:5px">{{ invoiceV.outstandingTotal }}</div></div>
-            </div>
-            <div style="display:flex;align-items:baseline;flex-wrap:var(--cpms-wrap,nowrap);justify-content:space-between;gap:12px;margin-bottom:8px"><div style="font-size:13px;font-weight:600;color:#0f1720">Invoice register <span style="font-weight:500;color:#8894a2;font-size:12px">· {{ invoiceV.ledgerCount }} issued</span></div><div style="font-size:12px;color:#8894a2">Next to be issued: <strong class="mono" style="color:#2b59c3">{{ invoiceV.invoiceNo }}</strong></div></div>
-            <div style="background:#fff;border:1px solid #e4e8ee;border-radius:12px;overflow:hidden">
-              <div style="overflow-x:auto"><div style="min-width:820px">
-                <div class="colhdr dark" style="display:grid;grid-template-columns:110px 120px 120px 150px 110px 1fr 140px;padding:11px 16px;background:#2A3580;border-bottom:1px solid #e4e8ee;font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#fff;text-transform:uppercase;gap:10px">
-                  <div>Invoice</div><div>Date</div><div>Due date</div><div style="text-align:right">Amount</div><div style="text-align:center">Status</div><div style="text-align:right">Payment</div><div></div>
-                </div>
-                <sc-for list="{{ invoiceV.ledger }}" as="iv" hint-placeholder-count="1">
-                  <div style="display:grid;grid-template-columns:110px 120px 120px 150px 110px 1fr 140px;padding:10px 16px;border-bottom:1px solid #eef1f4;align-items:center;gap:10px">
-                    <div class="mono" style="font-size:12px;font-weight:600;color:#0f1720">{{ iv.no }}<sc-if value="{{ iv.hasRev }}" hint-placeholder-val="{{ false }}"><span style="display:block;font-size:10px;font-weight:600;color:#b45309;font-family:Archivo,system-ui,sans-serif">{{ iv.revLabel }}</span></sc-if></div>
-                    <div class="mono" style="font-size:11.5px;color:#0f1720">{{ iv.date }}</div>
-                    <div class="mono" style="font-size:11.5px;color:#0f1720">{{ iv.due }}</div>
-                    <div class="mono" style="font-size:12.5px;font-weight:600;color:#0f1720;text-align:right">{{ iv.total }}</div>
-                    <div style="text-align:center"><span style="font-size:11px;font-weight:600;padding:2px 10px;border-radius:14px;background:{{ iv.statusBg }};color:{{ iv.statusColor }}">{{ iv.statusLabel }}</span></div>
-                    <div style="text-align:right">
-                      <sc-if value="{{ iv.hasPayments }}" hint-placeholder-val="{{ true }}">
-                        <button onClick="{{ iv.onPay }}" title="See, correct or remove the payments received against this invoice" style="border:1px solid #e4e8ee;background:#fff;border-radius:8px;padding:5px 10px;cursor:pointer;font-family:inherit;text-align:right" style-hover="border-color:#15803d">
-                          <span class="mono" style="display:block;font-size:11.5px;font-weight:600;color:#15803d">{{ iv.receivedLabel }} received</span>
-                          <span style="display:block;font-size:10px;color:#8894a2;margin-top:1px">{{ iv.owingLabel }} outstanding · {{ iv.payCountLabel }}</span>
-                        </button>
-                      </sc-if>
-                      <sc-if value="{{ iv.noPayments }}" hint-placeholder-val="{{ false }}"><button onClick="{{ iv.onPay }}" style="border:0;background:#15803d;color:#fff;border-radius:7px;padding:6px 13px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="background:#0f6b31">＋ Record payment</button></sc-if>
-                    </div>
-                    <div style="display:flex;align-items:center;flex-wrap:var(--cpms-wrap,nowrap);justify-content:flex-end;gap:4px"><button onClick="{{ iv.onViewPdf }}" title="Open the Tax Invoice PDF" style="border:0;background:transparent;color:#8894a2;cursor:pointer;font-size:13px;padding:2px;line-height:1" style-hover="color:#2b59c3">📄</button><button onClick="{{ iv.onDownloadPdf }}" title="Download this invoice as a PDF file" style="border:0;background:transparent;color:#8894a2;cursor:pointer;font-size:13px;padding:2px;line-height:1" style-hover="color:#b91c1c">⬇</button><button onClick="{{ iv.onViewExcel }}" title="Export this invoice to Excel (.xlsx, same template)" style="border:0;background:transparent;color:#8894a2;cursor:pointer;font-size:13px;padding:2px;line-height:1" style-hover="color:#15803d">📊</button><sc-if value="{{ iv.canEdit }}" hint-placeholder-val="{{ true }}"><button onClick="{{ iv.onEdit }}" title="Edit &amp; re-send this invoice" style="border:0;background:transparent;color:#8894a2;cursor:pointer;font-size:13px;padding:2px;line-height:1" style-hover="color:#2b59c3">✎</button></sc-if><sc-if value="{{ iv.canDelete }}" hint-placeholder-val="{{ true }}"><button onClick="{{ iv.onDelete }}" title="Delete this invoice" style="border:0;background:transparent;color:#c0c8d1;cursor:pointer;min-width:var(--cpms-tap,auto);min-height:var(--cpms-tap,auto);font-size:14px;padding:2px;line-height:1" style-hover="color:#b91c1c">✕</button></sc-if></div>
-                  </div>
-                </sc-for>
-                <sc-if value="{{ invoiceV.noLedger }}" hint-placeholder-val="{{ false }}">
-                  <div style="padding:20px 16px;text-align:center;font-size:12.5px;color:#8894a2">No invoices issued yet — the first one will be <strong class="mono" style="color:#4a5765">{{ invoiceV.invoiceNo }}</strong>.</div>
-                </sc-if>
-                <div style="display:grid;grid-template-columns:110px 120px 120px 150px 110px 1fr 140px;padding:10px 16px;border-top:1px dashed #cfd8e2;background:#f7f9fc;align-items:center;gap:10px">
-                  <div class="mono" style="font-size:12px;font-weight:600;color:#2b59c3">{{ invoiceV.invoiceNo }}</div>
-                  <div style="font-size:11.5px;color:#8894a2">—</div>
-                  <div style="font-size:11.5px;color:#8894a2">—</div>
-                  <div class="mono" style="font-size:12.5px;font-weight:600;color:#0f1720;text-align:right">{{ invoiceV.total }}</div>
-                  <div style="text-align:center"><span style="font-size:11px;font-weight:600;padding:2px 10px;border-radius:14px;background:#eef1f5;color:#6b7787">Draft</span></div>
-                  <div style="text-align:right;font-size:11.5px;color:#8894a2">next to be issued</div>
-                  <div></div>
-                </div>
-              </div></div>
-            </div>
-            <div style="font-size:12px;color:#8894a2;line-height:1.5;margin-top:10px">Record what the client actually pays, whenever it arrives — a part payment leaves the rest <strong style="color:#6b7787">outstanding</strong>, and the Paid / Outstanding totals above follow. Any payment can be corrected or removed. Due date is <strong style="color:#6b7787">15 days</strong> from the sent date.</div>
-          </sc-if>
         </sc-if>
 
         <!-- ============ BILLS ============ -->
