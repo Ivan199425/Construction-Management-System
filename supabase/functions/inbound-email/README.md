@@ -67,51 +67,102 @@ Sends a real invoice email straight at the function, as a provider would. If an 
 the app after **Check mail**, everything except mail delivery is working, and any later silence has
 one cause instead of five.
 
+It asks for the webhook URL. Once `make-gmail-script.ps1` (Route A) has run, the URL `setup.ps1`
+printed is retired: use the `ENDPOINT` value from `CPMS-gmail-collector.gs` on your Desktop.
+
 ---
 
 ## Route A — read your own mailbox
 
-`gmail-forwarder.gs` in this folder is a Google Apps Script. It runs in the account the invoices
-already arrive at, finds the ones matching a query, and posts each whole message to the function.
+`gmail-forwarder.gs` in this folder is a Google Apps Script. It runs in a mailbox the invoices
+arrive at, finds the ones that are invoices, and posts each whole message to the function.
 
-### 1. Paste it in
+### 0. Invoices arrive at several addresses
 
-Signed in as that account, open **script.google.com → New project**, delete the sample, paste in
-`gmail-forwarder.gs`.
+A script can only read the mailbox it runs in. When suppliers write to `ivan@`, `sales@`,
+`accounts@`, `sam@` and so on, have one mailbox collect for everybody:
 
-### 2. Give it the URL
+**Google Admin console → Menu → Apps → Google Workspace → Gmail → Routing → Email forwarding using
+recipient address map → Configure** (or **Add another rule**). Add one line per address —
+*Address* `ivan@sydneylvl.com`, *Map to address* `accounts@sydneylvl.com` — for every address
+except `accounts@` itself. **Messages to affect: Only external incoming messages.** Tick **Also
+route to original destination**, or those people stop receiving their own mail. **Save.** Google
+says a change can take up to 24 hours to apply; it is usually minutes.
 
-Set `ENDPOINT` at the top to the webhook URL `setup.ps1` printed, `?key=...` included. Lost it?
-Run `setup.ps1` again — it mints a new key and prints a new URL.
+Everybody keeps their mail, and `accounts@` receives a copy of what outside senders write to them.
+Install the script once, in `accounts@`. CPMS still records which address the supplier wrote to.
+
+(Without admin access: install the same file in each mailbox instead. Run
+`make-gmail-script.ps1` once and paste that one file everywhere — running it again makes a new key
+and stops the copies already pasted.)
+
+### 1. Make the script
+
+```powershell
+powershell -ExecutionPolicy Bypass -File supabase\functions\inbound-email\make-gmail-script.ps1
+```
+
+It makes a new key, stores it on the server, deploys the inbound-email function from this folder,
+and writes `CPMS-gmail-collector.gs` to your Desktop with the URL already in `ENDPOINT`. That file
+has the key in it — never put it in this repository, and never fill in `ENDPOINT` in
+`gmail-forwarder.gs` here: the repository is public, and the script needs that line as it is.
+
+### 2. Paste it in
+
+Signed in as the collecting mailbox, open **script.google.com → New project**, delete the sample,
+paste in the Desktop file, **Ctrl+S**.
 
 ### 3. Check it
 
-**Run → testConnection.** Google asks you to authorise it; it is your own script reading your own
-mailbox, so approve it. The "unverified app" screen is expected for a script you wrote yourself —
-*Advanced → Go to project*. A `200` in the log means the whole chain works. Open CPMS → Invoices →
-**Check mail** and the test invoice appears.
+Pick **testConnection → Run.** Google asks you to authorise it; it is your own script reading your
+own mailbox, so approve it. The "unverified app" screen is expected for a script you wrote yourself —
+*Advanced → Go to project*. A `200` in the log means the whole chain works. Open CPMS → Supplier
+Invoices → **Check mail**. The test message has nothing attached, so with *Only consider mail
+carrying a PDF or image attachment* ticked (the default) it shows under **Not collected** with the
+reason "No invoice was attached" — that is a pass.
 
 ### 4. Set it running
 
-**Run → collectInvoices** once by hand to see what it picks up, then **Triggers (clock icon) → Add
-trigger → collectInvoices → Time-driven → Minutes timer → Every 15 minutes.**
+Pick **collectInvoices → Run** once to see what it picks up, then **turnOn → Run.** It now runs every
+15 minutes by itself; **turnOff** stops it.
 
-### 5. Narrow the query
+### 5. What it collects
 
-`QUERY` starts at `has:attachment newer_than:7d -from:me`. Everything it matches goes in front of
-whoever clears the invoice queue, so tighten it once it runs — `subject:(invoice OR "tax invoice"
-OR claim)`, or `to:accounts@sydneylvl.com`. The collect scope and the attachment rule in CPMS are a
-second line of defence, not a substitute for a sensible query.
+`SEARCH` takes mail with an attachment that says *invoice*, *inv*, *claim* or *amount / balance /
+payment due* — in the subject, the email, or printed in the PDF itself, because Gmail searches
+inside PDFs. `DAYS` (30) is how far back it looks. It sends PDFs and pictures — attached, or pasted
+into the email the way a phone's mail app does — but not a logo in a signature, and never mail sent
+from the collecting mailbox itself. In a conversation it sends only the messages that match on
+their own, so the quote that came before an invoice stays out. (A reply that keeps "invoice" or
+"claim" in its subject still matches, attachments and all.)
+
+A scanned invoice has no printed words for Gmail to find. To send every email with a PDF or
+picture, whatever it is, set `var SEARCH = 'has:attachment -from:me';` — CPMS then puts anything it
+cannot place on a project under Unallocated or Not collected, depending on the collect setting.
+After changing `SEARCH`, run **resetHistory** once so mail already passed over is looked at again.
+
+Nothing is sent twice: the script remembers what it has sent, and the database refuses a second
+copy of the same message anyway. Mail CPMS itself sends — a bill sent on to accounts, a claim sent
+for payment — comes from the no-reply sending address and is turned away by the function, so it does
+not come back in as a new invoice. (If somebody forwards one of those on, the forward is taken in like
+any other mail.)
 
 ### 6. Tell the app
 
-Settings → **Invoice ingestion** → Receiving address → **`accounts@sydneylvl.com`**. That is what
-makes `sydneylvl.com` an internal domain, so a message forwarded by one of your own people is read
-as a forward and the supplier is taken from the invoice inside rather than from whoever passed it
-on.
+Settings → **Invoice ingestion**:
 
-Nothing needs changing on the server for this route: the script sends the address the mail was
-delivered to, which is already on the accept list.
+- **Provider** → Google Workspace.
+- **Receiving address** → **`accounts@sydneylvl.com`**. That is what makes `sydneylvl.com` an
+  internal domain, so a message forwarded by one of your own people is read as a forward and the
+  supplier is taken from the invoice inside rather than from whoever passed it on.
+- **What to collect** → **Everything that arrives** if every invoice should reach Supplier
+  Invoices, with those it cannot place on a project waiting under **Unallocated**. *Only invoices for
+  a project in this system* sets those aside under **Not collected** instead.
+- *Only consider mail carrying a PDF or image attachment* — leave it ticked. Mail from the script
+  always carries one; it is what keeps covering notes out.
+
+The script sends the address the mail was written to, which `sydneylvl.com` in `INBOUND_TO`
+already accepts, so nothing else changes on the server.
 
 ---
 
@@ -149,10 +200,12 @@ delivered to, which is already on the accept list.
 
 | What you see | What it means |
 |---|---|
-| `401 Not authorised` | The `key` in the URL is not the one the script set. Run `setup.ps1` again and re-paste the new URL into Resend. |
+| `401 Not authorised` (Gmail script) | The script has an old key. Paste the current `CPMS-gmail-collector.gs` from your Desktop into every mailbox that runs it. If that file is gone, run `make-gmail-script.ps1` once and paste the new file into all of them. Do **not** run `setup.ps1` for this — it makes another key. |
+| `401 Not authorised` (Resend) | The `key` in the webhook URL is not the one on the server. Run `setup.ps1` again and paste the new URL into Resend. |
 | `{"ok":true,"ignored":"not a receiving address"}` | It was sent to an address outside `INBOUND_TO`. Run `set-receiving.ps1`. |
 | Stored, but the app shows nothing | Press **Check mail**. If the pill stays amber, the migration has not been run. |
-| It arrives under **Not collected** | It was read fine; the rules could not place it on a project. The **Not collected** tab lists it and **Collect** takes it back. Giving the project a short code makes this much rarer. |
+| It arrives under **Not collected** | The reason is on it. "No invoice was attached": nothing readable was attached and the attachment box in Settings is ticked. Otherwise the rules could not place it on a project and **What to collect** is set to projects in this system only — set it to **Everything that arrives** to have those wait under **Unallocated** instead. **Collect** takes any of them back. The rules place an invoice by a PO or subcontract number; the project number as a reference of its own ("WHJ-24", "WALLSE" — or "Job 001" / "PO 001" when it is only digits); the project name; or the site's street number, street name and a street type ("8 Hilma St" for 8 Hilma Avenue). |
+| An email never reaches CPMS | Search for it in Gmail in the collecting mailbox with `in:anywhere` — an invoice in **Spam** is never searched; mark it *Not spam*. If it is there, find the run that first looked at it in Apps Script → **Executions** and read its log: it says when a message is passed over (no PDF or picture, or not an invoice by `SEARCH`); a later run only counts it as looked at before. Or run **resetHistory** then **collectInvoices** to see it again — copies CPMS already has are answered as duplicates. Mail older than `DAYS` is never looked at. The **CPMS collected** label is per conversation, so a labelled conversation can still hold a message that was not sent. After changing `SEARCH`, run **resetHistory** so passed-over mail is looked at again. No **CPMS collected** label anywhere means the script has never run: step 4. |
 | Nothing at all, anywhere | The mail never reached Resend — check the forwarding rule, or the MX record on `inbox.`. Not this function. |
 
 ## Other providers

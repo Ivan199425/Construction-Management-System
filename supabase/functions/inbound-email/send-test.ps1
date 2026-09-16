@@ -14,7 +14,8 @@ $eml = Join-Path $PSScriptRoot 'sample-invoice.eml'
 if (-not (Test-Path $eml)) { Write-Host "sample-invoice.eml is missing from $PSScriptRoot" -ForegroundColor Red; exit 1 }
 
 Write-Host ""
-Write-Host "Paste the webhook URL the setup script printed."
+Write-Host "Paste the webhook URL: the ENDPOINT value from CPMS-gmail-collector.gs on your Desktop if you"
+Write-Host "have run make-gmail-script.ps1, otherwise the one setup.ps1 printed."
 Write-Host "It looks like: https://vzxenkijxzzrgnmopnxh.supabase.co/functions/v1/inbound-email?key=..." -ForegroundColor DarkGray
 $url = Read-Host "URL"
 if ([string]::IsNullOrWhiteSpace($url)) { Write-Host "Nothing entered." -ForegroundColor Red; exit 1 }
@@ -42,8 +43,10 @@ try {
   if ($_.Exception.Response) { $code = [int]$_.Exception.Response.StatusCode }
   Write-Host ""
   switch ($code) {
-    401 { Write-Host "401 - the key in that URL is not the one on the server. Run setup.ps1 again" -ForegroundColor Red
-          Write-Host "      and use the URL it prints (it makes a new key each time)." -ForegroundColor Red }
+    401 { Write-Host "401 - the key in that URL is not the one on the server. If you have run" -ForegroundColor Red
+          Write-Host "      make-gmail-script.ps1, use the ENDPOINT line from CPMS-gmail-collector.gs on your" -ForegroundColor Red
+          Write-Host "      Desktop - it replaced the URL setup.ps1 printed. Running setup.ps1 again would" -ForegroundColor Red
+          Write-Host "      make another key and stop the Gmail script working." -ForegroundColor Red }
     404 { Write-Host "404 - the function is not deployed. Run setup.ps1 first." -ForegroundColor Red }
     500 { Write-Host "500 - the function ran but could not store the message. The most likely cause" -ForegroundColor Red
           Write-Host "      is that the ap_inbox migration has not been run in the SQL Editor." -ForegroundColor Red }

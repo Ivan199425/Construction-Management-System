@@ -278,6 +278,17 @@ Deno.serve(async (req: Request) => {
   // forward happened to pass through.
   const to = mine || envTo || recipients[0] || '';
 
+  // CPMS's own mail - a bill sent on to accounts, a claim sent for payment - carries the supplier's
+  // PDF and the word "invoice", and lands in the very mailboxes being collected. Taken in again it
+  // would become a second invoice for money already on the project. It is sent from MAIL_FROM.
+  // Only while that is a sending-only address, though: if MAIL_FROM is ever set to a mailbox people
+  // use (accounts@...), mail from it can be a real invoice passed on, and is taken in as usual.
+  const ownFrom = addr(Deno.env.get('MAIL_FROM') || '');
+  const sendingOnly = /^(no-?reply|do-?not-?reply|notifications?|mailer|onboarding|cpms)([+.-].*)?@/i.test(ownFrom);
+  if (ownFrom && sendingOnly && from === ownFrom) {
+    return json({ ok: true, ignored: 'sent by CPMS', from }, 200);
+  }
+
   const row = {
     to_addr: to, from_addr: from, subject, message_id: messageId,
     size_bytes: size,
@@ -299,6 +310,14 @@ Deno.serve(async (req: Request) => {
     },
     body: JSON.stringify([row]),
   });
+
+  // ignore-duplicates only covers a clash on the primary key. The one on message_id comes back as a
+  // 409 conflict instead - which means the same thing, already stored, and must not read as a
+  // failure: a sender told "try again" would send the same message for ever.
+  if (res.status === 409) {
+    await res.text().catch(() => '');
+    return json({ ok: true, stored: false, duplicate: true, id: '', to, from, subject, size });
+  }
 
   if (!res.ok) {
     const detail = await res.text().catch(() => '');

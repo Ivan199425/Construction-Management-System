@@ -9963,7 +9963,7 @@ class Component extends DCLogic {
       collectScope: 'matched',
       rules: [
         { key: 'po', label: 'PO or commitment number found in subject, body or document', on: true },
-        { key: 'project', label: 'Project number or name found in subject or body', on: true },
+        { key: 'project', label: 'Project number, name or site address found in the email or its document', on: true },
         { key: 'sole', label: 'Supplier is committed to exactly one project that is not closed', on: true },
         { key: 'forwarder', label: 'Forwarded by a team member who works on exactly one project that is not closed', on: true },
         { key: 'sender', label: 'Supplier email address mapped to a project', on: false },
@@ -9987,7 +9987,9 @@ class Component extends DCLogic {
       rejectReasons: ['Not our cost', 'Wrong project', 'Wrong amount', 'Duplicate of another invoice', 'Work not complete', 'Goods not received', 'Pricing not agreed', 'Missing purchase order'],
     };
   }
-  apSettings() { const d = this.apSettingsSeed(); const s = this.state.apSettings || {}; const out = Object.assign({}, d, s); out.rules = (s.rules && s.rules.length) ? d.rules.map(r => Object.assign({}, r, (s.rules.find(x => x.key === r.key) || {}))) : d.rules; out.approvalLimits = Object.assign({}, d.approvalLimits, s.approvalLimits || {}); return out; }
+  // Matching rules run in the order saved from Settings (moveApRule). Labels always come from the seed, the switch from
+  // what was saved; a seed rule missing from the saved list goes on the end with its default switch.
+  apSettings() { const d = this.apSettingsSeed(); const s = this.state.apSettings || {}; const out = Object.assign({}, d, s); out.rules = (s.rules && s.rules.length) ? s.rules.map(x => { const seed = x && d.rules.find(r => r.key === x.key); return seed ? Object.assign({}, seed, x, { label: seed.label }) : null; }).filter(Boolean).concat(d.rules.filter(r => !s.rules.some(x => x && x.key === r.key))) : d.rules; out.approvalLimits = Object.assign({}, d.approvalLimits, s.approvalLimits || {}); return out; }
   _saveApSettings(obj) {
     this._writeWal('ap_settings', obj || {});
     if (!this._catIsLoaded('ap_settings')) { this._setSave('ap_settings', 'error'); return; }
@@ -10392,14 +10394,16 @@ class Component extends DCLogic {
     const cfg = this.apSettings();
     const projects = (this.state.projects || []).filter(p => p.status !== 'closed');
     const all = this.state.projects || [];
-    const hay = [inv.poRef, (inv.source && inv.source.subject) || '', (inv.source && inv.source.body) || '', (inv.extract && inv.extract.text) || ''].join(' \n ').toLowerCase();
+    // the attachment's file name as well: suppliers name the PDF after the job or the order ("SC-001 claim 3.pdf")
+    const said = [inv.poRef, (inv.source && inv.source.subject) || '', (inv.source && inv.source.body) || '', (inv.extract && inv.extract.text) || '', (inv.source && inv.source.fileName) || ''].join(' \n ');
+    const hay = said.toLowerCase();
     for (let i = 0; i < cfg.rules.length; i++) {
       const r = cfg.rules[i];
       if (!r.on) continue;
       if (r.key === 'po') {
         const hits = [];
         for (const p of all) {
-          const hit = (p.commitments || []).find(cm => { const ref = String(cm.ref || '').trim().toLowerCase(); return ref.length >= 3 && hay.indexOf(ref) >= 0; });
+          const hit = (p.commitments || []).find(cm => { const ref = String(cm.ref || '').trim().toLowerCase(); return ref.length >= 3 && this._apMentionsRef(hay, ref); });
           if (hit) hits.push({ p: p, cm: hit });
         }
         if (hits.length === 1) {
@@ -10416,12 +10420,8 @@ class Component extends DCLogic {
         }
       }
       if (r.key === 'project') {
-        for (const p of all) {
-          const code = String(p.code || '').trim().toLowerCase();
-          if (code.length >= 3 && hay.indexOf(code) >= 0) return { pid: p.id, rule: 'Project number ' + p.code, conf: 90, commitmentId: '' };
-          const name = String(p.name || '').trim().toLowerCase();
-          if (name.length >= 5 && hay.indexOf(name) >= 0) return { pid: p.id, rule: 'Project name', conf: 85, commitmentId: '' };
-        }
+        const found = this._apProjectMention(said, all, inv.poRef, [(inv.source && inv.source.subject) || '', (inv.source && inv.source.fileName) || ''].join(' \n '));
+        if (found) return found;
       }
       if (r.key === 'sole' && inv.vendorId) {
         const v = this.apVendor(inv);
@@ -10444,6 +10444,122 @@ class Component extends DCLogic {
       }
     }
     return { pid: '', rule: '', conf: 0, commitmentId: '' };
+  }
+  // Where the mail names the job, tried in this order, each pointing at one project or saying nothing:
+  //  1. The project number as the job's reference - never inside another one. "001" is not project 001 when it is the
+  //     end of SC-001 or of Outlook's image001.png, and NAR is not in "Narraweena". A number made only of digits needs
+  //     a label before it (project, job, site, PO, order, your ref, reference) or to be the order number read off the
+  //     invoice: a bare 2401 is as likely a postcode or somebody's invoice number.
+  //  2. The project's full name. When one name is part of another ("... Hungry Jacks" and "... Hungry Jacks Stage 2")
+  //     the mail naming the longer one means the longer one.
+  //  3. The site address as suppliers write it: street number, street name and a street type, whatever type or suburb
+  //     they use ("8 Hilma St", "Unit 3/8 Hilma Street, Collaroy Plateau" for 8 Hilma Avenue). The type is what keeps
+  //     "12 May 2026" off 12 May Street and "12 PINE MGP10" off 12 Pine Street.
+  //  A code made only of letters and written bare (WALLSE, NAR - as the system has it, not "Nar") may be an ordinary
+  //  word in capitals: BAL DUE, FIRE COLLAR, a supplier in MASCOT NSW. Quoted in the subject line or the file name it is
+  //  taken as meant; anywhere else it is only a suggestion. Either way a labelled reference, or the name or site
+  //  address of another project in the same mail, outranks it.
+  // A suggestion - that, or several projects fitting of which only one is still running - is scored below the line
+  // for filing on its own, whatever the line is set to, so it waits in Unallocated for a person to confirm.
+  _apProjectMention(said, all, poRef, title) {
+    const raw = String(said || '');
+    const text = raw.toLowerCase();
+    const po = String(poRef || '').trim().toLowerCase();
+    const low = Math.min(75, (this._num(this.apSettings().confidence) || 80) - 1);
+    const pick = (hits, rule, conf) => {
+      if (hits.length === 1) return { pid: hits[0].p.id, rule: rule(hits[0]), conf, commitmentId: '' };
+      const live = hits.filter(h => h.p.status !== 'closed');
+      if (hits.length > 1 && live.length === 1) return { pid: live[0].p.id, rule: 'Suggested ' + live[0].p.name + ': ' + rule(live[0]) + ', which also fits a closed project', conf: Math.min(conf, low), commitmentId: '' };
+      return null;
+    };
+    const codes = { label: [], bare: [] };
+    all.forEach(p => { const how = this._apMentionsCode(raw, String(p.code || '').trim(), po); if (how) codes[how].push({ p }); });
+    const labelled = pick(codes.label, h => 'Project number ' + h.p.code, 90);
+    if (labelled) return labelled;
+    const nameOf = p => String(p.name || '').trim().toLowerCase();
+    const named = all.filter(p => nameOf(p).length >= 5 && text.indexOf(nameOf(p)) >= 0);
+    const byName = named.filter(p => !named.some(q => nameOf(q).length > nameOf(p).length && nameOf(q).indexOf(nameOf(p)) >= 0)).map(p => ({ p }));
+    const n = pick(byName, () => 'Project name', 85);
+    const street = () => {
+      const byStreet = [];
+      all.forEach(p => {
+        const hit = this._apStreetKeys([p.name, p.address].join(' , ')).find(k => this._apMentionsStreet(text, k));
+        if (hit) byStreet.push({ p, hit });
+      });
+      return pick(byStreet, h => 'Site address (' + h.hit.num + ' ' + h.hit.street + ')', 85);
+    };
+    const bare = codes.label.length ? null : pick(codes.bare, h => 'Project number ' + h.p.code, 90);
+    if (!bare) return n || street();
+    const other = n || street();
+    if (other && other.pid !== bare.pid) return other;
+    const bp = codes.bare.find(h => h.p.id === bare.pid).p;
+    const code = String(bp.code).trim();
+    if (other || this._apMentionsRef(title, code, code !== code.toLowerCase())) return bare;
+    return { pid: bp.id, rule: 'Suggested ' + bp.name + ': project number ' + code + ' appears in the document', conf: low, commitmentId: '' };
+  }
+  // How a project number appears: 'label' (as the job's reference), 'bare' (a code of letters on its own), or ''.
+  _apMentionsCode(raw, code, po) {
+    if (code.length < 3) return '';
+    if (po && po === code.toLowerCase()) return 'label';
+    const words = /^[a-z]+$/i.test(code);
+    // WHJ-24, SYD2401, 5 Gallimore Avenue: distinctive on their own
+    if (!words && !/^\d+$/.test(code)) return this._apMentionsRef(raw, code) ? 'label' : '';
+    // the supplier's own references ("Our ref", "Invoice ref") are not ours
+    const LABEL = '(?:project|proj|job|site|order|p\\.?\\s?o\\.?|your\\s*ref(?:erence)?|(?:client|cust(?:omer)?)\\s*(?:ref(?:erence)?|order)|(?<!(?:our|invoice|inv|supplier)\\s{0,3})ref(?:erence)?)';
+    if (new RegExp('(?:^|[^a-z0-9])' + LABEL + '(?:[\\s.:#-]*(?:no|number|num|ref|reference)(?![a-z]))?[\\s.:#-]*' + code + '(?![a-z0-9\\-_/@])', 'i').test(raw)) return 'label';
+    // letters on their own count as the system writes them - NAR, not "Nar" - so a name is not a job code
+    if (words && this._apMentionsRef(raw, code, code !== code.toLowerCase())) return 'bare';
+    return '';
+  }
+  // A reference as a token of its own: not inside a longer word, number or reference, a file name or an email address.
+  // "SC-001" is in "Claim SC-001." and "(SC-001)", not in "SC-0015" or "ABC-SC-001"; "001" is not in "image001.png@".
+  _apMentionsRef(text, ref, exact) {
+    const r = String(ref || '').trim();
+    if (!r) return false;
+    const esc = r.replace(/[.*+?^$()|[\]\\{}]/g, '\\$&');
+    return new RegExp('(?:^|[^A-Za-z0-9\\-_/.@])' + esc + '(?![A-Za-z0-9\\-_/@])', exact ? '' : 'i').test(String(text || ''));
+  }
+  // Street types, each with the ways it is written. "The ..." streets match within their own type only.
+  _apStreetTypeGroups() {
+    return ['street|st', 'avenue|ave|av', 'road|rd', 'parade|pde', 'place|pl', 'drive|drv|dr', 'lane|ln', 'crescent|cres|cr',
+      'court|crt|ct', 'close|cl', 'way', 'highway|hwy', 'boulevarde|boulevard|blvd|bvde|bvd', 'terrace|tce', 'circuit|cct',
+      'grove|gr', 'square|sq', 'esplanade|esp', 'parkway|pkwy', 'gardens|gdns', 'circle|cir', 'quay', 'mews', 'rise', 'row',
+      'walk', 'crest', 'glade', 'green', 'link', 'loop', 'path', 'promenade', 'reserve', 'retreat', 'ridge', 'track', 'view',
+      'vista', 'corso', 'broadway', 'strand', 'plaza', 'mall', 'arcade', 'concourse', 'chase', 'cove', 'wharf'];
+  }
+  _apStreetTypes() { return this._apStreetTypeGroups().join('|'); }
+  // "COLLAROY HEIGHTS 8 Hilma Avenue" -> 8 hilma; "40-44 Smith St" -> 40 smith, 44 smith; "Shop 3/45 George St" -> 45 george
+  // (3 is the shop); "45 Pitt Street Mall" -> 45 pitt; "CRONULLA 22 The Esplanade" -> 22 "the esplanade", whole, because
+  // "the" alone would be any The street.
+  _apStreetKeys(s) {
+    const TYPES = this._apStreetTypes();
+    const re = new RegExp('(?:^|[^0-9a-z])(\\d+[a-z]?)(?:\\s*([-/])\\s*(\\d+[a-z]?))?\\s+([a-z][a-z\'.]*(?:\\s+[a-z][a-z\'.]*)?)\\s+(' + TYPES + ')(?=$|[^a-z])', 'g');
+    const isType = new RegExp('^(?:' + TYPES + ')$');
+    const out = [];
+    const txt = String(s || '').toLowerCase();
+    let m;
+    while ((m = re.exec(txt))) {
+      const words = m[4].split(/\s+/);
+      let street = (words.length === 2 && isType.test(words[1])) ? words[0] : words.join(' ');
+      let variants = '';
+      if (street === 'the') {
+        street = 'the ' + m[5];
+        variants = this._apStreetTypeGroups().find(g => g.split('|').indexOf(m[5]) >= 0) || m[5];
+      }
+      if (street.replace(/[^a-z]/g, '').length < 3) continue;
+      if (m[2] !== '/') out.push({ num: m[1], street, variants });
+      if (m[3]) out.push({ num: m[3], street, variants });
+    }
+    return out;
+  }
+  _apMentionsStreet(text, k) {
+    const esc = x => x.replace(/[.*+?^$()|[\]\\{}]/g, '\\$&');
+    // a unit or the start of a range may come first ("3/8", "6-8"); only a range may follow ("8-10"), because
+    // "8/12 Hilma St" is unit 8 at number 12. Then the street name and a street type - for a "The ..." street, its own.
+    const named = k.variants
+      ? 'the\\s+(?:' + k.variants + ')\\.?'
+      : k.street.split(/\s+/).map(esc).join('\\s+') + '\\s+(?:' + this._apStreetTypes() + ')\\.?';
+    return new RegExp('(?:^|[^0-9a-z])(?:\\d+[a-z]?\\s*[-/]\\s*)?' + esc(k.num) + '(?:\\s*-\\s*\\d+[a-z]?)?,?\\s+' + named + '(?=$|[^a-z])').test(text);
   }
   // Matching the supplier is separate from matching the project: ABN is decisive, the name is a
   // fallback, and an unmatched supplier is left for the reviewer to create in the Directory.
