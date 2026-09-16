@@ -5672,6 +5672,7 @@ class Component extends DCLogic {
         // a good one, ask again rather than waiting for the backoff to come round.
         this._authDenied = false;
         this._loadSharedData();
+        this._sbLoadPrefs();   // the column layouts this user set, wherever they set them
       };
       restoreSession();
     }
@@ -7286,6 +7287,7 @@ class Component extends DCLogic {
     this.setState({ session: sess, role: prof.role, view: 'portfolio', auth: { view: 'login', email: '', password: '', newPassword: '', error: '', notice: '', busy: false } });
     this._loadProfilesIntoState();
     this._loadSharedData(); // anything denied while signed out is now readable
+    this._sbLoadPrefs();    // and the column layouts this user set, wherever they set them
   }
   async doActivate() {
     const a = this.state.auth || {}; const email = (a.email || '').trim().toLowerCase(); const pw = a.newPassword || '';
@@ -14680,8 +14682,65 @@ class Component extends DCLogic {
   endEdit() { this.setState({ editCell: '' }); }
   // ----- Budget: resizable columns (widths persisted per browser, across projects) -----
   _budgetColDefs() { return [{ id: 'parentCode', label: 'Parent code', align: 'left', w: 130 }, { id: 'code', label: 'Child code', align: 'left', w: 96 }, { id: 'desc', label: 'Description', align: 'left', w: 220 }, { id: 'cat', label: 'Category', align: 'left', w: 128 }, { id: 'orig', label: 'Budgeted', align: 'right', w: 122 }, { id: 'adj', label: 'Approved change', align: 'right', w: 130 }, { id: 'revised', label: 'Revised budget', align: 'right', w: 136 }, { id: 'committed', label: 'Committed', align: 'right', w: 150 }, { id: 'actual', label: 'Actual', align: 'right', w: 122 }, { id: 'prog', label: '% complete', align: 'right', w: 104 }, { id: 'cpi', label: 'CPI', align: 'right', w: 84 }, { id: 'ftc', label: 'FTC', align: 'right', w: 118 }, { id: 'eac', label: 'Est. at completion', align: 'right', w: 138 }, { id: 'variance', label: 'Variance', align: 'right', w: 122 }, { id: 'pct', label: '% spent', align: 'right', w: 96 }, { id: 'del', label: '', align: 'left', w: 42 }]; }
+  // ---- Column layouts, kept against the signed-in user ------------------------------------------
+  // Widths, order and hidden columns are saved on this machine as they always were, and against the user in
+  // user_prefs, so they come back on any computer and survive local storage being cleared. Signing in takes the
+  // account's copy; after that every change goes to both. Signed out, only the machine's copy is used.
+  // read back from the machine's own copy: that is written the moment a column moves, before the screen
+  // catches up, so what goes to the account is exactly what the user sees
+  _prefsPayload() {
+    return { cols: {
+      budgetW: this._loadBudgetColW(),
+      budgetOrder: this._loadBudgetColOrder() || [],
+      budgetHidden: this._loadBudgetColHidden(),
+      tables: this._tblColW || {},
+    } };
+  }
+  _applyPrefs(data) {
+    const c = (data && data.cols) || {};
+    const obj = v => (v && typeof v === 'object' && !Array.isArray(v)) ? v : null;
+    this._prefsApplying = true;   // applying the account's copy must not write it straight back
+    try {
+      const patch = {};
+      const bw = obj(c.budgetW); if (bw) { this._saveBudgetColW(bw); patch.budgetColW = bw; }
+      const bh = obj(c.budgetHidden); if (bh) { this._saveBudgetColHidden(bh); patch.budgetColHidden = bh; }
+      if (Array.isArray(c.budgetOrder)) { this._saveBudgetColOrder(c.budgetOrder); patch.budgetColOrder = c.budgetOrder.length ? c.budgetOrder : null; }
+      if (Object.keys(patch).length) this.setState(patch);
+      const tb = obj(c.tables);
+      if (tb) { this._tblColW = tb; this._tblColSave(); this._tblColPaint(); }
+    } catch (e) {}
+    this._prefsApplying = false;
+  }
+  _prefsUser() { const s = this.state && this.state.session; return (s && s.profile && s.profile.id) || ''; }
+  _sbLoadPrefs() {
+    const c = this._SB, uid = this._prefsUser();
+    if (!c || !c.url || !c.key || !uid || typeof fetch === 'undefined') return Promise.resolve(false);
+    return fetch(c.url + '/rest/v1/user_prefs?select=data&user_id=eq.' + encodeURIComponent(uid), { headers: this._sbUserHeaders() })
+      .then(r => (r.ok ? r.json() : null))
+      .then(rows => {
+        const row = Array.isArray(rows) ? rows[0] : null;
+        if (row && row.data) { this._applyPrefs(row.data); return true; }
+        this._sbSavePrefs(0);   // nothing saved yet: this machine's layout becomes the account's
+        return false;
+      })
+      .catch(() => false);
+  }
+  _sbSavePrefs(delay) {
+    const c = this._SB, uid = this._prefsUser();
+    if (!c || !c.url || !c.key || !uid || typeof fetch === 'undefined' || this._prefsApplying) return;
+    if (this._prefsTimer) clearTimeout(this._prefsTimer);
+    this._prefsTimer = setTimeout(() => {
+      try {
+        fetch(c.url + '/rest/v1/user_prefs', {
+          method: 'POST',
+          headers: this._sbUserHeaders({ 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates,return=minimal' }),
+          body: JSON.stringify({ user_id: uid, data: this._prefsPayload(), updated_at: new Date().toISOString() }),
+        }).catch(() => {});
+      } catch (e) {}
+    }, delay == null ? 800 : delay);
+  }
   _loadBudgetColW() { try { if (typeof localStorage === 'undefined') return {}; const raw = localStorage.getItem('cubicBudgetColW'); const o = raw ? JSON.parse(raw) : {}; return (o && typeof o === 'object') ? o : {}; } catch (e) { return {}; } }
-  _saveBudgetColW(obj) { try { if (typeof localStorage !== 'undefined') localStorage.setItem('cubicBudgetColW', JSON.stringify(obj || {})); } catch (e) {} }
+  _saveBudgetColW(obj) { try { if (typeof localStorage !== 'undefined') localStorage.setItem('cubicBudgetColW', JSON.stringify(obj || {})); } catch (e) {} this._sbSavePrefs(); }
   _colW(id) { const o = this.state.budgetColW || {}; if (o[id] != null) return o[id]; const d = this._budgetColDefs().find(c => c.id === id); return d ? d.w : 100; }
   _loadBudgetColOrder() { try { if (typeof localStorage === 'undefined') return null; const raw = localStorage.getItem('cubicBudgetColOrder'); const a = raw ? JSON.parse(raw) : null; return Array.isArray(a) ? this._migrateColOrder(a) : null; } catch (e) { return null; } }
   // A column order saved before a column existed does not mention it, and the merge appends
@@ -14696,9 +14755,9 @@ class Component extends DCLogic {
     }
     return out;
   }
-  _saveBudgetColOrder(a) { try { if (typeof localStorage !== 'undefined') localStorage.setItem('cubicBudgetColOrder', JSON.stringify(Array.isArray(a) ? a : [])); } catch (e) {} }
+  _saveBudgetColOrder(a) { try { if (typeof localStorage !== 'undefined') localStorage.setItem('cubicBudgetColOrder', JSON.stringify(Array.isArray(a) ? a : [])); } catch (e) {} this._sbSavePrefs(); }
   _loadBudgetColHidden() { try { if (typeof localStorage === 'undefined') return {}; const raw = localStorage.getItem('cubicBudgetColHidden'); const o = raw ? JSON.parse(raw) : {}; return (o && typeof o === 'object') ? o : {}; } catch (e) { return {}; } }
-  _saveBudgetColHidden(o) { try { if (typeof localStorage !== 'undefined') localStorage.setItem('cubicBudgetColHidden', JSON.stringify(o || {})); } catch (e) {} }
+  _saveBudgetColHidden(o) { try { if (typeof localStorage !== 'undefined') localStorage.setItem('cubicBudgetColHidden', JSON.stringify(o || {})); } catch (e) {} this._sbSavePrefs(); }
   _orderedColDefs() { const defs = this._budgetColDefs(); const order = this.state.budgetColOrder; if (!Array.isArray(order) || !order.length) return defs; const byId = {}; defs.forEach(d => { byId[d.id] = d; }); const seen = {}, out = []; order.forEach(id => { if (byId[id] && !seen[id]) { out.push(byId[id]); seen[id] = true; } }); defs.forEach((d, i) => { if (seen[d.id]) return; let at = out.length; for (let j = i - 1; j >= 0; j--) { const k = out.indexOf(byId[defs[j].id]); if (k >= 0) { at = k + 1; break; } } out.splice(at, 0, d); seen[d.id] = true; }); return out; }
   _visibleColDefs() { const h = this.state.budgetColHidden || {}; return this._orderedColDefs().filter(d => !h[d.id]); }
   colResizeDown(id, e) {
@@ -14715,7 +14774,7 @@ class Component extends DCLogic {
      change. Drag a column boundary to resize, double-click one to reset that table.
      The budget table is skipped, it has its own column manager. */
   _tblColLoad() { try { if (typeof localStorage === 'undefined') return {}; const o = JSON.parse(localStorage.getItem('cubicTableColW') || '{}'); return (o && typeof o === 'object') ? o : {}; } catch (e) { return {}; } }
-  _tblColSave() { try { if (typeof localStorage !== 'undefined') localStorage.setItem('cubicTableColW', JSON.stringify(this._tblColW || {})); } catch (e) {} }
+  _tblColSave() { try { if (typeof localStorage !== 'undefined') localStorage.setItem('cubicTableColW', JSON.stringify(this._tblColW || {})); } catch (e) {} this._sbSavePrefs(); }
   _tblColSelf(hdr) { return !!(hdr && hdr.querySelector('.rsz')); } // header that resizes itself
   _tblColId(hdr) {
     const k = Array.prototype.map.call(hdr.children, c => (c.textContent || '').trim().toLowerCase().replace(/[^a-z0-9%]/g, '').slice(0, 10)).join('|');
