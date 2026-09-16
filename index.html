@@ -5012,8 +5012,11 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
     <div onClick="{{ pdfPreviewV.onClose }}" style="position:fixed;inset:0;background:rgba(15,23,32,.62);display:flex;align-items:center;justify-content:center;z-index:80;animation:fadeUp .15s ease">
       <div onClick="{{ stop }}" style="background:#fff;width:100vw;max-width:100vw;height:100vh;overflow:hidden;display:flex;flex-direction:column">
         <div style="padding:12px 16px;border-bottom:1px solid #eef1f4;display:flex;align-items:center;flex-wrap:var(--cpms-wrap,nowrap);justify-content:space-between;gap:12px;flex:0 0 auto">
-          <div style="font-size:14px;font-weight:600;color:#0f1720;text-transform:capitalize">Preview &mdash; {{ pdfPreviewV.label }}</div>
+          <div style="font-size:14px;font-weight:600;color:#0f1720;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Preview &mdash; {{ pdfPreviewV.title }}</div>
           <div style="display:flex;align-items:center;gap:8px">
+            <sc-if value="{{ pdfPreviewV.hasFile }}" hint-placeholder-val="{{ false }}">
+              <button onClick="{{ pdfPreviewV.onDownload }}" title="{{ pdfPreviewV.downloadTitle }}" style="border:1px solid #cfd8e2;background:#fff;color:#4a5765;border-radius:8px;padding:8px 13px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="border-color:#2b59c3;color:#2b59c3">&#8659; Download</button>
+            </sc-if>
             <button onClick="{{ pdfPreviewV.onPrint }}" style="border:0;background:#2b59c3;color:#fff;border-radius:8px;padding:8px 15px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="background:#244dab">&#128424; Print / Save as PDF</button>
             <button onClick="{{ pdfPreviewV.onNewTab }}" style="border:1px solid #cfd8e2;background:#fff;color:#4a5765;border-radius:8px;padding:8px 13px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="border-color:#2b59c3;color:#2b59c3">&#8599; New tab</button>
             <button onClick="{{ pdfPreviewV.onClose }}" title="Close" style="border:0;background:transparent;color:#8894a2;cursor:pointer;font-size:20px;line-height:1;padding:0 4px">&#10005;</button>
@@ -6375,28 +6378,41 @@ class Component extends DCLogic {
   }
   // Show a PDF we have built, rather than a page made to look like one: the browser's own viewer, fitted to the
   // width of the window with its side panel closed, so the pages read landscape exactly as the saved file does.
-  _openPdfPreview(blob, label) {
+  // A file name without its extension, for the title inside a PDF.
+  _docTitleOf(fileName) { return String(fileName || '').replace(/\.[A-Za-z0-9]+$/, ''); }
+  _openPdfPreview(blob, label, fileName) {
     try {
       const blobUrl = URL.createObjectURL(blob);
       const prev = this.state.pdfPreview;
       if (prev && (prev.blobUrl || prev.url)) { const old = prev.blobUrl || prev.url; setTimeout(() => { try { URL.revokeObjectURL(old); } catch (e) {} }, 60000); }
-      this.setState({ pdfPreview: { url: blobUrl + '#view=FitH&navpanes=0', blobUrl, label: label || 'document', pdf: true } });
+      this.setState({ pdfPreview: { url: blobUrl + '#view=FitH&navpanes=0', blobUrl, label: label || 'document', fileName: fileName || '', pdf: true } });
       return true;
     } catch (e) { return false; }
   }
+  // Save what the preview is showing, under the document's own name. The browser's own save button in the viewer
+  // names the file after the blob address instead, which is what this is for.
+  downloadPdfPreview() {
+    const pv = this.state.pdfPreview; if (!pv || !pv.blobUrl || !pv.fileName) return;
+    try {
+      const a = document.createElement('a');
+      a.href = pv.blobUrl; a.download = pv.fileName; a.style.display = 'none';
+      document.body.appendChild(a); a.click();
+      setTimeout(() => { try { a.remove(); } catch (e) {} }, 200);
+    } catch (e) {}
+  }
   // Preview, anywhere in the app: the document itself, in the full-window viewer. onPage() is the version built as
   // a page, used where the browser cannot show a PDF inside the page or the PDF cannot be built.
-  _previewDoc(build, label, onPage) {
+  _previewDoc(build, label, onPage, fileName) {
     const page = () => { try { if (onPage) onPage(); } catch (e) {} };
     if (typeof navigator !== 'undefined' && navigator.pdfViewerEnabled === false) { page(); return; }
     let p = null;
     try { p = build(); } catch (e) { p = null; }
     if (!p || typeof p.then !== 'function') { page(); return; }
-    p.then(blob => { if (!blob || !this._openPdfPreview(blob, label)) page(); }).catch(() => page());
+    p.then(blob => { if (!blob || !this._openPdfPreview(blob, label, fileName)) page(); }).catch(() => page());
   }
   // The Budget tab's Preview: the same PDF the Download button saves.
   previewCostReportPdf() {
-    this._previewDoc(() => this.costReportPdfBlob(), 'PDF', () => this.exportPdf());
+    this._previewDoc(() => this.costReportPdfBlob(), 'PDF', () => this.exportPdf(), this.costReportPdfName());
   }
   closePdfPreview() {
     const pv = this.state.pdfPreview;
@@ -9375,7 +9391,7 @@ class Component extends DCLogic {
           if (c.coContact) dd.text(c.coContact, R, hy, { size: 7, align: 'right', color: MUT });
           dd.rect(M, M + 46, R - M, 2, { fill: NAVY });
         },
-      })))
+      }), { title: this._docTitleOf(this.agreementPdfName(cmId)) }))
       .catch(() => null);
   }
   // The exact document the "View agreement" button shows.
@@ -9614,7 +9630,7 @@ class Component extends DCLogic {
     const ctx = this._variationPdfContext(vid);
     if (!ctx) return Promise.resolve(null);
     return this._pdfLogo()
-      .then(logo => this._pdfBuild(d => this._layoutVariationPdf(d, ctx, logo)))
+      .then(logo => this._pdfBuild(d => this._layoutVariationPdf(d, ctx, logo), { title: this._docTitleOf(this.variationPdfName(vid)) }))
       .catch(() => null);
   }
   variationPdfName(vid) {
@@ -9783,7 +9799,7 @@ class Component extends DCLogic {
     this._previewDoc(() => this.variationPdfBlob(vid), 'Variation Order', () => {
       const html = this._variationDocHtml(vid);
       if (html) this._openPrintDoc(html, 'Variation Order');
-    });
+    }, this.variationPdfName(vid));
   }
   // Forecast final. A cost-to-complete typed on the line wins. Otherwise it is derived:
   // a line still has its budget to run, so the forecast is the largest of budget, committed
@@ -12377,7 +12393,7 @@ class Component extends DCLogic {
     const p = this.proj(this.state.pid); if (!p) return;
     const cm = (p.commitments || []).find(c => c.id === cmId); if (!cm) return;
     // the PDF that is sent to the sub-contractor; the page version is what the form's own Preview shows
-    this._previewDoc(() => this.agreementPdfBlob(cmId), 'Sub-contract', () => this.previewAgreement(this.agreementFormFrom(cm), cm));
+    this._previewDoc(() => this.agreementPdfBlob(cmId), 'Sub-contract', () => this.previewAgreement(this.agreementFormFrom(cm), cm), this.agreementPdfName(cmId));
   }
   previewAgreement(formOverride, cmOverride) {
     const f = formOverride || this.state.subForm; if (!f) return;
@@ -13566,11 +13582,13 @@ class Component extends DCLogic {
       push(im.bytes);
       push(S2B('\nendstream\nendobj\n'));
     });
-    const maxId = images.length ? iB + images.length - 1 : fB;
+    let maxId = images.length ? iB + images.length - 1 : fB;
+    // the document's own name, so a browser saving or printing it does not fall back to the blob address
+    if (opts.title) { maxId += 1; obj(maxId, '<</Title (' + esc(opts.title) + ')>>'); }
     const xrefAt = len;
     let x = 'xref\n0 ' + (maxId + 1) + '\n0000000000 65535 f \n';
     for (let id = 1; id <= maxId; id++) x += String(off[id] || 0).padStart(10, '0') + ' 00000 n \n';
-    push(S2B(x + 'trailer\n<</Size ' + (maxId + 1) + '/Root 1 0 R>>\nstartxref\n' + xrefAt + '\n%%EOF\n'));
+    push(S2B(x + 'trailer\n<</Size ' + (maxId + 1) + '/Root 1 0 R' + (opts.title ? '/Info ' + maxId + ' 0 R' : '') + '>>\nstartxref\n' + xrefAt + '\n%%EOF\n'));
     const out = new Uint8Array(len); let pos = 0;
     chunks.forEach(ch => { out.set(ch, pos); pos += ch.length; });
     return new Blob([out], { type: 'application/pdf' });
@@ -13877,7 +13895,7 @@ class Component extends DCLogic {
     const ctx = this._invoicePdfContext(invoiceId);          // snapshot before any await
     if (!ctx) return Promise.resolve(null);
     return this._pdfLogo()
-      .then(logo => this._pdfBuild(d => this._layoutInvoicePdf(d, ctx, logo)))
+      .then(logo => this._pdfBuild(d => this._layoutInvoicePdf(d, ctx, logo), { title: this._docTitleOf(this.invoicePdfName(invoiceId)) }))
       .catch(() => null);
   }
   invoicePdfName(invoiceId) {
@@ -14005,7 +14023,7 @@ class Component extends DCLogic {
     this._previewDoc(() => this.invoicePdfBlob(invoiceId), 'Tax Invoice', () => {
       const html = this._invoiceDocHtml(invoiceId);
       if (html) this._openPrintDoc(html, 'invoice PDF');
-    });
+    }, this.invoicePdfName(invoiceId));
   }
   _invoiceDocUrl(invoiceId) {
     const html = this._invoiceDocHtml(invoiceId);
@@ -15927,11 +15945,11 @@ class Component extends DCLogic {
     const p = this.proj(this.state.pid); if (!p) return Promise.resolve(null);
     const c = this._reportDesignContext(p);
     return this._pdfLogo()
-      .then(logo => this._pdfBuild(d => this._layoutCostReportPdf(d, c, logo), { landscape: true }))
+      .then(logo => this._pdfBuild(d => this._layoutCostReportPdf(d, c, logo), { landscape: true, title: this._docTitleOf(this.reportPdfName()) }))
       .catch(() => null);
   }
   previewReportPdf() {
-    this._previewDoc(() => this.reportPdfBlob(), 'Report', () => this.exportReportPdf());
+    this._previewDoc(() => this.reportPdfBlob(), 'Report', () => this.exportReportPdf(), this.reportPdfName());
   }
   downloadReportPdf() {
     const name = this.reportPdfName();
@@ -16012,7 +16030,7 @@ class Component extends DCLogic {
     const p = this.proj(this.state.pid); if (!p) return Promise.resolve(null);
     const c = this._costReportPdfContext(p);
     return this._pdfLogo()
-      .then(logo => this._pdfBuild(d => this._layoutCostReportPdf(d, c, logo), { landscape: true }))
+      .then(logo => this._pdfBuild(d => this._layoutCostReportPdf(d, c, logo), { landscape: true, title: this._docTitleOf(this.costReportPdfName()) }))
       .catch(() => null);
   }
   downloadCostReportPdf() {
@@ -18580,8 +18598,11 @@ class Component extends DCLogic {
     // in-app document preview
     const _pv = S.pdfPreview;
     const pdfPreviewV = _pv
-      ? { open: true, url: _pv.url, label: _pv.label, onClose: () => this.closePdfPreview(), onPrint: () => this.printPdfPreview(), onNewTab: () => this.openPdfPreviewTab() }
-      : { open: false, url: '', label: '' };
+      ? { open: true, url: _pv.url, label: _pv.label, title: _pv.fileName || _pv.label,
+          hasFile: !!_pv.fileName, downloadTitle: 'Save as ' + (_pv.fileName || 'the document'),
+          onClose: () => this.closePdfPreview(), onPrint: () => this.printPdfPreview(),
+          onDownload: () => this.downloadPdfPreview(), onNewTab: () => this.openPdfPreviewTab() }
+      : { open: false, url: '', label: '', title: '', hasFile: false, downloadTitle: '' };
 
     // edit an issued invoice
     let invoiceEditV = { open: false };
