@@ -4410,8 +4410,8 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
   </sc-if>
 
   <sc-if value="{{ docViewerV.open }}" hint-placeholder-val="{{ false }}">
-    <div onClick="{{ docViewerV.onClose }}" style="position:fixed;inset:0;background:rgba(15,23,32,.55);display:flex;align-items:center;justify-content:center;z-index:60;padding:24px;animation:fadeUp .15s ease">
-      <div onClick="{{ stop }}" style="background:#fff;border-radius:14px;width:1000px;max-width:96vw;height:90vh;box-shadow:0 24px 60px rgba(15,23,32,.34);overflow:hidden;display:flex;flex-direction:column">
+    <div onClick="{{ docViewerV.onClose }}" style="position:fixed;inset:0;background:rgba(15,23,32,.55);display:flex;align-items:center;justify-content:center;z-index:60;animation:fadeUp .15s ease">
+      <div onClick="{{ stop }}" style="background:#fff;width:100vw;max-width:100vw;height:100vh;overflow:hidden;display:flex;flex-direction:column">
         <div style="padding:14px 20px;border-bottom:1px solid #eef1f4;display:flex;align-items:center;flex-wrap:var(--cpms-wrap,nowrap);justify-content:space-between;gap:12px">
           <div style="display:flex;align-items:center;gap:10px;min-width:0"><span style="font-size:17px">📄</span><div style="font-size:14.5px;font-weight:600;color:#0f1720;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ docViewerV.name }}</div><sc-if value="{{ docViewerV.hasNav }}" hint-placeholder-val="{{ false }}"><span class="mono" style="font-size:11.5px;color:#8894a2;background:#eef1f5;border-radius:12px;padding:2px 9px;flex-shrink:0">{{ docViewerV.position }}</span></sc-if></div>
           <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
@@ -6381,13 +6381,19 @@ class Component extends DCLogic {
       return true;
     } catch (e) { return false; }
   }
-  // The Budget tab's Preview: the same PDF the Download button saves. Falls back to the report on screen where the
-  // browser cannot show a PDF in the page, or where the PDF cannot be built.
+  // Preview, anywhere in the app: the document itself, in the full-window viewer. onPage() is the version built as
+  // a page, used where the browser cannot show a PDF inside the page or the PDF cannot be built.
+  _previewDoc(build, label, onPage) {
+    const page = () => { try { if (onPage) onPage(); } catch (e) {} };
+    if (typeof navigator !== 'undefined' && navigator.pdfViewerEnabled === false) { page(); return; }
+    let p = null;
+    try { p = build(); } catch (e) { p = null; }
+    if (!p || typeof p.then !== 'function') { page(); return; }
+    p.then(blob => { if (!blob || !this._openPdfPreview(blob, label)) page(); }).catch(() => page());
+  }
+  // The Budget tab's Preview: the same PDF the Download button saves.
   previewCostReportPdf() {
-    if (typeof navigator !== 'undefined' && navigator.pdfViewerEnabled === false) { this.exportPdf(); return; }
-    this.costReportPdfBlob().then(blob => {
-      if (!blob || !this._openPdfPreview(blob, 'PDF')) this.exportPdf();
-    }).catch(() => this.exportPdf());
+    this._previewDoc(() => this.costReportPdfBlob(), 'PDF', () => this.exportPdf());
   }
   closePdfPreview() {
     const pv = this.state.pdfPreview;
@@ -9739,8 +9745,10 @@ class Component extends DCLogic {
     return html;
   }
   previewVariationPdf(vid) {
-    const html = this._variationDocHtml(vid);
-    if (html) this._openPrintDoc(html, 'Variation Order');
+    this._previewDoc(() => this.variationPdfBlob(vid), 'Variation Order', () => {
+      const html = this._variationDocHtml(vid);
+      if (html) this._openPrintDoc(html, 'Variation Order');
+    });
   }
   // Forecast final. A cost-to-complete typed on the line wins. Otherwise it is derived:
   // a line still has its budget to run, so the forecast is the largest of budget, committed
@@ -12333,7 +12341,8 @@ class Component extends DCLogic {
   viewAgreement(cmId) {
     const p = this.proj(this.state.pid); if (!p) return;
     const cm = (p.commitments || []).find(c => c.id === cmId); if (!cm) return;
-    this.previewAgreement(this.agreementFormFrom(cm), cm);
+    // the PDF that is sent to the sub-contractor; the page version is what the form's own Preview shows
+    this._previewDoc(() => this.agreementPdfBlob(cmId), 'Sub-contract', () => this.previewAgreement(this.agreementFormFrom(cm), cm));
   }
   previewAgreement(formOverride, cmOverride) {
     const f = formOverride || this.state.subForm; if (!f) return;
@@ -13957,8 +13966,10 @@ class Component extends DCLogic {
     return html;
   }
   previewInvoicePdf(invoiceId) {
-    const html = this._invoiceDocHtml(invoiceId);
-    if (html) this._openPrintDoc(html, 'invoice PDF');
+    this._previewDoc(() => this.invoicePdfBlob(invoiceId), 'Tax Invoice', () => {
+      const html = this._invoiceDocHtml(invoiceId);
+      if (html) this._openPrintDoc(html, 'invoice PDF');
+    });
   }
   _invoiceDocUrl(invoiceId) {
     const html = this._invoiceDocHtml(invoiceId);
@@ -15883,6 +15894,9 @@ class Component extends DCLogic {
       .then(logo => this._pdfBuild(d => this._layoutCostReportPdf(d, c, logo), { landscape: true }))
       .catch(() => null);
   }
+  previewReportPdf() {
+    this._previewDoc(() => this.reportPdfBlob(), 'Report', () => this.exportReportPdf());
+  }
   downloadReportPdf() {
     const name = this.reportPdfName();
     this.reportPdfBlob().then(blob => {
@@ -17200,7 +17214,7 @@ class Component extends DCLogic {
         colMenuOpen: !!S.reportColMenu, onToggleColMenu: () => this.toggleReportColMenu(), onCloseColMenu: () => this.closeReportColMenu(),
         onResetCols: () => this.resetReportCols(), canReorder: this.can('financial', 'edit'),
         onTitle: e => this.setReportTitle(e.target.value),
-        onExportPdf: () => this.exportReportPdf(), onExportExcel: () => this.exportReportWorkbook(),
+        onExportPdf: () => this.previewReportPdf(), onExportExcel: () => this.exportReportWorkbook(),
         onDownloadPdf: () => this.downloadReportPdf(), onSendEmail: () => this.openReportEmail(),
       };
     }
