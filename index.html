@@ -14711,16 +14711,82 @@ class Component extends DCLogic {
     } catch (e) {}
     this._prefsApplying = false;
   }
-  _prefsUser() { const s = this.state && this.state.session; return (s && s.profile && s.profile.id) || ''; }
+  // The Supabase login id - what the user_prefs row rules check with auth.uid(). It is not the profile's own id: that
+  // is a separate value, and a row saved under it is refused. Read from the signed-in token (its "sub"), else the
+  // profile's auth_id.
+  _prefsUser() {
+    const sess = this.state && this.state.session;
+    try {
+      const part = String((sess && sess.access_token) || '').split('.')[1];
+      if (part) {
+        const b64 = part.replace(/-/g, '+').replace(/_/g, '/');
+        const claims = JSON.parse(atob(b64 + '==='.slice((b64.length + 3) % 4)));
+        if (claims && claims.sub) return String(claims.sub);
+      }
+    } catch (e) {}
+    return (sess && sess.profile && sess.profile.auth_id) || '';
+  }
+  // A read or write of the layout. A login token lasts an hour: when the server refuses one, renew it once and try
+  // again rather than losing the change.
+  _prefsFetch(url, opt, extra, retried) {
+    return fetch(url, Object.assign({}, opt, { headers: this._sbUserHeaders(extra) })).then(r => {
+      if ((r.status === 401 || r.status === 403) && !retried) {
+        const sess = this.state.session;
+        if (sess && sess.refresh_token) {
+          return this._sbAuthRefresh(sess.refresh_token).then(res => {
+            if (res && res.ok && res.body && res.body.access_token) {
+              const ns = Object.assign({}, this.state.session, { access_token: res.body.access_token, refresh_token: res.body.refresh_token });
+              this._saveAuth(ns); this.setState({ session: ns });
+              return this._prefsFetch(url, opt, extra, true);
+            }
+            return r;
+          }).catch(() => r);
+        }
+      }
+      return r;
+    });
+  }
+  _prefsWarn(what, r) {
+    if (this._prefsWarned) return;
+    this._prefsWarned = true;
+    try { console.warn('[CPMS] column layout ' + what + ' refused by the server (' + (r && r.status) + ')'); } catch (e) {}
+  }
+  // The account's layout wins where it has one; what only this computer has is kept, so the first computer to connect
+  // cannot wipe the other's. Column order and hidden columns come from the account once it holds them.
+  _mergePrefs(server, local) {
+    const sv = (server && server.cols) || {}, lc = (local && local.cols) || {};
+    const obj = v => (v && typeof v === 'object' && !Array.isArray(v)) ? v : null;
+    return { cols: {
+      budgetW: Object.assign({}, obj(lc.budgetW) || {}, obj(sv.budgetW) || {}),
+      budgetOrder: Array.isArray(sv.budgetOrder) ? sv.budgetOrder : (Array.isArray(lc.budgetOrder) ? lc.budgetOrder : []),
+      budgetHidden: obj(sv.budgetHidden) || obj(lc.budgetHidden) || {},
+      tables: Object.assign({}, obj(lc.tables) || {}, obj(sv.tables) || {}),
+    } };
+  }
+  _prefsEmpty(p) {
+    const c = (p && p.cols) || {};
+    const n = o => (o && typeof o === 'object' && !Array.isArray(o)) ? Object.keys(o).length : 0;
+    return !n(c.budgetW) && !n(c.budgetHidden) && !n(c.tables) && !(Array.isArray(c.budgetOrder) && c.budgetOrder.length);
+  }
   _sbLoadPrefs() {
     const c = this._SB, uid = this._prefsUser();
     if (!c || !c.url || !c.key || !uid || typeof fetch === 'undefined') return Promise.resolve(false);
-    return fetch(c.url + '/rest/v1/user_prefs?select=data&user_id=eq.' + encodeURIComponent(uid), { headers: this._sbUserHeaders() })
-      .then(r => (r.ok ? r.json() : null))
+    return this._prefsFetch(c.url + '/rest/v1/user_prefs?select=data&user_id=eq.' + encodeURIComponent(uid), {})
+      .then(r => {
+        if (!r.ok) { this._prefsWarn('read', r); return null; }
+        return r.json();
+      })
       .then(rows => {
-        const row = Array.isArray(rows) ? rows[0] : null;
-        if (row && row.data) { this._applyPrefs(row.data); return true; }
-        this._sbSavePrefs(0);   // nothing saved yet: this machine's layout becomes the account's
+        if (!Array.isArray(rows)) return false;   // no answer: leave this computer's layout as it is
+        const local = this._prefsPayload();
+        const row = rows[0];
+        if (row && row.data) {
+          const merged = this._mergePrefs(row.data, local);
+          this._applyPrefs(merged);
+          if (JSON.stringify(merged) !== JSON.stringify(row.data)) this._sbSavePrefs(0);   // send up what only this computer had
+          return true;
+        }
+        if (!this._prefsEmpty(local)) this._sbSavePrefs(0);   // nothing saved yet: this computer's layout becomes the account's
         return false;
       })
       .catch(() => false);
@@ -14731,11 +14797,12 @@ class Component extends DCLogic {
     if (this._prefsTimer) clearTimeout(this._prefsTimer);
     this._prefsTimer = setTimeout(() => {
       try {
-        fetch(c.url + '/rest/v1/user_prefs', {
+        this._prefsFetch(c.url + '/rest/v1/user_prefs', {
           method: 'POST',
-          headers: this._sbUserHeaders({ 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates,return=minimal' }),
-          body: JSON.stringify({ user_id: uid, data: this._prefsPayload(), updated_at: new Date().toISOString() }),
-        }).catch(() => {});
+          body: JSON.stringify({ user_id: this._prefsUser() || uid, data: this._prefsPayload(), updated_at: new Date().toISOString() }),
+        }, { 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates,return=minimal' })
+          .then(r => { if (!r.ok) this._prefsWarn('save', r); })
+          .catch(() => {});
       } catch (e) {}
     }, delay == null ? 800 : delay);
   }
