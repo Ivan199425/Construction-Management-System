@@ -8697,8 +8697,10 @@ class Component extends DCLogic {
     const esc = v => String(v == null ? '' : v).replace(/[&<>"]/g, x => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[x]));
     const logo = this._letterheadLogo();
     const NAVY = '#2A3580', LINE = '#C9CDD6', MUTED = '#6E7480', BAD = '#B3261E', GOODB = '#2A6FD6';
-    const meta = c.m.meta, wSum = meta.reduce((a, x) => a + (x.w || 100), 0) || 1;
-    const th = meta.map(x => '<th style="width:' + (Math.round((x.w || 100) / wSum * 1000) / 10) + '%'
+    const meta = c.m.meta;
+    // the same widths the printed document uses
+    const pct = this._fitColPercents(meta, c.m.rows.concat([c.m.total]));
+    const th = meta.map((x, i) => '<th style="width:' + pct[i] + '%'
       + (x.align === 'right' ? ';text-align:right' : '') + '">' + esc(x.label) + '</th>').join('');
     const fmt = (v, col) => (typeof v === 'number') ? (col.signed ? this.signed(v) : this.money(v)) : esc(v);
     const body = c.m.rows.map(row => '<tr>' + row.map((v, i) => {
@@ -15526,74 +15528,94 @@ class Component extends DCLogic {
       fitCols: true,
     };
   }
+  // Column widths that fit the page: every figure and code on its line, a heading of more than one word measured as
+  // two lines, a column that wraps never narrower than its longest word, and the room left over to the columns that
+  // can wrap (Description first). Where it does not all fit, those columns give up their slack, then all are scaled.
+  // widthOf(text, size, bold) measures text; rows are the table's rows plus its total row.
+  _fitColumns(meta, rows, CW, widthOf) {
+    const WRAPS = { desc: 1, cat: 1 };
+    const headNeed = i => {
+      const words = String(meta[i].label || '').toUpperCase().split(/\s+/).filter(Boolean);
+      if (!words.length) return 8;
+      if (words.length === 1) return widthOf(words[0], 6.2, true) + 8;
+      let best = Infinity;
+      for (let k = 1; k < words.length; k++) {
+        best = Math.min(best, Math.max(widthOf(words.slice(0, k).join(' '), 6.2, true), widthOf(words.slice(k).join(' '), 6.2, true)));
+      }
+      return best + 8;
+    };
+    const cellNeed = i => {
+      let w = 0;
+      rows.forEach(r => {
+        const v = r[i];
+        const t = typeof v === 'number' ? (meta[i].signed ? this.signed(v) : this.money(v)) : String(v == null ? '' : v);
+        w = Math.max(w, widthOf(t, 7, false));
+      });
+      return w + 8;
+    };
+    const wordNeed = i => {
+      let w = 0;
+      rows.forEach(r => {
+        const v = r[i];
+        if (typeof v === 'number') return;
+        String(v == null ? '' : v).split(/\s+/).forEach(word => { if (word) w = Math.max(w, widthOf(word, 7, false)); });
+      });
+      return w + 8;
+    };
+    const head = meta.map((col, i) => headNeed(i));
+    const least = meta.map((col, i) => (WRAPS[col.id] ? Math.max(head[i], wordNeed(i)) : head[i]));
+    const need = meta.map((col, i) => WRAPS[col.id]
+      ? Math.max(least[i], Math.min(cellNeed(i), CW * 0.2))
+      : Math.max(head[i], cellNeed(i)));
+    const total = need.reduce((a, w) => a + w, 0);
+    if (total <= CW) {
+      let colW = need.slice(), slack = CW - total;
+      // first let the wrapping columns reach what their text actually needs
+      const grow = meta.map((col, i) => (WRAPS[col.id] ? Math.max(0, Math.min(cellNeed(i), CW * 0.45) - need[i]) : 0));
+      const growSum = grow.reduce((a, x) => a + x, 0);
+      if (growSum > 0 && slack > 0) {
+        const take = Math.min(slack, growSum);
+        colW = colW.map((w, i) => w + take * grow[i] / growSum);
+        slack -= take;
+      }
+      // then share what is left across every column, so the table fills the page evenly
+      if (slack > 0) { const sum = colW.reduce((a, w) => a + w, 0) || 1; colW = colW.map(w => w + slack * w / sum); }
+      return colW;
+    }
+    let over = total - CW;
+    const give = meta.map((col, i) => (WRAPS[col.id] ? Math.max(0, need[i] - least[i]) : 0));
+    const giveSum = give.reduce((a, x) => a + x, 0);
+    let colW = need.slice();
+    if (giveSum > 0) {
+      const take = Math.min(over, giveSum);
+      colW = colW.map((w, i) => w - take * give[i] / giveSum);
+      over -= take;
+    }
+    if (over > 0) { const k = CW / colW.reduce((a, w) => a + w, 0); colW = colW.map(w => w * k); }
+    return colW;
+  }
+  // The same widths as a share of the table, for the reports built as a page. Measured with the PDF's own metrics so
+  // the page and the printed document are laid out alike.
+  _fitColPercents(meta, rows) {
+    const pw = this._pdfWidths();
+    const widthOf = (t, size, bold) => {
+      const arr = bold ? pw.b : pw.n, str = this._pdfClean(String(t == null ? '' : t));
+      let w = 0;
+      for (let i = 0; i < str.length; i++) { const k = str.charCodeAt(i) - 32; w += (k >= 0 && k < arr.length) ? arr[k] : 500; }
+      return w * size / 1000;
+    };
+    const cols = this._fitColumns(meta, rows, 841.89 - 56, widthOf);   // the landscape page these pages mirror
+    const sum = cols.reduce((a, w) => a + w, 0) || 1;
+    return cols.map(w => Math.round(w / sum * 1000) / 10);
+  }
   _layoutCostReportPdf(d, c, logo) {
     const M = 28, R = d.W - M, CW = R - M;
     const NAVY = [0.165, 0.208, 0.502], MUT = [0.431, 0.455, 0.502], BORD = [0.788, 0.804, 0.839];
     const GREY = [0.957, 0.961, 0.973], WHITE = [1, 1, 1], GOOD = [0.118, 0.478, 0.294], BAD = [0.702, 0.149, 0.145];
     const meta = c.m.meta;
-    // What a heading needs: one word on one line, more than one word split over two lines as evenly as it can be.
-    const headNeed = i => {
-      const words = String(meta[i].label || '').toUpperCase().split(/\s+/).filter(Boolean);
-      if (!words.length) return 8;
-      if (words.length === 1) return d.width(words[0], 6.2, true) + 8;
-      let best = Infinity;
-      for (let k = 1; k < words.length; k++) {
-        best = Math.min(best, Math.max(d.width(words.slice(0, k).join(' '), 6.2, true), d.width(words.slice(k).join(' '), 6.2, true)));
-      }
-      return best + 8;
-    };
-    // What the column holds: figures and codes have to fit on their line; text can wrap, so it only asks for a share.
-    const cellNeed = i => {
-      let w = 0;
-      c.m.rows.concat([c.m.total]).forEach(r => {
-        const v = r[i];
-        const t = typeof v === 'number' ? (meta[i].signed ? this.signed(v) : this.money(v)) : String(v == null ? '' : v);
-        w = Math.max(w, d.width(t, 7, false));
-      });
-      return w + 8;
-    };
-    // a column that wraps still cannot break a word, so it never goes narrower than its longest one
-    const wordNeed = i => {
-      let w = 0;
-      c.m.rows.concat([c.m.total]).forEach(r => {
-        const v = r[i];
-        if (typeof v === 'number') return;
-        String(v == null ? '' : v).split(/\s+/).forEach(word => { if (word) w = Math.max(w, d.width(word, 7, false)); });
-      });
-      return w + 8;
-    };
-    const WRAPS = { desc: 1, cat: 1 };
-    let colW;
-    if (c.fitCols === false) {
-      const wSum = meta.reduce((a, x) => a + (x.w || 100), 0) || 1;
-      colW = meta.map(x => (x.w || 100) / wSum * CW);
-    } else {
-      const head = meta.map((col, i) => headNeed(i));
-      const least = meta.map((col, i) => (WRAPS[col.id] ? Math.max(head[i], wordNeed(i)) : head[i]));
-      const need = meta.map((col, i) => WRAPS[col.id]
-        ? Math.max(least[i], Math.min(cellNeed(i), CW * 0.2))
-        : Math.max(head[i], cellNeed(i)));
-      const total = need.reduce((a, w) => a + w, 0);
-      if (total <= CW) {
-        // the room left over goes to the columns that can wrap, else it is shared out
-        const flex = meta.map(col => (WRAPS[col.id] ? (col.id === 'desc' ? 2 : 1) : 0));
-        const flexSum = flex.reduce((a, x) => a + x, 0);
-        const slack = CW - total;
-        colW = need.map((w, i) => w + (flexSum ? slack * flex[i] / flexSum : slack * w / total));
-      } else {
-        // too much to fit: the wrapping columns give up their slack first, then everything is scaled
-        let over = total - CW;
-        const give = meta.map((col, i) => (WRAPS[col.id] ? Math.max(0, need[i] - least[i]) : 0));
-        const giveSum = give.reduce((a, x) => a + x, 0);
-        colW = need.slice();
-        if (giveSum > 0) {
-          const take = Math.min(over, giveSum);
-          colW = colW.map((w, i) => w - take * give[i] / giveSum);
-          over -= take;
-        }
-        if (over > 0) { const k = CW / colW.reduce((a, w) => a + w, 0); colW = colW.map(w => w * k); }
-      }
-    }
+    const colW = c.fitCols === false
+      ? (() => { const wSum = meta.reduce((a, x) => a + (x.w || 100), 0) || 1; return meta.map(x => (x.w || 100) / wSum * CW); })()
+      : this._fitColumns(meta, c.m.rows.concat([c.m.total]), CW, (t, size, bold) => d.width(t, size, bold));
     let y = M, pageNo = 0;
 
     const footer = () => {
@@ -15840,7 +15862,7 @@ class Component extends DCLogic {
     }, { current: 0, com: 0, act: 0, eac: 0, varc: 0 });
     return {
       m: { meta, rows, total }, T,
-      showKpi: false, cats: null, notes: null, fitCols: false,   // this template carries neither, and sets its own widths
+      showKpi: false, cats: null, notes: null, fitCols: true,   // this template carries neither summary nor commentary
       // resolved exactly as the Report Design header resolves it, so the two agree
       docTitle: this._reportDocTitle(p),
       freqLabel: { weekly: 'Weekly', fortnightly: 'Fortnightly', monthly: 'Monthly' }[rm.freq] || '',
@@ -16092,9 +16114,9 @@ class Component extends DCLogic {
       + '<div style="font-size:15pt;font-weight:700;' + (colour ? 'color:' + colour + ';' : '') + 'font-variant-numeric:tabular-nums">' + value + '</div>'
       + (note ? '<div style="font-size:7.5pt;color:' + MUTED + '">' + note + '</div>' : '') + '</div>';
 
-    // Column widths follow whatever you dragged them to on the Budget tab, as a share of the page.
-    const wSum = meta.reduce((a, c) => a + (c.w || 100), 0) || 1;
-    const th = meta.map(c => '<th style="width:' + (Math.round((c.w || 100) / wSum * 1000) / 10) + '%'
+    // Column widths as the printed report works them out, not as they are dragged on the Budget tab.
+    const pct = this._fitColPercents(meta, rows.concat([total]));
+    const th = meta.map((c, i) => '<th style="width:' + pct[i] + '%'
       + (c.align === 'right' ? ';text-align:right' : '') + '">' + esc(c.label) + '</th>').join('');
     const cellFmt = (v, c) => (typeof v === 'number') ? (c.signed ? this.signed(v) : this.money(v)) : esc(v);
     const body = rows.map(r => '<tr>' + r.map((v, i) => {
