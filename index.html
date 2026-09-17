@@ -6140,11 +6140,18 @@ class Component extends DCLogic {
   billPaidRecords(b) { return (b && b.payments) || []; }
   billPaid(b) {
     const recs = this.billPaidRecords(b);
-    if (!recs.length) return this._r2(this._num(b && b.paid));
+    // never more than the total (an amount lowered after paying), never less than nothing (a credit note is not a
+    // negative payment until one is recorded)
+    if (!recs.length) return this._r2(Math.max(0, Math.min(b ? Math.max(0, this.billTotal(b)) : 0, this._num(b && b.paid))));
     return this._r2(Math.min(this.billTotal(b), recs.reduce((a, r) => a + this._num(r.amount), 0)));
   }
   billOutstanding(b) { return this._r2(Math.max(0, this.billTotal(b) - this.billPaid(b))); }
-  billStatusFor(b) { const t = this.billTotal(b), pd = this.billPaid(b); return pd <= 0 ? "unpaid" : (pd + 0.005 >= t ? "paid" : "partial"); }
+  billStatusFor(b) {
+    const t = this.billTotal(b), pd = this.billPaid(b);
+    // a negative total (an early-payment discount, a credit) is paid once its negative payment is recorded
+    if (t < -0.005) return (this.billPaidRecords(b).length && pd <= t + 0.005) ? "paid" : "unpaid";
+    return pd <= 0 ? "unpaid" : (pd + 0.005 >= t ? "paid" : "partial");
+  }
   commitmentBilled(cmId, p) { const proj = p || this.proj(this.state.pid) || {}; return this._r2((proj.bills || []).filter(b => b.commitmentId === cmId).reduce((s, b) => s + this.billTotal(b), 0)); }
   canIssue() { return this.state.role === 'PM' || this.state.role === 'Admin'; }
   // ===== Authentication & RBAC (Phase 1) =====
@@ -8579,7 +8586,7 @@ class Component extends DCLogic {
     (p.bills || []).forEach(b => {
       if (b.fromClaim || b.claimId) return;                 // the claim carries this money
       const n = dnum(b.billDate); if (n == null) return;
-      const paid = this._num(b.paid); if (paid > 0) paidEvents.push({ n, v: paid });
+      const paid = this.billPaid(b); if (paid > 0) paidEvents.push({ n, v: paid });
       const tot = this.billTotal(b); if (tot > 0) commitEvents.push({ n, v: tot });
     });
     (p.claims || []).forEach(c => {
@@ -11360,7 +11367,7 @@ class Component extends DCLogic {
         const prior = {}; mine.forEach(b => { prior[b.id] = b; });
         const merged = this._apBillsFor(inv).map(b => {
           const old = prior[b.id];
-          return old ? Object.assign({}, b, { paid: old.paid, payments: old.payments || [], status: old.status }) : b;
+          return old ? Object.assign({}, b, { paid: old.paid, payments: old.payments || [], status: old.status, paidAt: old.paidAt || '' }) : b;
         });
         if (mine.length === merged.length && merged.every(b => same(prior[b.id], b))) return p;
         touched = true;
@@ -14215,7 +14222,7 @@ class Component extends DCLogic {
   setBillField(id, field, raw) {
     this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, bills: (p.bills || []).map(x => x.id === id ? { ...x, [field]: raw } : x) }) }));
   }
-  billStatusFromPaid(bill) { const tot = this.billTotal(bill); const paid = this._num(bill.paid); if (paid <= 0) return 'unpaid'; if (paid + 0.005 >= tot) return 'paid'; return 'partial'; }
+  billStatusFromPaid(bill) { return this.billStatusFor(bill); }
   setBillPaid(id, val) {
     this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, bills: (p.bills || []).map(x => {
       if (x.id !== id) return x;
@@ -14261,7 +14268,7 @@ class Component extends DCLogic {
       } });
       return;
     }
-    const outstanding = Math.max(0, this.billTotal(b) - this._num(b.paid));
+    const outstanding = this.billOutstanding(b);
     const claim = (p.claims || []).find(c => c.id === b.claimId);
     this.setState({ paymentModal: { billId }, paymentForm: {
       claimId: b.claimId || '', paymentNo: this.nextSeqRef((p.bills || []).reduce((a, x) => a.concat(x.payments || []), []), 'no', 'PAY-', 4),
@@ -14677,7 +14684,9 @@ class Component extends DCLogic {
 
   lineActualPaid(l, p) {
     const proj = p || this.proj(this.state.pid) || {};
-    const fromBills = this.lineBills(l, proj).reduce((s, b) => s + this._num(b.paid), 0);
+    // what each bill's payment records say, as the Commitments table shows it - not the stored number, which goes
+    // stale when an amount or GST is changed after paying
+    const fromBills = this.lineBills(l, proj).reduce((s, b) => s + this.billPaid(b), 0);
     const fromClaims = this._lineClaimsUnbilled(l, proj).filter(c => c.status === 'paid').reduce((s, c) => s + this.claimTotal(c), 0);
     return fromBills + fromClaims;
   }
@@ -17088,7 +17097,7 @@ class Component extends DCLogic {
       const today = new Date().toISOString().slice(0, 10);
       const paid = bills.reduce((s, x) => s + this.billPaid(x), 0);
       const outstanding = bills.reduce((s, x) => s + this.billOutstanding(x), 0);
-      const overdueBills = bills.filter(x => x.status !== 'paid' && x.dueDate && x.dueDate < today);
+      const overdueBills = bills.filter(x => this.billStatusFor(x) !== 'paid' && x.dueDate && x.dueDate < today);
       const overdue = overdueBills.reduce((s, x) => s + this.billTotal(x), 0);
       const uncoded = bills.filter(x => !x.code).length;
       kpis = [
@@ -17262,14 +17271,14 @@ class Component extends DCLogic {
       const billSort = S.billSort === 'oldest' ? 'oldest' : 'newest';
       const billStatus = ['paid', 'partial', 'unpaid'].indexOf(S.billStatus) >= 0 ? S.billStatus : 'all';
       let billsSrc = (p.bills || []).slice();
-      if (billStatus !== 'all') billsSrc = billsSrc.filter(b => (b.status || 'unpaid') === billStatus);
+      if (billStatus !== 'all') billsSrc = billsSrc.filter(b => this.billStatusFor(b) === billStatus);
       billsSrc.sort((a, b) => { const da = a.billDate || '', db = b.billDate || ''; return billSort === 'newest' ? (db < da ? -1 : db > da ? 1 : 0) : (da < db ? -1 : da > db ? 1 : 0); });
       // A certified claim auto-posts a bill into the ledger. Listing both would show the
       // same money twice, so the claim is kept - it carries the number you issued - and
       // the bill it generated is hidden.
       billsSrc = billsSrc.filter(b => !(b.fromClaim || b.claimId));
       const billItems = billsSrc.map(b => {
-        const vn = this.vendorName(b.vendorId) || b.vendorId || 'Vendor'; const st = b.status || 'unpaid';
+        const vn = this.vendorName(b.vendorId) || b.vendorId || 'Vendor'; const st = this.billStatusFor(b);
         const sm = st === 'paid' ? { c: '#15803d', bg: '#e6f4ea', l: 'Paid' } : st === 'partial' ? { c: '#b45309', bg: '#fbf1e3', l: 'Partial' } : { c: '#6b7787', bg: '#eef1f5', l: 'Unpaid' };
         return { id: b.id, kind: 'Commitment', kindColor: '#2b59c3', kindBg: '#e7eefc', icon: '📄', title: b.billNo, sub: vn + (b.desc ? ' · ' + b.desc : ''), meta: b.billDate ? this.fmtDate(b.billDate) : '—', amount: this.money(this.billTotal(b)), statusLabel: sm.l, statusColor: sm.c, statusBg: sm.bg , hasFile: !!b.invoiceUrl, fileName: b.invoice || '', onViewFile: () => this.viewBillInvoice(b.id), sortKey: b.billDate || '' };
       });
@@ -19092,7 +19101,10 @@ class Component extends DCLogic {
       const bill = (p.bills || []).find(b => b.id === S.paymentModal.billId);
       if (bill) {
         const ven = (S.vendors || []).find(v => v.id === bill.vendorId);
-        const tot = this.billTotal(bill), already = this._num(bill.paid);
+        // editing a payment: already paid is the others, so outstanding is what this one can be
+        const tot = this.billTotal(bill), already = S.paymentModal.payId
+          ? this._r2(Math.min(tot, this.billPaidRecords(bill).filter(r => r.id !== S.paymentModal.payId).reduce((a, r) => a + this._num(r.amount), 0)))
+          : this.billPaid(bill);
         const atts = (f.attachments || []).map(a => ({ id: a.id, name: a.name, uploading: !!a.uploading, ready: !a.uploading,
           statusText: a.uploading ? 'uploading…' : 'attached', onRemove: () => this.removePaymentAttachment(a.id) }));
         paymentModalV = {
