@@ -2053,7 +2053,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                   </sc-if>
                   <input value="{{ r.progDisp }}" onInput="{{ r.onProg }}" placeholder="{{ r.progPlaceholder }}" title="{{ r.progSource }}" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 8px;font-size:12.5px;text-align:right;font-family:'IBM Plex Mono',monospace;color:#0f1720;background:#fff;{{ r.bc.prog }}" style-focus="border-color:#2b59c3;outline:none">
                   <div class="mono" style="text-align:right;font-size:12.5px;font-weight:600;color:{{ r.cpiColor }};{{ r.bc.cpi }}">{{ r.cpi }}</div>
-                  <input value="{{ r.ftcDisp }}" onInput="{{ r.onFtc }}" onFocus="{{ r.onFtcFocus }}" onBlur="{{ r.onCellBlur }}" placeholder="{{ r.ftcPlaceholder }}" title="Cost still to spend. Blank uses the calculated estimate to complete; type a figure to override the forecast on this line." style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 8px;font-size:12.5px;text-align:right;font-family:'IBM Plex Mono',monospace;color:#0f1720;background:#fff;{{ r.bc.ftc }}" style-focus="border-color:#2b59c3;outline:none">
+                  <div class="mono" title="Cost still to spend: Est. at completion less Actual. Worked out from the forecast - it cannot be typed." style="text-align:right;font-weight:500;font-size:12.5px;color:#0f1720;{{ r.bc.ftc }}">{{ r.ftcDisp }}</div>
                   <div class="mono" style="text-align:right;font-weight:500;font-size:12.5px;color:#0f1720;{{ r.bc.eac }}">{{ r.eac }}</div>
                   <div class="mono" style="text-align:right;font-weight:600;font-size:12.5px;color:{{ r.varColor }};{{ r.bc.variance }}">{{ r.variance }}</div>
                   <div class="mono" style="text-align:right;font-size:12.5px;color:#0f1720;{{ r.bc.pct }}">{{ r.pct }}</div>
@@ -9978,9 +9978,8 @@ class Component extends DCLogic {
       if (html) this._openPrintDoc(html, 'Variation Order');
     }, this.variationPdfName(vid));
   }
-  // Forecast final. A cost-to-complete typed on the line wins. Otherwise it is derived:
-  // a line still has its budget to run, so the forecast is the largest of budget, committed
-  // and actual — never $0 just because nobody has typed a cost-to-complete yet.
+  // Forecast final: BAC / CPI, never below committed. With no progress or no spend to forecast from
+  // a line still has its budget to run, so the forecast is the largest of budget, committed and actual.
   // Duration-weighted percent complete across the programme; the fallback for any cost
   // line that has no progress of its own recorded.
   projectProgressPct(p) {
@@ -10041,15 +10040,14 @@ class Component extends DCLogic {
     const actual = this.lineActual(l, proj);
     const committed = this.lineCommitted(l, proj);
     const bac = this.lineCurrent(l, proj);
-    const ftc = this._num(l.ftc);
     // A forecast below money already committed is not a forecast, whichever branch we take.
     const floor = v => Math.max(v, committed);
-    // 1. an entered forecast-to-complete is a deliberate judgement and wins
-    if (ftc > 0) return floor(actual + ftc);
-    // 2. EAC = BAC / CPI - carry on at the spending efficiency achieved so far
+    // 1. EAC = BAC / CPI - carry on at the spending efficiency achieved so far. BAC is the revised budget. Nothing
+    //    typed overrides it: FTC is worked out from this, never the other way round (Ivan, 2026-09-22). An FTC typed
+    //    before then is still stored on the line and is simply not read.
     const cpi = this.lineCPI(l, proj);
     if (cpi != null && isFinite(cpi) && cpi > 0) return floor(bac / cpi);
-    // 3. nothing spent or no progress recorded: hold the budget
+    // 2. nothing spent or no progress recorded: hold the budget
     return Math.max(bac, committed, actual);
   }
   // Share of the CURRENT BUDGET that has been spent (it used to divide by the forecast, which
@@ -10061,10 +10059,8 @@ class Component extends DCLogic {
     return Math.round(this.lineActual(l, proj) / budget * 100);
   }
   lineVariance(l, p) { const proj = p || this.proj(this.state.pid) || {}; return this.lineCurrent(l, proj) - this.lineForecast(l, proj); }
-  // Cost still to spend on a line: what the forecast carries beyond what has been spent. It is the typed FTC wherever
-  // the forecast uses the typed FTC, and the grey figure in the FTC cell where nothing is typed - so anything that adds
-  // FTC up gets Actual + FTC = Est. at completion. Adding up only the TYPED figures, as the totals and the export used
-  // to, counted every grey figure as nothing.
+  // FTC - cost still to spend on a line: Est. at completion less Actual (Ivan's ETC = EAC - AC). It is worked out,
+  // never typed, so anything that adds FTC up gets Actual + FTC = Est. at completion.
   lineFtc(l, p) { const proj = p || this.proj(this.state.pid) || {}; return Math.max(0, this.lineForecast(l, proj) - this.lineActual(l, proj)); }
   niceStep(range) { if (!(range > 0)) return 1; const exp = Math.floor(Math.log10(range)); const base = Math.pow(10, exp); const frac = range / base; let nice; if (frac <= 1) nice = 1; else if (frac <= 2) nice = 2; else if (frac <= 2.5) nice = 2.5; else if (frac <= 5) nice = 5; else nice = 10; return nice * base; }
   setCostPeriod(v) { this.setState({ costPeriod: v }); }
@@ -16139,8 +16135,8 @@ class Component extends DCLogic {
       mg(rr, 1, N - 1);
       heights[rr] = 30;
     });
-    const foot = (c.pricing ? 'All figures in AUD, exclusive of GST, except GST and the grand total under Pricing. ' : 'All figures in AUD, exclusive of GST. ') + 'Est. at completion = budget at completion / CPI (CPI = earned value / actual cost), or actual + FTC where a forecast to complete is entered, '
-      + 'otherwise the budget is held until there is progress and spend to forecast from. Never below committed. Variance = budgeted + approved change \u2212 est. at completion; '
+    const foot = (c.pricing ? 'All figures in AUD, exclusive of GST, except GST and the grand total under Pricing. ' : 'All figures in AUD, exclusive of GST. ') + 'Est. at completion = budget at completion / CPI (CPI = earned value / actual cost), '
+      + 'otherwise the budget (or the spend, if more) is held until there is progress and spend to forecast from. Never below committed. FTC = est. at completion \u2212 actual. Variance = budgeted + approved change \u2212 est. at completion; '
       + 'a negative variance is an overrun. % spent = actual \u00f7 current budget.';
     const footRow = banner(foot, S.note);
 
@@ -16400,8 +16396,8 @@ class Component extends DCLogic {
     if (!c.cats || !c.cats.length) { footer(); return; }
     const leftW = CW * 0.53, rightX = M + leftW + 14, rightW = CW - leftW - 14;
     const noteLabelW = rightW * 0.28, noteBodyW = rightW - noteLabelW;
-    const foot = (c.pricing ? 'All figures in AUD, exclusive of GST, except GST and the grand total under Pricing. ' : 'All figures in AUD, exclusive of GST. ') + 'Est. at completion = budget at completion / CPI (CPI = earned value / actual cost), or actual + FTC where a forecast to complete is entered, '
-      + 'otherwise the budget is held until there is progress and spend to forecast from. Never below committed. Variance = budgeted + approved change - est. at completion; '
+    const foot = (c.pricing ? 'All figures in AUD, exclusive of GST, except GST and the grand total under Pricing. ' : 'All figures in AUD, exclusive of GST. ') + 'Est. at completion = budget at completion / CPI (CPI = earned value / actual cost), '
+      + 'otherwise the budget (or the spend, if more) is held until there is progress and spend to forecast from. Never below committed. FTC = est. at completion - actual. Variance = budgeted + approved change - est. at completion; '
       + 'a negative variance is an overrun. % spent = actual / current budget.';
     // the category table (and pricing) on the left, the commentary on the right: start a page if either would cross
     // the footer line
@@ -16731,7 +16727,7 @@ class Component extends DCLogic {
     const vars = this._varEvery(p).filter(v => v.status === 'approved');
     const varTotal = vars.reduce((a, v) => a + this._num(v.value), 0);
     const ftcNote = T.ftc > 0
-      ? ('Forecast to complete of ' + money(T.ftc) + ' is carried against the remaining scope; estimate at completion is actual plus FTC where it is entered.')
+      ? ('Forecast to complete of ' + money(T.ftc) + ' is carried against the remaining scope; estimate at completion is actual plus FTC.')
       : 'Forecast to complete (FTC) is nil against all codes; estimate at completion is held at the approved budget pending subcontractor award of the remaining trades.';
     const comNote = ordered.length
       ? ('Committed value of ' + money(T.com) + ' covers ' + ordered.slice(0, 3).map(l => (l.desc || l.code) + ' (' + l.code + ')').join(', ')
@@ -16877,7 +16873,7 @@ class Component extends DCLogic {
       + '<h2 style="font-size:10pt;font-weight:700;color:' + NAVY + ';text-transform:uppercase;letter-spacing:.08em;margin-bottom:7px">Commentary &amp; basis of report</h2>'
       + '<table class="sm"><tbody>' + notes + '</tbody></table>'
       + '<p style="font-size:7.5pt;color:' + MUTED + ';margin:8px 0 0;line-height:1.6">' + (pricing ? 'All figures in AUD, exclusive of GST, except GST and the grand total under Pricing. ' : 'All figures in AUD, exclusive of GST. ')
-      + 'Est. at completion = budget at completion / CPI (CPI = earned value / actual cost), or actual + FTC where a forecast to complete is entered, otherwise the budget is held until there is progress and spend to forecast from. Never below committed. '
+      + 'Est. at completion = budget at completion / CPI (CPI = earned value / actual cost), otherwise the budget (or the spend, if more) is held until there is progress and spend to forecast from. Never below committed. FTC = est. at completion &minus; actual. '
       + 'Variance = budgeted + approved change &minus; est. at completion; a negative variance is an overrun. % spent = actual &divide; current budget.</p>'
       + '</div></div>'
 
@@ -18603,11 +18599,9 @@ class Component extends DCLogic {
         const varRefs = vlistAll.filter(v => v.status === 'approved' && v.costCode === l.code).map(v => v.ref).join(', ');
         return { id: l.id, code: l.code, desc: l.desc, cat: l.cat, orig: l.orig, adj: l.adj, committed: l.committed, actual: l.actual, ftc: l.ftc,
           origDisp: md(l.id, 'orig', l.orig), committedDisp: md(l.id, 'committed', l.committed), actualDisp: md(l.id, 'actual', l.actual),
-          // blank rather than $0.00 when nothing is entered, so the placeholder can show
-          // what the forecast is actually using for cost to complete
-          ftcDisp: (ec === l.id + ':ftc') ? String(l.ftc == null ? '' : l.ftc) : (this._num(l.ftc) > 0 ? this.money(this._num(l.ftc)) : ''),
-          ftcPlaceholder: this.money(this.lineFtc(l, p)),
-          onOrigFocus: () => this.startEdit(l.id + ':orig'), onCommittedFocus: () => this.startEdit(l.id + ':committed'), onActualFocus: () => this.startEdit(l.id + ':actual'), onFtcFocus: () => this.startEdit(l.id + ':ftc'), onCellBlur: () => this.endEdit(),
+          // FTC is calculated only: Est. at completion less Actual
+          ftcDisp: this.money(this.lineFtc(l, p)),
+          onOrigFocus: () => this.startEdit(l.id + ':orig'), onCommittedFocus: () => this.startEdit(l.id + ':committed'), onActualFocus: () => this.startEdit(l.id + ':actual'), onCellBlur: () => this.endEdit(),
           revised: this.money(this.lineCurrent(l, p)), varAdj: this.signed(varAdjRaw), hasVarAdj: varAdjRaw !== 0, noVarAdj: varAdjRaw === 0, varRefs,
           commitmentOptions, linkedId: l.commitmentId || '', linked, invoiced, manual: !invoiced,
           actualPaid: this.money(this.lineActual(l, p)), actualSource: this.lineActualSource(l, p),
@@ -18631,7 +18625,6 @@ class Component extends DCLogic {
           onAdj: e => this.setLineField(l.id, 'adj', e.target.value),
           onCommitted: e => this.onMoneyInput(l.id, 'committed', e),
           onActual: e => this.onMoneyInput(l.id, 'actual', e),
-          onFtc: e => this.onMoneyInput(l.id, 'ftc', e),
           progDisp: (l.prog === '' || l.prog == null) ? '' : String(l.prog),
           progPlaceholder: (() => { const v = this.lineProgress(l, p); return v == null ? '0' : String(Math.round(v)); })(),
           progLinked: this.lineProgressLinked(l, p),
@@ -18720,7 +18713,7 @@ class Component extends DCLogic {
       }
       const remaining = timeElapsedPct != null ? (100 - timeElapsedPct) : null;
       const actions = overBudget ? [
-        (worst && worst.v < 0) ? ('Re-baseline the forecast-to-complete on ' + worst.code + ' (' + worst.desc + ') and the other over-forecast codes' + (remaining != null ? ' — there is ~' + remaining + '% of the programme left to recover it' : '') + '.') : 'Re-baseline the forecast-to-complete on the over-forecast cost codes — challenge quantities, rates and remaining scope.',
+        (worst && worst.v < 0) ? ('Check % complete on ' + worst.code + ' (' + worst.desc + ') and the other over-forecast codes: the forecast is budget / CPI, so progress that lags the work done reads as an overrun' + (remaining != null ? ' — there is ~' + remaining + '% of the programme left to recover it' : '') + '.') : 'Check % complete on the over-forecast cost codes, then challenge quantities, rates and remaining scope.',
         'Raise client variations for any out-of-scope work driving the overrun — an approved variation lifts the budget and recovers cost (Financial → Variations).',
         'Freeze or re-scope non-critical commitments (POs / subcontracts) before more cost is locked in; require sign-off on any new commitment.',
         'Value-engineer the remaining scope — material substitutions, resequencing, and eliminating rework / defects.',
