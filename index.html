@@ -12302,8 +12302,8 @@ class Component extends DCLogic {
   // The tab strip on the Financial screen and the menu at the top of the app are two ways to
   // the same seven screens, so they read their names from one place.
   _commitTabDefs() { return [
-    { key: 'budget', label: 'Budget' }, { key: 'agreements', label: 'Sub-contracts' },
-    { key: 'apreg', label: 'Supplier Invoices' }, { key: 'bills', label: 'Commitments' },
+    { key: 'budget', label: 'Budget' }, { key: 'bills', label: 'Commitments' },
+    { key: 'agreements', label: 'Sub-contracts' }, { key: 'apreg', label: 'Supplier Invoices' },
     { key: 'costvars', label: 'Variations' },
     // the client register keeps the key it has always had, so links in variation emails already sent still open it
     { key: 'variations', label: 'Client Variations', group: 'Client', headStart: true },
