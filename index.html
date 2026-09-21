@@ -2136,7 +2136,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
         <!-- ============ VARIATIONS (own tab, between Progress claims & Invoices) ============ -->
         <sc-if value="{{ showVariations }}" hint-placeholder-val="{{ true }}">
           <div style="display:flex;align-items:center;flex-wrap:var(--cpms-wrap,nowrap);justify-content:space-between;margin:2px 0 10px;gap:12px;flex-wrap:wrap">
-            <div><div style="font-size:15px;font-weight:600;color:#0f1720">Variations</div><div style="font-size:12.5px;color:#8894a2;margin-top:2px">Raise a variation, send it to the client for approval, and link it to the budget.</div></div>
+            <div><div style="font-size:15px;font-weight:600;color:#0f1720">{{ varScreenV.title }}</div><div style="font-size:12.5px;color:#8894a2;margin-top:2px">{{ varScreenV.hint }}</div></div>
             <div style="display:flex;align-items:center;gap:14px">
               <div style="font-size:12px;color:#8894a2">Approved &amp; applied: <strong style="color:#15803d">{{ budgetVarApproved }}</strong></div>
               <button onClick="{{ onAddVariation }}" style="border:1px solid #2b59c3;background:#2b59c3;color:#fff;border-radius:8px;padding:8px 14px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="background:#244dab">＋ Variation</button>
@@ -2195,10 +2195,10 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                 </sc-for>
               </div></div>
             </div>
-            <div style="font-size:12px;color:#8894a2;line-height:1.5;margin-top:10px">Create a variation, link it to a cost code, then <strong style="color:#6b7787">✉ send it to the client for approval</strong> (with a PDF and supporting documents). On <strong style="color:#6b7787">approval</strong> (Summary → Head contract) its value flows into that line's approved change and the budget updates automatically.</div>
+            <div style="font-size:12px;color:#8894a2;line-height:1.5;margin-top:10px">{{ varScreenV.foot }}</div>
           </sc-if>
           <sc-if value="{{ budgetVarEmpty }}" hint-placeholder-val="{{ false }}">
-            <div style="background:#fff;border:1px dashed #d7dde5;border-radius:12px;padding:26px 24px;text-align:center;color:#8894a2;font-size:13px">No variations yet. Click <strong style="color:#6b7787">＋ Variation</strong> to raise one and send it to the client for approval.</div>
+            <div style="background:#fff;border:1px dashed #d7dde5;border-radius:12px;padding:26px 24px;text-align:center;color:#8894a2;font-size:13px">{{ varScreenV.empty }}</div>
           </sc-if>
         </sc-if>
 
@@ -6308,6 +6308,8 @@ class Component extends DCLogic {
       tabs.forEach(t => { const v = q.get(t[0]); if (!recId && v) { recId = v; tab = t[1]; } });
       if (!pid || !tab) return;
       const proj = (this.state.projects || []).find(p => p.id === pid); if (!proj) return;
+      // a variation link carries only the record id, so the register it is on decides the screen
+      if (tab === 'variations' && (proj.costVariations || []).some(v => v.id === recId)) tab = 'costvars';
       if (tab === 'eot') this.setState({ view: 'project', pid, module: 'eot', highlightId: recId });
       else if (tab === 'documents') this.setState({ view: 'project', pid, module: 'documents', highlightId: recId });
       else if (tab === 'claims') {
@@ -7660,12 +7662,39 @@ class Component extends DCLogic {
     if (lab > 0) parts.push(this.money(lab) + ' of hours recorded on Labour hours');
     return parts.length ? parts.join(', plus ') + '.' : 'Nothing recorded against this cost code yet.';
   }
-  lineVarAdj(l, p) { const proj = p || this.proj(this.state.pid) || {}; const vars = (proj.contract && proj.contract.variations) || []; return vars.reduce((s, v) => s + ((v.status === 'approved' && v.costCode && v.costCode === l.code) ? this._num(v.value) : 0), 0); }
+  // Two registers: contract.variations are the client's - the head contract, the contract sum and the tax invoice
+  // count those - and costVariations are the ones raised on the Financial screen. Ids are unique, so everything that
+  // changes a variation finds it by id rather than being told which list to look in.
+  _varLists(p) { return [((p && p.contract && p.contract.variations) || []), ((p && p.costVariations) || [])]; }
+  _varEvery(p) { const l = this._varLists(p); return l[0].concat(l[1]); }
+  _findVariation(p, vid) { return this._varEvery(p).find(v => v.id === vid) || null; }
+  _varIsCost(p, vid) { return ((p && p.costVariations) || []).some(v => v.id === vid); }
+  // The project with one variation changed, in whichever register it sits in.
+  _varPatch(p, vid, fn) {
+    if (this._varIsCost(p, vid)) return { ...p, costVariations: (p.costVariations || []).map(v => v.id === vid ? fn(v) : v) };
+    return { ...p, contract: { ...p.contract, variations: ((p.contract && p.contract.variations) || []).map(v => v.id === vid ? fn(v) : v) } };
+  }
+  _varRemove(p, vid) {
+    if (this._varIsCost(p, vid)) return { ...p, costVariations: (p.costVariations || []).filter(v => v.id !== vid) };
+    return { ...p, contract: { ...p.contract, variations: ((p.contract && p.contract.variations) || []).filter(v => v.id !== vid) } };
+  }
+  lineVarAdj(l, p) { const proj = p || this.proj(this.state.pid) || {}; const vars = this._varEvery(proj); return vars.reduce((s, v) => s + ((v.status === 'approved' && v.costCode && v.costCode === l.code) ? this._num(v.value) : 0), 0); }
   lineCurrent(l, p) { return (Number(l.orig) || 0) + (Number(l.adj) || 0) + this.lineVarAdj(l, p); }
-  setVariationCostCode(vid, code) { if (!this.can('variations', 'edit')) return; this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, contract: { ...p.contract, variations: p.contract.variations.map(v => v.id === vid ? { ...v, costCode: code } : v) } }) })); }
-  setVariationField(vid, field, val) { if (!this.can('variations', 'edit')) return; this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, contract: { ...p.contract, variations: p.contract.variations.map(v => v.id === vid ? { ...v, [field]: val } : v) } }) })); }
-  addVariation() { if (!this.can('variations', 'edit')) return; const p = this.proj(this.state.pid); if (!p) return; const ref = this.nextSeqRef((p.contract && p.contract.variations) || [], 'ref', 'VO-', 3); const v = { id: this._rid('vo'), ref, subject: '', desc: '', value: 0, time: 0, timeDelay: 'no', status: 'draft', costCode: '', attachments: [], sentForApprovalAt: '' }; this.setState(s => ({ projects: s.projects.map(x => x.id !== s.pid ? x : { ...x, contract: { ...x.contract, variations: [...x.contract.variations, v] } }) })); }
-  deleteVariation(vid) { if (!this._delGate('variation', this._delTarget('variation', vid), () => this.deleteVariation(vid), 'If it was approved and linked to a cost code, it comes out of the revised budget.')) return; this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, contract: { ...p.contract, variations: p.contract.variations.filter(v => v.id !== vid) } }) })); }
+  setVariationCostCode(vid, code) { if (!this.can('variations', 'edit')) return; this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : this._varPatch(p, vid, v => ({ ...v, costCode: code }))) })); }
+  setVariationField(vid, field, val) { if (!this.can('variations', 'edit')) return; this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : this._varPatch(p, vid, v => ({ ...v, [field]: val }))) })); }
+  // 'cost' for the Financial register (VAR-001), anything else for the client's (VO-001).
+  addVariation(reg) {
+    if (!this.can('variations', 'edit')) return;
+    const p = this.proj(this.state.pid); if (!p) return;
+    const cost = reg === 'cost';
+    const list = cost ? (p.costVariations || []) : ((p.contract && p.contract.variations) || []);
+    const ref = this.nextSeqRef(list, 'ref', cost ? 'VAR-' : 'VO-', 3);
+    const v = { id: this._rid(cost ? 'cvo' : 'vo'), ref, subject: '', desc: '', value: 0, time: 0, timeDelay: 'no', status: 'draft', costCode: '', attachments: [], sentForApprovalAt: '' };
+    this.setState(s => ({ projects: s.projects.map(x => x.id !== s.pid ? x : (cost
+      ? { ...x, costVariations: [...(x.costVariations || []), v] }
+      : { ...x, contract: { ...x.contract, variations: [...x.contract.variations, v] } })) }));
+  }
+  deleteVariation(vid) { if (!this._delGate('variation', this._delTarget('variation', vid), () => this.deleteVariation(vid), 'If it was approved and linked to a cost code, it comes out of the revised budget.')) return; this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : this._varRemove(p, vid)) })); }
   eotCauseList() { return ['Variation / change order', 'Inclement weather', 'Latent site condition', 'Client instruction / delay', 'Access / possession delay', 'Suspension of works', 'Industrial action', 'Utility / authority delay', 'Other']; }
   docCategories() {
     return [
@@ -8990,9 +9019,9 @@ class Component extends DCLogic {
       '</body></html>';
     this._openPrintDoc(html, 'EOT PDF');
   }
-  clientRespondVariation(vid, decision) { if (!this.can('variations', 'approve')) return; const u = this.currentUser(); const pj = this.proj(this.state.pid); const vv = pj && pj.contract && (pj.contract.variations || []).find(x => x.id === vid); if (u && u.role === 'Superintendent' && decision === 'approved' && vv && this._num(vv.value) !== 0) return; const status = decision === 'approved' ? 'approved' : decision === 'rejected' ? 'rejected' : 'info'; const label = decision === 'approved' ? 'Client approved' : decision === 'rejected' ? 'Client rejected' : 'Client requested more information'; const note = label + ' on ' + this.fmtDate(this.todayLocal()); this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, contract: { ...p.contract, variations: p.contract.variations.map(v => v.id !== vid ? v : { ...v, status, clientResponse: note }) } }) })); }
-  addVariationAttachment(vid, e) { if (!this.can('variations', 'edit')) return; const files = Array.from((e.target && e.target.files) || []); if (!files.length) return; files.forEach(file => { this._sbUploadFile(file, 'variations').then(url => { if (!url) return; const att = { id: 'att' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), name: file.name || 'file', type: file.type || '', size: file.size || 0, url }; this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, contract: { ...p.contract, variations: p.contract.variations.map(v => v.id === vid ? { ...v, attachments: [...(v.attachments || []), att] } : v) } }) })); }); }); if (e.target) e.target.value = ''; }
-  removeVariationAttachment(vid, aid) { if (!this.can('variations', 'edit')) return; if (!this._delGate('variation document', this._delTarget('variation document', vid, aid), () => this.removeVariationAttachment(vid, aid))) return; this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, contract: { ...p.contract, variations: p.contract.variations.map(v => v.id === vid ? { ...v, attachments: (v.attachments || []).filter(a => a.id !== aid) } : v) } }) })); }
+  clientRespondVariation(vid, decision) { if (!this.can('variations', 'approve')) return; const u = this.currentUser(); const pj = this.proj(this.state.pid); const vv = this._findVariation(pj, vid); if (u && u.role === 'Superintendent' && decision === 'approved' && vv && this._num(vv.value) !== 0) return; const status = decision === 'approved' ? 'approved' : decision === 'rejected' ? 'rejected' : 'info'; const label = decision === 'approved' ? 'Client approved' : decision === 'rejected' ? 'Client rejected' : 'Client requested more information'; const note = label + ' on ' + this.fmtDate(this.todayLocal()); this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : this._varPatch(p, vid, v => ({ ...v, status, clientResponse: note }))) })); }
+  addVariationAttachment(vid, e) { if (!this.can('variations', 'edit')) return; const files = Array.from((e.target && e.target.files) || []); if (!files.length) return; files.forEach(file => { this._sbUploadFile(file, 'variations').then(url => { if (!url) return; const att = { id: 'att' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), name: file.name || 'file', type: file.type || '', size: file.size || 0, url }; this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : this._varPatch(p, vid, v => ({ ...v, attachments: [...(v.attachments || []), att] }))) })); }); }); if (e.target) e.target.value = ''; }
+  removeVariationAttachment(vid, aid) { if (!this.can('variations', 'edit')) return; if (!this._delGate('variation document', this._delTarget('variation document', vid, aid), () => this.removeVariationAttachment(vid, aid))) return; this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : this._varPatch(p, vid, v => ({ ...v, attachments: (v.attachments || []).filter(a => a.id !== aid) }))) })); }
   // Net, GST and total for a variation, on the project's GST rate - the same basis the Variation
   // Order PDF uses, so the screen and the document the client receives cannot disagree.
   variationMoney(v, p) {
@@ -9015,7 +9044,7 @@ class Component extends DCLogic {
     const yes = yn === 'yes';
     // No clears the days too: the Variation Order prints them as time impact, and a delay answered
     // No must not still show one there.
-    this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, contract: { ...p.contract, variations: p.contract.variations.map(v => v.id !== vid ? v : Object.assign({}, v, { timeDelay: yes ? 'yes' : 'no' }, yes ? {} : { time: 0 })) } }) }));
+    this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : this._varPatch(p, vid, v => Object.assign({}, v, { timeDelay: yes ? 'yes' : 'no' }, yes ? {} : { time: 0 }))) }));
   }
   variationStatusChoice(v) { const st = (v && v.status) || ''; return st === 'approved' ? 'approved' : (st === 'rejected' ? 'rejected' : 'pending'); }
   // Pending, approved or rejected. The last two go through the client-response path, so the note,
@@ -9024,12 +9053,11 @@ class Component extends DCLogic {
     if (choice === 'approved' || choice === 'rejected') { this.clientRespondVariation(vid, choice); return; }
     if (!this.can('variations', 'approve')) return;
     const when = this.fmtDate(this.todayLocal());
-    this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, contract: { ...p.contract, variations: p.contract.variations.map(v => {
-      if (v.id !== vid) return v;
+    this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : this._varPatch(p, vid, v => {
       if (v.status !== 'approved' && v.status !== 'rejected') return v;
       // Back to where it stood before the decision: submitted if it went to the client, draft if not.
       return Object.assign({}, v, { status: v.sentForApprovalAt ? 'submitted' : 'draft', clientResponse: 'Decision withdrawn on ' + when });
-    }) } }) }));
+    })) }));
   }
   openVariationDetail(vid) { this.setState({ varDetail: { vid: vid, editing: false } }); }
   closeVariationDetail() { this.setState({ varDetail: null }); }
@@ -9037,7 +9065,7 @@ class Component extends DCLogic {
   // variation review & send for approval
   openVariationSend(vid) {
     const p = this.proj(this.state.pid); if (!p) return;
-    const v = (p.contract.variations || []).find(x => x.id === vid); if (!v) return;
+    const v = this._findVariation(p, vid); if (!v) return;
     const seen = {}; const recips = [];
     (p.customers || []).forEach(c => { if (c.email && !seen[c.email]) { seen[c.email] = 1; recips.push(c.email); } });
     (p.clientReps || []).forEach(c => { if (c.email && !seen[c.email]) { seen[c.email] = 1; recips.push(c.email); } });
@@ -9086,8 +9114,8 @@ class Component extends DCLogic {
   setVarMessage(v) { this.setState(s => s.variationSend ? { variationSend: { ...s.variationSend, message: v } } : {}); }
   setVarFrom(v) { this.setState(s => s.variationSend ? { variationSend: { ...s.variationSend, from: v } } : {}); }
   setVarSubject(v) { this.setState(s => s.variationSend ? { variationSend: { ...s.variationSend, subject: v } } : {}); }
-  confirmSendVariation() { const st = this.state; const sc = st.variationSend; if (!sc) return; const recips = sc.recipients || []; if (!recips.length) return; const p = this.proj(st.pid); const v = (p.contract.variations || []).find(x => x.id === sc.vid); if (!v) { this.setState({ variationSend: null }); return; } const today = this.todayLocal(); const msg = (sc.message || '').trim() ? ' — “' + sc.message.trim() + '”' : ''; const note = 'Variation ' + v.ref + ' sent for approval to ' + recips.length + ' recipient(s): ' + recips.join(', ') + ' on ' + this.fmtDate(today) + msg;
-    this._emailVariationWithPdf(sc.vid, recips, sc.subject || '', sc.message || '', this._mailAttachments(v.attachments)); this.setState(s => ({ projects: s.projects.map(x => x.id !== s.pid ? x : { ...x, senderEmail: sc.from || x.senderEmail, contract: { ...x.contract, variations: x.contract.variations.map(vv => vv.id !== sc.vid ? vv : { ...vv, doc: Object.assign({}, vv.doc || {}, sc.edit || {}), desc: (sc.edit && sc.edit.desc != null) ? sc.edit.desc : vv.desc, status: vv.status === 'draft' ? 'submitted' : vv.status, sentForApprovalAt: note }) } }), variationSend: null })); }
+  confirmSendVariation() { const st = this.state; const sc = st.variationSend; if (!sc) return; const recips = sc.recipients || []; if (!recips.length) return; const p = this.proj(st.pid); const v = this._findVariation(p, sc.vid); if (!v) { this.setState({ variationSend: null }); return; } const today = this.todayLocal(); const msg = (sc.message || '').trim() ? ' — “' + sc.message.trim() + '”' : ''; const note = 'Variation ' + v.ref + ' sent for approval to ' + recips.length + ' recipient(s): ' + recips.join(', ') + ' on ' + this.fmtDate(today) + msg;
+    this._emailVariationWithPdf(sc.vid, recips, sc.subject || '', sc.message || '', this._mailAttachments(v.attachments)); this.setState(s => ({ projects: s.projects.map(x => x.id !== s.pid ? x : Object.assign(this._varPatch(x, sc.vid, vv => ({ ...vv, doc: Object.assign({}, vv.doc || {}, sc.edit || {}), desc: (sc.edit && sc.edit.desc != null) ? sc.edit.desc : vv.desc, status: vv.status === 'draft' ? 'submitted' : vv.status, sentForApprovalAt: note })), { senderEmail: sc.from || x.senderEmail })), variationSend: null })); }
   // The Variation Order's editable fields. Defaults come from the project, then anything
   // saved on the variation, then whatever is being typed in the send dialog right now.
   _variationDoc(p, v) {
@@ -9485,7 +9513,7 @@ class Component extends DCLogic {
   // ---- Variation Order as a real PDF (same writer as the invoice) --------------
   _variationPdfContext(vid) {
     const p = this.proj(this.state.pid); if (!p) return null;
-    const v = ((p.contract || {}).variations || []).find(x => x.id === vid); if (!v) return null;
+    const v = this._findVariation(p, vid); if (!v) return null;
     const co = this.state.company || {};
     const cust = (p.customers && p.customers[0]) || null;
     const line = (p.costLines || []).find(l => l.code === v.costCode);
@@ -9696,7 +9724,7 @@ class Component extends DCLogic {
   }
   variationPdfName(vid) {
     const p = this.proj(this.state.pid);
-    const v = p ? (((p.contract || {}).variations) || []).find(x => x.id === vid) : null;
+    const v = p ? this._findVariation(p, vid) : null;
     return this._fileName('Variation', (v && v.ref) || '', 'pdf', p || false);
   }
   downloadVariationPdf(vid) {
@@ -9750,7 +9778,7 @@ class Component extends DCLogic {
   // price breakdown, effect on the contract sum and programme, then execution.
   _variationDocHtml(vid) {
     const p = this.proj(this.state.pid); if (!p) return '';
-    const v = ((p.contract || {}).variations || []).find(x => x.id === vid); if (!v) return '';
+    const v = this._findVariation(p, vid); if (!v) return '';
     const esc = x => String(x == null ? '' : x).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
     const blank = '<span style="color:#9AA0AC">____________________</span>';
     const val2 = x => (x != null && String(x).trim()) ? esc(x) : blank;
@@ -12238,6 +12266,7 @@ class Component extends DCLogic {
   // ---------- actions ----------
   openProject(id) { this.setState({ view: 'project', pid: id, module: 'dashboard', anim: this.state.anim + 1, navOpen: false, projPick: false, secPick: false }); }
   // ----- Create a new project -----
+  // costVariations: the Financial register. Older projects have no such list, so every reader writes (p.costVariations || []).
   _blankProject(f) {
     const name = (f.name || '').trim();
     const id = 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
@@ -12250,6 +12279,7 @@ class Component extends DCLogic {
       schedule: { fileName: '', fileType: '', fileUrl: '', uploadedAt: '', version: 0, versions: [], activities: [] },
       clientReps: [], team: [],
       contract: { client, type: 'lump_sum', original: 0, retentionPct: 5, paymentTermsDays: this._termDays(), start: '', end: '', status: 'draft', variations: [] },
+      costVariations: [],
       commitments: [], costLines: [], costTrend: [], claims: [], bills: [], defects: [], invoices: [], photos: [], markups: {},
     };
   }
@@ -12274,7 +12304,9 @@ class Component extends DCLogic {
   _commitTabDefs() { return [
     { key: 'budget', label: 'Budget' }, { key: 'agreements', label: 'Sub-contracts' },
     { key: 'apreg', label: 'Supplier Invoices' }, { key: 'bills', label: 'Commitments' },
-    { key: 'variations', label: 'Variations' },
+    { key: 'costvars', label: 'Variations' },
+    // the client register keeps the key it has always had, so links in variation emails already sent still open it
+    { key: 'variations', label: 'Client Variations', group: 'Client', headStart: true },
     { key: 'invoices', label: 'Client Invoices', group: 'Client' },
   ]; }
   // From the menu, a Financial screen is a place you go to, not a tab you switch: the project
@@ -13073,7 +13105,7 @@ class Component extends DCLogic {
     add((p.bills || []).length, 'commitment');
     add((p.claims || []).length, 'progress claim');
     add((p.invoices || []).length, 'invoice');
-    add(((p.contract || {}).variations || []).length, 'variation');
+    add(this._varEvery(p).length, 'variation');
     add((p.docs || []).length, 'document');
     add((p.eots || []).length, 'EOT');
     add((p.defects || []).length, 'defect');
@@ -13130,7 +13162,7 @@ class Component extends DCLogic {
       const rec = o => ({ label: nm(o), blank: this._delBlank(o) });
       const kept = o => ({ label: nm(o), blank: false });
       const file = o => ({ label: (o && (o.name || o.fileName)) || '', blank: false });
-      const vars = (p.contract || {}).variations;
+      const vars = this._varEvery(p);
       switch (kind) {
         case 'sub-contract': { const cm = byId(p.commitments, a); return { label: cm ? [cm.ref, cm.vendor].filter(Boolean).join(' \u2014 ') : '', blank: false }; }
         case 'bill': return rec(byId(p.bills, a));
@@ -16603,7 +16635,7 @@ class Component extends DCLogic {
     const over = lines.filter(l => this.lineVariance(l, p) < 0)
       .sort((a, b) => this.lineVariance(a, p) - this.lineVariance(b, p));
     const ordered = lines.filter(l => this.lineCommitted(l, p) > this.lineActual(l, p));
-    const vars = ((p.contract && p.contract.variations) || []).filter(v => v.status === 'approved');
+    const vars = this._varEvery(p).filter(v => v.status === 'approved');
     const varTotal = vars.reduce((a, v) => a + this._num(v.value), 0);
     const ftcNote = T.ftc > 0
       ? ('Forecast to complete of ' + money(T.ftc) + ' is carried against the remaining scope; estimate at completion is actual plus FTC where it is entered.')
@@ -16765,7 +16797,7 @@ class Component extends DCLogic {
   decideContractVar(vid, status) {
     if (!this.can('variations', 'approve')) return;
     const u = this.currentUser(); const pj = this.proj(this.state.pid);
-    const vv = pj && pj.contract && (pj.contract.variations || []).find(x => x.id === vid);
+    const vv = this._findVariation(pj, vid);
     if (u && u.role === 'Superintendent' && status === 'approved' && vv && this._num(vv.value) !== 0) return; // Superintendent can't approve value-changing variations
     this.setState(s => {
       const projects = s.projects.map(p => p.id !== s.pid ? p : { ...p, contract: { ...p.contract, variations: p.contract.variations.map(v => v.id === vid ? { ...v, status } : v) } });
@@ -16940,7 +16972,11 @@ class Component extends DCLogic {
     const showBills = moduleCommitments && S.commitTab === 'bills';
     const showCost = moduleCommitments && S.commitTab === 'budget';
     const showInvoices = moduleCommitments && S.commitTab === 'invoices';
-    const showVariations = moduleCommitments && S.commitTab === 'variations';
+    const showClientVars = moduleCommitments && _commitTab === 'variations';   // the client's, as it always was
+    const showCostVars = moduleCommitments && _commitTab === 'costvars';
+    // one table serves both: only one of them is ever open
+    const showVariations = showClientVars || showCostVars;
+    const varReg = showCostVars ? 'cost' : 'client';
     const showDefects = inProject && S.module === 'defects';
     const showLabour = inProject && S.module === 'labour';
     const showContacts = inProject && S.module === 'contacts';
@@ -16975,7 +17011,8 @@ class Component extends DCLogic {
       if (showBills) { crumb2 = 'Financial'; }
       if (showCost) { pageTitle = 'Financial'; pageSub = 'Budget — budget vs committed vs actual vs forecast — ' + p.name; crumb2 = 'Financial'; }
       if (showInvoices) { pageTitle = 'Financial'; pageSub = 'Client Invoices — customer billing & receivables — ' + p.name; crumb2 = 'Financial'; }
-      if (showVariations) { pageTitle = 'Financial'; pageSub = 'Variations — change orders sent to the client for approval — ' + p.name; crumb2 = 'Financial'; }
+      if (showClientVars) { pageTitle = 'Financial'; pageSub = 'Client Variations — change orders sent to the client for approval — ' + p.name; crumb2 = 'Client'; }
+      if (showCostVars) { pageTitle = 'Financial'; pageSub = 'Variations — change orders on the cost side — ' + p.name; crumb2 = 'Financial'; }
       if (showDefects) { pageTitle = 'Defects'; pageSub = 'Defect register & rectification tracking — ' + p.name; crumb2 = 'Defects'; if (this.can('punchList', 'edit')) primaryAction = { show: true, label: '＋ Raise defect', onClick: () => this.addDefect() }; }
       if (showBills) { pageTitle = 'Financial'; pageSub = 'Commitments — planned spend per cost code — ' + p.name; if (this.can('bills', 'edit')) primaryAction = { show: true, label: '＋ Add commitment', onClick: () => this.addBill() }; }
       if (showApReg) { pageTitle = 'Financial'; pageSub = 'Supplier Invoices — every supplier invoice allocated to ' + p.name; crumb2 = 'Financial'; }
@@ -17127,7 +17164,7 @@ class Component extends DCLogic {
       .map(m => _secLink(m.label, inProject && S.module === m.key, m.onClick, m.badgeShow ? 'SOON' : ''));
     const _finOn = !!p && this.moduleVisible('commitments');
     const _finLinks = _finOn ? this._commitTabDefs().map(t =>
-      Object.assign(_secLink(t.label, inProject && S.module === 'commitments' && S.commitTab === t.key, () => this.goCommitTab(t.key)), { head: t.group || '', headShow: !!t.group })) : [];
+      Object.assign(_secLink(t.label, inProject && S.module === 'commitments' && S.commitTab === t.key, () => this.goCommitTab(t.key)), { head: t.group || '', headShow: !!t.headStart })) : [];
 
     // The button wears the name of the screen you are looking at, so the bar always answers
     // "where am I" without being asked.
@@ -17919,7 +17956,7 @@ class Component extends DCLogic {
     // variation review & send-for-approval modal
     let variationSendV = { open: false };
     if (S.variationSend) {
-      const vsel = (p.contract && p.contract.variations || []).find(x => x.id === S.variationSend.vid);
+      const vsel = this._findVariation(p, S.variationSend.vid);
       if (vsel) {
         const _voMw = Math.min(1080, (typeof window !== 'undefined' ? window.innerWidth : 1200) * 0.96);
         const _voSc = Math.round(Math.max(0.26, Math.min(0.62, (Math.max(240, _voMw * (1.35 / 2.35) - 46)) / 1010)) * 1000) / 1000;
@@ -17978,7 +18015,7 @@ class Component extends DCLogic {
     // variation details - the whole variation in one place, documents included
     let varDetailV = { open: false };
     if (S.varDetail && p && p.contract) {
-      const vd = (p.contract.variations || []).find(x => x.id === S.varDetail.vid);
+      const vd = this._findVariation(p, S.varDetail.vid);
       if (vd) {
         const vsm = this.statusMeta(vd.status);
         const vmo = this.variationMoney(vd, p);
@@ -18411,7 +18448,7 @@ class Component extends DCLogic {
     }
 
     // cost (flat, inline-editable)
-    let costLineRows = [], costTotals = {}, chart = { has: false }, costInsight = { show: false }, budgetVarRows = [], varSearchV = { has: false }, budgetVarApproved = '', budgetVarHas = false, budgetVarEmpty = false, markupSummary = { show: false }, budgetColTemplate = '', budgetMinWidth = '1420px', budgetHeaderCols = [], budgetTotalCols = [], colMenuItems = [], budgetCatOptions = [], budgetCatValue = '', budgetFiltered = false, budgetRowCount = 0, budgetTotalLineCount = 0;
+    let costLineRows = [], costTotals = {}, chart = { has: false }, costInsight = { show: false }, budgetVarRows = [], varScreenV = { title: 'Variations', hint: '', empty: '', foot: '' }, varSearchV = { has: false }, budgetVarApproved = '', budgetVarHas = false, budgetVarEmpty = false, markupSummary = { show: false }, budgetColTemplate = '', budgetMinWidth = '1420px', budgetHeaderCols = [], budgetTotalCols = [], colMenuItems = [], budgetCatOptions = [], budgetCatValue = '', budgetFiltered = false, budgetRowCount = 0, budgetTotalLineCount = 0;
     if (showCost) {
       const commitmentOptions = p.commitments.map(cm => ({ id: cm.id, label: cm.ref + ' — ' + cm.vendor }));
       const codeCatalog = this.costCodeOptions();
@@ -18419,7 +18456,7 @@ class Component extends DCLogic {
       const _pcMap = new Map(this.costCodeCatalog().map(c => [c.code, c.parentCode || '']));
       const _parentOf = l => { const c = String((l && l.code) == null ? '' : l.code).trim(); if (c) { const pc = _pcMap.get(c); if (pc) return pc; const i = c.indexOf('-'); return i > 0 ? c.slice(0, i) : ''; } return String((l && l.parentCode) == null ? '' : l.parentCode).trim(); };
       const _parentOptions = this.parentCodeOptions();
-      const vlistAll = (p.contract && p.contract.variations) || [];
+      const vlistAll = this._varEvery(p);   // the same set the approved-change figure is summed from
       const ec = S.editCell || '';
       const md = (id, field, raw) => (ec === id + ':' + field) ? String(raw == null ? '' : raw) : this.money(Number(raw) || 0);
       // column layout (order + show/hide): explicit grid placement per body cell so DOM order is irrelevant
@@ -18666,10 +18703,11 @@ class Component extends DCLogic {
     // variations (own tab, between Progress claims and Invoices)
     if (showVariations) {
       const codeOpts = p.costLines.map(l => ({ code: l.code, label: l.code + ' — ' + l.desc }));
-      let vlist2 = (p.contract && p.contract.variations) || [];
-      const _varAll = vlist2.length; const _vq2 = this._q('variations');
+      const _vKey = showCostVars ? 'costvars' : 'variations';   // each screen keeps its own search box
+      let vlist2 = showCostVars ? ((p.costVariations) || []) : ((p.contract && p.contract.variations) || []);
+      const _varAll = vlist2.length; const _vq2 = this._q(_vKey);
       if (_vq2) vlist2 = vlist2.filter(v => [v.ref, v.subject, v.desc, v.status, v.costCode].join(' ').toLowerCase().indexOf(_vq2) >= 0);
-      varSearchV = { value: S.search.variations || '', has: !!_vq2, shown: vlist2.length, total: _varAll, onInput: e => this.setSearch('variations', e.target.value) };
+      varSearchV = { value: S.search[_vKey] || '', has: !!_vq2, shown: vlist2.length, total: _varAll, onInput: e => this.setSearch(_vKey, e.target.value) };
       const _vCanStatus = this.can('variations', 'approve');
       budgetVarRows = vlist2.map(v => {
         const sm = this.statusMeta(v.status); const approved = v.status === 'approved'; const linkedCode = v.costCode || '';
@@ -18712,6 +18750,13 @@ class Component extends DCLogic {
       });
       budgetVarApproved = this.signed(vlist2.filter(v => v.status === 'approved').reduce((s, v) => s + this._num(v.value), 0));
       budgetVarHas = vlist2.length > 0; budgetVarEmpty = vlist2.length === 0;
+      varScreenV = showCostVars
+        ? { title: 'Variations', hint: 'Raise a variation on the cost side, send it for approval, and link it to the budget.',
+            empty: 'No variations yet. Click ＋ Variation to raise one.',
+            foot: 'Create a variation, link it to a cost code, then ✉ send it for approval (with a PDF and supporting documents). On approval it is added to that cost code as approved change. Client change orders belong under Client — Client Variations.' }
+        : { title: 'Client Variations', hint: 'Raise a variation, send it to the client for approval, and link it to the budget.',
+            empty: 'No client variations yet. Click ＋ Variation to raise one and send it to the client for approval.',
+            foot: 'Create a variation, link it to a cost code, then ✉ send it to the client for approval (with a PDF and supporting documents). On approval it is added to the contract sum and to that cost code as approved change.' };
     }
 
     // vendor directory
@@ -20335,7 +20380,7 @@ class Component extends DCLogic {
       pageTitle, pageSub, crumb1, crumb2, pageStatus, primaryAction, kpis, hasKpis: kpis.length > 0,
       statusFilters, portfolioRows, totals, dashModules,
       contractFields, contractVarRows, contractCalc, hasContractFile, contractFileName, onViewContract: () => this.viewProjectContract(), projectsSaveV, globalSaveV, newVersionV,
-      commitmentRows, commitSearchV, looseClaimsV, costLineRows, costTotals, chart, costInsight, markupSummary, budgetColTemplate, budgetMinWidth, budgetHeaderCols, budgetTotalCols, colMenuItems, budgetColMenu: S.budgetColMenu, onToggleColMenu: () => this.toggleBudgetColMenu(), onCloseColMenu: () => this.closeBudgetColMenu(), onResetBudgetCols: () => this.resetBudgetCols(), budgetCatOptions, budgetCatValue, budgetFiltered, budgetRowCount, budgetTotalLineCount, onBudgetCatFilter: e => this.setBudgetCatFilter(e.target.value), budgetHasLines: (p && (p.costLines || []).length > 0), onGenSchedule: () => this.generateScheduleFromBudget(), budgetVarRows, varSearchV, budgetVarApproved, budgetVarHas, budgetVarEmpty, onAddVariation: () => this.addVariation(), onAddCostLine: () => this.addCostLine(),
+      commitmentRows, commitSearchV, looseClaimsV, costLineRows, costTotals, chart, costInsight, markupSummary, budgetColTemplate, budgetMinWidth, budgetHeaderCols, budgetTotalCols, colMenuItems, budgetColMenu: S.budgetColMenu, onToggleColMenu: () => this.toggleBudgetColMenu(), onCloseColMenu: () => this.closeBudgetColMenu(), onResetBudgetCols: () => this.resetBudgetCols(), budgetCatOptions, budgetCatValue, budgetFiltered, budgetRowCount, budgetTotalLineCount, onBudgetCatFilter: e => this.setBudgetCatFilter(e.target.value), budgetHasLines: (p && (p.costLines || []).length > 0), onGenSchedule: () => this.generateScheduleFromBudget(), budgetVarRows, varSearchV, varScreenV, budgetVarApproved, budgetVarHas, budgetVarEmpty, onAddVariation: () => this.addVariation(varReg), onAddCostLine: () => this.addCostLine(),
       onExportCsv: () => this.exportCostReportExcel(), onExportPdf: () => this.previewCostReportPdf(),
       onDownloadPdf: () => this.downloadCostReportPdf(), onExportCsvRaw: () => this.exportCsv(),
       codeModal: S.codeModal ? {
