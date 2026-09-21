@@ -6586,21 +6586,64 @@ class Component extends DCLogic {
   // The document as the server last confirmed it. Everything that differs from this is ours, and
   // is the only part we are entitled to re-apply over somebody else's newer copy.
   _setBaseline(key, doc, rev) {
+    // An older stamp than the one already held is a straggler - a held answer applied late, a slow reply that
+    // overtook a save. Winding the stamp back would make the next write look conditional on a version that has
+    // been overtaken, and the merge would read a record somebody just saved as one this window had deleted.
+    if (rev && this._revStale(key, rev)) return;
     this._baseline()[key] = doc;
     if (rev) this._revs()[key] = rev;
+    // whatever was held for this key is older than what we now hold, so it has nothing left to add
+    if (this._held && this._held[key] && !this._revNewer(key, this._held[key].rev)) delete this._held[key];
+  }
+  // Stamps are ISO times. Unreadable ones are treated as "not older", so a server that changes format cannot
+  // freeze a window.
+  _revStale(key, rev) {
+    const now = Date.parse(this._revs()[key] || ''), next = Date.parse(rev || '');
+    return !!(now && next && next < now);
+  }
+  _revNewer(key, rev) {
+    const now = Date.parse(this._revs()[key] || ''), next = Date.parse(rev || '');
+    if (!next) return false;
+    return !now || next > now;
   }
 
-  _sbRowMeta(key) {
+  _sbRowMeta(key, again) {
     const c = this._SB;
     if (!c || !c.url || typeof fetch === 'undefined') return Promise.resolve(null);
     return fetch(c.url + '/rest/v1/app_catalog?select=updated_at&key=eq.' + encodeURIComponent(key), { headers: this._sbUserHeaders() })
-      .then(r => (r.ok ? r.json() : null))
-      .then(rows => ((rows && rows[0]) ? rows[0].updated_at : null))
+      .then(r => {
+        // An hour in, the sign-in runs out. Read as "nothing has changed", a window goes quiet for good and stops
+        // seeing anyone else's work - so renew it the way the rest of the app does, and ask once more. Once: a
+        // refresh token that is itself dead must not have every key asking every twelve seconds.
+        if ((r.status === 401 || r.status === 403) && !again) {
+          const sess = this.state.session;
+          if (!sess || !sess.refresh_token || this._authRenewing) return { __done: null };
+          this._authRenewing = true;
+          return this._sbAuthRefresh(sess.refresh_token).then(res => {
+            this._authRenewing = false;
+            if (!(res && res.ok && res.body && res.body.access_token)) return { __done: null };
+            const next = Object.assign({}, this.state.session, { access_token: res.body.access_token, refresh_token: res.body.refresh_token || sess.refresh_token });
+            this._saveAuth(next);
+            this.setState({ session: next });
+            return this._sbRowMeta(key, true).then(v => ({ __done: v }));
+          }, () => { this._authRenewing = false; return { __done: null }; });
+        }
+        return r.ok ? r.json() : null;
+      })
+      .then(rows => {
+        if (rows && rows.__done !== undefined) return rows.__done;
+        return ((rows && rows[0]) ? rows[0].updated_at : null);
+      })
       .catch(() => null);
   }
-  _sbLoadCatalogFull(key) {
+  // { ok, row }. ok false means the server did not answer - denied, offline, error - which is not the same as
+  // "there is no row there". A caller that takes the one for the other writes a whole row over whatever is really
+  // on the server, which is how one window replaces another window's work. The answer travels with its own
+  // request rather than sitting in a shared slot, so two reads at once cannot answer for each other.
+  _sbLoadCatalogFull(key) { return this._sbLoadCatalogRow(key).then(got => got.row); }
+  _sbLoadCatalogRow(key) {
     const c = this._SB;
-    if (!c || !c.url || typeof fetch === 'undefined') return Promise.resolve(null);
+    if (!c || !c.url || typeof fetch === 'undefined') return Promise.resolve({ ok: false, row: null });
     return fetch(c.url + '/rest/v1/app_catalog?select=data,updated_at&key=eq.' + encodeURIComponent(key), { headers: this._sbUserHeaders() })
       .then(r => {
         // 401/403 is the database saying it does not know who this is — a sign-in that has
@@ -6608,10 +6651,11 @@ class Component extends DCLogic {
         // their wifi for an hour.
         if (r.status === 401 || r.status === 403) this._authDenied = true;
         else if (r.ok) this._authDenied = false;
-        return r.ok ? r.json() : null;
+        if (!r.ok) return { ok: false, rows: null };
+        return r.json().then(rows => ({ ok: true, rows: rows }));
       })
-      .then(rows => ((rows && rows[0]) ? rows[0] : null))
-      .catch(() => null);
+      .then(got => ({ ok: got.ok, row: ((got.rows && got.rows[0]) ? got.rows[0] : null) }))
+      .catch(() => ({ ok: false, row: null }));
   }
 
   _sameJson(a, b) { try { return JSON.stringify(a) === JSON.stringify(b); } catch (e) { return a === b; } }
@@ -6769,8 +6813,11 @@ class Component extends DCLogic {
         if (rows && rows.length) return settle(data, rows[0].updated_at || stamp);
         // Matched nothing: the row moved on. Reconcile against what is there now and write that.
         if ((depth || 0) >= 5) return false;   // a row being rewritten faster than we can answer
-        return this._sbLoadCatalogFull(key).then(row => {
-          if (!row) return insert(data);
+        return this._sbLoadCatalogRow(key).then(got => {
+          const row = got.row;
+          // The row moved on and we cannot read it: keep the work pending for the sweep rather than writing a
+          // whole row over whatever is really there.
+          if (!row) return got.ok ? insert(data) : false;
           const merged = this._mergeCatalog(key, row.data, data);
           if (merged == null) {
             this._setBaseline(key, row.data, row.updated_at);
@@ -6778,12 +6825,12 @@ class Component extends DCLogic {
             this._noteMerge(key);
             return true;
           }
-          this._revs()[key] = row.updated_at;
-          this._baseline()[key] = row.data;
-          return this._sbSaveCatalog(key, merged, (depth || 0) + 1).then(ok => {
-            if (ok) { this._adoptCatalog(key, merged); this._noteMerge(key); }
-            return ok;
-          });
+          this._setBaseline(key, row.data, row.updated_at);
+          // merged holds both sides, so showing it now can only add their work to this screen. Waiting for the
+          // write to come back first is how a window ends up holding - and later saving - a copy without it.
+          this._adoptCatalog(key, merged);
+          this._noteMerge(key);
+          return this._sbSaveCatalog(key, merged, (depth || 0) + 1);
         });
       }, () => false);
     }).catch(() => false);
@@ -7108,34 +7155,75 @@ class Component extends DCLogic {
       // Coming back to the tab is the moment somebody most wants to be up to date.
       document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') this._pollShared(); });
       window.addEventListener('focus', () => this._pollShared());
+      document.addEventListener('keydown', () => { this._typedAt = Date.now(); }, true);
+      // leaving a field is the moment to show what came in while it was open
+      document.addEventListener('focusout', () => { setTimeout(() => this._applyHeld(), 0); }, true);
     } catch (e) {}
+  }
+  // Somebody is mid-sentence: a field is open AND a key went down in the last few seconds. Nothing else counts -
+  // a dropdown picked ten minutes ago and a cell clicked on the way past used to stop a window hearing from the
+  // team for as long as they were left, which is exactly how a commitment somebody else added stayed invisible.
+  _typingNow() {
+    try {
+      const el = document.activeElement;
+      if (!el || !/^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName || '')) return false;
+      return (Date.now() - (this._typedAt || 0)) < 3000;
+    } catch (e) { return false; }
+  }
+  // What came in while they were typing, put up once they stop. It is read against what is on screen by then, so a
+  // word typed in the meantime is kept, and an answer this window has since moved past is dropped: a save that met
+  // another window has already brought both sides together, and applying the old copy over it would undo that.
+  _applyHeld() {
+    const held = this._held;
+    if (!held) return;
+    if (this._typingNow()) return;
+    this._held = null;
+    Object.keys(held).forEach(key => {
+      const row = held[key];
+      if (!this._revNewer(key, row.rev)) return;
+      const mine = this._currentDoc(key);
+      const merged = this._mergeCatalog(key, row.data, mine);
+      const next = (merged == null) ? row.data : merged;
+      this._setBaseline(key, row.data, row.rev);
+      this._adoptCatalog(key, next);
+      this._noteIncoming(key);
+      if (merged != null && !this._sameJson(merged, row.data)) this._flushChannel(key);
+    });
   }
   _pollShared() {
     if (typeof document !== 'undefined' && document.visibilityState === 'hidden') return;
     if (!this.currentUser()) return;
-    // Never pull the ground out from under someone mid-sentence. The check comes round again
-    // in a few seconds, by which time the field will usually have been left.
-    try {
-      const el = document.activeElement;
-      if (el && /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName || '')) return;
-    } catch (e) {}
+    this._applyHeld();
     this._sharedKeys().forEach(key => {
       const ready = key === 'projects' ? this._projLoaded : this._catIsLoaded(key);
       const known = this._revs()[key];
       if (!ready || !known) return;
-      if (this._polling && this._polling[key]) return;
+      // stamped, so a request that never answers cannot latch the check off for the life of the window
       this._polling = this._polling || {};
-      this._polling[key] = true;
-      const done = () => { this._polling[key] = false; };
+      if (this._polling[key] && (Date.now() - this._polling[key]) < 60000) return;
+      const turn = Date.now();
+      this._polling[key] = turn;
+      const mineStill = () => this._polling[key] === turn;
+      const done = () => { if (mineStill()) this._polling[key] = 0; };
       this._sbRowMeta(key).then(now => {
         if (!now || now === known) { done(); return; }
         return this._sbLoadCatalogFull(key).then(row => {
           if (!row) { done(); return; }
+          // a reply that arrives after its turn was given up belongs to nobody: another request has the slot
+          if (!mineStill()) return;
+          // Somebody is mid-sentence: hold what came back, and put it up when they stop. The baseline waits with
+          // it - recording the server's copy now would make their new record read as one this window deleted.
+          if (this._typingNow()) {
+            this._held = this._held || {};
+            this._held[key] = { data: row.data, rev: row.updated_at };
+            done();
+            return;
+          }
           const mine = this._currentDoc(key);
           const merged = this._mergeCatalog(key, row.data, mine);
           const next = (merged == null) ? row.data : merged;
           // The baseline is what the SERVER has, so a write that follows is still a proper
-          // conditional update rather than a blind overwrite.
+          // conditional update rather than a blind overwrite. It is recorded after the merge, which reads it.
           this._setBaseline(key, row.data, row.updated_at);
           this._adoptCatalog(key, next);
           this._noteIncoming(key);
