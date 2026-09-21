@@ -2352,7 +2352,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                 <div style="display:grid;grid-template-columns:112px 1.1fr 1.1fr 1.1fr 1fr 104px 104px .85fr 58px .85fr 100px 156px 96px 40px;padding:8px 16px;border-bottom:1px solid #eef1f4;align-items:start;gap:9px" style-hover="background:#f9fafc">
                   <div>
                     <input value="{{ r.billNo }}" onInput="{{ r.onBillNo }}" placeholder="BILL-0000" class="mono" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 8px;font-size:12px;font-family:'IBM Plex Mono',monospace;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none">
-                    <sc-if value="{{ r.fromClaim }}" hint-placeholder-val="{{ false }}"><span title="Auto-posted from a certified progress claim" style="display:inline-block;margin-top:3px;font-size:8.5px;font-weight:700;letter-spacing:.3px;color:#15803d;background:#e6f4ea;border-radius:4px;padding:1px 5px">↩ FROM CLAIM</span></sc-if><sc-if value="{{ r.fromAp }}" hint-placeholder-val="{{ false }}"><span title="Posted automatically from an approved supplier invoice — edit it in Company → Supplier Invoices, not here" style="display:inline-block;margin-top:3px;font-size:8.5px;font-weight:700;letter-spacing:.3px;color:#2b59c3;background:#e7eefc;border-radius:4px;padding:1px 5px">🧾 FROM INVOICE</span></sc-if><sc-if value="{{ r.fromLabour }}" hint-placeholder-val="{{ false }}"><span title="Made from recorded Labour hours. Its weeks are locked on the Labour hours screen; delete it to put them back." style="display:inline-block;margin-top:3px;font-size:8.5px;font-weight:700;letter-spacing:.3px;color:#6d28d9;background:#f1ebfd;border-radius:4px;padding:1px 5px">⏱ FROM LABOUR HOURS</span></sc-if>
+                    <sc-if value="{{ r.fromClaim }}" hint-placeholder-val="{{ false }}"><span title="Auto-posted from a certified progress claim" style="display:inline-block;margin-top:3px;font-size:8.5px;font-weight:700;letter-spacing:.3px;color:#15803d;background:#e6f4ea;border-radius:4px;padding:1px 5px">↩ FROM CLAIM</span></sc-if><sc-if value="{{ r.fromAp }}" hint-placeholder-val="{{ false }}"><span title="Posted automatically from an approved supplier invoice — edit it in Company → Supplier Invoices, not here" style="display:inline-block;margin-top:3px;font-size:8.5px;font-weight:700;letter-spacing:.3px;color:#2b59c3;background:#e7eefc;border-radius:4px;padding:1px 5px">🧾 FROM INVOICE</span></sc-if><sc-if value="{{ r.fromLabour }}" hint-placeholder-val="{{ false }}"><span title="Made from recorded Labour hours. Its weeks are locked on the Labour hours screen; delete it to put them back." style="display:inline-block;margin-top:3px;font-size:8.5px;font-weight:700;letter-spacing:.3px;color:#6d28d9;background:#f1ebfd;border-radius:4px;padding:1px 5px">⏱ FROM LABOUR HOURS</span></sc-if><sc-if value="{{ r.hasTimesheetBtn }}" hint-placeholder-val="{{ false }}"><button onClick="{{ r.onTimesheet }}" title="{{ r.timesheetTitle }}" style="display:inline-block;margin-top:3px;border:0;cursor:pointer;font-family:inherit;font-size:8.5px;font-weight:700;letter-spacing:.3px;color:#2b59c3;background:#e7eefc;border-radius:4px;padding:1px 5px" style-hover="background:#d6e2fb">{{ r.timesheetLabel }}</button></sc-if>
                   </div>
                   <select value="{{ r.vendorId }}" onChange="{{ r.onVendor }}" title="Select or create a vendor" style="width:100%;border:1px solid {{ r.vendorBorder }};border-radius:6px;padding:6px 6px;font-size:12px;font-family:inherit;color:#0f1720;background:{{ r.vendorBg }};cursor:pointer" style-focus="border-color:#2b59c3;outline:none">
                     <option value="">— Select vendor —</option>
@@ -3294,6 +3294,30 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
             </div>
           </sc-if>
 
+          <sc-if value="{{ labourV.hasBills }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;flex-wrap:var(--cpms-wrap,nowrap);align-items:center;justify-content:space-between;gap:12px;margin:22px 0 12px">
+              <div style="font-size:12px;font-weight:600;letter-spacing:.4px;color:#8894a2;text-transform:uppercase">Commitments from these hours</div>
+              <button onClick="{{ labourV.onOpenBills }}" title="Change a commitment on the Commitments table" style="border:1px solid #cfd8e2;background:#fff;color:#2b59c3;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap" style-hover="border-color:#2b59c3">Open Commitments →</button>
+            </div>
+            <div style="background:#fff;border:1px solid #e4e8ee;border-radius:12px;overflow:hidden">
+              <div style="overflow-x:auto"><div style="min-width:640px">
+                <div class="colhdr dark" style="display:grid;grid-template-columns:120px 1fr 140px 140px 120px;padding:9px 16px;background:#2A3580;border-bottom:1px solid #e4e8ee;font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#fff;text-transform:uppercase;gap:9px">
+                  <div>Commitment</div><div>Period</div><div style="text-align:right">Ex GST</div><div style="text-align:right">Incl. GST</div><div>Status</div>
+                </div>
+                <sc-for list="{{ labourV.bills }}" as="b" hint-placeholder-count="2">
+                  <div onClick="{{ b.onOpen }}" title="View only - open Commitments to change it" style="display:grid;grid-template-columns:120px 1fr 140px 140px 120px;padding:9px 16px;border-bottom:1px solid #eef1f4;align-items:center;gap:9px;font-size:12.5px;color:#0f1720;cursor:pointer" style-hover="background:#f9fafc">
+                    <div class="mono" style="font-weight:600;color:#2b59c3">{{ b.billNo }}</div>
+                    <div class="mono">{{ b.period }}</div>
+                    <div class="mono" style="text-align:right">{{ b.ex }}</div>
+                    <div class="mono" style="text-align:right;font-weight:600">{{ b.inc }}</div>
+                    <div><span style="font-size:11px;font-weight:600;padding:3px 9px;border-radius:16px;background:{{ b.statusBg }};color:{{ b.statusColor }};white-space:nowrap">{{ b.statusLabel }}</span></div>
+                  </div>
+                </sc-for>
+              </div></div>
+            </div>
+            <div style="font-size:11.5px;color:#8894a2;margin-top:6px">View only. To change a commitment, open it on the Commitments table.</div>
+          </sc-if>
+
         </sc-if>
 
         <!-- ============ REPORT DESIGN ============ -->
@@ -3677,7 +3701,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                   <div style="display:grid;grid-template-columns:36px 1fr 96px 120px 130px 92px;gap:12px;align-items:center;padding:11px 16px;border-bottom:1px solid #f4f6f9" style-hover="background:#f9fafc">
                     <div style="font-size:20px">{{ r.icon }}</div>
                     <div style="min-width:0"><div style="display:flex;align-items:center;gap:7px"><span class="mono" style="font-size:12.5px;font-weight:600;color:#0f1720">{{ r.title }}</span><span style="font-size:9.5px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;color:{{ r.kindColor }};background:{{ r.kindBg }};border-radius:10px;padding:1px 7px">{{ r.kind }}</span></div><div style="font-size:11px;color:#8894a2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.sub }}</div></div>
-                    <div><sc-if value="{{ r.hasFile }}" hint-placeholder-val="{{ false }}"><button onClick="{{ r.onViewFile }}" title="{{ r.fileName }}" style="border:1px solid #cfd8e2;background:#fff;color:#2b59c3;border-radius:7px;padding:4px 9px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap" style-hover="background:#f2f6fd">&#128065; File</button></sc-if></div>
+                    <div><sc-if value="{{ r.hasFile }}" hint-placeholder-val="{{ false }}"><button onClick="{{ r.onViewFile }}" title="{{ r.fileName }}" style="border:1px solid #cfd8e2;background:#fff;color:#2b59c3;border-radius:7px;padding:4px 9px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap" style-hover="background:#f2f6fd">&#128065; File</button></sc-if><sc-if value="{{ r.hasTimesheet }}" hint-placeholder-val="{{ false }}"><button onClick="{{ r.onViewTimesheet }}" title="{{ r.timesheetName }}" style="border:1px solid #cfd8e2;background:#fff;color:#2b59c3;border-radius:7px;padding:4px 9px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap;margin-left:4px" style-hover="background:#f2f6fd">&#128196; Timesheet</button></sc-if></div>
                     <div class="mono" style="font-size:11px;color:#0f1720">{{ r.meta }}</div>
                     <div class="mono" style="font-size:12.5px;font-weight:600;color:#0f1720;text-align:right">{{ r.amount }}</div>
                     <div style="text-align:right"><span style="display:inline-block;font-size:10px;font-weight:700;color:{{ r.statusColor }};background:{{ r.statusBg }};border-radius:12px;padding:2px 9px">{{ r.statusLabel }}</span></div>
@@ -5295,6 +5319,16 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
             </div>
             <sc-if value="{{ acctSendV.missingInvoice }}" hint-placeholder-val="{{ false }}">
               <div style="font-size:11.5px;color:#b45309;margin-top:6px">No invoice file is attached yet — attach one on its row (＋ Invoice) so it travels with the email.</div>
+            </sc-if>
+            <sc-if value="{{ acctSendV.hasTimesheet }}" hint-placeholder-val="{{ false }}">
+              <div style="border:1px solid #e4e8ee;border-radius:9px;padding:10px 12px;display:flex;align-items:center;gap:9px;font-size:12.5px;color:#0f1720;margin-top:8px">
+                <span onClick="{{ acctSendV.onToggleTimesheet }}" style="{{ acctSendV.timesheetChk }};cursor:pointer">{{ acctSendV.timesheetTick }}</span>
+                <span onClick="{{ acctSendV.onToggleTimesheet }}" style="cursor:pointer;flex:1">📄 {{ acctSendV.timesheetName }}</span>
+                <button onClick="{{ acctSendV.onViewTimesheet }}" style="border:1px solid #cfd8e2;background:#fff;color:#2b59c3;border-radius:6px;padding:3px 9px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="border-color:#2b59c3">👁 View</button>
+              </div>
+            </sc-if>
+            <sc-if value="{{ acctSendV.timesheetStale }}" hint-placeholder-val="{{ false }}">
+              <div style="font-size:11.5px;color:#b45309;margin-top:6px">The timesheet on this commitment is out of date - the commitment has changed since. Use TIMESHEET on its row to update it; until then it is not sent.</div>
             </sc-if>
           </div>
 
@@ -14775,7 +14809,7 @@ class Component extends DCLogic {
     this.setState({ billSend: { id, recipients: this._billStandardRecipients(), newEmail: '',
       from: p.senderEmail || me.email || this._accountsEmail(),
       subject: 'Invoice for payment — ' + (bill.billNo || '') + ' · ' + vendorName + ' — ' + p.name,
-      message: body, attachInvoice: true } });
+      message: body, attachInvoice: true, attachTimesheet: this._billTimesheetFresh(p, bill) ? true : undefined } });
   }
   closeBillSend() { this.setState({ billSend: null }); }
   setBillSend(k, v) { this.setState(s => (s.billSend ? { billSend: { ...s.billSend, [k]: v } } : {})); }
@@ -14794,8 +14828,11 @@ class Component extends DCLogic {
     const recips = (st.recipients || []).filter(Boolean); if (!recips.length) return;
     const p = this.proj(this.state.pid); const bill = (p.bills || []).find(b => b.id === st.id); if (!bill) return;
     const atts = (st.attachInvoice && bill.invoiceUrl) ? [{ name: bill.invoice || 'invoice', url: bill.invoiceUrl }] : [];
+    // only an up-to-date one: a sheet made before the commitment changed would say something else
+    const _ts = st.attachTimesheet ? this._billTimesheetFresh(p, bill) : null;
+    if (_ts) atts.push({ name: _ts.name, url: _ts.url });
     this._sendEmailNow({ to: recips, subject: st.subject || '', text: st.message || '', attachments: atts });
-    const attLabel = (st.attachInvoice && bill.invoice) ? bill.invoice : 'no invoice file';
+    const attLabel = [(st.attachInvoice && bill.invoice) ? bill.invoice : '', _ts ? _ts.name : ''].filter(Boolean).join(' + ') || 'no invoice file';
     this.setState(s => ({ projects: s.projects.map(pr => pr.id !== s.pid ? pr : { ...pr, senderEmail: st.from || pr.senderEmail,
       bills: (pr.bills || []).map(b => b.id !== st.id ? b : { ...b,
         sentAt: 'Sent ' + this.now() + ' → ' + recips.join(', '),
@@ -15116,6 +15153,8 @@ class Component extends DCLogic {
     if (!this.can('labour', 'edit') || !this.can('bills', 'edit')) return;
     const f = this.state.labourBillForm; if (!f) return;
     if (this._labourBillDatesBad(f) || !this._labourBillTaxOk(f)) return;
+    const pid = this.state.pid;
+    let createdIds = [], notice = '';
     this.setState(s => {
       const made = [];
       const p = s.projects.find(x => x.id === s.pid); if (!p) return {};
@@ -15137,12 +15176,302 @@ class Component extends DCLogic {
       });
       const tot = made.reduce((a, b) => a + this.billTotal(b), 0);
       const hrs = this._r2(plan.groups.reduce((a, g) => a + g.hours, 0));
+      // assigned, not pushed: an update function can be run twice
+      createdIds = made.map(b => b.id);
+      notice = made.map(b => b.billNo).join(', ') + ' created from ' + hrs + ' h of labour — ' + this.money(tot)
+        + ' including GST. ' + (made.length === 1 ? 'It is' : 'They are') + ' on Commitments, where the supplier’s invoice is attached and payments are recorded.';
       return {
         projects: s.projects.map(x => x.id !== s.pid ? x : { ...x, bills }),
         labourBillForm: null,
-        apNotice: made.map(b => b.billNo).join(', ') + ' created from ' + hrs + ' h of labour — ' + this.money(tot)
-          + ' including GST. ' + (made.length === 1 ? 'It is' : 'They are') + ' on Commitments, where the supplier’s invoice is attached and payments are recorded.',
+        apNotice: notice + ' Attaching the timesheet…',
       };
+    }, () => {
+      // once the commitments are saved, make each one's timesheet from the weeks it names and attach it
+      const ids = createdIds.slice(), base = notice;
+      if (!ids.length) return;
+      Promise.all(ids.map(id => this.attachLabourTimesheet(pid, id))).then(res => {
+        const failed = res.filter(r => r === null).length, ok = res.filter(r => r && typeof r === 'object').length;
+        const tail = failed ? ' The timesheet could not be uploaded just now — use TIMESHEET on the commitment to attach it.'
+          : (ok ? (ok === 1 ? ' Its timesheet is attached.' : ' Their timesheets are attached.') : '');
+        this.setState(s => (s.apNotice === base + ' Attaching the timesheet…' ? { apNotice: base + tail } : {}));
+      });
+    });
+  }
+
+  // ---- the timesheet of a commitment made from hours ----
+  // Timesheets live beside the commitments (project.timesheets[commitment id]), not on them: see attachLabourTimesheet.
+  labourTimesheetName(p, bill) { return this._fileName('Timesheet', (bill && bill.billNo) || '', 'pdf', p || false); }
+  _billTimesheet(p, b) { const ts = p && b && p.timesheets && p.timesheets[b.id]; return (ts && ts.url) ? ts : null; }
+  // what the sheet was made from; if any of it has changed on the commitment since, the sheet is out of date
+  _timesheetBasis(b) {
+    return { amount: this._r2(this._num(b.amount)), taxRate: this._num(b.taxRate), code: String(b.code == null ? '' : b.code).trim(),
+      vendorId: b.vendorId || '', weeks: (Array.isArray(b.labourWeekIds) ? b.labourWeekIds : []).join(',') };
+  }
+  _timesheetStale(p, b) {
+    const ts = this._billTimesheet(p, b); if (!ts) return false;
+    const a = ts.basis || {}, n = this._timesheetBasis(b);
+    return !(a.amount === n.amount && a.taxRate === n.taxRate && a.code === n.code && a.vendorId === n.vendorId && a.weeks === n.weeks);
+  }
+  _billTimesheetFresh(p, b) { const ts = this._billTimesheet(p, b); return (ts && !this._timesheetStale(p, b)) ? ts : null; }
+  // Everything the sheet shows, taken at once from the saved project: the weeks the commitment names, each with the
+  // person, the hours per day and the rate that week was costed at. Null when there is nothing to show.
+  _labourTimesheetContext(pid, billId) {
+    const p = this.proj(pid); if (!p) return null;
+    const bill = (p.bills || []).find(b => b.id === billId);
+    if (!bill || !Array.isArray(bill.labourWeekIds) || !bill.labourWeekIds.length) return null;
+    const lab = this.labourOf(p), byId = {};
+    lab.weeks.forEach(w => { byId[w.id] = w; });
+    const days = this._labourDays();
+    const rows = bill.labourWeekIds.map(id => byId[id]).filter(Boolean).map(w => {
+      const person = lab.roster.find(r => r.id === w.personId) || {};
+      return { personId: w.personId, person: person.name || '(unnamed)', role: person.role || '', weekStart: w.weekStart || '',
+        days: days.map(k => this._num((w.d || {})[k])), hours: this.labourRowHours(w), rate: this._num(w.rate), cost: this.labourRowCost(w) };
+    }).sort((a, b) => (a.person.localeCompare(b.person) || (a.weekStart < b.weekStart ? -1 : (a.weekStart > b.weekStart ? 1 : 0))));
+    if (!rows.length) return null;
+    const co = this.state.company || {};
+    const code = String(bill.code == null ? '' : bill.code).trim();
+    const line = (p.costLines || []).find(l => String(l.code == null ? '' : l.code).trim() === code);
+    const v = (this.state.vendors || []).find(x => x.id === bill.vendorId);
+    const net = this._r2(rows.reduce((a, r) => a + r.cost, 0));
+    const taxRate = this._num(bill.taxRate);
+    const gst = this._r2(net * taxRate / 100);
+    const starts = rows.map(r => r.weekStart).filter(Boolean).sort();
+    return {
+      projName: p.name || '', projCode: p.code || '', billNo: bill.billNo || '', billDate: bill.billDate || '',
+      vendor: (v && v.company) || bill.vendor || '', code, lineDesc: (line && line.desc) || '',
+      from: bill.labourFrom || starts[0] || '', to: bill.labourTo || starts[starts.length - 1] || '',
+      rows, dayLabels: this._labourDayLabels(),
+      hours: this._r2(rows.reduce((a, r) => a + r.hours, 0)), net, taxRate, gst, total: this._r2(net + gst),
+      billAmount: this._r2(this._num(bill.amount)), missing: bill.labourWeekIds.length - rows.length,
+      coName: (co.name || '').trim(), coSlogan: this._coSlogan(), coAbn: this._abn(), coAddr: this._coAddress(),
+      coContact: [co.phone, (this._accountsEmail && this._accountsEmail()) || '', co.website].filter(Boolean).join('  -  '),
+      fileName: this.labourTimesheetName(p, bill), basis: this._timesheetBasis(bill),
+    };
+  }
+  _layoutLabourTimesheet(d, c, logo) {
+    const M = 32, R = d.W - M, CW = R - M;
+    const NAVY = [0.165, 0.208, 0.502], GREY = [0.957, 0.961, 0.973], BORD = [0.788, 0.804, 0.839],
+          MUT = [0.431, 0.455, 0.502], WHITE = [1, 1, 1], INK = [0.059, 0.09, 0.125];
+    const money = n => this.money(n), fdate = iso => (iso ? this.fmtDate(iso) : '');
+    const num = n => (n ? String(this._r2(n)) : '');
+    // text that must stay inside maxW: a little smaller first, then cut with "..."
+    const fit = (t, maxW, size, bold, minSize) => {
+      let v = String(t == null ? '' : t), sz = size;
+      while (sz > (minSize || 6) && d.width(v, sz, bold) > maxW) sz -= 0.5;
+      if (d.width(v, sz, bold) > maxW) { while (v.length > 1 && d.width(v + '...', sz, bold) > maxW) v = v.slice(0, -1); v += '...'; }
+      return { t: v, size: sz };
+    };
+    let y = M, pageNo = 0;
+    const footer = () => {
+      d.line(M, d.H - M - 16, R, d.H - M - 16, { color: BORD, lw: 0.5 });
+      const ms = 8.5;
+      this._drawCpmsMark(d, M, d.H - M - 14, ms);
+      d.text('CPMS', M + ms + 4, d.H - M - 6, { size: 7.5, bold: true, color: [0.078, 0.137, 0.180] });
+      d.text('  -  Labour timesheet  -  ' + c.billNo, M + ms + 4 + d.width('CPMS', 7.5, true), d.H - M - 6, { size: 7.5, color: MUT });
+      d.text('Commercial in confidence', d.W / 2, d.H - M - 6, { size: 7.5, align: 'center', color: MUT });
+      // the project name gives way before it can reach the middle
+      const tail = '  -  page ' + pageNo;
+      const room = R - (d.W / 2 + d.width('Commercial in confidence', 7.5, false) / 2) - 16 - d.width(tail, 7.5, false);
+      const nm = fit(c.projName, Math.max(40, room), 7.5, false, 7.5);
+      d.text(nm.t + tail, R, d.H - M - 6, { size: 7.5, align: 'right', color: MUT });
+    };
+    const startPage = () => { if (pageNo) footer(); pageNo++; d.page(); y = M; };
+    const room = h => (y + h) < (d.H - M - 26);
+
+    // letterhead - every line from the Company profile, a blank one prints nothing
+    startPage();
+    const LH = 46;
+    if (logo) { const lh = LH, lw = lh * (logo.w / Math.max(1, logo.h)); d.image(logo, M, y, Math.min(lw, 200), lh); }
+    else if (c.coName) d.text(c.coName.toUpperCase(), M, y + 16, { size: 12, bold: true, color: NAVY });
+    let hy = y + 6;
+    if (c.coName) { d.text(c.coName.toUpperCase(), R, hy, { size: 8.5, bold: true, align: 'right', color: NAVY }); hy += 10; }
+    if (c.coSlogan) { d.text(c.coSlogan.toUpperCase(), R, hy, { size: 6, align: 'right', color: MUT }); hy += 8; }
+    if (c.coAbn) { d.text('ABN ' + c.coAbn, R, hy, { size: 7.5, align: 'right', color: MUT }); hy += 9; }
+    if (c.coAddr) { d.text(c.coAddr, R, hy, { size: 7.5, align: 'right', color: MUT }); hy += 9; }
+    if (c.coContact) { d.text(c.coContact, R, hy, { size: 7.5, align: 'right', color: MUT }); hy += 9; }
+    // the rule clears the logo as well as the address block
+    y = Math.max(y + (logo ? LH + 6 : 40), hy + 2);
+    d.rect(M, y, CW, 2, { fill: NAVY });
+    y += 16;
+
+    // title and the commitment it belongs to
+    const bw = 200, bh = 48, bx = R - bw;
+    d.text('Labour timesheet', M, y + 18, { size: 19, bold: true });
+    d.text('HOURS ON COMMITMENT ' + c.billNo, M, y + 32, { size: 7.5, bold: true, color: MUT });
+    d.rect(bx, y - 4, bw, bh, { stroke: NAVY, lw: 1 });
+    d.text('COMMITMENT NO.', R - 10, y + 8, { size: 7, bold: true, align: 'right', color: MUT });
+    d.text(c.billNo, R - 10, y + 28, { size: 17, bold: true, align: 'right', color: NAVY });
+    if (c.billDate) d.text('Date: ' + fdate(c.billDate), R - 10, y + 39, { size: 8, align: 'right', color: MUT });
+    y += bh + 12;
+
+    // what it covers
+    const kv = [
+      ['Project', c.projName + (c.projCode ? ' (' + c.projCode + ')' : '')],
+      ['Supplier', c.vendor || '-'],
+      ['Cost code', c.code + (c.lineDesc ? '  -  ' + c.lineDesc : '')],
+      ['Period', 'Weeks commencing ' + fdate(c.from) + (c.to && c.to !== c.from ? ' to ' + fdate(c.to) : '')],
+    ];
+    const kw = CW / 2;
+    kv.forEach((pair, i) => {
+      const x = M + (i % 2) * kw, yy = y + Math.floor(i / 2) * 22;
+      d.rect(x, yy, kw, 22, { fill: GREY, stroke: BORD, lw: 0.4 });
+      d.text(pair[0].toUpperCase(), x + 8, yy + 9, { size: 6.5, bold: true, color: MUT });
+      const v = fit(pair[1], kw - 90, 8.5, true, 6.5);
+      d.text(v.t, x + 80, yy + 14, { size: v.size, bold: true, color: INK });
+    });
+    y += 44 + 14;
+
+    // the table: one row per person-week, each person's total under their weeks
+    const cols = [{ l: 'Person', w: 150, a: 'l' }, { l: 'Week commencing', w: 88, a: 'l' }]
+      .concat(c.dayLabels.map(l => ({ l, w: 46, a: 'c' })))
+      .concat([{ l: 'Hours', w: 56, a: 'r' }, { l: 'Rate', w: 66, a: 'r' }]);
+    cols.push({ l: 'Cost', w: CW - cols.reduce((a, x) => a + x.w, 0), a: 'r' });
+    const at = (i, t, yy, o) => {
+      let cx = M; for (let k = 0; k < i; k++) cx += cols[k].w;
+      const col = cols[i];
+      const x = col.a === 'r' ? cx + col.w - 5 : (col.a === 'c' ? cx + col.w / 2 : cx + 5);
+      d.text(t, x, yy, Object.assign({ size: 7.5, align: col.a === 'r' ? 'right' : (col.a === 'c' ? 'center' : undefined) }, o || {}));
+    };
+    const head = () => {
+      d.rect(M, y, CW, 18, { fill: NAVY });
+      cols.forEach((col, i) => at(i, col.l.toUpperCase(), y + 11.5, { size: 6.5, bold: true, color: WHITE }));
+      y += 18;
+    };
+    const rowBox = (h, fill) => {
+      d.rect(M, y, CW, h, fill ? { fill, stroke: BORD, lw: 0.4 } : { stroke: BORD, lw: 0.4 });
+      let cx = M; cols.forEach((col, i) => { if (i) d.line(cx, y, cx, y + h, { color: BORD, lw: 0.4 }); cx += col.w; });
+    };
+    const inPerson = cols[0].w - 10;
+    head();
+    let last = null;
+    const byPerson = {};
+    c.rows.forEach(r => { (byPerson[r.personId] = byPerson[r.personId] || []).push(r); });
+    c.rows.forEach((r, i) => {
+      // a person's last week keeps their total row with it on the same page
+      const nextRow = c.rows[i + 1];
+      const closes = byPerson[r.personId].length > 1 && (!nextRow || nextRow.personId !== r.personId);
+      if (!room(17 + (closes ? 16 : 0))) { startPage(); head(); last = null; }
+      rowBox(17);
+      if (last !== r.personId) {
+        // the name first, and the role only where it fits beside it
+        const nm = fit(r.person, inPerson, 7.5, true, 6.5);
+        at(0, nm.t, y + 11, { bold: true, color: INK, size: nm.size });
+        const used = d.width(nm.t, nm.size, true) + 5;
+        if (r.role && used + d.width(r.role, 6.5, false) <= inPerson) d.text(r.role, M + 5 + used, y + 11, { size: 6.5, color: MUT });
+      }
+      at(1, fdate(r.weekStart), y + 11);
+      r.days.forEach((h, k) => at(2 + k, num(h), y + 11));
+      at(9, String(r.hours), y + 11, { bold: true });
+      at(10, money(r.rate), y + 11);
+      at(11, money(r.cost), y + 11);
+      y += 17;
+      last = r.personId;
+      const mine = byPerson[r.personId];
+      const next = c.rows[i + 1];
+      if (mine.length > 1 && (!next || next.personId !== r.personId)) {
+        if (!room(16)) { startPage(); head(); }
+        rowBox(16, GREY);
+        const tl = fit('Total  -  ' + r.person, inPerson, 7, true, 6);
+        at(0, tl.t, y + 10.5, { size: tl.size, bold: true, color: MUT });
+        at(9, String(this._r2(mine.reduce((a, x) => a + x.hours, 0))), y + 10.5, { bold: true });
+        at(11, money(this._r2(mine.reduce((a, x) => a + x.cost, 0))), y + 10.5, { bold: true });
+        y += 16;
+      }
+    });
+
+    // totals, under the money columns
+    const sumW = cols[9].w + cols[10].w + cols[11].w + 90, sx = R - sumW;
+    const sumRow = (label, value, o) => {
+      if (!room(18)) { startPage(); }
+      d.rect(sx, y, sumW, 18, o.navy ? { fill: NAVY } : (o.grey ? { fill: GREY, stroke: BORD, lw: 0.4 } : { stroke: BORD, lw: 0.4 }));
+      d.text(label, sx + 8, y + 12, { size: 7.5, bold: !!(o.bold || o.navy), color: o.navy ? WHITE : INK });
+      d.text(value, R - 6, y + 12, { size: 8, bold: !!(o.bold || o.navy), align: 'right', color: o.navy ? WHITE : INK });
+      y += 18;
+    };
+    y += 8;
+    if (!room(4 * 18)) startPage();                 // the four totals stay together
+    sumRow('Total hours', String(c.hours) + ' h', { grey: true, bold: true });
+    sumRow('Total (ex GST)', money(c.net), { bold: true });
+    sumRow('GST ' + this._r2(c.taxRate) + '%', money(c.gst), {});
+    sumRow('Total (incl. GST)', money(c.total), { navy: true });
+
+    const notes = [];
+    if (Math.abs(c.billAmount - c.net) > 0.005) notes.push('The commitment reads ' + money(c.billAmount) + ' ex GST: its amount was changed on the Commitments table after it was made from these hours.');
+    if (c.missing > 0) notes.push(c.missing + (c.missing === 1 ? ' week' : ' weeks') + ' named on this commitment could not be found in Labour hours and ' + (c.missing === 1 ? 'is' : 'are') + ' not shown.');
+    notes.push('Hours as recorded on the Labour hours screen, costed at the rate each week was entered at. The weeks on this commitment are locked there.');
+    y += 10;
+    notes.forEach(t => {
+      d.wrap(t, 7, false, CW).forEach(line => { if (!room(10)) startPage(); d.text(line, M, y + 7, { size: 7, color: MUT }); y += 10; });
+    });
+    footer();
+  }
+  _labourTimesheetPdf(pid, billId) {
+    const ctx = this._labourTimesheetContext(pid, billId);   // taken now, before anything waits
+    if (!ctx) return Promise.resolve(null);
+    return this._pdfLogo()
+      .then(logo => this._pdfBuild(d => this._layoutLabourTimesheet(d, ctx, logo), { title: this._docTitleOf(ctx.fileName), landscape: true }))
+      .then(blob => (blob ? { blob, name: ctx.fileName, basis: ctx.basis } : null))
+      .catch(() => null);
+  }
+  labourTimesheetBlob(pid, billId) { return this._labourTimesheetPdf(pid, billId).then(r => (r ? r.blob : null)); }
+  // Make the sheet and attach it. Resolves to what was attached; 'gone' if the commitment went meanwhile; null if it
+  // could not be made or uploaded. Kept only when it really uploaded. Written into project.timesheets and never onto
+  // the commitment, so a commitment another window deletes meanwhile stays deleted when the two are merged.
+  attachLabourTimesheet(pid, billId) {
+    this._tsBusy = this._tsBusy || {};
+    const key = pid + '|' + billId;
+    // one make-and-upload per commitment at a time - but an upload that has not answered in a minute is given up on,
+    // so a hung connection cannot stop the next try
+    const busy = this._tsBusy[key];
+    if (busy && Date.now() - busy.at < 60000) return busy.run;
+    const run = this._labourTimesheetPdf(pid, billId).then(r => {
+      if (!r) return null;
+      let file = r.blob;
+      try { file = new File([r.blob], r.name, { type: 'application/pdf' }); } catch (e) { try { r.blob.name = r.name; } catch (e2) {} }
+      return this._sbUploadFile(file, 'bills').then(url => {
+        if (!url || String(url).indexOf('http') !== 0) return null;
+        const ts = { name: r.name, url, type: 'application/pdf', at: this.now(), basis: r.basis };
+        let landed = false;
+        this.setState(s => {
+          if (!s.projects.some(p => p.id === pid && (p.bills || []).some(b => b.id === billId))) return {};
+          landed = true;
+          const out = { projects: s.projects.map(p => p.id !== pid ? p : { ...p, timesheets: { ...(p.timesheets || {}), [billId]: ts } }) };
+          // Send to accounts opened before it landed: tick it, unless it was unticked on purpose
+          if (s.billSend && s.billSend.id === billId && s.billSend.attachTimesheet == null) out.billSend = { ...s.billSend, attachTimesheet: true };
+          return out;
+        });
+        return landed ? ts : 'gone';
+      });
+    }).catch(() => null);
+    this._tsBusy[key] = { run, at: Date.now() };
+    const done = () => { if (this._tsBusy[key] && this._tsBusy[key].run === run) delete this._tsBusy[key]; };
+    run.then(done, done);
+    return run;
+  }
+  // TIMESHEET on a commitment: open the one attached; otherwise (none yet, or out of date) make it, attach it and open it.
+  viewLabourTimesheet(billId, again) {
+    const pid = this.state.pid, p = this.proj(pid);
+    const b = p && (p.bills || []).find(x => x.id === billId); if (!b) return;
+    const fresh = this._billTimesheetFresh(p, b);
+    if (fresh) { this.openAttachment({ name: fresh.name, url: fresh.url, type: fresh.type || 'application/pdf' }); return; }
+    if (!this._labourTimesheetContext(pid, billId)) { this.setState({ apNotice: 'The hours on ' + (b.billNo || 'this commitment') + ' could not be found in Labour hours, so there is no timesheet to make.' }); return; }
+    const name = this.labourTimesheetName(p, b);
+    const show = () => this._previewDoc(() => this.labourTimesheetBlob(pid, billId), 'Labour timesheet', () => {}, name);
+    if (!this.can('bills', 'edit')) { show(); return; }
+    const updating = !!this._billTimesheet(p, b);
+    this.setState({ apNotice: (updating ? 'Updating the timesheet for ' : 'Making the timesheet for ') + (b.billNo || 'this commitment') + '…' });
+    this.attachLabourTimesheet(pid, billId).then(ts => {
+      if (ts && typeof ts === 'object') {
+        // it may have been started before the commitment last changed (a make already under way): make it once more
+        const p2 = this.proj(pid), b2 = p2 && (p2.bills || []).find(x => x.id === billId);
+        if (!again && b2 && this._timesheetStale(p2, b2)) { this.viewLabourTimesheet(billId, true); return; }
+        this.setState({ apNotice: 'Timesheet ' + (updating ? 'updated on ' : 'attached to ') + (b.billNo || 'the commitment') + '.' });
+        this.openAttachment({ name: ts.name, url: ts.url, type: ts.type });
+        return;
+      }
+      if (ts === 'gone') { this.setState({ apNotice: (b.billNo || 'The commitment') + ' has been deleted.' }); return; }
+      this.setState({ apNotice: 'The timesheet could not be uploaded just now, so it is shown without being attached. Use TIMESHEET again to attach it.' });
+      show();
     });
   }
 
@@ -17457,6 +17786,20 @@ class Component extends DCLogic {
       const _lbOpen = this._labourBilledMap(p);
       labourV.canBill = _canEdit && this.can('bills', 'edit') && _lab.weeks.some(w => !_lbOpen[w.id] && this.labourRowCost(w) > 0);
       labourV.onBill = () => this.openLabourBill();
+      // what has been put on commitments from these hours - to look at; changes are made on Commitments
+      labourV.bills = (p.bills || []).filter(b => b.fromLabour).slice()
+        .sort((a, b) => (String(b.labourFrom || b.billDate || '').localeCompare(String(a.labourFrom || a.billDate || '')) || String(b.billNo || '').localeCompare(String(a.billNo || ''), undefined, { numeric: true })))
+        .map(b => {
+          const sm = this.statusMeta(this.billStatusFor(b));
+          const end = b.labourTo ? this.addDays(b.labourTo, 6) : '';
+          return { id: b.id, billNo: b.billNo || '—',
+            period: (b.labourFrom ? this.fmtDate(b.labourFrom) : '—') + ' – ' + (end ? this.fmtDate(end) : '—'),
+            ex: this.money(this._num(b.amount)), inc: this.money(this.billTotal(b)),
+            statusLabel: sm.label, statusColor: sm.color, statusBg: sm.bg,
+            onOpen: () => this.goCommitTab('bills') };
+        });
+      labourV.hasBills = labourV.bills.length > 0;
+      labourV.onOpenBills = () => this.goCommitTab('bills');
       labourV.unpostedShow = _unposted > 0;
       labourV.unpostedText = this.money(_unposted) + ' of recorded time has no budget line to land on — pick one in “Posts to” and it joins that budget line’s Committed and Actual.';
     }
@@ -17816,7 +18159,10 @@ class Component extends DCLogic {
       const billItems = billsSrc.map(b => {
         const vn = this.vendorName(b.vendorId) || b.vendorId || 'Vendor'; const st = this.billStatusFor(b);
         const sm = st === 'paid' ? { c: '#15803d', bg: '#e6f4ea', l: 'Paid' } : st === 'partial' ? { c: '#b45309', bg: '#fbf1e3', l: 'Partial' } : { c: '#6b7787', bg: '#eef1f5', l: 'Unpaid' };
-        return { id: b.id, kind: 'Commitment', kindColor: '#2b59c3', kindBg: '#e7eefc', icon: '📄', title: b.billNo, sub: vn + (b.desc ? ' · ' + b.desc : ''), meta: b.billDate ? this.fmtDate(b.billDate) : '—', amount: this.money(this.billTotal(b)), statusLabel: sm.l, statusColor: sm.c, statusBg: sm.bg , hasFile: !!b.invoiceUrl, fileName: b.invoice || '', onViewFile: () => this.viewBillInvoice(b.id), sortKey: b.billDate || '' };
+        return { id: b.id, kind: 'Commitment', kindColor: '#2b59c3', kindBg: '#e7eefc', icon: '📄', title: b.billNo, sub: vn + (b.desc ? ' · ' + b.desc : ''), meta: b.billDate ? this.fmtDate(b.billDate) : '—', amount: this.money(this.billTotal(b)), statusLabel: sm.l, statusColor: sm.c, statusBg: sm.bg , hasFile: !!b.invoiceUrl, fileName: b.invoice || '', onViewFile: () => this.viewBillInvoice(b.id), sortKey: b.billDate || '',
+          hasTimesheet: !!b.fromLabour,
+          timesheetName: this._billTimesheetFresh(p, b) ? this._billTimesheet(p, b).name : (this.can('bills', 'edit') ? 'Make the timesheet from its hours and attach it' : 'Show the timesheet of its hours'),
+          onViewTimesheet: () => this.viewLabourTimesheet(b.id) };
       });
       // Progress claims belong beside the bills they will become - same folder, one story.
       let claimsSrc = (p.claims || []).slice();
@@ -19214,7 +19560,13 @@ class Component extends DCLogic {
         const psm = this.statusMeta(status);
         const overdue = status !== 'paid' && x.dueDate && x.dueDate < today;
         return { id: x.id, billNo: x.billNo, vendorId: x.vendorId, code: x.code, desc: x.desc, amount: this._mdisp(x.id + ":amount", x.amount), onAmountFocus: () => this.startEdit(x.id + ":amount"), onCellBlur: () => this.endEdit(), taxRate: x.taxRate, billDate: x.billDate, dueDate: x.dueDate,
-          coded: !!x.code, hasVendor: !!x.vendorId, fromAp: !!x.fromAp, fromLabour: !!x.fromLabour, vendorOptions, codeCatalog, codeGroups: this.projectCodeGroups(S.pid), tax: this.money(tax), total: this.money(tot),
+          coded: !!x.code, hasVendor: !!x.vendorId, fromAp: !!x.fromAp, fromLabour: !!x.fromLabour,
+          hasTimesheetBtn: !!x.fromLabour,
+          timesheetLabel: (!this.can('bills', 'edit') || this._billTimesheetFresh(p, x)) ? '📄 TIMESHEET' : (this._billTimesheet(p, x) ? '📄 UPDATE TIMESHEET' : '📄 MAKE TIMESHEET'),
+          timesheetTitle: this._billTimesheetFresh(p, x) ? ('Open the timesheet attached to this commitment: ' + this._billTimesheet(p, x).name)
+            : (!this.can('bills', 'edit') ? 'Show the timesheet of the hours on this commitment'
+              : (this._billTimesheet(p, x) ? 'The commitment has changed since its timesheet was made - make it again and attach it' : 'Make the timesheet from the hours on this commitment and attach it')),
+          onTimesheet: () => this.viewLabourTimesheet(x.id), vendorOptions, codeCatalog, codeGroups: this.projectCodeGroups(S.pid), tax: this.money(tax), total: this.money(tot),
           vendorBorder: x.vendorId ? '#e4e8ee' : '#e6c9a3', vendorBg: x.vendorId ? '#fff' : '#fdf6ec',
           codeBorder: x.code ? '#e4e8ee' : '#e6c9a3', codeBg: x.code ? '#fff' : '#fdf6ec',
           status, statusLabel: psm.label, statusColor: psm.color, statusBg: psm.bg, overdue, fromClaim: !!x.fromClaim,
@@ -19656,7 +20008,7 @@ class Component extends DCLogic {
           (S.vendors || []).forEach(v => { if (v.email && !seenB[v.email]) { seenB[v.email] = 1; picks.push({ email: v.email, label: (v.rep || v.company) + ' — ' + v.email + ' · ' + v.company }); } });
           const chkB = on => on ? 'width:17px;height:17px;border-radius:5px;background:#2b59c3;border:1px solid #2b59c3;color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:11px;flex:0 0 auto'
                                : 'width:17px;height:17px;border-radius:5px;background:#fff;border:1.5px solid #c3ccd8;color:transparent;display:inline-flex;align-items:center;justify-content:center;font-size:11px;flex:0 0 auto';
-          let net = 0, tax = 0, rows = [], attName = '', attUrl = '', onViewAtt = () => {};
+          let net = 0, tax = 0, rows = [], attName = '', attUrl = '', onViewAtt = () => {}, tsName = '', tsUrl = '', onViewTs = () => {}, tsStale = false;
           if (isBill) {
             const ven = (S.vendors || []).find(v => v.id === bill.vendorId);
             net = this._num(bill.amount); tax = this.billTotal(bill) - net;
@@ -19669,6 +20021,8 @@ class Component extends DCLogic {
               { k: 'Due date', v: bill.dueDate ? this.fmtDate(bill.dueDate) : '—', mono: true },
             ];
             attName = bill.invoice || ''; attUrl = bill.invoiceUrl || ''; onViewAtt = () => this.viewBillInvoice(bill.id);
+            { const _f = this._billTimesheetFresh(p, bill); tsName = _f ? _f.name : ''; tsUrl = _f ? _f.url : ''; tsStale = !_f && !!this._billTimesheet(p, bill); }
+            onViewTs = () => this.viewLabourTimesheet(bill.id);
           } else {
             const cm = (p.commitments || []).find(k => k.id === clm.commitmentId);
             net = this._num((clm.status === 'approved' || clm.status === 'paid') ? clm.certified : clm.thisClaim);
@@ -19696,7 +20050,9 @@ class Component extends DCLogic {
             onPickContact: e => { const v = e.target.value; e.target.value = ''; if (isBill) this.addBillSendRecipient(v); else this.addClaimSendRecipient(v); },
             invoiceName: attName || 'No file attached', hasInvoiceFile: !!attUrl, onViewInvoice: onViewAtt, missingInvoice: !attUrl,
             invoiceChk: chkB(!!st.attachInvoice), invoiceTick: st.attachInvoice ? '✓' : '', onToggleInvoice: () => setF('attachInvoice', !st.attachInvoice),
-            attachSummary: (st.attachInvoice && attName) ? attName : 'no file',
+            attachSummary: [(st.attachInvoice && attName) ? attName : '', (tsUrl && st.attachTimesheet) ? tsName : ''].filter(Boolean).join(' + ') || 'no file',
+            hasTimesheet: !!tsUrl, timesheetName: tsName, onViewTimesheet: onViewTs, timesheetStale: tsStale,
+            timesheetChk: chkB(!!st.attachTimesheet), timesheetTick: st.attachTimesheet ? '✓' : '', onToggleTimesheet: () => setF('attachTimesheet', !st.attachTimesheet),
             canSend: recips.length > 0, cannotSend: recips.length === 0,
             sendBg: recips.length ? '#2b59c3' : '#c7d0db', sendCursor: recips.length ? 'pointer' : 'not-allowed',
             onFrom: e => setF('from', e.target.value), onSubject: e => setF('subject', e.target.value), onMessage: e => setF('message', e.target.value),
