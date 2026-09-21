@@ -10061,6 +10061,11 @@ class Component extends DCLogic {
     return Math.round(this.lineActual(l, proj) / budget * 100);
   }
   lineVariance(l, p) { const proj = p || this.proj(this.state.pid) || {}; return this.lineCurrent(l, proj) - this.lineForecast(l, proj); }
+  // Cost still to spend on a line: what the forecast carries beyond what has been spent. It is the typed FTC wherever
+  // the forecast uses the typed FTC, and the grey figure in the FTC cell where nothing is typed - so anything that adds
+  // FTC up gets Actual + FTC = Est. at completion. Adding up only the TYPED figures, as the totals and the export used
+  // to, counted every grey figure as nothing.
+  lineFtc(l, p) { const proj = p || this.proj(this.state.pid) || {}; return Math.max(0, this.lineForecast(l, proj) - this.lineActual(l, proj)); }
   niceStep(range) { if (!(range > 0)) return 1; const exp = Math.floor(Math.log10(range)); const base = Math.pow(10, exp); const frac = range / base; let nice; if (frac <= 1) nice = 1; else if (frac <= 2) nice = 2; else if (frac <= 2.5) nice = 2.5; else if (frac <= 5) nice = 5; else nice = 10; return nice * base; }
   setCostPeriod(v) { this.setState({ costPeriod: v }); }
   advanceDate(iso, interval) { const parts = (iso || this.todayLocal()).split('-').map(Number); const d = new Date(parts[0], parts[1] - 1, parts[2]); if (interval === 'monthly') d.setMonth(d.getMonth() + 1); else d.setDate(d.getDate() + (interval === 'fortnightly' ? 14 : 7)); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
@@ -16648,7 +16653,7 @@ class Component extends DCLogic {
       revised: l => this.lineCurrent(l, p),
       committed: l => this.lineCommitted(l, p),
       actual: l => this.lineActual(l, p),
-      ftc: l => Number(l.ftc) || 0,
+      ftc: l => this.lineFtc(l, p),
       eac: l => this.lineForecast(l, p),
       variance: l => this.lineVariance(l, p),
       // the same measure the budget grid shows: actual against the current budget
@@ -16670,7 +16675,7 @@ class Component extends DCLogic {
       a.adj += (Number(l.adj) || 0) + this.lineVarAdj(l, p);
       a.com += this.lineCommitted(l, p);
       a.act += this.lineActual(l, p);
-      a.ftc += Number(l.ftc) || 0;
+      a.ftc += this.lineFtc(l, p);
       a.eac += this.lineForecast(l, p);
       a.varc += this.lineVariance(l, p);
       return a;
@@ -18568,7 +18573,7 @@ class Component extends DCLogic {
             case 'revised': return this.lineCurrent(l, p);
             case 'committed': return this.lineCommitted(l, p);
             case 'actual': return this.lineActual(l);
-            case 'ftc': return Number(l.ftc) || 0;
+            case 'ftc': return this.lineFtc(l, p);
             case 'eac': return this.lineForecast(l);
             case 'variance': return this.lineVariance(l);
             case 'pct': { const v = this.linePctSpent(l, p); return v == null ? -1 : v; }
@@ -18601,7 +18606,7 @@ class Component extends DCLogic {
           // blank rather than $0.00 when nothing is entered, so the placeholder can show
           // what the forecast is actually using for cost to complete
           ftcDisp: (ec === l.id + ':ftc') ? String(l.ftc == null ? '' : l.ftc) : (this._num(l.ftc) > 0 ? this.money(this._num(l.ftc)) : ''),
-          ftcPlaceholder: this.money(Math.max(0, this.lineForecast(l, p) - this.lineActual(l, p))),
+          ftcPlaceholder: this.money(this.lineFtc(l, p)),
           onOrigFocus: () => this.startEdit(l.id + ':orig'), onCommittedFocus: () => this.startEdit(l.id + ':committed'), onActualFocus: () => this.startEdit(l.id + ':actual'), onFtcFocus: () => this.startEdit(l.id + ':ftc'), onCellBlur: () => this.endEdit(),
           revised: this.money(this.lineCurrent(l, p)), varAdj: this.signed(varAdjRaw), hasVarAdj: varAdjRaw !== 0, noVarAdj: varAdjRaw === 0, varRefs,
           commitmentOptions, linkedId: l.commitmentId || '', linked, invoiced, manual: !invoiced,
@@ -18642,7 +18647,7 @@ class Component extends DCLogic {
           onMoveUp: () => this.moveCostLine(l.id, -1, _visIds), onMoveDown: () => this.moveCostLine(l.id, 1, _visIds),
           onGrip: ev => this._lineDragStart(l.id, ev) };
       });
-      const T = _dispLines.reduce((a, l) => { a.orig += Number(l.orig) || 0; a.adj += this.lineVarAdj(l, p); a.current += this.lineCurrent(l, p); a.committed += this.lineCommitted(l, p); a.actual += this.lineActual(l, p); a.ftc += Number(l.ftc) || 0; a.forecast += this.lineForecast(l, p); a.variance += this.lineVariance(l, p); return a; }, { orig: 0, adj: 0, current: 0, committed: 0, actual: 0, ftc: 0, forecast: 0, variance: 0 });
+      const T = _dispLines.reduce((a, l) => { a.orig += Number(l.orig) || 0; a.adj += this.lineVarAdj(l, p); a.current += this.lineCurrent(l, p); a.committed += this.lineCommitted(l, p); a.actual += this.lineActual(l, p); a.ftc += this.lineFtc(l, p); a.forecast += this.lineForecast(l, p); a.variance += this.lineVariance(l, p); return a; }, { orig: 0, adj: 0, current: 0, committed: 0, actual: 0, ftc: 0, forecast: 0, variance: 0 });
       costTotals = { orig: this.money(T.orig), adj: this.signed(T.adj), current: this.money(T.current), committed: this.money(T.committed), actual: this.money(T.actual), ftc: this.money(T.ftc), eac: this.money(T.forecast), variance: this.signed(T.variance), varColor: this.varColor(T.variance), pct: T.current > 0 ? Math.round(T.actual / T.current * 100) + '%' : '—' };
       // Pricing: apply category markups to the budgeted cost — per-project override, else the Settings → Financial default.
       const mk = this.costPricing(p);
