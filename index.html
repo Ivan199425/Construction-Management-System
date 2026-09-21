@@ -2352,7 +2352,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                 <div style="display:grid;grid-template-columns:112px 1.1fr 1.1fr 1.1fr 1fr 104px 104px .85fr 58px .85fr 100px 156px 96px 40px;padding:8px 16px;border-bottom:1px solid #eef1f4;align-items:start;gap:9px" style-hover="background:#f9fafc">
                   <div>
                     <input value="{{ r.billNo }}" onInput="{{ r.onBillNo }}" placeholder="BILL-0000" class="mono" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 8px;font-size:12px;font-family:'IBM Plex Mono',monospace;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none">
-                    <sc-if value="{{ r.fromClaim }}" hint-placeholder-val="{{ false }}"><span title="Auto-posted from a certified progress claim" style="display:inline-block;margin-top:3px;font-size:8.5px;font-weight:700;letter-spacing:.3px;color:#15803d;background:#e6f4ea;border-radius:4px;padding:1px 5px">↩ FROM CLAIM</span></sc-if><sc-if value="{{ r.fromAp }}" hint-placeholder-val="{{ false }}"><span title="Posted automatically from an approved supplier invoice — edit it in Company → Supplier Invoices, not here" style="display:inline-block;margin-top:3px;font-size:8.5px;font-weight:700;letter-spacing:.3px;color:#2b59c3;background:#e7eefc;border-radius:4px;padding:1px 5px">🧾 FROM INVOICE</span></sc-if>
+                    <sc-if value="{{ r.fromClaim }}" hint-placeholder-val="{{ false }}"><span title="Auto-posted from a certified progress claim" style="display:inline-block;margin-top:3px;font-size:8.5px;font-weight:700;letter-spacing:.3px;color:#15803d;background:#e6f4ea;border-radius:4px;padding:1px 5px">↩ FROM CLAIM</span></sc-if><sc-if value="{{ r.fromAp }}" hint-placeholder-val="{{ false }}"><span title="Posted automatically from an approved supplier invoice — edit it in Company → Supplier Invoices, not here" style="display:inline-block;margin-top:3px;font-size:8.5px;font-weight:700;letter-spacing:.3px;color:#2b59c3;background:#e7eefc;border-radius:4px;padding:1px 5px">🧾 FROM INVOICE</span></sc-if><sc-if value="{{ r.fromLabour }}" hint-placeholder-val="{{ false }}"><span title="Made from recorded Labour hours. Its weeks are locked on the Labour hours screen; delete it to put them back." style="display:inline-block;margin-top:3px;font-size:8.5px;font-weight:700;letter-spacing:.3px;color:#6d28d9;background:#f1ebfd;border-radius:4px;padding:1px 5px">⏱ FROM LABOUR HOURS</span></sc-if>
                   </div>
                   <select value="{{ r.vendorId }}" onChange="{{ r.onVendor }}" title="Select or create a vendor" style="width:100%;border:1px solid {{ r.vendorBorder }};border-radius:6px;padding:6px 6px;font-size:12px;font-family:inherit;color:#0f1720;background:{{ r.vendorBg }};cursor:pointer" style-focus="border-color:#2b59c3;outline:none">
                     <option value="">— Select vendor —</option>
@@ -3162,6 +3162,9 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
             <div style="display:flex;align-items:center;gap:14px;font-size:12.5px;color:#6b7787;white-space:nowrap">
               <span>{{ labourV.weekHours }} h this week</span>
               <span class="mono" style="font-weight:700;color:#0f1720">{{ labourV.weekCost }}</span>
+              <sc-if value="{{ labourV.canBill }}" hint-placeholder-val="{{ false }}">
+                <button onClick="{{ labourV.onBill }}" title="Put the hours of a timeframe on a commitment for the supplier who invoices them" style="border:0;background:#2b59c3;color:#fff;border-radius:8px;padding:7px 13px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap" style-hover="background:#234aa3">＋ Commitment from hours</button>
+              </sc-if>
             </div>
           </div>
 
@@ -3198,17 +3201,20 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                       <div style="font-size:10.5px;color:#8894a2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.role }}</div>
                     </div>
                     <sc-for list="{{ r.days }}" as="d" hint-placeholder-count="7">
-                      <input value="{{ d.value }}" onInput="{{ d.onInput }}" onFocus="{{ d.onFocus }}" onBlur="{{ labourV.onCellBlur }}" placeholder="0" inputmode="decimal" class="mono" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 4px;font-size:12.5px;text-align:center;font-family:'IBM Plex Mono',monospace;color:#0f1720;background:{{ d.bg }}" style-focus="border-color:#2b59c3;outline:none">
+                      <input value="{{ d.value }}" onInput="{{ d.onInput }}" onFocus="{{ d.onFocus }}" onBlur="{{ labourV.onCellBlur }}" disabled="{{ d.locked }}" placeholder="0" inputmode="decimal" class="mono" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 4px;font-size:12.5px;text-align:center;font-family:'IBM Plex Mono',monospace;color:#0f1720;background:{{ d.bg }}" style-focus="border-color:#2b59c3;outline:none">
                     </sc-for>
                     <div class="mono" style="text-align:right;font-size:13px;font-weight:600;color:#0f1720">{{ r.hours }}</div>
                     <sc-if value="{{ r.hasRow }}" hint-placeholder-val="{{ true }}">
-                      <input value="{{ r.rateDisp }}" onInput="{{ r.onRate }}" onFocus="{{ r.onRateFocus }}" onBlur="{{ labourV.onCellBlur }}" title="The rate this week was costed at. Changing it corrects this week only." inputmode="decimal" class="mono" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 6px;font-size:12px;text-align:right;font-family:'IBM Plex Mono',monospace;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none">
+                      <input value="{{ r.rateDisp }}" onInput="{{ r.onRate }}" onFocus="{{ r.onRateFocus }}" onBlur="{{ labourV.onCellBlur }}" disabled="{{ r.locked }}" title="The rate this week was costed at. Changing it corrects this week only." inputmode="decimal" class="mono" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 6px;font-size:12px;text-align:right;font-family:'IBM Plex Mono',monospace;color:#0f1720;background:{{ r.rateBg }}" style-focus="border-color:#2b59c3;outline:none">
                     </sc-if>
                     <sc-if value="{{ r.noRow }}" hint-placeholder-val="{{ false }}">
                       <div class="mono" style="text-align:right;font-size:12px;color:#a4afba">{{ r.rateFixed }}</div>
                     </sc-if>
                     <div class="mono" style="text-align:right;font-size:13px;color:#0f1720">{{ r.cost }}</div>
-                    <div style="text-align:right">
+                    <div style="text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:3px">
+                      <sc-if value="{{ r.billedShow }}" hint-placeholder-val="{{ false }}">
+                        <button onClick="{{ r.onOpenBill }}" title="{{ r.billedTitle }}" style="border:0;font-size:11px;font-weight:600;padding:3px 9px;border-radius:16px;background:#e7eefc;color:#2b59c3;white-space:nowrap;cursor:pointer;font-family:inherit">🔒 {{ r.billedLabel }}</button>
+                      </sc-if>
                       <sc-if value="{{ r.overShow }}" hint-placeholder-val="{{ false }}">
                         <span title="More than a standard week" style="font-size:11px;font-weight:600;padding:3px 9px;border-radius:16px;background:#fbf1e3;color:#b45309;white-space:nowrap">{{ r.overLabel }}</span>
                       </sc-if>
@@ -3269,7 +3275,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                         <div style="height:5px;border-radius:4px;background:#eef1f5;margin-top:4px;overflow:hidden"><div style="height:100%;width:{{ r.barW }};background:{{ r.barColor }}"></div></div>
                       </sc-if>
                     </div>
-                    <div class="mono" style="text-align:right;font-size:13px;color:#0f1720">{{ r.costToDate }}</div>
+                    <div style="text-align:right"><div class="mono" style="font-size:13px;color:#0f1720">{{ r.costToDate }}</div><sc-if value="{{ r.billedShow }}" hint-placeholder-val="{{ false }}"><div style="font-size:10px;color:#2b59c3;white-space:nowrap">{{ r.billedText }}</div></sc-if></div>
                     <select value="{{ r.lineValue }}" onChange="{{ r.onLine }}" title="Which budget line this person’s time is charged to" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 6px;font-size:12px;font-family:inherit;color:#0f1720;background:#fff;cursor:pointer" style-focus="border-color:#2b59c3;outline:none">
                       <sc-for list="{{ r.lineOptions }}" as="o" hint-placeholder-count="3"><option value="{{ o.v }}">{{ o.l }}</option></sc-for>
                     </select>
@@ -5417,6 +5423,86 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
         <div style="padding:15px 24px;border-top:1px solid #eef1f4;display:flex;flex-wrap:var(--cpms-wrap,nowrap);justify-content:space-between;gap:10px">
           <button onClick="{{ signModalV.onReject }}" style="border:1px solid #efd0d0;background:#fff;color:#b91c1c;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Decline</button>
           <button onClick="{{ signModalV.onSign }}" disabled="{{ signModalV.cannotSign }}" style="border:0;background:{{ signModalV.signBg }};color:#fff;border-radius:8px;padding:9px 22px;font-size:13px;font-weight:600;cursor:{{ signModalV.signCursor }};font-family:inherit">✓ E-sign agreement</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- COMMITMENT FROM LABOUR HOURS -->
+  <sc-if value="{{ labourBillV.open }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ labourBillV.onClose }}" style="position:fixed;inset:0;background:rgba(15,23,32,.5);display:flex;align-items:center;justify-content:center;z-index:50;padding:24px;animation:fadeUp .15s ease">
+      <div onClick="{{ stop }}" style="background:#fff;border-radius:14px;width:600px;max-width:96vw;max-height:92vh;box-shadow:0 24px 60px rgba(15,23,32,.3);overflow:hidden;display:flex;flex-direction:column">
+        <div style="padding:18px 22px;border-bottom:1px solid #eef1f4;display:flex;align-items:flex-start;flex-wrap:var(--cpms-wrap,nowrap);justify-content:space-between;gap:12px;flex:0 0 auto">
+          <div><div style="font-size:17px;font-weight:600;color:#0f1720">Commitment from hours</div><div style="font-size:12.5px;color:#8894a2;margin-top:2px">Put the hours of a timeframe on a commitment for the supplier who invoices them</div></div>
+          <button onClick="{{ labourBillV.onClose }}" style="border:0;background:transparent;color:#8894a2;cursor:pointer;font-size:20px;line-height:1">✕</button>
+        </div>
+        <div style="padding:18px 22px;display:flex;flex-direction:column;gap:14px;overflow-y:auto;flex:1 1 auto">
+
+          <div style="display:flex;gap:12px">
+            <div style="flex:1"><label style="font-size:12px;font-weight:600;color:#4a5765;display:block;margin-bottom:5px">Weeks starting from</label><input value="{{ labourBillV.from }}" onInput="{{ labourBillV.onFrom }}" type="date" class="mono" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:'IBM Plex Mono',monospace" style-focus="border-color:#2b59c3;outline:none"></div>
+            <div style="flex:1"><label style="font-size:12px;font-weight:600;color:#4a5765;display:block;margin-bottom:5px">to</label><input value="{{ labourBillV.to }}" onInput="{{ labourBillV.onTo }}" type="date" class="mono" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:'IBM Plex Mono',monospace" style-focus="border-color:#2b59c3;outline:none"></div>
+          </div>
+
+          <div>
+            <label style="font-size:12px;font-weight:600;color:#4a5765;display:block;margin-bottom:5px">Who is on it</label>
+            <sc-if value="{{ labourBillV.hasPeople }}" hint-placeholder-val="{{ true }}">
+              <div style="border:1px solid #e4e8ee;border-radius:9px;overflow:hidden">
+                <sc-for list="{{ labourBillV.people }}" as="o" hint-placeholder-count="3">
+                  <div onClick="{{ o.onToggle }}" style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-bottom:1px solid #eef1f4;cursor:pointer" style-hover="background:#f7f9fb">
+                    <span style="width:18px;height:18px;border-radius:5px;border:1px solid {{ o.boxBorder }};background:{{ o.boxBg }};color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;flex:0 0 auto">{{ o.check }}</span>
+                    <span style="flex:1;min-width:0"><span style="display:block;font-size:13px;font-weight:600;color:#0f1720">{{ o.name }}</span><span style="display:block;font-size:11px;color:{{ o.detailColor }}">{{ o.detail }}</span></span>
+                    <span class="mono" style="font-size:12.5px;color:#0f1720;white-space:nowrap">{{ o.cost }}</span>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-if>
+            <sc-if value="{{ labourBillV.datesShow }}" hint-placeholder-val="{{ false }}">
+              <div style="font-size:12.5px;color:#b45309;background:#fdf6ec;border:1px solid #f3dfbf;border-radius:9px;padding:12px 14px">{{ labourBillV.datesText }}</div>
+            </sc-if>
+            <sc-if value="{{ labourBillV.noPeople }}" hint-placeholder-val="{{ false }}">
+              <div style="font-size:12.5px;color:#8894a2;background:#f7f9fb;border:1px dashed #cfd8e2;border-radius:9px;padding:12px 14px">No hours in these weeks that are not on a commitment already.</div>
+            </sc-if>
+            <sc-if value="{{ labourBillV.cannotShow }}" hint-placeholder-val="{{ false }}">
+              <div style="margin-top:8px;font-size:12px;color:#b45309;background:#fdf6ec;border:1px solid #f3dfbf;border-radius:8px;padding:8px 11px">{{ labourBillV.cannotText }}</div>
+            </sc-if>
+          </div>
+
+          <div>
+            <label style="font-size:12px;font-weight:600;color:#4a5765;display:block;margin-bottom:5px">Supplier who invoices the hours</label>
+            <select value="{{ labourBillV.vendorId }}" onChange="{{ labourBillV.onVendor }}" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:inherit;background:#fff;cursor:pointer" style-focus="border-color:#2b59c3;outline:none">
+              <option value="">Select supplier…</option>
+              <option value="__new__">＋ New supplier…</option>
+              <sc-for list="{{ labourBillV.vendorOptions }}" as="o" hint-placeholder-count="3"><option value="{{ o.id }}">{{ o.label }}</option></sc-for>
+            </select>
+          </div>
+
+          <div style="display:flex;gap:12px">
+            <div style="flex:1"><label style="font-size:12px;font-weight:600;color:#4a5765;display:block;margin-bottom:5px">GST %</label><input value="{{ labourBillV.taxRate }}" onInput="{{ labourBillV.onTax }}" inputmode="decimal" class="mono" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:'IBM Plex Mono',monospace" style-focus="border-color:#2b59c3;outline:none"><sc-if value="{{ labourBillV.taxShow }}" hint-placeholder-val="{{ false }}"><div style="font-size:11px;color:#b45309;margin-top:4px">{{ labourBillV.taxText }}</div></sc-if></div>
+            <div style="flex:1"><label style="font-size:12px;font-weight:600;color:#4a5765;display:block;margin-bottom:5px">Commitment date</label><input value="{{ labourBillV.billDate }}" onInput="{{ labourBillV.onBillDate }}" type="date" class="mono" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:'IBM Plex Mono',monospace" style-focus="border-color:#2b59c3;outline:none"></div>
+          </div>
+
+          <sc-if value="{{ labourBillV.hasGroups }}" hint-placeholder-val="{{ false }}">
+            <div style="background:#f7f9fb;border:1px solid #e4e8ee;border-radius:9px;padding:11px 13px;display:flex;flex-direction:column;gap:8px">
+              <sc-for list="{{ labourBillV.groups }}" as="g" hint-placeholder-count="1">
+                <div style="display:flex;align-items:flex-start;gap:12px">
+                  <div style="flex:1;min-width:0"><div style="font-size:12.5px;font-weight:600;color:#0f1720">{{ g.code }}</div><div style="font-size:11px;color:#8894a2">{{ g.who }}</div></div>
+                  <div style="text-align:right"><div class="mono" style="font-size:12.5px;color:#0f1720">{{ g.amount }}</div><div style="font-size:10.5px;color:#8894a2">{{ g.total }} with GST</div></div>
+                </div>
+              </sc-for>
+              <div style="display:flex;gap:18px;justify-content:flex-end;border-top:1px solid #e4e8ee;padding-top:8px;font-size:12px">
+                <span><span style="color:#8894a2">Net</span> <span class="mono" style="font-weight:600">{{ labourBillV.net }}</span></span>
+                <span><span style="color:#8894a2">GST</span> <span class="mono" style="font-weight:600">{{ labourBillV.gst }}</span></span>
+                <span><span style="color:#8894a2">Total</span> <span class="mono" style="font-weight:700">{{ labourBillV.gross }}</span></span>
+              </div>
+            </div>
+          </sc-if>
+
+          <div style="font-size:11.5px;color:#6b7787;line-height:1.55">One commitment per budget line. Once they are on it, those hours count through the commitment: Committed at its total (with GST, like every commitment) and Actual as payments are recorded against it. Their weeks are locked here; delete the commitment to change them.</div>
+
+        </div>
+        <div style="padding:15px 22px;border-top:1px solid #eef1f4;display:flex;flex-wrap:var(--cpms-wrap,nowrap);justify-content:flex-end;gap:10px;flex:0 0 auto">
+          <button onClick="{{ labourBillV.onClose }}" style="border:1px solid #cfd8e2;background:#fff;color:#4a5765;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Cancel</button>
+          <button onClick="{{ labourBillV.onSave }}" disabled="{{ labourBillV.cannotSave }}" style="border:0;background:{{ labourBillV.saveBg }};color:#fff;border-radius:8px;padding:9px 24px;font-size:13px;font-weight:600;cursor:{{ labourBillV.saveCursor }};font-family:inherit">{{ labourBillV.saveLabel }}</button>
         </div>
       </div>
     </div>
@@ -8774,8 +8860,9 @@ class Component extends DCLogic {
     const _lab = this.labourOf(p);
     const _lineIds = {}; (p.costLines || []).forEach(l => { _lineIds[l.id] = 1; });
     const _posts = {}; _lab.roster.forEach(r => { if (r.costLineId && _lineIds[r.costLineId]) _posts[r.id] = 1; });
+    const _lbBilled = this._labourBilledMap(p);   // those are drawn by their commitment, with the other bills
     _lab.weeks.forEach(w => {
-      if (!_posts[w.personId]) return;
+      if (!_posts[w.personId] || _lbBilled[w.id]) return;
       const n = dnum(w.weekStart); if (n == null) return;
       // labour is committed the week it is worked, and paid then too
       const v = this.labourRowCost(w); if (v > 0) { paidEvents.push({ n, v }); commitEvents.push({ n, v }); }
@@ -14418,7 +14505,9 @@ class Component extends DCLogic {
     this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, bills: [...(p.bills || []), { id: this._rid('bill'), billNo: this.nextSeqRef(p.bills, 'billNo', 'BILL-', 4), vendorId: '', code: '', desc: '', amount: 0, taxRate: 10, billDate: today, dueDate: due, status: 'unpaid', paid: 0, invoice: '', sentAt: '', commitmentId: '' }] }) }));
   }
   deleteBill(id) {
-    if (!this._delGate('bill', this._delTarget('bill', id), () => this.deleteBill(id))) return; 
+    const _pb = this.proj(this.state.pid), _b = _pb && (_pb.bills || []).find(x => x.id === id);
+    const _note = (_b && _b.fromLabour) ? 'Its hours go back onto the budget line directly and can be put on another commitment.' : '';
+    if (!this._delGate('bill', this._delTarget('bill', id), () => this.deleteBill(id), _note)) return; 
     this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, bills: (p.bills || []).filter(x => x.id !== id) }) }));
   }
   setBillField(id, field, raw) {
@@ -14848,19 +14937,38 @@ class Component extends DCLogic {
   // line if the project has one; if it has none, their hours still count, they just have
   // nowhere to post until somebody picks a line.
   _labourDefaultLine(p) { const l = (p.costLines || []).find(x => x.cat === 'labor'); return l ? l.id : ''; }
+  // Weeks that sit on a commitment, as { weekId: bill }. Read from the commitments themselves, the way a claim counts
+  // as posted because a bill names it: delete the commitment and its weeks are simply not on one any more.
+  _labourBilledMap(p) {
+    const bills = (p && p.bills) || [];
+    if (this._lbBilledCache && this._lbBilledCache.bills === bills) return this._lbBilledCache.map;
+    const map = {};
+    bills.forEach(b => { if (b && Array.isArray(b.labourWeekIds)) b.labourWeekIds.forEach(id => { if (!map[id]) map[id] = b; }); });
+    this._lbBilledCache = { bills, map };
+    return map;
+  }
+  labourRowBill(p, w) { return (w && this._labourBilledMap(p)[w.id]) || null; }
+  labourPersonBilledCost(p, personId) {
+    const billed = this._labourBilledMap(p);
+    return this._r2(this.labourPersonWeeks(p, personId).reduce((a, w) => a + (billed[w.id] ? this.labourRowCost(w) : 0), 0));
+  }
+  // Labour a budget line carries directly: its people's weeks that are not on a commitment. Weeks on a commitment
+  // reach the line through the commitment instead, so counting them here as well would count them twice.
   lineLabourCost(l, p) {
     const proj = p || this.proj(this.state.pid) || {};
     if (!l || !l.id) return 0;
-    return this._r2(this.labourOf(proj).roster.filter(r => r.costLineId === l.id)
-      .reduce((a, r) => a + this.labourPersonCost(proj, r.id), 0));
+    const lab = this.labourOf(proj), billed = this._labourBilledMap(proj);
+    const ids = {}; lab.roster.forEach(r => { if (r.costLineId === l.id) ids[r.id] = 1; });
+    return this._r2(lab.weeks.reduce((a, w) => a + ((ids[w.personId] && !billed[w.id]) ? this.labourRowCost(w) : 0), 0));
   }
   // Hours recorded against a person who has no budget line, or one that has since been
   // deleted. The money is real and has to be visible somewhere, so the screen says so rather
   // than letting it disappear between the two views.
   labourUnpostedCost(p) {
     const ids = {}; (p.costLines || []).forEach(l => { ids[l.id] = 1; });
-    return this._r2(this.labourOf(p).roster.filter(r => !r.costLineId || !ids[r.costLineId])
-      .reduce((a, r) => a + this.labourPersonCost(p, r.id), 0));
+    const lab = this.labourOf(p), billed = this._labourBilledMap(p);
+    const lost = {}; lab.roster.forEach(r => { if (!r.costLineId || !ids[r.costLineId]) lost[r.id] = 1; });
+    return this._r2(lab.weeks.reduce((a, w) => a + ((lost[w.personId] && !billed[w.id]) ? this.labourRowCost(w) : 0), 0));
   }
 
   // ---- entering and correcting ----
@@ -14903,6 +15011,9 @@ class Component extends DCLogic {
   setLabourHours(personId, day, text) {
     if (!this.can('labour', 'edit')) return;
     const week = this.labourWeekStart();
+    // the commitment's amount was worked out from these hours
+    const _p0 = this.proj(this.state.pid);
+    if (_p0 && this.labourRowBill(_p0, this.labourWeekRow(_p0, personId, week))) return;
     const raw = String(text == null ? '' : text).replace(/[^0-9.]/g, '');
     const dot = raw.indexOf('.');
     const clean = dot < 0 ? raw : raw.slice(0, dot + 1) + raw.slice(dot + 1).replace(/\./g, '');
@@ -14928,11 +15039,112 @@ class Component extends DCLogic {
   setLabourWeekRate(personId, text) {
     if (!this.can('labour', 'edit')) return;
     const week = this.labourWeekStart();
+    const _p0 = this.proj(this.state.pid);
+    if (_p0 && this.labourRowBill(_p0, this.labourWeekRow(_p0, personId, week))) return;
     const rate = this._r2(this._num(text));
     this.setState({ labourRaw: String(text == null ? '' : text), editCell: 'lb:' + personId + ':rate' });
-    this._labourUpdate(lab => ({ ...lab, weeks: lab.weeks.map(w => (w.personId === personId && w.weekStart === week) ? { ...w, rate } : w) }));
+    this._labourUpdate((lab, p) => { const billed = this._labourBilledMap(p);
+      return { ...lab, weeks: lab.weeks.map(w => (w.personId === personId && w.weekStart === week && !billed[w.id]) ? { ...w, rate } : w) }; });
   }
   endLabourEdit() { this.setState({ editCell: '', labourRaw: null }); }
+
+  // ---- a commitment from recorded hours ----
+  // What a timeframe holds: for each person with hours in it that are not yet on a commitment, those weeks and what
+  // they cost, and the budget line (by code - a commitment lands on a line by its cost code) the money goes to.
+  _labourBillDatesBad(f) { return !f || !f.from || !f.to || f.from > f.to; }
+  _labourBillTaxOk(f) { const t = String(f && f.taxRate != null ? f.taxRate : '').trim(); return /^\d+(\.\d+)?$/.test(t) && Number(t) <= 100; }
+  _labourBillPlan(p, f) {
+    const lab = this.labourOf(p), billed = this._labourBilledMap(p);
+    if (this._labourBillDatesBad(f)) return { people: [], groups: [], cannot: [] };
+    const inRange = w => w.weekStart >= f.from && w.weekStart <= f.to;
+    const pick = f.pick || {};
+    // a commitment is counted by every budget line carrying its code, and hours belong to one line
+    const codeUse = {};
+    (p.costLines || []).forEach(l => { const c = String(l.code == null ? '' : l.code).trim(); if (c) codeUse[c] = (codeUse[c] || 0) + 1; });
+    const people = lab.roster.map(r => {
+      const weeks = lab.weeks.filter(w => w.personId === r.id && !billed[w.id] && inRange(w) && this.labourRowCost(w) > 0)
+        .sort((a, b) => (a.weekStart < b.weekStart ? -1 : a.weekStart > b.weekStart ? 1 : 0));
+      const line = (p.costLines || []).find(l => l.id === r.costLineId);
+      const code = line ? String(line.code == null ? '' : line.code).trim() : '';
+      const shared = !!code && codeUse[code] > 1;
+      return { r, weeks, line, code, shared, ok: !!code && !shared,
+        why: !code ? 'posts to no budget line with a cost code' : (shared ? 'posts to ' + code + ', which more than one budget line uses' : ''),
+        on: pick[r.id] !== false,
+        hours: this._r2(weeks.reduce((a, w) => a + this.labourRowHours(w), 0)),
+        cost: this._r2(weeks.reduce((a, w) => a + this.labourRowCost(w), 0)) };
+    }).filter(x => x.weeks.length > 0);
+    const groups = [], byCode = {};
+    people.filter(x => x.on && x.ok).forEach(x => {
+      let g = byCode[x.code];
+      if (!g) { g = byCode[x.code] = { code: x.code, line: x.line, names: [], weekIds: [], hours: 0, cost: 0, first: '', last: '' }; groups.push(g); }
+      g.names.push(x.r.name || '(unnamed)');
+      x.weeks.forEach(w => {
+        g.weekIds.push(w.id);
+        if (!g.first || w.weekStart < g.first) g.first = w.weekStart;
+        if (!g.last || w.weekStart > g.last) g.last = w.weekStart;
+      });
+      g.hours = this._r2(g.hours + x.hours); g.cost = this._r2(g.cost + x.cost);
+    });
+    return { people, groups, cannot: people.filter(x => x.on && !x.ok) };
+  }
+  openLabourBill() {
+    if (!this.can('labour', 'edit') || !this.can('bills', 'edit')) return;
+    const p = this.proj(this.state.pid); if (!p) return;
+    const billed = this._labourBilledMap(p);
+    const open = this.labourOf(p).weeks.filter(w => !billed[w.id] && this.labourRowCost(w) > 0).map(w => w.weekStart).sort();
+    const wk = this.labourWeekStart();
+    this.setState({ labourBillForm: { from: open.length ? open[0] : wk, to: open.length ? open[open.length - 1] : wk, pick: {},
+      vendorId: '', taxRate: '10', billDate: this.todayLocal() } });
+  }
+  closeLabourBill() { this.setState({ labourBillForm: null }); }
+  setLabourBillField(k, v) {
+    if (k === 'vendorId' && v === '__new__') {
+      this.setState({ vendorModal: { labourBill: true }, vendorForm: { type: 'contractor', company: '', rep: '', abn: '', phone: '', email: '', address: '' } });
+      return;
+    }
+    this.setState(s => (s.labourBillForm ? { labourBillForm: { ...s.labourBillForm, [k]: v } } : {}));
+  }
+  toggleLabourBillPerson(id) {
+    this.setState(s => {
+      if (!s.labourBillForm) return {};
+      const pick = { ...(s.labourBillForm.pick || {}) };
+      pick[id] = pick[id] === false;
+      return { labourBillForm: { ...s.labourBillForm, pick } };
+    });
+  }
+  saveLabourBill() {
+    if (!this.can('labour', 'edit') || !this.can('bills', 'edit')) return;
+    const f = this.state.labourBillForm; if (!f) return;
+    if (this._labourBillDatesBad(f) || !this._labourBillTaxOk(f)) return;
+    this.setState(s => {
+      const made = [];
+      const p = s.projects.find(x => x.id === s.pid); if (!p) return {};
+      // worked out again from what is saved now, so a week put on a commitment a moment ago is not put on another
+      const plan = this._labourBillPlan(p, f);
+      if (!plan.groups.length) return {};
+      const bills = (p.bills || []).slice();
+      const billDate = f.billDate || this.todayLocal();
+      const taxRate = this._num(f.taxRate);
+      plan.groups.forEach(g => {
+        const bill = { id: this._rid('bill'), billNo: this.nextSeqRef(bills, 'billNo', 'BILL-', 4), vendorId: f.vendorId || '',
+          code: g.code,
+          desc: 'Labour hours — ' + g.names.join(', ') + ' — weeks from ' + this.fmtDate(g.first) + ' to ' + this.fmtDate(g.last) + ' (' + g.hours + ' h)',
+          amount: g.cost, taxRate, billDate, dueDate: this.addCalendarDays(billDate, this._termDays()),
+          status: 'unpaid', paid: 0, payments: [], invoice: '', sentAt: '', commitmentId: '',
+          fromLabour: true, labourWeekIds: g.weekIds.slice(), labourFrom: g.first, labourTo: g.last };
+        bills.push(bill);
+        made.push(bill);
+      });
+      const tot = made.reduce((a, b) => a + this.billTotal(b), 0);
+      const hrs = this._r2(plan.groups.reduce((a, g) => a + g.hours, 0));
+      return {
+        projects: s.projects.map(x => x.id !== s.pid ? x : { ...x, bills }),
+        labourBillForm: null,
+        apNotice: made.map(b => b.billNo).join(', ') + ' created from ' + hrs + ' h of labour — ' + this.money(tot)
+          + ' including GST. ' + (made.length === 1 ? 'It is' : 'They are') + ' on Commitments, where the supplier’s invoice is attached and payments are recorded.',
+      };
+    });
+  }
 
   // ---- moving between weeks ----
   labourGoWeek(deltaWeeks) { this.setState({ labourWeek: this.addDays(this.labourWeekStart(), deltaWeeks * 7) }); }
@@ -14964,6 +15176,7 @@ class Component extends DCLogic {
         vendors: nextVendors,
         vendorModal: null,
         subForm: (vendorModal.sub && s.subForm) ? { ...s.subForm, vendorId: id } : s.subForm,
+        labourBillForm: (vendorModal.labourBill && s.labourBillForm) ? { ...s.labourBillForm, vendorId: id } : s.labourBillForm,
         projects: vendorModal.billId ? s.projects.map(p => p.id !== s.pid ? p : { ...p, bills: (p.bills || []).map(x => x.id === vendorModal.billId ? { ...x, vendorId: id } : x) }) : s.projects,
       };
     }, () => { if (vendorModal.apId) this._apCommit(vendorModal.apId, { vendorId: id }, 'Supplier added to the Directory', vendor.company); }));
@@ -17148,9 +17361,14 @@ class Component extends DCLogic {
         const hours = this.labourRowHours(w);
         const rate = w ? this._num(w.rate) : this._num(r.rate);
         const over = _std > 0 && hours > _std;
+        const onBill = this.labourRowBill(p, w);
         return {
           id: r.id, name: r.name || '(unnamed)', role: r.role || '',
           hasRow: !!w, noRow: !w,
+          locked: !!onBill, billedShow: !!onBill, billedLabel: onBill ? 'On ' + onBill.billNo : '',
+          billedTitle: onBill ? ('This week is on commitment ' + onBill.billNo + ', so its hours and rate are locked. Delete that commitment to change them.') : '',
+          onOpenBill: () => this.goCommitTab('bills'),
+          rateBg: onBill ? '#f3f5f8' : '#fff',
           rateDisp: (_ec === 'lb:' + r.id + ':rate' && S.labourRaw != null) ? String(S.labourRaw) : (rate > 0 ? String(this._r2(rate)) : ''),
           onRate: e => this.setLabourWeekRate(r.id, e.target.value),
           onRateFocus: () => this.startEdit('lb:' + r.id + ':rate'),
@@ -17159,7 +17377,7 @@ class Component extends DCLogic {
             key: k, value: _hrs('lb:' + r.id + ':' + k, this._num((w && w.d) ? w.d[k] : 0)),
             onInput: e => this.setLabourHours(r.id, k, e.target.value),
             onFocus: () => this.startEdit('lb:' + r.id + ':' + k),
-            bg: (i > 4) ? '#fafbfc' : '#fff',
+            bg: onBill ? '#f3f5f8' : ((i > 4) ? '#fafbfc' : '#fff'), locked: !!onBill,
           })),
           hours: hours > 0 ? String(hours) : '—',
           cost: this.money(this.labourRowCost(w)),
@@ -17193,6 +17411,8 @@ class Component extends DCLogic {
           barColor: over ? '#dc2626' : (near ? '#e0a800' : '#22a35a'),
           barShow: allow > 0,
           costToDate: this.money(this.labourPersonCost(p, r.id)),
+          billedShow: this.labourPersonBilledCost(p, r.id) > 0,
+          billedText: this.money(this.labourPersonBilledCost(p, r.id)) + ' on commitments',
           lineValue: r.costLineId || '', lineOptions: _lineOpts, onLine: e => this.setLabourPerson(r.id, 'costLineId', e.target.value),
           onJob: r.active !== false,
           statusLabel: r.active === false ? 'Finished' : 'On the job',
@@ -17234,8 +17454,61 @@ class Component extends DCLogic {
       labourV.onAdd = e => { const v = e.target.value; if (v) this.addLabourPerson(v); };
       labourV.onAddBlank = () => this.addLabourPerson('');
       labourV.onCellBlur = () => this.endLabourEdit();
+      const _lbOpen = this._labourBilledMap(p);
+      labourV.canBill = _canEdit && this.can('bills', 'edit') && _lab.weeks.some(w => !_lbOpen[w.id] && this.labourRowCost(w) > 0);
+      labourV.onBill = () => this.openLabourBill();
       labourV.unpostedShow = _unposted > 0;
       labourV.unpostedText = this.money(_unposted) + ' of recorded time has no budget line to land on — pick one in “Posts to” and it joins that budget line’s Committed and Actual.';
+    }
+
+    // ---- a commitment from hours ----
+    let labourBillV = { open: false };
+    if (S.labourBillForm && p) {
+      const f = S.labourBillForm;
+      const plan = this._labourBillPlan(p, f);
+      const tax = this._num(f.taxRate);
+      const net = this._r2(plan.groups.reduce((a, g) => a + g.cost, 0));
+      const gross = this._r2(net * (1 + tax / 100));
+      const datesBad = this._labourBillDatesBad(f), taxOk = this._labourBillTaxOk(f);
+      const can = plan.groups.length > 0 && taxOk && this.can('labour', 'edit') && this.can('bills', 'edit');
+      labourBillV = {
+        open: true,
+        from: f.from || '', to: f.to || '', billDate: f.billDate || '', taxRate: f.taxRate == null ? '' : String(f.taxRate), vendorId: f.vendorId || '',
+        onFrom: e => this.setLabourBillField('from', e.target.value),
+        onTo: e => this.setLabourBillField('to', e.target.value),
+        onBillDate: e => this.setLabourBillField('billDate', e.target.value),
+        onTax: e => this.setLabourBillField('taxRate', e.target.value),
+        onVendor: e => this.setLabourBillField('vendorId', e.target.value),
+        vendorOptions: [...(S.vendors || [])].sort((a, b) => String(a.company || '').localeCompare(String(b.company || ''))).map(v => ({ id: v.id, label: v.company + ' · ' + this.vendorTypeLabel(v.type) })),
+        people: plan.people.map(x => ({
+          id: x.r.id, name: x.r.name || '(unnamed)',
+          detail: (x.r.active === false ? 'Finished · ' : '') + x.hours + ' h · ' + x.weeks.length + (x.weeks.length === 1 ? ' week' : ' weeks') + ' · ' + (x.ok ? ('posts to ' + x.code + (x.line && x.line.desc ? ' — ' + x.line.desc : '')) : x.why),
+          cost: this.money(x.cost),
+          check: x.on ? '✓' : '',
+          boxBg: x.on ? '#2b59c3' : '#fff', boxBorder: x.on ? '#2b59c3' : '#cfd8e2',
+          detailColor: x.ok ? '#8894a2' : '#b45309',
+          onToggle: () => this.toggleLabourBillPerson(x.r.id),
+        })),
+        hasPeople: plan.people.length > 0, noPeople: !datesBad && plan.people.length === 0,
+        datesShow: datesBad,
+        datesText: (!f.from || !f.to) ? 'Pick both dates: the first and the last week to put on the commitment.' : 'The “to” date is before the “from” date.',
+        taxShow: !taxOk, taxText: 'GST must be a number from 0 to 100 — 10 for standard GST, 0 for none.',
+        groups: plan.groups.map(g => ({
+          code: g.code + (g.line && g.line.desc ? ' — ' + g.line.desc : ''),
+          who: g.names.join(', ') + ' · ' + g.hours + ' h · weeks from ' + this.fmtDate(g.first) + ' to ' + this.fmtDate(g.last),
+          amount: this.money(g.cost), total: this.money(this._r2(g.cost * (1 + tax / 100))),
+        })),
+        hasGroups: plan.groups.length > 0,
+        cannotShow: plan.cannot.length > 0,
+        cannotText: 'Left out: ' + plan.cannot.map(x => (x.r.name || '(unnamed)') + ' ' + x.why).join('; ')
+          + '. Each person needs a budget line in “Posts to” with a cost code of its own.',
+        net: this.money(net), gst: this.money(this._r2(gross - net)), gross: this.money(gross),
+        canSave: can, cannotSave: !can,
+        saveBg: can ? '#2b59c3' : '#c7d0db', saveCursor: can ? 'pointer' : 'not-allowed',
+        saveLabel: plan.groups.length > 1 ? ('Create ' + plan.groups.length + ' commitments') : 'Create commitment',
+        onSave: () => this.saveLabourBill(),
+        onClose: () => this.closeLabourBill(),
+      };
     }
 
     // ---- the sections menu ----
@@ -18941,7 +19214,7 @@ class Component extends DCLogic {
         const psm = this.statusMeta(status);
         const overdue = status !== 'paid' && x.dueDate && x.dueDate < today;
         return { id: x.id, billNo: x.billNo, vendorId: x.vendorId, code: x.code, desc: x.desc, amount: this._mdisp(x.id + ":amount", x.amount), onAmountFocus: () => this.startEdit(x.id + ":amount"), onCellBlur: () => this.endEdit(), taxRate: x.taxRate, billDate: x.billDate, dueDate: x.dueDate,
-          coded: !!x.code, hasVendor: !!x.vendorId, fromAp: !!x.fromAp, vendorOptions, codeCatalog, codeGroups: this.projectCodeGroups(S.pid), tax: this.money(tax), total: this.money(tot),
+          coded: !!x.code, hasVendor: !!x.vendorId, fromAp: !!x.fromAp, fromLabour: !!x.fromLabour, vendorOptions, codeCatalog, codeGroups: this.projectCodeGroups(S.pid), tax: this.money(tax), total: this.money(tot),
           vendorBorder: x.vendorId ? '#e4e8ee' : '#e6c9a3', vendorBg: x.vendorId ? '#fff' : '#fdf6ec',
           codeBorder: x.code ? '#e4e8ee' : '#e6c9a3', codeBg: x.code ? '#fff' : '#fdf6ec',
           status, statusLabel: psm.label, statusColor: psm.color, statusBg: psm.bg, overdue, fromClaim: !!x.fromClaim,
@@ -20447,7 +20720,7 @@ class Component extends DCLogic {
       navAp, onGoAp: () => this.goApInvoices(),
       apV, apReviewV, apAllocV, apSendV, apPromptV, apRegV, apNoticeV,
       showDashboard, showContract, showDetails, showCommitments, showCost, showInvoices, showVariations, showBills, showDefects,
-      showLabour, labourV,
+      showLabour, labourV, labourBillV,
       defectRows, defectSummary, defectAnalytics, defectSearch: S.defectSearch || '',
       onAddDefect: () => this.addDefect(), onExportDefectsPdf: () => this.exportDefectsPdf(),
       onDefectSearch: e => this.setDefectSearch(e.target.value),
