@@ -15723,14 +15723,18 @@ class Component extends DCLogic {
       + 'Own labour is charged at charge-out rates, with no markup. GST is charged on the whole claim.'
       + (sent.length ? ' Sent with this claim: ' + sent.join(' and ') + '.' : '');
   }
-  // [label, amount, strong, taken off]. A deduction the claim does not have is not printed.
+  // [label, amount, strong, taken off]. A deduction the claim does not have is not printed - and a
+  // claim with nothing taken off at all has a net amount that is its subtotal, so the subtotal is the
+  // line GST is charged on and the same figure is not printed twice under two names.
   _cpSummaryRows(m) {
     const cp = m.cp;
     const out = [['Costs this claim (excl. GST)', cp.cost, false, false], ['Markup', cp.fee, false, false], ['Subtotal (excl. GST)', cp.subtotal, false, false]];
+    const took = out.length;
     if (m.retPct > 0) out.push(['Less retention ' + this._r2(m.retPct) + '%', m.retAmt, false, true]);
     if (cp.depApply > 0) out.push(['Less deposit applied', cp.depApply, false, true]);
     if (m.back > 0) out.push(['Less back charges / deductions', m.back, false, true]);
-    out.push(['Net amount (excl. GST)', m.net, false, false], ['GST ' + m.gst + '%', m.gstAmt, false, false], ['Total payable (incl. GST)', m.total, true, false]);
+    if (out.length > took) out.push(['Net amount (excl. GST)', m.net, false, false]);
+    out.push(['GST ' + m.gst + '%', m.gstAmt, false, false], ['Total payable (incl. GST)', m.total, true, false]);
     return out;
   }
   // [label, amount, strong]. With no estimate on the contract there is nothing to compare with: only what has been claimed.
