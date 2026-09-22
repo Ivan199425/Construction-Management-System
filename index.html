@@ -2373,7 +2373,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                   <input value="{{ r.amount }}" onInput="{{ r.onAmount }}" onFocus="{{ r.onAmountFocus }}" onBlur="{{ r.onCellBlur }}" class="mono" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 8px;font-size:12.5px;text-align:right;font-family:'IBM Plex Mono',monospace;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none">
                   <input value="{{ r.taxRate }}" onInput="{{ r.onTax }}" class="mono" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 6px;font-size:12.5px;text-align:right;font-family:'IBM Plex Mono',monospace;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none">
                   <div class="mono" style="text-align:right;font-weight:600;font-size:12.5px;color:#0f1720">{{ r.total }}</div>
-                  <div style="display:flex;align-items:center;gap:3px;margin-top:1px"><sc-if value="{{ r.hasInvoiceFile }}" hint-placeholder-val="{{ false }}"><button onClick="{{ r.onViewInvoice }}" title="View invoice" style="border:1px solid #cfd8e2;background:#fff;color:#2b59c3;border-radius:6px;padding:6px 7px;font-size:10.5px;font-weight:700;cursor:pointer;flex:0 0 auto" style-hover="border-color:#2b59c3">👁</button></sc-if><label title="Attach the vendor invoice (PDF/image)" style="display:flex;align-items:center;gap:4px;border:1px dashed #cfd8e2;background:#fff;color:#6b7787;border-radius:6px;padding:6px 7px;font-size:10.5px;font-weight:600;cursor:pointer;overflow:hidden" style-hover="border-color:#2b59c3;color:#2b59c3"><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.invoiceLabel }}</span><input type="file" accept="application/pdf,image/*" onChange="{{ r.onAttachInvoice }}" style="display:none"></label></div>
+                  <div style="display:flex;align-items:center;gap:3px;margin-top:1px"><sc-if value="{{ r.hasInvoiceFile }}" hint-placeholder-val="{{ false }}"><button onClick="{{ r.onViewInvoice }}" title="{{ r.invoiceViewTitle }}" style="border:1px solid #cfd8e2;background:#fff;color:#2b59c3;border-radius:6px;padding:6px 7px;font-size:10.5px;font-weight:700;cursor:pointer;flex:0 0 auto" style-hover="border-color:#2b59c3">👁</button></sc-if><label title="Attach the vendor invoice (PDF/image)" style="display:flex;align-items:center;gap:4px;border:1px dashed #cfd8e2;background:#fff;color:#6b7787;border-radius:6px;padding:6px 7px;font-size:10.5px;font-weight:600;cursor:pointer;overflow:hidden" style-hover="border-color:#2b59c3;color:#2b59c3"><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.invoiceLabel }}</span><input type="file" accept="application/pdf,image/*" onChange="{{ r.onAttachInvoice }}" style="display:none"></label></div>
                   <div style="display:flex;flex-direction:column;gap:3px">
                     <span style="align-self:flex-start;font-size:10px;font-weight:600;padding:1px 8px;border-radius:12px;background:{{ r.statusBg }};color:{{ r.statusColor }}">{{ r.statusLabel }}</span><sc-if value="{{ r.hasPaidOn }}" hint-placeholder-val="{{ false }}"><span class="mono" title="Date this commitment was marked paid" style="font-size:9px;color:#15803d;margin-top:2px">✓ {{ r.paidOn }}</span></sc-if>
                     <div style="display:flex;gap:4px;align-items:center">
@@ -19578,7 +19578,13 @@ class Component extends DCLogic {
           paidOn: (() => { const ps = (x.payments || []).filter(q => q.datePaid).sort((a, b) => String(b.datePaid).localeCompare(String(a.datePaid))); const d = (ps[0] && ps[0].datePaid) || x.paidAt || ''; return d ? this.fmtDate(d) : ''; })(),
           hasPaidOn: status === 'paid' && !!(((x.payments || []).find(q => q.datePaid) || {}).datePaid || x.paidAt),
           payCount: String((x.payments || []).length), hasPayments: (x.payments || []).length > 0,
-          invoice: x.invoice || '', hasInvoice: !!x.invoice, invoiceLabel: x.invoice ? x.invoice : '＋ Invoice', hasInvoiceFile: !!x.invoiceUrl, onViewInvoice: () => this.viewBillInvoice(x.id), sent: !!x.sentAt, sentAt: x.sentAt || '',
+          invoice: x.invoice || '', hasInvoice: !!x.invoice,
+          // the proof of a labour commitment: its timesheet, until a supplier's invoice is attached in its place
+          ...(((ts) => (ts
+            ? { invoiceLabel: '📄 ' + ts.name, hasInvoiceFile: true, onViewInvoice: () => this.viewLabourTimesheet(x.id), invoiceViewTitle: 'View the timesheet attached to this commitment' }
+            : { invoiceLabel: x.invoice ? x.invoice : '＋ Invoice', hasInvoiceFile: !!x.invoiceUrl, onViewInvoice: () => this.viewBillInvoice(x.id), invoiceViewTitle: 'View invoice' }))
+            // a supplier invoice counts from the moment it is picked, not only once its upload has come back
+            ((x.fromLabour && !x.invoice && !x.invoiceUrl) ? this._billTimesheetFresh(p, x) : null)), sent: !!x.sentAt, sentAt: x.sentAt || '',
           commitmentId: x.commitmentId || '', commitmentOptions,
           onPaid: e => this.setBillPaid(x.id, e.target.value), onPayFull: () => this.recordBillPayment(x.id, null), onAddPayment: () => this.openPaymentModal(x.id),
           onViewPayments: () => this.openPaymentsView(x.id),
@@ -20048,7 +20054,7 @@ class Component extends DCLogic {
             recipientCount: String(recips.length), hasRecipients: recips.length > 0, noRecipients: recips.length === 0,
             contactPicks: picks, hasContactPicks: picks.length > 0,
             onPickContact: e => { const v = e.target.value; e.target.value = ''; if (isBill) this.addBillSendRecipient(v); else this.addClaimSendRecipient(v); },
-            invoiceName: attName || 'No file attached', hasInvoiceFile: !!attUrl, onViewInvoice: onViewAtt, missingInvoice: !attUrl,
+            invoiceName: attName || 'No file attached', hasInvoiceFile: !!attUrl, onViewInvoice: onViewAtt, missingInvoice: !attUrl && !(tsUrl && st.attachTimesheet),
             invoiceChk: chkB(!!st.attachInvoice), invoiceTick: st.attachInvoice ? '✓' : '', onToggleInvoice: () => setF('attachInvoice', !st.attachInvoice),
             attachSummary: [(st.attachInvoice && attName) ? attName : '', (tsUrl && st.attachTimesheet) ? tsName : ''].filter(Boolean).join(' + ') || 'no file',
             hasTimesheet: !!tsUrl, timesheetName: tsName, onViewTimesheet: onViewTs, timesheetStale: tsStale,
