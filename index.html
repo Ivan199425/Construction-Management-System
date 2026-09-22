@@ -2348,12 +2348,12 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
             </div>
 
             <div style="background:#fff;border:1px solid #e4e8ee;border-radius:12px;overflow:hidden">
-              <div style="overflow-x:auto"><div style="min-width:1160px">
-                <div class="colhdr dark" style="display:grid;grid-template-columns:42px 88px 90px minmax(200px,1.5fr) 150px 112px 132px 58px 100px 60px;padding:11px 16px;background:#2A3580;border-bottom:1px solid #e4e8ee;font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#fff;text-transform:uppercase;gap:10px">
+              <div style="overflow-x:auto"><div style="min-width:1178px">
+                <div class="colhdr dark" style="display:grid;grid-template-columns:42px 88px 90px minmax(200px,1.5fr) 150px 112px 132px 58px 100px 78px;padding:11px 16px;background:#2A3580;border-bottom:1px solid #e4e8ee;font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#fff;text-transform:uppercase;gap:10px">
                   <div></div><div>Date</div><div>Cost code</div><div>Cost</div><div>Category</div><div style="text-align:right">To claim</div><div style="text-align:right">This claim</div><div style="text-align:right">Markup %</div><div style="text-align:right">Markup</div><div style="text-align:center">Invoice</div>
                 </div>
                 <sc-for list="{{ invoiceV.cp.rows }}" as="r" hint-placeholder-count="4">
-                  <div style="display:grid;grid-template-columns:42px 88px 90px minmax(200px,1.5fr) 150px 112px 132px 58px 100px 60px;padding:9px 16px;border-bottom:1px solid #eef1f4;align-items:center;gap:10px;opacity:{{ r.rowOpacity }}" style-hover="background:#f9fafc">
+                  <div style="display:grid;grid-template-columns:42px 88px 90px minmax(200px,1.5fr) 150px 112px 132px 58px 100px 78px;padding:9px 16px;border-bottom:1px solid #eef1f4;align-items:center;gap:10px;opacity:{{ r.rowOpacity }}" style-hover="background:#f9fafc">
                     <button onClick="{{ r.onSelect }}" title="Claim this cost on this invoice" style="width:18px;height:18px;border-radius:5px;border:1.5px solid {{ r.checkBorder }};background:{{ r.checkBg }};color:#fff;font-size:11px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0">{{ r.checkMark }}</button>
                     <div class="mono" style="font-size:11.5px;color:#0f1720">{{ r.date }}</div>
                     <div class="mono" style="font-size:12px;color:#0f1720">{{ r.code }}</div>
@@ -2376,7 +2376,8 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                     <div class="mono" style="font-size:12px;color:#0f1720;text-align:right">{{ r.fee }}</div>
                     <div style="text-align:center">
                       <sc-if value="{{ r.hasDoc }}" hint-placeholder-val="{{ true }}"><button onClick="{{ r.onViewDoc }}" title="{{ r.docTitle }}" style="border:0;background:transparent;color:#2b59c3;cursor:pointer;font-size:14px;padding:2px;line-height:1">&#128196;</button></sc-if>
-                      <sc-if value="{{ r.noDoc }}" hint-placeholder-val="{{ false }}"><span title="No supplier invoice file is attached to this cost, so the client gets no copy of it. Attach it on Commitments." style="font-size:9.5px;font-weight:700;letter-spacing:.3px;color:#b45309;background:#fbf1e3;border-radius:4px;padding:2px 5px">NONE</span></sc-if>
+                      <sc-if value="{{ r.localDoc }}" hint-placeholder-val="{{ false }}"><span title="{{ r.localTitle }}" style="font-size:9px;font-weight:700;letter-spacing:.3px;color:#8a6d00;background:#fdf3d7;border-radius:4px;padding:2px 4px">LOCAL</span></sc-if>
+                      <sc-if value="{{ r.canAttach }}" hint-placeholder-val="{{ false }}"><label title="No supplier invoice file is attached to this cost, so the client gets no copy of it. Click to attach one (PDF/image)." style="display:inline-block;font-size:9.5px;font-weight:700;letter-spacing:.3px;color:#b45309;background:#fbf1e3;border-radius:4px;padding:2px 5px;cursor:pointer" style-hover="background:#f6e6c6">NONE ＋<input type="file" accept="application/pdf,image/*" onChange="{{ r.onAttachDoc }}" style="display:none"></label></sc-if>
                       <sc-if value="{{ r.isLabour }}" hint-placeholder-val="{{ false }}"><span title="On the labour timesheet sent with this claim" style="font-size:9.5px;font-weight:700;letter-spacing:.3px;color:#6d28d9;background:#f1ebfd;border-radius:4px;padding:2px 5px">SHEET</span></sc-if>
                     </div>
                   </div>
@@ -13663,21 +13664,78 @@ class Component extends DCLogic {
     return this._num((mine[k] != null && mine[k] !== '') ? mine[k] : dflt[k]);
   }
   // The supplier's invoice behind a commitment, as a file that can go to the client: attached to the commitment, to
-  // the progress claim it was posted from, or to the supplier invoice it was posted from. Only an uploaded file can
-  // travel; one kept only in this browser cannot, and counts as none.
+  // the progress claim it was posted from, or to the supplier invoice it was posted from. A file that never reached
+  // the file store - kept in this browser as a data: or blob: URL, because the upload failed while offline or signed
+  // out - counts as a file: it is marked local, and it is uploaded when the claim is sent. A file already in the file
+  // store is preferred over one kept here, whichever it is attached to: it is the one that is certain to travel.
   _cpBillDoc(p, b) {
     const ok = u => /^https?:/i.test(String(u || ''));
-    if (ok(b.invoiceUrl)) return { name: b.invoice || 'Invoice', url: b.invoiceUrl, type: b.invoiceType || '' };
+    const any = u => ok(u) || /^(data:|blob:)/i.test(String(u || ''));
+    const out = [];
+    const add = (name, url, type, dflt) => { if (any(url)) out.push({ name: name || dflt, url: String(url), type: type || '', local: !ok(url) }); };
+    add(b.invoice, b.invoiceUrl, b.invoiceType, 'Invoice');
     if (b.claimId) {
       const c = (p.claims || []).find(x => x.id === b.claimId);
-      if (c && ok(c.invoiceUrl)) return { name: c.invoice || 'Claim', url: c.invoiceUrl, type: c.invoiceType || '' };
+      if (c) add(c.invoice, c.invoiceUrl, c.invoiceType, 'Claim');
     }
     if (b.apId) {
-      const inv = this.apInv(b.apId), list = ((inv && inv.attachments) || []).filter(a => a && ok(a.url));
-      const a = list.find(x => x.original) || list[0];
-      if (a) return { name: a.name || 'Invoice', url: a.url, type: a.type || '' };
+      const inv = this.apInv(b.apId), list = ((inv && inv.attachments) || []).filter(a => a && any(a.url));
+      list.filter(x => x.original).concat(list.filter(x => !x.original)).forEach(a => add(a.name, a.url, a.type, 'Invoice'));
     }
-    return null;
+    return out.filter(d => !d.local)[0] || out[0] || null;
+  }
+  // A file kept in this browser, as a real file to upload: a data: URL decoded here, a blob: URL read back.
+  _fileFromUrl(url, name, type) {
+    const u = String(url || '');
+    const named = blob => {
+      if (!blob) return null;
+      let f = blob;
+      try { f = new File([blob], name || 'file', { type: type || blob.type || '' }); } catch (e) { try { blob.name = name || 'file'; } catch (e2) {} }
+      return f;
+    };
+    try {
+      if (/^data:/i.test(u)) {
+        const comma = u.indexOf(',');
+        if (comma < 0) return Promise.resolve(null);
+        const head = u.slice(5, comma), body = u.slice(comma + 1);
+        const mime = (head.split(';')[0] || '') || (type || '');
+        let blob;
+        if (/;base64/i.test(head)) {
+          const bin = atob(body), arr = new Uint8Array(bin.length);
+          for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+          blob = new Blob([arr], { type: mime });
+        } else blob = new Blob([decodeURIComponent(body)], { type: mime });
+        return Promise.resolve(named(blob));
+      }
+      if (/^blob:/i.test(u)) return fetch(u).then(r => r.blob()).then(named).catch(() => null);
+    } catch (e) {}
+    return Promise.resolve(null);
+  }
+  // What an issued claim keeps about a supplier invoice: its name, and where the file is. A file held only in this
+  // browser is kept by name alone - its bytes never go in the project record - and is looked up again from the cost.
+  _keptDoc(d) {
+    if (!d || !d.url) return d || null;
+    return /^https?:/i.test(String(d.url)) ? d : { name: d.name || 'Invoice', url: '', type: d.type || '', local: true };
+  }
+  // A supplier invoice that could not be sent is named in the email, rather than left out quietly.
+  _attMissedNote(text, missed) {
+    if (!missed || !missed.length) return text;
+    const NLc = String.fromCharCode(10), one = missed.length === 1;
+    const note = 'Not attached: ' + missed.join(', ') + ' - ' + (one ? 'this file is' : 'these files are') + ' held in our system and could not'
+      + ' be sent with this email. Ask us and we will send ' + (one ? 'it' : 'them') + ' to you.';
+    const at = text.indexOf('Attached: ');
+    const eol = at >= 0 ? text.indexOf(NLc, at) : -1;
+    return at >= 0 ? (eol >= 0 ? text.slice(0, eol) + NLc + note + text.slice(eol) : text + NLc + note) : text + NLc + NLc + note;
+  }
+  // ... and the person who sent it is told, with what to do about it.
+  _tellMissedAtts(missed) {
+    if (!missed || !missed.length) return;
+    const NL2 = String.fromCharCode(10) + String.fromCharCode(10);
+    const one = missed.length === 1;
+    alert((one ? 'One supplier invoice could not be sent with the claim:' : missed.length + ' supplier invoices could not be sent with the claim:')
+      + NL2 + missed.join(String.fromCharCode(10)) + NL2
+      + (one ? 'That file is' : 'Those files are') + ' kept in this browser, not in the file store, and the upload failed again just now.'
+      + ' Check you are signed in and online, attach the file again on the claim or on Commitments, then re-send the invoice.');
   }
   // Every cost the project has that a claim can carry, as it stands now: one per commitment - not those made from
   // Labour hours, whose weeks are claimed themselves - and one per person-week of Labour hours. Each knows where it
@@ -13848,12 +13906,15 @@ class Component extends DCLogic {
     }).sort((a, b) => ((a.code ? 0 : 1) - (b.code ? 0 : 1)) || String(a.code).localeCompare(String(b.code), undefined, { numeric: true }) || a.cat.localeCompare(b.cat) || ((a.fixed ? 1 : 0) - (b.fixed ? 1 : 0)));
   }
   // The supplier invoices a claim sends with it: one file per invoice, however many cost codes it was split over.
+  // Each knows which costs it stands for, so a file uploaded as the claim goes out can be kept against them.
   _cpDocs(items) {
-    const seen = {}, out = [];
+    const at = {}, out = [];
     items.forEach(it => {
       const d = it.doc;
-      if (!d || !d.url || this._num(it.claim) <= 0.005 || seen[d.url]) return;
-      seen[d.url] = 1; out.push({ name: d.name || 'Invoice', url: d.url, type: d.type || '' });
+      if (!d || !d.url || this._num(it.claim) <= 0.005) return;
+      if (at[d.url]) { at[d.url].keys.push(it.key); return; }
+      at[d.url] = { name: d.name || 'Invoice', url: d.url, type: d.type || '', local: !!d.local, keys: [it.key] };
+      out.push(at[d.url]);
     });
     return out;
   }
@@ -13881,7 +13942,17 @@ class Component extends DCLogic {
     let items, from, to, retPct, depApply, depHeld, E, uncat, draft = null;
     if (issued) {
       const cp = issued.cp || {};
-      items = (cp.items || []).map(it => Object.assign({}, it, { claim: this._num(it.amount), fee: this._num(it.fee) }));
+      // a file that was only in this browser when the claim went out was kept by name: if it has been uploaded
+      // since, a re-send carries it
+      items = (cp.items || []).map(it => {
+        const k = Object.assign({}, it, { claim: this._num(it.amount), fee: this._num(it.fee) });
+        if (it.kind === 'bill' && it.doc && it.doc.local && !it.doc.url) {
+          const b = (p.bills || []).find(x => 'b:' + x.id === it.key);
+          // gone from the cost as well: the claim says it has no file, rather than naming one it cannot send
+          k.doc = (b ? this._cpBillDoc(p, b) : null) || null;
+        }
+        return k;
+      });
       from = ex.periodFrom || ''; to = ex.periodTo || '';
       retPct = this._num(ex.retentionPct);
       // what it applied when it was issued stands: a deposit lowered on the contract since does not rewrite it
@@ -14017,13 +14088,21 @@ class Component extends DCLogic {
         pct: this._r2(it.pct) + '%', fee: money(it.on ? it.fee : it.typedFee),
         on: it.on, checkMark: it.on ? '✓' : '', checkBg: it.on ? '#2b59c3' : '#fff', checkBorder: it.on ? '#2b59c3' : '#cfd8e2',
         rowOpacity: it.on ? '1' : '.55', onSelect: () => this.toggleCpItem(it.key),
-        hasDoc: !!it.doc, noDoc: it.kind === 'bill' && !it.doc && !it.gone, isLabour: it.kind === 'labour',
-        docTitle: it.doc ? 'Open ' + it.doc.name + ' — sent to the client with this claim' : '',
-        onViewDoc: () => { if (it.doc) this.openAttachment({ name: it.doc.name, url: it.doc.url, type: it.doc.type || '' }); },
+        hasDoc: !!(it.doc && it.doc.url), localDoc: !!(it.doc && it.doc.local), isLabour: it.kind === 'labour',
+        // NONE means no file at all: a file kept in this browser is uploaded when the claim is sent
+        noDoc: it.kind === 'bill' && !it.doc && !it.gone,
+        docTitle: it.doc ? ('Open ' + it.doc.name + (it.doc.local
+          ? ' — kept in this browser; it is uploaded and sent to the client when this claim goes'
+          : ' — sent to the client with this claim')) : '',
+        localTitle: 'This file is kept in this browser, not in the file store. It is uploaded when the claim is sent.',
+        canAttach: it.kind === 'bill' && !it.doc && !it.gone && this.can('bills', 'edit'),
+        onAttachDoc: e => this.attachBillInvoice(it.refId, e),
+        onViewDoc: () => { if (it.doc && it.doc.url) this.openAttachment({ name: it.doc.name, url: it.doc.url, type: it.doc.type || '' }); },
       };
     });
     (dr.lines || []).forEach(l => rows.push(this._cpLineRow(l, cp.sheets)));
-    rows.forEach(r => { r.noPickCat = !r.canPickCat; });
+    rows.forEach(r => { r.noPickCat = !r.canPickCat; r.localDoc = !!r.localDoc; r.canAttach = !!r.canAttach;
+      r.localTitle = r.localTitle || ''; if (!r.onAttachDoc) r.onAttachDoc = () => {}; });
     rows.sort((a, b) => String(a.iso).localeCompare(String(b.iso)) || String(a.key).localeCompare(String(b.key)));
     const ticked = rows.filter(r => r.on).length;
     const retDefault = String(this._num(c.retentionPct));
@@ -14048,7 +14127,7 @@ class Component extends DCLogic {
         feeLine: this._cpCats().map(x => x.l + ' ' + this._r2(this._cpFeePct(p, x.k, null)) + '%').join(' · '),
         hasNoDoc: noDoc > 0,
         noDocText: noDoc + (noDoc === 1 ? ' cost ticked on this claim has' : ' costs ticked on this claim have') + ' no supplier invoice file, so the client gets no copy of '
-          + (noDoc === 1 ? 'it' : 'them') + '. They can still be claimed; attach the invoice on Commitments to send it.',
+          + (noDoc === 1 ? 'it' : 'them') + '. They can still be claimed; attach the file on the NONE mark in the Invoice column, or on Commitments.',
         rows, noRows: rows.length === 0, emptyText,
         countText: rows.length + (rows.length === 1 ? ' cost' : ' costs') + ' listed · ' + ticked + ' ticked',
         onAll: () => this.setAllCpItems(true), onNone: () => this.setAllCpItems(false),
@@ -14413,7 +14492,7 @@ class Component extends DCLogic {
       const k = { key: it.key, origin: it.origin || it.key, kind: it.kind, refId: it.refId, date: it.date || '', code: it.code || '', cat: it.cat,
         desc: it.desc || '', lineDesc: it.lineDesc == null ? '' : String(it.lineDesc),
         pct: this._num(it.pct), amount: this._r2(it.claim), fee: this._r2(it.fee),
-        recorded: this._r2(this._num(it.now)), before: this._r2(this._num(it.done)), gone: !!it.gone, doc: it.doc || null };
+        recorded: this._r2(this._num(it.now)), before: this._r2(this._num(it.done)), gone: !!it.gone, doc: this._keptDoc(it.doc) };
       if (it.kind === 'labour') Object.assign(k, { line: it.line || '', lineRef: it.lineRef || '', lineLabel: it.lineLabel || '', sheetDoc: it.sheetDoc || null,
         person: it.person || '', personId: it.personId || '', role: it.role || '',
         days: (it.days || []).slice(), hours: this._num(it.hours), rate: this._num(it.rate) });
@@ -14559,11 +14638,12 @@ class Component extends DCLogic {
     s.first = false;
     this._previewDoc(() => this._cpTimesheetPdf(p, m, s).then(r => (r ? r.blob : null)), 'Labour timesheet', () => {}, s.name);
   }
-  // The files that go with a claim besides its PDF: its labour timesheets - a commitment's as it is in Storage, the
-  // others uploaded now - then the supplier invoices already in Storage. One that cannot be uploaded is left off
-  // rather than stopping the email.
+  // The files that go with a claim's email. The mail service is handed a URL, never the file's bytes, so a supplier
+  // invoice kept only in this browser is uploaded here first - that is how it travels. What was uploaded is handed
+  // back to be kept against the claim, and one that still cannot be uploaded is named, so the email can say so.
   _invoiceMoreAtts(more) {
-    const docs = this._mailAttachments((more && more.docs) || []);
+    const all = ((more && more.docs) || []).filter(d => d && d.url);
+    const missed = [], uploaded = [];
     const up = r => {
       if (!r) return Promise.resolve(null);
       if (r.url) return Promise.resolve(/^https?:/i.test(String(r.url)) ? { url: r.url, name: r.name || 'Timesheet', type: r.type || 'application/pdf' } : null);
@@ -14572,9 +14652,50 @@ class Component extends DCLogic {
       try { file = new File([r.blob], r.name, { type: 'application/pdf' }); } catch (e) { try { r.blob.name = r.name; } catch (e2) {} }
       return this._sbUploadFile(file, 'invoices').then(url => ((url && String(url).indexOf('http') === 0) ? { url, name: r.name, type: 'application/pdf' } : null)).catch(() => null);
     };
+    const upDoc = d => this._fileFromUrl(d.url, d.name, d.type)
+      .then(f => (f ? this._sbUploadFile(f, 'bills') : null))
+      .then(url => ((url && String(url).indexOf('http') === 0) ? { url, name: d.name || 'Invoice', type: d.type || '' } : null), () => null)
+      .then(a => {
+        if (a) uploaded.push({ keys: (d.keys || []).slice(), name: a.name, url: a.url, type: a.type });
+        else missed.push(d.name || 'Invoice');
+        return a;
+      });
+    const docs = () => Promise.all(all.map(d => (/^https?:/i.test(String(d.url))
+      ? Promise.resolve({ url: d.url, name: d.name || 'attachment', type: d.type || '' }) : upDoc(d))));
     const sheets = (more && more.sheets) ? Promise.resolve(more.sheets).then(arr => Promise.all((arr || []).map(up)))
       : ((more && more.sheet) ? Promise.resolve(more.sheet).then(up).then(a => [a]) : Promise.resolve([]));
-    return sheets.then(arr => arr.filter(Boolean).concat(docs), () => docs);
+    return sheets.then(arr => arr.filter(Boolean), () => [])
+      .then(sh => docs().then(ds => ({ atts: sh.concat(ds.filter(Boolean)), missed, uploaded }), () => ({ atts: sh, missed, uploaded })));
+  }
+  // A supplier invoice uploaded as the claim went out belongs to that claim from then on: the invoice keeps the file
+  // the client was sent, so a re-send carries the same file although the cost has been edited or deleted since, and
+  // the same bytes are never uploaded twice. The record also keeps the note about a file that could not be sent, so
+  // what it says is what the client was told. Only an invoice that is still there is written to: one deleted in
+  // another window must not come back through the merge.
+  _cpKeepSentDocs(id, no, uploaded, missed) {
+    const ups = (uploaded || []).filter(u => u && u.url);
+    const note = (missed && missed.length) ? missed.slice() : null;
+    if (!ups.length && !note) return;
+    const byKey = {};
+    ups.forEach(u => (u.keys || []).forEach(k => { byKey[k] = u; }));
+    this.setState(s => ({ projects: s.projects.map(p => {
+      if (p.id !== s.pid) return p;
+      let hit = false;
+      const invoices = (p.invoices || []).map(iv => {
+        if (!iv || iv.kind !== 'cost_plus' || (id ? iv.id !== id : iv.no !== no)) return iv;
+        hit = true;
+        const cp = iv.cp || {};
+        const items = (cp.items || []).map(it => {
+          const u = byKey[it.key];
+          if (!u || (it.doc && it.doc.url)) return it;
+          return Object.assign({}, it, { doc: { name: u.name, url: u.url, type: u.type || '', local: false } });
+        });
+        const out = Object.assign({}, iv, { cp: Object.assign({}, cp, { items }) });
+        if (note && String(iv.message || '').indexOf('Not attached: ') < 0) out.message = this._attMissedNote(iv.message || '', note);
+        return out;
+      });
+      return hit ? Object.assign({}, p, { invoices }) : p;
+    }) }));
   }
   // The mail service takes ten files an email (resend-email). A claim with more goes as its own email with the first
   // ten - it says so, once the files that really go are known - then "supporting documents" emails with ten each.
@@ -15089,7 +15210,14 @@ class Component extends DCLogic {
   // If the PDF or the upload fails the email still goes out, with a note in place of the file.
   _emailInvoiceWithPdf(recips, subject, text, invoiceId, refNo, more) {
     const send = atts => (more
-      ? this._invoiceMoreAtts(more).then(xs => this._sendInBatches(recips, subject, text, (atts || []).concat(xs), more.no))
+      ? this._invoiceMoreAtts(more).then(r => this._sendInBatches(recips, subject, this._attMissedNote(text, r.missed), (atts || []).concat(r.atts), more.no)
+          .then(res => {
+            const went = !!(res && res.ok);
+            this._cpKeepSentDocs(invoiceId || null, more.no, r.uploaded, went ? r.missed : null);
+            // an email that never went is its own handoff: one missing file is not the thing to say about it
+            if (went) this._tellMissedAtts(r.missed);
+            return res;
+          }))
       : this._sendEmailNow({ to: recips, subject, text, attachments: atts || [] }));
     const name = refNo ? this._fileName('Tax Invoice', refNo, 'pdf') : this.invoicePdfName(invoiceId || null);
     let blobP;
@@ -19962,7 +20090,8 @@ class Component extends DCLogic {
         const cpm = _ivm.cp;
         const list = [{ name: this.invoicePdfName(_ivId), kind: 'Tax invoice', canOpen: true, onOpen: () => this.previewInvoicePdf(_ivId) }]
           .concat((cpm.sheets || []).map(s => ({ name: s.name, kind: 'Timesheet', canOpen: true, onOpen: () => this.cpTimesheetDownload(_ivId, s.line) })))
-          .concat(cpm.docs.map(d => ({ name: d.name, kind: 'Supplier invoice', canOpen: true, onOpen: () => this.openAttachment({ name: d.name, url: d.url, type: d.type || '' }) })));
+          .concat(cpm.docs.map(d => ({ name: d.name, kind: d.local ? 'Supplier invoice · uploaded when sent' : 'Supplier invoice',
+            canOpen: true, onOpen: () => this.openAttachment({ name: d.name, url: d.url, type: d.type || '' }) })));
         Object.assign(invoiceSendV, { isCp: true, notCp: false, attachList: list, attachCount: String(list.length),
           cpPeriod: this.fmtDate(_ivm.periodFrom) + ' to ' + this.fmtDate(_ivm.periodTo) + ', retention ' + this._r2(_ivm.retPct) + '%, deposit ' + this.money(cpm.depApply),
           hasBatchNote: list.length > 10, batchNote: 'The mail service takes 10 files an email, so these go in ' + Math.ceil(list.length / 10) + ' emails: the invoice with the first files, then the rest as supporting documents.',
