@@ -2214,7 +2214,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                 <span class="mono" style="font-size:11px;font-weight:600;color:#2b59c3;background:#e7eefc;border-radius:6px;padding:2px 8px">{{ invoiceV.invoiceNo }}</span>
               </div>
               <sc-if value="{{ invoiceV.isLumpSum }}" hint-placeholder-val="{{ true }}"><div style="font-size:12.5px;color:#8894a2;margin-top:3px">Billed to <strong style="color:#6b7787">{{ invoiceV.billedTo }}</strong> — tick the budget items to bill, then claim <strong style="color:#6b7787">works completed − previously invoiced</strong>.</div></sc-if>
-              <sc-if value="{{ invoiceV.isCostPlus }}" hint-placeholder-val="{{ false }}"><div style="font-size:12.5px;color:#8894a2;margin-top:3px">Billed to <strong style="color:#6b7787">{{ invoiceV.billedTo }}</strong> — cost plus: the costs received in the period, <strong style="color:#6b7787">plus the fee for each category</strong>.</div></sc-if>
+              <sc-if value="{{ invoiceV.isCostPlus }}" hint-placeholder-val="{{ false }}"><div style="font-size:12.5px;color:#8894a2;margin-top:3px">Billed to <strong style="color:#6b7787">{{ invoiceV.billedTo }}</strong> — cost plus: the costs received in the period, <strong style="color:#6b7787">plus the markup for each category</strong>.</div></sc-if>
             </div>
             <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><button onClick="{{ invoiceV.onPreviewPdf }}" title="Preview this claim as the Tax Invoice PDF" style="border:1px solid #2b59c3;background:#fff;color:#2b59c3;border-radius:8px;padding:9px 14px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="background:#f2f6fd">📄 Preview PDF</button><button onClick="{{ invoiceV.onExportExcel }}" title="Export this claim to Excel in the same template" style="border:1px solid #cfd8e2;background:#fff;color:#15803d;border-radius:8px;padding:9px 14px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="background:#f2fbf5;border-color:#15803d">📊 Export Excel</button><button onClick="{{ invoiceV.onSend }}" style="border:0;background:#2b59c3;color:#fff;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="background:#244dab">✉ Send to client</button></div>
           </div>
@@ -2332,9 +2332,9 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                 <div><div style="font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#6b7787;text-transform:uppercase;margin-bottom:5px">to</div><input value="{{ invoiceV.cp.to }}" onInput="{{ invoiceV.cp.onTo }}" type="date" class="mono" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:8px 9px;font-size:12.5px;font-family:'IBM Plex Mono',monospace;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none"></div>
                 <div><div style="font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#6b7787;text-transform:uppercase;margin-bottom:5px">Retention %</div><input value="{{ invoiceV.cp.retPct }}" onInput="{{ invoiceV.cp.onRet }}" placeholder="{{ invoiceV.cp.retDefault }}" title="Blank = the contract's retention" class="mono" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:8px 9px;font-size:12.5px;font-family:'IBM Plex Mono',monospace;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none"></div>
                 <div><div style="font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#6b7787;text-transform:uppercase;margin-bottom:5px">Deposit applied</div><input value="{{ invoiceV.cp.depApply }}" onInput="{{ invoiceV.cp.onDep }}" placeholder="0.00" title="{{ invoiceV.cp.depTitle }}" class="mono" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:8px 9px;font-size:12.5px;font-family:'IBM Plex Mono',monospace;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none"></div>
-                <div><div style="font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#6b7787;text-transform:uppercase;margin-bottom:5px">Fee on uncategorised %</div><input value="{{ invoiceV.cp.uncatPct }}" onInput="{{ invoiceV.cp.onUncat }}" placeholder="{{ invoiceV.cp.uncatDefault }}" title="Blank = the contract's %" class="mono" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:8px 9px;font-size:12.5px;font-family:'IBM Plex Mono',monospace;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none"></div>
+                <div><div style="font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#6b7787;text-transform:uppercase;margin-bottom:5px">Markup on uncategorised %</div><input value="{{ invoiceV.cp.uncatPct }}" onInput="{{ invoiceV.cp.onUncat }}" placeholder="{{ invoiceV.cp.uncatDefault }}" title="Blank = the contract's %" class="mono" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:8px 9px;font-size:12.5px;font-family:'IBM Plex Mono',monospace;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none"></div>
               </div>
-              <div style="font-size:11.5px;color:#8894a2;line-height:1.55;margin-top:10px">{{ invoiceV.cp.depLine }} {{ invoiceV.cp.blankLine }}<br>Fee on each category (Budget &rarr; Pricing): <strong style="color:#6b7787">{{ invoiceV.cp.feeLine }}</strong>. Own labour: the Labour hours rate, no fee.</div>
+              <div style="font-size:11.5px;color:#8894a2;line-height:1.55;margin-top:10px">{{ invoiceV.cp.depLine }} {{ invoiceV.cp.blankLine }}<br>Markup on each category (Budget &rarr; Pricing): <strong style="color:#6b7787">{{ invoiceV.cp.feeLine }}</strong>. Own labour: the Labour hours rate, no markup.</div>
             </div>
             <sc-if value="{{ invoiceV.cp.hasNoDoc }}" hint-placeholder-val="{{ false }}">
               <div style="background:#fff7e6;border:1px solid #f3dfae;border-radius:9px;padding:10px 14px;margin-bottom:14px;font-size:12.5px;color:#8a6d00;line-height:1.5">&#9888; {{ invoiceV.cp.noDocText }}</div>
@@ -2348,12 +2348,12 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
             </div>
 
             <div style="background:#fff;border:1px solid #e4e8ee;border-radius:12px;overflow:hidden">
-              <div style="overflow-x:auto"><div style="min-width:1080px">
-                <div class="colhdr dark" style="display:grid;grid-template-columns:42px 88px 90px minmax(220px,1.6fr) 104px 112px 132px 58px 100px 60px;padding:11px 16px;background:#2A3580;border-bottom:1px solid #e4e8ee;font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#fff;text-transform:uppercase;gap:10px">
-                  <div></div><div>Date</div><div>Cost code</div><div>Cost</div><div>Category</div><div style="text-align:right">To claim</div><div style="text-align:right">This claim</div><div style="text-align:right">Fee %</div><div style="text-align:right">Fee</div><div style="text-align:center">Invoice</div>
+              <div style="overflow-x:auto"><div style="min-width:1160px">
+                <div class="colhdr dark" style="display:grid;grid-template-columns:42px 88px 90px minmax(200px,1.5fr) 150px 112px 132px 58px 100px 60px;padding:11px 16px;background:#2A3580;border-bottom:1px solid #e4e8ee;font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#fff;text-transform:uppercase;gap:10px">
+                  <div></div><div>Date</div><div>Cost code</div><div>Cost</div><div>Category</div><div style="text-align:right">To claim</div><div style="text-align:right">This claim</div><div style="text-align:right">Markup %</div><div style="text-align:right">Markup</div><div style="text-align:center">Invoice</div>
                 </div>
                 <sc-for list="{{ invoiceV.cp.rows }}" as="r" hint-placeholder-count="4">
-                  <div style="display:grid;grid-template-columns:42px 88px 90px minmax(220px,1.6fr) 104px 112px 132px 58px 100px 60px;padding:9px 16px;border-bottom:1px solid #eef1f4;align-items:center;gap:10px;opacity:{{ r.rowOpacity }}" style-hover="background:#f9fafc">
+                  <div style="display:grid;grid-template-columns:42px 88px 90px minmax(200px,1.5fr) 150px 112px 132px 58px 100px 60px;padding:9px 16px;border-bottom:1px solid #eef1f4;align-items:center;gap:10px;opacity:{{ r.rowOpacity }}" style-hover="background:#f9fafc">
                     <button onClick="{{ r.onSelect }}" title="Claim this cost on this invoice" style="width:18px;height:18px;border-radius:5px;border:1.5px solid {{ r.checkBorder }};background:{{ r.checkBg }};color:#fff;font-size:11px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0">{{ r.checkMark }}</button>
                     <div class="mono" style="font-size:11.5px;color:#0f1720">{{ r.date }}</div>
                     <div class="mono" style="font-size:12px;color:#0f1720">{{ r.code }}</div>
@@ -2362,7 +2362,14 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                       <sc-if value="{{ r.hasSub }}" hint-placeholder-val="{{ true }}"><div title="{{ r.sub }}" style="font-size:11px;color:#8894a2;white-space:{{ r.descWs }};overflow:hidden;text-overflow:ellipsis">{{ r.sub }}</div></sc-if>
                       <sc-if value="{{ r.hasFlag }}" hint-placeholder-val="{{ false }}"><div style="font-size:10.5px;font-weight:600;color:{{ r.flagColor }}">{{ r.flag }}</div></sc-if>
                     </div>
-                    <div style="font-size:12px;color:#4a5765">{{ r.catLabel }}</div>
+                    <div style="font-size:12px;color:#4a5765">
+                      <sc-if value="{{ r.canPickCat }}" hint-placeholder-val="{{ true }}">
+                        <select value="{{ r.cat }}" onChange="{{ r.onCat }}" title="What this cost is charged as on the claim, and so its markup %. Kept for this cost on later claims." style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:4px 5px;font-size:11.5px;font-family:inherit;color:#0f1720;background:#fff;cursor:pointer" style-focus="border-color:#2b59c3;outline:none">
+                          <sc-for list="{{ r.catOptions }}" as="o" hint-placeholder-count="7"><option value="{{ o.v }}">{{ o.l }}</option></sc-for>
+                        </select>
+                      </sc-if>
+                      <sc-if value="{{ r.noPickCat }}" hint-placeholder-val="{{ false }}">{{ r.catLabel }}</sc-if>
+                    </div>
                     <div class="mono" style="font-size:12px;color:#6b7787;text-align:right">{{ r.avail }}</div>
                     <div><input value="{{ r.claimValue }}" onInput="{{ r.onClaim }}" onFocus="{{ r.onClaimFocus }}" onBlur="{{ r.onClaimBlur }}" title="{{ r.claimTitle }}" class="mono" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 8px;font-size:12.5px;font-weight:600;text-align:right;font-family:'IBM Plex Mono',monospace;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none"></div>
                     <div class="mono" style="font-size:12px;color:#0f1720;text-align:right">{{ r.pct }}</div>
@@ -2395,7 +2402,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
               <div style="width:340px;max-width:100%;background:#fff;border:1px solid #e4e8ee;border-radius:11px;padding:14px 16px">
                 <div style="font-size:11px;font-weight:700;letter-spacing:.4px;color:#6b7787;text-transform:uppercase;margin-bottom:6px">This claim</div>
                 <div style="display:flex;flex-wrap:var(--cpms-wrap,nowrap);justify-content:space-between;gap:10px;font-size:12.5px;color:#8894a2;padding:3px 0"><span>Costs (excl. GST)</span><span class="mono">{{ invoiceV.cp.cost }}</span></div>
-                <div style="display:flex;flex-wrap:var(--cpms-wrap,nowrap);justify-content:space-between;gap:10px;font-size:12.5px;color:#8894a2;padding:3px 0"><span>Fee</span><span class="mono">{{ invoiceV.cp.fee }}</span></div>
+                <div style="display:flex;flex-wrap:var(--cpms-wrap,nowrap);justify-content:space-between;gap:10px;font-size:12.5px;color:#8894a2;padding:3px 0"><span>Markup</span><span class="mono">{{ invoiceV.cp.fee }}</span></div>
                 <div style="display:flex;flex-wrap:var(--cpms-wrap,nowrap);justify-content:space-between;gap:10px;font-size:12.5px;color:#8894a2;padding:3px 0;font-size:13px;color:#4a5765;border-top:1px solid #eef1f4;margin-top:3px;padding-top:6px"><span style="font-weight:600">Subtotal (excl. GST)</span><span class="mono" style="font-weight:600;color:#0f1720">{{ invoiceV.cp.subtotal }}</span></div>
                 <div style="display:flex;flex-wrap:var(--cpms-wrap,nowrap);justify-content:space-between;gap:10px;font-size:12.5px;color:#8894a2;padding:3px 0"><span>Less retention ({{ invoiceV.cp.retShown }}%)</span><span class="mono">{{ invoiceV.cp.retAmt }}</span></div>
                 <div style="display:flex;flex-wrap:var(--cpms-wrap,nowrap);justify-content:space-between;gap:10px;font-size:12.5px;color:#8894a2;padding:3px 0"><span>Less deposit applied</span><span class="mono">{{ invoiceV.cp.depAmt }}</span></div>
@@ -2404,7 +2411,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                 <div style="display:flex;flex-wrap:var(--cpms-wrap,nowrap);justify-content:space-between;gap:10px;font-size:14px;padding:9px 0 2px;border-top:1px solid #e4e8ee;margin-top:4px"><span style="font-weight:700;color:#0f1720">Total this invoice</span><span class="mono" style="font-weight:700;color:#2b59c3;font-size:16px">{{ invoiceV.total }}</span></div>
               </div>
             </div>
-            <div style="font-size:12px;color:#8894a2;line-height:1.5;margin-top:12px">Each ticked cost is claimed at its amount <strong style="color:#6b7787">excluding GST</strong>, with the fee for its category; your own labour at its Labour hours rate, with no fee. <strong style="color:#6b7787">Untick</strong> a cost, or <strong style="color:#6b7787">lower</strong> its amount, to leave it for a later claim &mdash; what is left comes back on the next one, and a cost that goes down after it is claimed comes back as a credit. The client's invoice shows one total per cost code; on <strong style="color:#6b7787">Send</strong>, each supplier invoice and each labour line's timesheet go with it as separate files. GST is added to the whole claim.</div>
+            <div style="font-size:12px;color:#8894a2;line-height:1.5;margin-top:12px">Each ticked cost is claimed at its amount <strong style="color:#6b7787">excluding GST</strong>, with the markup for its <strong style="color:#6b7787">category</strong> &mdash; which comes from its budget line, and can be changed on the row (kept for that cost from then on); your own labour at its Labour hours rate, with no markup. <strong style="color:#6b7787">Untick</strong> a cost, or <strong style="color:#6b7787">lower</strong> its amount, to leave it for a later claim &mdash; what is left comes back on the next one, and a cost that goes down after it is claimed comes back as a credit. The client's invoice shows one total per cost code; on <strong style="color:#6b7787">Send</strong>, each supplier invoice and each labour line's timesheet go with it as separate files. GST is added to the whole claim.</div>
           </sc-if>
 
         </sc-if>
@@ -4865,10 +4872,10 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                 <div style="flex:1"><label style="font-size:12px;font-weight:600;color:#4a5765;display:block;margin-bottom:5px">Deposit held (excl. GST)</label><input value="{{ contractModalV.deposit }}" onInput="{{ contractModalV.onDeposit }}" placeholder="0.00" class="mono" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:'IBM Plex Mono',monospace;background:#fff"></div>
               </div>
               <div style="display:flex;gap:12px;align-items:flex-end">
-                <div style="flex:1"><label style="font-size:12px;font-weight:600;color:#4a5765;display:block;margin-bottom:5px">Fee on uncategorised costs %</label><input value="{{ contractModalV.uncatPct }}" onInput="{{ contractModalV.onUncat }}" placeholder="0" class="mono" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:'IBM Plex Mono',monospace;background:#fff"></div>
+                <div style="flex:1"><label style="font-size:12px;font-weight:600;color:#4a5765;display:block;margin-bottom:5px">Markup on uncategorised costs %</label><input value="{{ contractModalV.uncatPct }}" onInput="{{ contractModalV.onUncat }}" placeholder="0" class="mono" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:'IBM Plex Mono',monospace;background:#fff"></div>
                 <div style="flex:1;font-size:11.5px;color:#8894a2;line-height:1.45">For a cost with no cost code, or a code that is not on exactly one budget category.</div>
               </div>
-              <div style="font-size:11.5px;color:#8894a2;line-height:1.5">The fee on every other cost is its category's markup on <strong style="color:#6b7787">Budget &rarr; Pricing</strong>. Approved client variations are added to the estimate. The deposit comes off a claim only when you type it there; retention below is the starting % of each claim.</div>
+              <div style="font-size:11.5px;color:#8894a2;line-height:1.5">The markup on every other cost is its category's on <strong style="color:#6b7787">Budget &rarr; Pricing</strong>. Approved client variations are added to the estimate. The deposit comes off a claim only when you type it there; retention below is the starting % of each claim.</div>
             </div>
           </sc-if>
           <div style="display:flex;gap:12px">
@@ -5202,7 +5209,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
               <label style="font-size:12px;font-weight:600;color:#4a5765;display:block;margin-bottom:5px">Costs claimed on this invoice</label>
               <div style="border:1px solid #e4e8ee;border-radius:10px;overflow:hidden"><div style="overflow-x:auto"><div style="min-width:470px">
                 <div style="display:grid;grid-template-columns:84px 1fr 100px 58px 130px;padding:9px 12px;background:#f7f9fc;border-bottom:1px solid #e4e8ee;font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#6b7787;text-transform:uppercase;gap:10px">
-                  <div>Code</div><div>Cost</div><div>Category</div><div style="text-align:right">Fee %</div><div style="text-align:right">Claimed</div>
+                  <div>Code</div><div>Cost</div><div>Category</div><div style="text-align:right">Markup %</div><div style="text-align:right">Claimed</div>
                 </div>
                 <sc-for list="{{ invoiceEditV.cpItems }}" as="ci" hint-placeholder-count="2">
                   <div style="display:grid;grid-template-columns:84px 1fr 100px 58px 130px;padding:8px 12px;border-bottom:1px solid #eef1f4;align-items:center;gap:10px">
@@ -5214,7 +5221,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                   </div>
                 </sc-for>
                 <div style="display:grid;grid-template-columns:84px 1fr 100px 58px 130px;padding:9px 12px;background:#f7f9fc;align-items:center;gap:10px">
-                  <div></div><div style="font-size:12px;font-weight:600;color:#4a5765">Costs and fee (excl. GST)</div><div></div><div></div>
+                  <div></div><div style="font-size:12px;font-weight:600;color:#4a5765">Costs and markup (excl. GST)</div><div></div><div></div>
                   <div class="mono" style="font-size:13px;font-weight:700;color:#0f1720;text-align:right">{{ invoiceEditV.cpSubtotal }}</div>
                 </div>
               </div></div></div>
@@ -13528,7 +13535,7 @@ class Component extends DCLogic {
     return {
       key: l.key, iso: l.date || '', date: l.date ? this.fmtDate(l.date) : '—', code: l.codes.length ? l.codes.join(', ') : '—',
       desc: l.label, sub, hasSub: true, flag, hasFlag: !!flag, flagColor: '#b45309', descWs: 'normal',
-      catLabel: 'Own labour', avail: money(l.avail), claimValue: this._cpAmtDisp(l),
+      catLabel: 'Own labour', canPickCat: false, cat: '', catOptions: [], onCat: () => {}, avail: money(l.avail), claimValue: this._cpAmtDisp(l),
       claimTitle: 'Up to ' + money(l.avail) + '. Lower it and the earliest weeks are claimed first; the rest comes back on the next claim.',
       onClaim: e => this.setCpItemAmount(l.key, e.target.value),
       onClaimFocus: () => this.startEdit('cpa:' + l.key), onClaimBlur: () => this._cpBlurAmount(l.key),
@@ -13585,6 +13592,39 @@ class Component extends DCLogic {
       rows.push({ key: it.key, code: it.code || '', desc: it.desc || '', catLabel: this._cpCatLabel(it.cat), pct: this._num(it.pct), was: this._r2(it.claim), amount: String(this._r2(it.claim)) });
     });
     return rows.map(r => (r.keys ? { key: r.key, keys: r.keys, code: r.codes.join(', '), desc: r.desc, catLabel: r.catLabel, pct: 0, was: r.was, amount: String(r.was) } : r));
+  }
+  // The category a cost is charged at on a claim, and so the fee % on it: the category of the budget line its cost code
+  // sits on, unless it was set on the claim. Ivan, on two supplier costs reading Labour because their code is on a
+  // Labour budget line: "the categories are wrong in those cases should be material, allow to change the category".
+  // What he picks is kept against that one cost (p.cpCats), so the rest of it and any later claim charge it the same.
+  _cpCatKeys() { return ['material', 'labour', 'equipment', 'subcontract', 'other', 'uncat']; }
+  // Kept as the category and the cost code it was set on: a supplier invoice or progress claim can be un-coded and
+  // posted again under the same id, and its category must not follow it onto another budget line.
+  _cpCatSet(p, key, code) {
+    const v = ((p && p.cpCats) || {})[key];
+    if (v && typeof v === 'object') {
+      return (this._cpCatKeys().indexOf(v.c) >= 0 && String(v.code || '') === String(code == null ? '' : code)) ? v.c : '';
+    }
+    return (v && this._cpCatKeys().indexOf(v) >= 0) ? v : '';
+  }
+  setCpItemCat(key, val) {
+    const v = this._cpCatKeys().indexOf(String(val)) >= 0 ? String(val) : '';
+    this.setState(s => ({ projects: s.projects.map(p => {
+      if (p.id !== s.pid) return p;
+      const m = Object.assign({}, p.cpCats || {});
+      if (v) {
+        const b = (p.bills || []).find(x => 'b:' + x.id === key);
+        m[key] = { c: v, code: b ? this._cpCode(b.code) : '' };
+      } else delete m[key];
+      return Object.assign({}, p, { cpCats: m });
+    }) }));
+  }
+  // What the picker offers: the five and Uncategorised - the cell shows the category itself, from the budget line or
+  // as it was set here - and last, putting it back to the budget line's.
+  _cpCatOptions(auto) {
+    return this._cpCats().map(c => ({ v: c.k, l: c.l }))
+      .concat([{ v: 'uncat', l: 'Uncategorised' },
+        { v: 'auto', l: auto === 'uncat' ? 'From its cost code (on no budget line)' : ('From the budget line (' + this._cpCatLabel(auto) + ')') }]);
   }
   // ===== Cost plus: the claim ===============================================================================
   // A cost-plus job is claimed from what it has cost: every supplier invoice on Commitments, paid or not, at its
@@ -13650,7 +13690,8 @@ class Component extends DCLogic {
       if (!b || !b.id || b.fromLabour) return;
       const code = this._cpCode(b.code);
       out.push({ key: 'b:' + b.id, origin: b.apId ? 'ap:' + b.apId : (b.claimId ? 'pc:' + b.claimId : 'b:' + b.id),
-        kind: 'bill', refId: b.id, date: b.billDate || '', code, cat: this._cpCatOf(p, code), lineDesc: descOf(code),
+        kind: 'bill', refId: b.id, date: b.billDate || '', code, catAuto: this._cpCatOf(p, code), catSet: this._cpCatSet(p, 'b:' + b.id, code),
+        cat: this._cpCatSet(p, 'b:' + b.id, code) || this._cpCatOf(p, code), lineDesc: descOf(code),
         desc: b.desc || '', supplier: this.vendorName(b.vendorId) || b.vendor || '', ref: b.billNo || '', supInv: b.invoice || '',
         now: this._r2(this._num(b.amount)), doc: this._cpBillDoc(p, b) });
     });
@@ -13741,16 +13782,20 @@ class Component extends DCLogic {
       claim = this._r2(avail > 0 ? Math.min(Math.max(0, claim), avail) : Math.max(Math.min(0, claim), avail));
       const use = on ? claim : 0;
       let pct, feeOf;
-      if (src.gone) {
-        // a cost no longer there takes back exactly the fee it was charged, however many claims that took
-        pct = done ? this._r2(c.fee / done * 100) : 0;
+      // a credit takes back exactly the markup it was charged - whatever the cost is now, and however many claims that
+      // took - and stays in a row of its own, so the client's page never nets it into a cost charged at another rate
+      const back = (src.gone || avail < 0) && !!c && Math.abs(done) > 0.005;
+      if (back) {
+        pct = this._r2(c.fee / done * 100);
         feeOf = v => (Math.abs(v + done) <= 0.005 ? -c.fee : this._r2s(v * c.fee / done));
+      } else if (src.gone) {
+        pct = 0; feeOf = () => 0;
       } else {
         pct = this._cpFeePct(p, src.cat, uncat);
         feeOf = v => this._r2s(v * pct / 100);
       }
       return Object.assign({}, src, { done, avail, older, part: !!c, on, byAmount, rawAmt: typed, typedClaim: claim,
-        claim: use, pct, fee: feeOf(use), typedFee: feeOf(claim), fixedFee: !!src.gone });
+        claim: use, pct, fee: feeOf(use), typedFee: feeOf(claim), fixedFee: !!(src.gone || back) });
     }).sort((a, b) => String(a.date || '').localeCompare(String(b.date || '')) || String(a.key).localeCompare(String(b.key)));
     const lines = this._cpLabourLines(p, items, tick, amt, !dr.v);
     this._cpShareFees(items.filter(it => it.on));
@@ -13792,8 +13837,12 @@ class Component extends DCLogic {
       }
       g[k].cost = this._r2(g[k].cost + this._num(it.claim)); g[k].feeSum = this._r2(g[k].feeSum + this._num(it.fee)); g[k].count++;
     });
+    // one cost code charged at two categories prints two rows: each says which
+    const codes = {};
+    order.forEach(k => { const c = g[k].code; codes[c] = (codes[c] || 0) + 1; });
     return order.map(k => {
       const x = g[k], fee = x.fixed ? x.feeSum : this._r2s(x.cost * x.pct / 100);
+      if (codes[x.code] > 1 && x.cat !== 'own' && x.desc.indexOf(x.catLabel) < 0) x.desc = x.desc + ' - ' + x.catLabel;
       return Object.assign(x, { fee, total: this._r2(x.cost + fee) });
     // by code, and the costs with no code last
     }).sort((a, b) => ((a.code ? 0 : 1) - (b.code ? 0 : 1)) || String(a.code).localeCompare(String(b.code), undefined, { numeric: true }) || a.cat.localeCompare(b.cat) || ((a.fixed ? 1 : 0) - (b.fixed ? 1 : 0)));
@@ -13958,6 +14007,9 @@ class Component extends DCLogic {
         key: it.key, iso: it.date || '', descWs: 'nowrap', date: it.date ? this.fmtDate(it.date) : '—', code: it.code || '—',
         desc: it.desc || '(no description)', sub, hasSub: !!sub, flag, hasFlag: !!flag, flagColor: credit ? '#b91c1c' : '#b45309',
         catLabel: this._cpCatLabel(it.cat), avail: money(it.avail),
+        // a credit takes back what was charged: its category is not for changing
+        canPickCat: it.kind === 'bill' && !it.gone && it.avail > 0, cat: it.cat || '',
+        catOptions: this._cpCatOptions(it.catAuto || it.cat), onCat: e => this.setCpItemCat(it.key, e.target.value),
         claimValue: this._cpAmtDisp(it),
         claimTitle: credit ? 'A credit: between ' + money(it.avail) + ' and nothing' : 'Up to ' + money(it.avail) + '. Lower it to leave the rest for a later claim.',
         onClaim: e => this.setCpItemAmount(it.key, e.target.value),
@@ -13971,6 +14023,7 @@ class Component extends DCLogic {
       };
     });
     (dr.lines || []).forEach(l => rows.push(this._cpLineRow(l, cp.sheets)));
+    rows.forEach(r => { r.noPickCat = !r.canPickCat; });
     rows.sort((a, b) => String(a.iso).localeCompare(String(b.iso)) || String(a.key).localeCompare(String(b.key)));
     const ticked = rows.filter(r => r.on).length;
     const retDefault = String(this._num(c.retentionPct));
@@ -13991,7 +14044,7 @@ class Component extends DCLogic {
         depTitle: 'Up to ' + money(cp.depHeld) + ' still held, excluding GST',
         uncatPct: dr.uncat == null ? '' : String(dr.uncat), uncatDefault, onUncat: e => this.setCpDraftField('uncatPct', e.target.value),
         depLine: 'Deposit still held: ' + money(cp.depHeld) + ' (excl. GST), of ' + money(this._num(c.deposit)) + ' on the contract.',
-        blankLine: 'A blank retention or fee % is the contract\'s (' + retDefault + '% and ' + uncatDefault + '%).',
+        blankLine: 'A blank retention or markup % is the contract\'s (' + retDefault + '% and ' + uncatDefault + '%).',
         feeLine: this._cpCats().map(x => x.l + ' ' + this._r2(this._cpFeePct(p, x.k, null)) + '%').join(' · '),
         hasNoDoc: noDoc > 0,
         noDocText: noDoc + (noDoc === 1 ? ' cost ticked on this claim has' : ' costs ticked on this claim have') + ' no supplier invoice file, so the client gets no copy of '
@@ -14403,12 +14456,12 @@ class Component extends DCLogic {
     const attText = att.length > 1 ? att.slice(0, -1).join(', ') + ' and ' + att[att.length - 1] : att[0];
     return 'Hi ' + (first || 'there') + ',' + NLc + NLc
       + (isResend ? 'Please find the revised tax invoice for ' : 'Please find the tax invoice for ')
-      + p.name + (p.address ? ' (' + p.address + ')' : '') + '. It claims the costs received in the period, plus our fee.' + NLc + NLc
+      + p.name + (p.address ? ' (' + p.address + ')' : '') + '. It claims the costs received in the period, plus our markup.' + NLc + NLc
       + 'Invoice: ' + m.no + (m.rev ? ' (Rev ' + m.rev + ')' : '') + NLc
       + 'Claim no: ' + m.claimNo + NLc
       + 'Claim period: ' + this.fmtDate(m.periodFrom) + ' to ' + this.fmtDate(m.periodTo) + NLc
       + 'Costs (excl. GST): ' + this.money(cp.cost) + NLc
-      + 'Fee: ' + this.money(cp.fee) + NLc
+      + 'Markup: ' + this.money(cp.fee) + NLc
       + (m.retPct ? 'Less retention ' + m.retPct + '%: (' + this.money(m.retAmt) + ')' + NLc : '')
       + (cp.depApply ? 'Less deposit applied: (' + this.money(cp.depApply) + ')' + NLc : '')
       + (m.back ? 'Less back charges: (' + this.money(m.back) + ')' + NLc : '')
@@ -14454,7 +14507,7 @@ class Component extends DCLogic {
     const notes = [];
     if (Math.abs(claimed - net) > 0.005) notes.push('This claim charges ' + this.money(claimed) + ' excluding GST for these hours: the earliest weeks first, the rest to come on a later claim, or part of them was claimed before.');
     if (credits < 0) notes.push('It also takes back ' + this.money(-credits) + ' for hours changed or removed since they were claimed.');
-    notes.push('Hours as recorded on the Labour hours screen, charged at the rate each week was entered at, with no fee added.');
+    notes.push('Hours as recorded on the Labour hours screen, charged at the rate each week was entered at, with no markup added.');
     const fileName = sheet ? sheet.name : this._fileName('Labour timesheet', m.no, 'pdf', p);
     return {
       projName: p.name || '', projCode: p.code || '', billNo: m.no, billDate: m.date || '',
@@ -14964,7 +15017,7 @@ class Component extends DCLogic {
     if (m.costPlus) {
       const cp = m.cp;
       r = push([{ v: 'COSTS THIS CLAIM', s: S.head }]); mg(r, 0, 6);
-      r = push(['Cost code', 'Description', 'Category', 'Cost (excl. GST)', 'Fee %', 'Fee', 'Total (excl. GST)'].map(t => ({ v: t, s: S.th })));
+      r = push(['Cost code', 'Description', 'Category', 'Cost (excl. GST)', 'Markup %', 'Markup', 'Total (excl. GST)'].map(t => ({ v: t, s: S.th })));
       heights[r] = 28;
       cp.groups.forEach(g => push([{ v: g.code || '-', s: S.val }, { v: g.desc || '', s: S.val }, { v: g.catLabel, s: S.val }, { n: mn(g.cost), s: S.money },
         { v: this._r2(g.pct) + '%', s: S.val }, { n: mn(g.fee), s: S.money }, { n: mn(g.total), s: S.moneyB }]));
@@ -15339,8 +15392,8 @@ class Component extends DCLogic {
         { t: 'DESCRIPTION', w: CW - 54 - 66 - 78 - 38 - 66 - 80, a: 'left' },
         { t: 'CATEGORY', w: 66, a: 'left' },
         { t: 'COST (EXCL. GST)', w: 78, a: 'right' },
-        { t: 'FEE %', w: 38, a: 'right' },
-        { t: 'FEE', w: 66, a: 'right' },
+        { t: 'MARKUP %', w: 38, a: 'right' },
+        { t: 'MARKUP', w: 66, a: 'right' },
         { t: 'TOTAL (EXCL. GST)', w: 80, a: 'right' },
       ];
       const phead = () => {
@@ -15538,14 +15591,14 @@ class Component extends DCLogic {
   _cpBasisText(cp) {
     const n = ((cp && cp.docs) || []).length, t = ((cp && cp.sheets) || []).length;
     const sent = [n ? n + (n === 1 ? ' supplier invoice' : ' supplier invoices') : '', t ? (t === 1 ? 'the labour timesheet' : t + ' labour timesheets') : ''].filter(Boolean);
-    return 'Costs are the supplier and subcontractor invoices received and the labour hours recorded, excluding GST, with the fee for each category added. '
-      + 'Own labour is charged at charge-out rates, with no fee. GST is charged on the whole claim.'
+    return 'Costs are the supplier and subcontractor invoices received and the labour hours recorded, excluding GST, with the markup for each category added. '
+      + 'Own labour is charged at charge-out rates, with no markup. GST is charged on the whole claim.'
       + (sent.length ? ' Sent with this claim: ' + sent.join(' and ') + '.' : '');
   }
   // [label, amount, strong, taken off]. A deduction the claim does not have is not printed.
   _cpSummaryRows(m) {
     const cp = m.cp;
-    const out = [['Costs this claim (excl. GST)', cp.cost, false, false], ['Fee', cp.fee, false, false], ['Subtotal (excl. GST)', cp.subtotal, false, false]];
+    const out = [['Costs this claim (excl. GST)', cp.cost, false, false], ['Markup', cp.fee, false, false], ['Subtotal (excl. GST)', cp.subtotal, false, false]];
     if (m.retPct > 0) out.push(['Less retention ' + this._r2(m.retPct) + '%', m.retAmt, false, true]);
     if (cp.depApply > 0) out.push(['Less deposit applied', cp.depApply, false, true]);
     if (m.back > 0) out.push(['Less back charges / deductions', m.back, false, true]);
@@ -15583,7 +15636,7 @@ class Component extends DCLogic {
     const G = 'font-weight:700;background:#F4F5F8';
     const est = r => '<tr><td style="width:62%;background:#F4F5F8;font-weight:' + (r[2] ? 700 : 600) + '">' + esc(r[0]) + '</td><td class="r"' + (r[2] ? ' style="font-weight:700"' : '') + '>' + money(r[1]) + '</td></tr>';
     return '<h2>Costs this claim</h2>'
-      + '<table><thead><tr><th style="width:76px">Cost code</th><th>Description</th><th style="width:92px">Category</th><th class="r" style="width:96px">Cost (excl. GST)</th><th class="r" style="width:56px">Fee %</th><th class="r" style="width:86px">Fee</th><th class="r" style="width:104px">Total (excl. GST)</th></tr></thead>'
+      + '<table><thead><tr><th style="width:76px">Cost code</th><th>Description</th><th style="width:92px">Category</th><th class="r" style="width:96px">Cost (excl. GST)</th><th class="r" style="width:56px">Markup %</th><th class="r" style="width:86px">Markup</th><th class="r" style="width:104px">Total (excl. GST)</th></tr></thead>'
       + '<tbody>' + rows
       + '<tr><td colspan="3" class="r" style="' + G + '">Totals this claim (excl. GST)</td><td class="r" style="' + G + '">' + money(cp.cost) + '</td><td style="background:#F4F5F8"></td><td class="r" style="' + G + '">' + money(cp.fee) + '</td><td class="r" style="' + G + '">' + money(cp.subtotal) + '</td></tr>'
       + '</tbody></table>'
@@ -20341,7 +20394,7 @@ class Component extends DCLogic {
       ].concat(c.type === 'cost_plus' ? [
         { label: 'Estimate (excl. GST)', value: this.money(this._num(c.estimate)) },
         { label: 'Deposit held (excl. GST)', value: this.money(this._num(c.deposit)) },
-        { label: 'Fee on uncategorised costs', value: this._num(c.uncatPct) + '%' },
+        { label: 'Markup on uncategorised costs', value: this._num(c.uncatPct) + '%' },
       ] : []);
       const _u = this.currentUser();
       contractVarRows = c.variations.map(v => {
@@ -22326,7 +22379,7 @@ class Component extends DCLogic {
     const projectModalV = S.projectModal ? {
       open: true, name: pf.name || '', code: pf.code || '', client: pf.client || '', projectType: pf.projectType || 'Residential', address: pf.address || '', gstRate: pf.gstRate == null ? '10' : String(pf.gstRate),
       contractType: pf.contractType || 'lump_sum',
-      contractHint: (pf.contractType === 'cost_plus') ? 'Client invoices claim the costs received, plus the fee for each category.' : 'Client invoices claim progress against the budget.',
+      contractHint: (pf.contractType === 'cost_plus') ? 'Client invoices claim the costs received, plus the markup for each category.' : 'Client invoices claim progress against the budget.',
       onContractType: e => this.setProjectFormField('contractType', e.target.value),
       error: S.projectFormError || '', hasError: !!S.projectFormError,
       typeOptions: ['Residential', 'Commercial', 'Infrastructure', 'Industrial', 'Fit-out', 'Mixed-use', 'Civil', 'Other'].map(x => ({ v: x, l: x })),
