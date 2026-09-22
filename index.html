@@ -2358,8 +2358,8 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                     <div class="mono" style="font-size:11.5px;color:#0f1720">{{ r.date }}</div>
                     <div class="mono" style="font-size:12px;color:#0f1720">{{ r.code }}</div>
                     <div style="min-width:0">
-                      <div title="{{ r.desc }}" style="font-size:12.5px;color:#0f1720;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.desc }}</div>
-                      <sc-if value="{{ r.hasSub }}" hint-placeholder-val="{{ true }}"><div title="{{ r.sub }}" style="font-size:11px;color:#8894a2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.sub }}</div></sc-if>
+                      <div title="{{ r.desc }}" style="font-size:12.5px;color:#0f1720;white-space:{{ r.descWs }};overflow:hidden;text-overflow:ellipsis">{{ r.desc }}</div>
+                      <sc-if value="{{ r.hasSub }}" hint-placeholder-val="{{ true }}"><div title="{{ r.sub }}" style="font-size:11px;color:#8894a2;white-space:{{ r.descWs }};overflow:hidden;text-overflow:ellipsis">{{ r.sub }}</div></sc-if>
                       <sc-if value="{{ r.hasFlag }}" hint-placeholder-val="{{ false }}"><div style="font-size:10.5px;font-weight:600;color:{{ r.flagColor }}">{{ r.flag }}</div></sc-if>
                     </div>
                     <div style="font-size:12px;color:#4a5765">{{ r.catLabel }}</div>
@@ -2404,7 +2404,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                 <div style="display:flex;flex-wrap:var(--cpms-wrap,nowrap);justify-content:space-between;gap:10px;font-size:14px;padding:9px 0 2px;border-top:1px solid #e4e8ee;margin-top:4px"><span style="font-weight:700;color:#0f1720">Total this invoice</span><span class="mono" style="font-weight:700;color:#2b59c3;font-size:16px">{{ invoiceV.total }}</span></div>
               </div>
             </div>
-            <div style="font-size:12px;color:#8894a2;line-height:1.5;margin-top:12px">Each ticked cost is claimed at its amount <strong style="color:#6b7787">excluding GST</strong>, with the fee for its category; your own labour at its Labour hours rate, with no fee. <strong style="color:#6b7787">Untick</strong> a cost, or <strong style="color:#6b7787">lower</strong> its amount, to leave it for a later claim &mdash; what is left comes back on the next one, and a cost that goes down after it is claimed comes back as a credit. The client's invoice shows one total per cost code; on <strong style="color:#6b7787">Send</strong>, each supplier invoice and a labour timesheet go with it as separate files. GST is added to the whole claim.</div>
+            <div style="font-size:12px;color:#8894a2;line-height:1.5;margin-top:12px">Each ticked cost is claimed at its amount <strong style="color:#6b7787">excluding GST</strong>, with the fee for its category; your own labour at its Labour hours rate, with no fee. <strong style="color:#6b7787">Untick</strong> a cost, or <strong style="color:#6b7787">lower</strong> its amount, to leave it for a later claim &mdash; what is left comes back on the next one, and a cost that goes down after it is claimed comes back as a credit. The client's invoice shows one total per cost code; on <strong style="color:#6b7787">Send</strong>, each supplier invoice and each labour line's timesheet go with it as separate files. GST is added to the whole claim.</div>
           </sc-if>
 
         </sc-if>
@@ -13440,6 +13440,152 @@ class Component extends DCLogic {
   }
   _ivTotal(iv) { return (iv && iv.kind === 'cost_plus' && iv.cp) ? this._cpRecordTotals(iv).total : this._num(iv && iv.total); }
   _ivAmount(iv) { return (iv && iv.kind === 'cost_plus' && iv.cp) ? this._cpRecordTotals(iv).subtotal : this._num(iv && iv.amount); }
+  // Own labour goes on a claim in lines, not week by week: each labour commitment is a line of its own and every other
+  // hour is one line. A line is ticked, or lowered, as one; lowered, its earliest weeks are claimed first and the rest
+  // comes back on the next claim. What is claimed is still kept week by week underneath, so a commitment made or deleted
+  // later cannot claim a week twice. Hours never claimed from before the period are a line of their own, unticked; a week
+  // that has gone down or gone since it was claimed stays a credit row of its own.
+  // The commitment's own timesheet goes with its line only when the line is exactly that commitment, claimed whole for
+  // the first time; otherwise the claim draws the line's timesheet, showing only the weeks it charges.
+  _cpLabourLines(p, items, tick, amt, legacyOk) {
+    const billed = this._labourBilledMap(p), rows = {};
+    this.labourOf(p).weeks.forEach(w => { if (w && w.id) rows[w.id] = w; });
+    const groups = {}, order = [];
+    items.forEach(it => {
+      if (it.kind !== 'labour' || it.gone || !(it.avail > 0)) return;
+      const bill = (it.refIds || [it.refId]).map(id => billed[id]).find(Boolean) || null;
+      const key = bill ? 'L:b:' + bill.id : (it.older ? 'L:h:older' : 'L:h');
+      if (!groups[key]) { groups[key] = { key, bill, weeks: [] }; order.push(key); }
+      groups[key].weeks.push(it);
+    });
+    return order.map(key => {
+      const g = groups[key], bill = g.bill;
+      g.weeks.sort((a, b) => String(a.date).localeCompare(String(b.date)) || String(a.person).localeCompare(String(b.person)));
+      const avail = this._r2(g.weeks.reduce((a, w) => a + w.avail, 0));
+      const older = bill ? g.weeks.every(w => w.older) : key === 'L:h:older';
+      // a claim drafted week by week, before labour went in lines: a line whose weeks were all unticked stays unticked;
+      // any other week-by-week choice is flagged for a look rather than guessed at
+      const legacy = !!legacyOk && !(key in tick) && (amt[key] == null) && g.weeks.some(w => (w.key in tick) || (amt[w.key] != null && amt[w.key] !== ''));
+      let on, typed;
+      const legacyOff = legacy && g.weeks.every(w => (w.key in tick) && !tick[w.key]);
+      const legacyNote = (legacy && !legacyOff) ? 'Drafted week by week before labour went in lines: check this line' : '';
+      if (legacy) { on = legacyOff ? false : !older; typed = undefined; }
+      else { on = (key in tick) ? !!tick[key] : !older; typed = amt[key]; }
+      const byAmount = typed != null && typed !== '';
+      const claim = this._r2(Math.min(Math.max(0, byAmount ? this._num(typed) : avail), avail));
+      const names = g.weeks.map(w => w.person).filter((x, i, a) => a.indexOf(x) === i);
+      const hours = this._r2(g.weeks.reduce((a, w) => a + this._num(w.hours), 0));
+      const first = g.weeks[0].date, last = g.weeks[g.weeks.length - 1].date;
+      const codes = g.weeks.map(w => w.code).filter(Boolean).filter((x, i, a) => a.indexOf(x) === i).sort();
+      const made = 'Labour hours — ' + names.join(', ') + ' — weeks from ' + this.fmtDate(first) + ' to ' + this.fmtDate(last) + ' (' + hours + ' h)';
+      const label = bill ? (bill.desc || made) : made;
+      // the commitment's own figure, when it was changed on Commitments after it was made from these hours
+      let hoursCost = 0;
+      if (bill) (bill.labourWeekIds || []).forEach(id => { if (rows[id]) hoursCost += this.labourRowCost(rows[id]); });
+      hoursCost = this._r2(hoursCost);
+      const amountNote = (bill && Math.abs(hoursCost - this._r2(this._num(bill.amount))) > 0.005)
+        ? 'Its hours come to ' + this.money(hoursCost) + ' and the commitment reads ' + this.money(this._num(bill.amount)) + ': the claim charges the hours' : '';
+      const olderAmt = (bill && !older) ? this._r2(g.weeks.reduce((a, w) => a + (w.older ? w.avail : 0), 0)) : 0;
+      const olderNote = olderAmt > 0.005 ? 'Includes ' + this.money(olderAmt) + ' of hours from before the period, never claimed' : '';
+      // is the line exactly the commitment, claimed whole for the first time?
+      const ids = {}; g.weeks.forEach(w => (w.refIds || [w.refId]).forEach(id => { ids[id] = 1; }));
+      const billIds = bill ? (bill.labourWeekIds || []).filter(id => rows[id]) : [];
+      const whole = !!bill && billIds.length > 0 && billIds.every(id => ids[id]) && Object.keys(ids).every(id => billIds.indexOf(id) >= 0)
+        && g.weeks.every(w => Math.abs(this._num(w.done)) <= 0.005) && !amountNote && Math.abs(claim - avail) <= 0.005;
+      const ts = whole ? this._billTimesheetFresh(p, bill) : null;
+      const sheetDoc = (ts && /^https?:/i.test(String(ts.url || ''))) ? { name: ts.name || 'Timesheet', url: ts.url, type: ts.type || 'application/pdf' } : null;
+      let left = claim;
+      g.weeks.forEach(w => {
+        const take = this._r2(Math.min(w.avail, Math.max(0, left))); left = this._r2(left - take);
+        Object.assign(w, { inLine: true, on, typedClaim: take, claim: on ? take : 0, fee: 0, typedFee: 0, line: key, lineRef: bill ? (bill.billNo || '') : '', lineLabel: label, sheetDoc });
+      });
+      return { key, kind: 'labourLine', bill, weeks: g.weeks, avail, on, older, byAmount, rawAmt: typed, typedClaim: claim, claim: on ? claim : 0,
+        date: first, codes, hours, names, label, ref: bill ? (bill.billNo || '') : '', sheetDoc, amountNote, olderNote, legacyOff, legacyNote,
+        claimedBefore: g.weeks.some(w => Math.abs(this._num(w.done)) > 0.005),
+        part: g.weeks.some(w => w.part), done: this._r2(g.weeks.reduce((a, w) => a + w.done, 0)), now: this._r2(g.weeks.reduce((a, w) => a + w.now, 0)) };
+    });
+  }
+  // The weeks of a ticked labour line that a lowered amount left out: kept on the invoice at nothing, so they come
+  // back on the next claim as the rest of that line, ticked - not as older hours never claimed.
+  _cpLineRests(cp) {
+    const out = [];
+    ((cp && cp.draft && cp.draft.lines) || []).forEach(l => { if (l.on) l.weeks.forEach(w => { if (Math.abs(this._num(w.claim)) <= 0.005) out.push(Object.assign({}, w, { claim: 0, fee: 0 })); }); });
+    return out;
+  }
+  // A labour line as the claim screen shows it: one row, one tick, one amount, and its timesheet in the Invoice column -
+  // described as the timesheet that will really go (sheets: the claim's, as _cpSheets decides them).
+  _cpLineRow(l, sheets) {
+    const money = n => this.money(n);
+    const rest = l.claimedBefore ? 'The rest of hours claimed before: now ' + money(l.now) + ', claimed ' + money(l.done)
+      : (l.part ? 'Left over from the last claim, not claimed yet' : (l.older ? 'Before the period, not claimed yet' : ''));
+    const flag = [l.legacyNote, l.amountNote, rest, l.olderNote].filter(Boolean).join(' · ');
+    const s = (sheets || []).find(x => x.line === l.key);
+    const own = s ? !!s.doc : !!l.sheetDoc;
+    const forced = !!(s && !s.doc && l.sheetDoc);
+    const what = l.bill ? (l.ref ? l.ref + ' · labour commitment' : 'Labour commitment') : 'Hours not on a commitment';
+    const sheetWord = own ? 'its timesheet is attached' : (forced ? 'the claim makes its timesheet, to show the labour credits as well' : 'the claim makes its timesheet');
+    const sub = [what, l.codes.join(', '), sheetWord].filter(Boolean).join(' · ');
+    return {
+      key: l.key, iso: l.date || '', date: l.date ? this.fmtDate(l.date) : '—', code: l.codes.length ? l.codes.join(', ') : '—',
+      desc: l.label, sub, hasSub: true, flag, hasFlag: !!flag, flagColor: '#b45309', descWs: 'normal',
+      catLabel: 'Own labour', avail: money(l.avail), claimValue: this._cpAmtDisp(l),
+      claimTitle: 'Up to ' + money(l.avail) + '. Lower it and the earliest weeks are claimed first; the rest comes back on the next claim.',
+      onClaim: e => this.setCpItemAmount(l.key, e.target.value),
+      onClaimFocus: () => this.startEdit('cpa:' + l.key), onClaimBlur: () => this._cpBlurAmount(l.key),
+      pct: '0%', fee: money(0),
+      on: l.on, checkMark: l.on ? '✓' : '', checkBg: l.on ? '#2b59c3' : '#fff', checkBorder: l.on ? '#2b59c3' : '#cfd8e2',
+      rowOpacity: l.on ? '1' : '.55', onSelect: () => this.toggleCpItem(l.key),
+      hasDoc: true, noDoc: false, isLabour: false,
+      docTitle: own ? 'Open ' + ((s && s.name) || l.sheetDoc.name) + ' — the timesheet attached to ' + (l.ref || 'the commitment') + ', sent to the client with this claim'
+        : 'Open the timesheet this claim makes for these hours — sent to the client with it',
+      onViewDoc: () => this._cpLineSheetPreview(l.key),
+    };
+  }
+  // The timesheets a claim sends: one per labour line - the commitment's own, when the line is that whole commitment
+  // and it has a current one, otherwise one this claim draws for the weeks it claims on that line. Labour credits are
+  // told on the first one drawn; when every line would send a commitment's own file, the first is drawn instead so the
+  // credits are told somewhere. No two go with the same name.
+  _cpSheets(p, items, no) {
+    const by = {}, order = [];
+    (items || []).filter(it => it.kind === 'labour' && this._num(it.claim) > 0.005).forEach(it => {
+      const k = it.line || 'L:h';
+      if (!by[k]) { by[k] = { line: k, isBill: k.indexOf('L:b:') === 0, ref: it.lineRef || '', label: it.lineLabel || '', doc: it.sheetDoc || null, items: [] }; order.push(k); }
+      by[k].items.push(it);
+    });
+    const list = order.map(k => by[k]);
+    const credits = (items || []).some(it => it.kind === 'labour' && this._num(it.claim) < -0.005);
+    if (credits && list.length && !list.some(s => !s.doc)) list[0].doc = null;
+    let told = false;
+    const used = {};
+    list.forEach(s => {
+      s.first = !s.doc && !told; if (s.first) told = true;
+      let name = s.doc ? (s.doc.name || 'Timesheet')
+        : this._fileName('Labour timesheet', no + (s.ref ? ' ' + s.ref : (s.isBill ? ' commitment' : (s.line === 'L:h:older' ? ' earlier hours' : ''))), 'pdf', p);
+      if (used[name]) { const dot = name.lastIndexOf('.') > 0 ? name.lastIndexOf('.') : name.length; let n = 2; let alt; do { alt = name.slice(0, dot) + ' (' + n + ')' + name.slice(dot); n++; } while (used[alt]); name = alt; }
+      used[name] = 1; s.name = name;
+    });
+    return list;
+  }
+  // Promise<[file]>, one per labour line in order: a commitment's timesheet as it is in Storage, the others drawn now.
+  _cpSheetFiles(p, m) {
+    const sheets = (m && m.cp && m.cp.sheets) || [];
+    return Promise.all(sheets.map(s => (s.doc ? Promise.resolve({ url: s.doc.url, name: s.name, type: s.doc.type || 'application/pdf' }) : this._cpTimesheetPdf(p, m, s))));
+  }
+  // The costs of an issued invoice as the edit dialog lists them: each labour line as one row, as the claim did.
+  _cpEditRows(items) {
+    const rows = [], lines = {};
+    (items || []).forEach(it => {
+      if (it.kind === 'labour' && it.line && this._num(it.claim) > 0.005) {
+        let r = lines[it.line];
+        if (!r) { r = lines[it.line] = { key: 'line:' + it.line, keys: [], codes: [], desc: it.lineLabel || 'Labour hours', catLabel: 'Own labour', pct: 0, was: 0 }; rows.push(r); }
+        r.keys.push(it.key); r.was = this._r2(r.was + this._num(it.claim));
+        if (it.code && r.codes.indexOf(it.code) < 0) r.codes.push(it.code);
+        return;
+      }
+      rows.push({ key: it.key, code: it.code || '', desc: it.desc || '', catLabel: this._cpCatLabel(it.cat), pct: this._num(it.pct), was: this._r2(it.claim), amount: String(this._r2(it.claim)) });
+    });
+    return rows.map(r => (r.keys ? { key: r.key, keys: r.keys, code: r.codes.join(', '), desc: r.desc, catLabel: r.catLabel, pct: 0, was: r.was, amount: String(r.was) } : r));
+  }
   // ===== Cost plus: the claim ===============================================================================
   // A cost-plus job is claimed from what it has cost: every supplier invoice on Commitments, paid or not, at its
   // amount excluding GST with the fee for its category on top, and the company's own labour straight from Labour
@@ -13521,10 +13667,11 @@ class Component extends DCLogic {
         const x = weeks[key];
         x.days = x.days.map((h, i) => this._r2(h + d[i])); x.hours = this._r2(x.hours + this.labourRowHours(w)); x.now = this._r2(x.now + this.labourRowCost(w));
         x.rate = x.hours > 0 ? this._r2(x.now / x.hours) : x.rate;
+        x.refIds.push(w.id);
         return;
       }
       const who = people[w.personId] || {}, line = byLine[who.costLineId];
-      weeks[key] = { key, origin: key, kind: 'labour', refId: w.id, date: w.weekStart || '', code: line ? this._cpCode(line.code) : '', cat: 'own',
+      weeks[key] = { key, origin: key, kind: 'labour', refId: w.id, refIds: [w.id], date: w.weekStart || '', code: line ? this._cpCode(line.code) : '', cat: 'own',
         lineDesc: (line && line.desc) ? String(line.desc) : '',
         desc: (who.name || '(unnamed)') + ' - week commencing ' + this.fmtDate(w.weekStart),
         person: who.name || '(unnamed)', personId: w.personId || '', role: who.role || '',
@@ -13578,7 +13725,7 @@ class Component extends DCLogic {
     this._cpSources(p).forEach(src => { seen[src.key] = 1; cand(src, claimed[src.key] || null); });
     Object.keys(claimed).forEach(k => {
       if (seen[k] || !claimed[k].last) return;
-      cand(Object.assign({}, claimed[k].last, { now: 0, gone: true, doc: null }), claimed[k]);
+      cand(Object.assign({}, claimed[k].last, { now: 0, gone: true, doc: null, line: '', lineRef: '', lineLabel: '', sheetDoc: null }), claimed[k]);
     });
     if (!from) from = cands.map(x => x.src.date).filter(Boolean).sort()[0] || to;
     const items = cands.map(x => {
@@ -13605,8 +13752,9 @@ class Component extends DCLogic {
       return Object.assign({}, src, { done, avail, older, part: !!c, on, byAmount, rawAmt: typed, typedClaim: claim,
         claim: use, pct, fee: feeOf(use), typedFee: feeOf(claim), fixedFee: !!src.gone });
     }).sort((a, b) => String(a.date || '').localeCompare(String(b.date || '')) || String(a.key).localeCompare(String(b.key)));
+    const lines = this._cpLabourLines(p, items, tick, amt, !dr.v);
     this._cpShareFees(items.filter(it => it.on));
-    return { from, to, items, uncat, retPct: dr.retPct, depApply: dr.depApply, later, any };
+    return { from, to, items, lines, uncat, retPct: dr.retPct, depApply: dr.depApply, later, any };
   }
   // The money on a claim from the costs it carries: the costs, the fee on each row of the client's page, then
   // retention, the deposit applied and any back charges off the lot (all excluding GST), then GST on what is left.
@@ -13720,16 +13868,34 @@ class Component extends DCLogic {
       termDays: this._termDays(),
       cp: { items: live, groups, cost: t.cost, fee: t.fee, subtotal: t.subtotal, depApply: t.depApply, depHeld, uncatPct: uncat == null ? '' : String(uncat),
         est: E.est, vars: E.vars, revised: E.revised, prev: E.prev, toDate, remaining: this._r2(E.revised - toDate), noEstimate: !(E.revised > 0),
-        docs: this._cpDocs(live), labour: live.filter(it => it.kind === 'labour' && this._num(it.claim) > 0.005),
+        sheets: this._cpSheets(p, live, issued ? issued.no : nextNo), docs: this._cpDocs(live), labour: live.filter(it => it.kind === 'labour' && this._num(it.claim) > 0.005),
         noDoc: live.filter(it => it.kind === 'bill' && !it.gone && !it.doc && this._num(it.claim) > 0.005).length, draft },
     };
   }
+  // Every write marks the draft as one made with labour in lines (v: 2). A draft from before that is first carried over
+  // (see _cpMigrateDraft), so what it showed is what it keeps.
   _setCpDraft(fn) {
     this.setState(s => ({ projects: s.projects.map(p => {
       if (p.id !== s.pid) return p;
       const g = this._cpGen(p), all = p.cpDrafts || {};
-      return Object.assign({}, p, { cpDrafts: { [g]: fn(Object.assign({}, all[g] || {}), p) } });
+      let d = Object.assign({}, all[g] || {});
+      if (!d.v) d = this._cpMigrateDraft(p, d);
+      d = fn(d, p) || d;
+      d.v = 2;
+      return Object.assign({}, p, { cpDrafts: { [g]: d } });
     }) }));
+  }
+  // A claim drafted week by week, before labour went in lines: a line whose weeks were all unticked stays unticked, and
+  // the week-by-week labour ticks and amounts are let go - a line is ticked and lowered as one, and guessing which weeks
+  // a lowered total meant would be guessing at money. Such a line is flagged for a look until then.
+  _cpMigrateDraft(p, d) {
+    const dr = this._cpDraft(p);
+    const tick = Object.assign({}, d.tick || {}), amt = Object.assign({}, d.amt || {});
+    (dr.lines || []).forEach(l => {
+      if (l.legacyOff) tick[l.key] = false;
+      l.weeks.forEach(w => { delete tick[w.key]; delete amt[w.key]; });
+    });
+    return Object.assign(d, { tick, amt });
   }
   _cpNumText(v, signed) {
     let clean = String(v == null ? '' : v).replace(signed ? /[^0-9.\-]/g : /[^0-9.]/g, '');
@@ -13744,15 +13910,18 @@ class Component extends DCLogic {
   }
   toggleCpItem(key) {
     this._setCpDraft((d, p) => {
-      const it = this._cpDraft(p).items.find(x => x.key === key);
+      const dr = this._cpDraft(p);
+      const it = dr.items.find(x => x.key === key) || (dr.lines || []).find(x => x.key === key);
       d.tick = Object.assign({}, d.tick || {}, { [key]: !(it && it.on) });
       return d;
     });
   }
   setAllCpItems(on) {
     this._setCpDraft((d, p) => {
-      const t = Object.assign({}, d.tick || {});
-      this._cpDraft(p).items.forEach(it => { t[it.key] = !!on; });
+      const t = Object.assign({}, d.tick || {}), dr = this._cpDraft(p);
+      // a week inside a labour line is ticked by its line, not by itself
+      dr.items.forEach(it => { if (!it.inLine) t[it.key] = !!on; });
+      (dr.lines || []).forEach(l => { t[l.key] = !!on; });
       d.tick = t; return d;
     });
   }
@@ -13774,7 +13943,7 @@ class Component extends DCLogic {
   _cpInvoiceView(p) {
     const m = this._invoiceModel(p, null), cp = m.cp, dr = cp.draft, c = p.contract || {};
     const money = n => this.money(n);
-    const rows = dr.items.map(it => {
+    const rows = dr.items.filter(it => !it.inLine).map(it => {
       const credit = it.avail < 0;
       const flag = it.gone
         ? (credit ? 'Credit: claimed before at ' + money(it.done) + ', and no longer on ' + (it.kind === 'labour' ? 'Labour hours' : 'Commitments')
@@ -13786,7 +13955,7 @@ class Component extends DCLogic {
         ? (this._r2(it.hours) + ' h × ' + money(it.rate) + (it.role ? ' · ' + it.role : ''))
         : [it.supplier, it.ref, it.supInv ? 'inv ' + it.supInv : ''].filter(Boolean).join(' · ');
       return {
-        key: it.key, date: it.date ? this.fmtDate(it.date) : '—', code: it.code || '—',
+        key: it.key, iso: it.date || '', descWs: 'nowrap', date: it.date ? this.fmtDate(it.date) : '—', code: it.code || '—',
         desc: it.desc || '(no description)', sub, hasSub: !!sub, flag, hasFlag: !!flag, flagColor: credit ? '#b91c1c' : '#b45309',
         catLabel: this._cpCatLabel(it.cat), avail: money(it.avail),
         claimValue: this._cpAmtDisp(it),
@@ -13801,7 +13970,9 @@ class Component extends DCLogic {
         onViewDoc: () => { if (it.doc) this.openAttachment({ name: it.doc.name, url: it.doc.url, type: it.doc.type || '' }); },
       };
     });
-    const ticked = dr.items.filter(it => it.on).length;
+    (dr.lines || []).forEach(l => rows.push(this._cpLineRow(l, cp.sheets)));
+    rows.sort((a, b) => String(a.iso).localeCompare(String(b.iso)) || String(a.key).localeCompare(String(b.key)));
+    const ticked = rows.filter(r => r.on).length;
     const retDefault = String(this._num(c.retentionPct));
     const uncatDefault = String(this._num(c.uncatPct));
     const noDoc = cp.noDoc;
@@ -14190,7 +14361,8 @@ class Component extends DCLogic {
         desc: it.desc || '', lineDesc: it.lineDesc == null ? '' : String(it.lineDesc),
         pct: this._num(it.pct), amount: this._r2(it.claim), fee: this._r2(it.fee),
         recorded: this._r2(this._num(it.now)), before: this._r2(this._num(it.done)), gone: !!it.gone, doc: it.doc || null };
-      if (it.kind === 'labour') Object.assign(k, { person: it.person || '', personId: it.personId || '', role: it.role || '',
+      if (it.kind === 'labour') Object.assign(k, { line: it.line || '', lineRef: it.lineRef || '', lineLabel: it.lineLabel || '', sheetDoc: it.sheetDoc || null,
+        person: it.person || '', personId: it.personId || '', role: it.role || '',
         days: (it.days || []).slice(), hours: this._num(it.hours), rate: this._num(it.rate) });
       else Object.assign(k, { supplier: it.supplier || '', ref: it.ref || '', supInv: it.supInv || '' });
       return k;
@@ -14204,10 +14376,10 @@ class Component extends DCLogic {
     const record = { id: this._rid('inv'), no: noStr, kind: 'cost_plus', date: e.date || today, dueDate: e.dueDate || m.due,
       amount: cp.subtotal, gstRate: m.gst, total: m.total, extra, from: sc.from || '', subject: sc.subject || '', message: text.trim(),
       recipients: recips.slice(), status: 'sent', paidAt: '', payRef: '', lines: {}, snap: [], payments: [], paid: 0,
-      cp: { items: cp.items.map(keep), depApply: cp.depApply, uncatPct: cp.uncatPct, est: cp.est, vars: cp.vars, prev: cp.prev } };
+      cp: { items: cp.items.concat(this._cpLineRests(cp)).map(keep), depApply: cp.depApply, uncatPct: cp.uncatPct, est: cp.est, vars: cp.vars, prev: cp.prev } };
     const msg = record.message ? ' — “' + record.message + '”' : '';
     // the PDF and the timesheet are drawn now, from the claim as it stands, before anything waits
-    this._emailInvoiceWithPdf(recips, sc.subject || '', text, null, noStr, { no: noStr, docs: cp.docs, sheet: this._cpTimesheetPdf(p, m) });
+    this._emailInvoiceWithPdf(recips, sc.subject || '', text, null, noStr, { no: noStr, docs: cp.docs, sheets: this._cpSheetFiles(p, m) });
     this.setState(s => ({ projects: s.projects.map(x => x.id !== s.pid ? x : { ...x, clientInvoiceNo: no, cpDrafts: { [record.id]: {} }, senderEmail: sc.from || x.senderEmail,
       invoices: [...(x.invoices || []), record],
       clientInvoiceSentAt: noStr + ' sent to ' + recips.length + ' recipient(s): ' + recips.join(', ') + ' on ' + today + ' · due ' + this.fmtDate(record.dueDate) + msg }), invoiceSend: null }));
@@ -14218,7 +14390,7 @@ class Component extends DCLogic {
     if (!iv) { this.setState({ invoiceSend: null }); return; }
     const recips = sc.recipients || []; if (!recips.length) return;
     let more = null;
-    if (iv.kind === 'cost_plus') { const m = this._invoiceModel(p, iv.id); more = { no: iv.no, docs: m.cp.docs, sheet: this._cpTimesheetPdf(p, m) }; }
+    if (iv.kind === 'cost_plus') { const m = this._invoiceModel(p, iv.id); more = { no: iv.no, docs: m.cp.docs, sheets: this._cpSheetFiles(p, m) }; }
     this._emailInvoiceWithPdf(recips, sc.subject || '', sc.message || '', iv.id, null, more);
     const today = this.todayLocal(), rev = this._num((iv.extra || {}).rev);
     this.setState(s => ({ projects: s.projects.map(x => x.id !== s.pid ? x : { ...x, senderEmail: sc.from || x.senderEmail,
@@ -14226,8 +14398,8 @@ class Component extends DCLogic {
   }
   // The email of a cost-plus claim.
   _cpEmailBody(p, m, first, isResend, invoiceId, me) {
-    const cp = m.cp, n = cp.docs.length, sheet = cp.labour.length > 0, NLc = String.fromCharCode(10);
-    const att = ['the tax invoice'].concat(n ? [n + (n === 1 ? ' supplier invoice' : ' supplier invoices')] : []).concat(sheet ? ['the labour timesheet'] : []);
+    const cp = m.cp, n = cp.docs.length, t = (cp.sheets || []).length, NLc = String.fromCharCode(10);
+    const att = ['the tax invoice'].concat(n ? [n + (n === 1 ? ' supplier invoice' : ' supplier invoices')] : []).concat(t ? [t === 1 ? 'the labour timesheet' : t + ' labour timesheets'] : []);
     const attText = att.length > 1 ? att.slice(0, -1).join(', ') + ' and ' + att[att.length - 1] : att[0];
     return 'Hi ' + (first || 'there') + ',' + NLc + NLc
       + (isResend ? 'Please find the revised tax invoice for ' : 'Please find the tax invoice for ')
@@ -14258,10 +14430,11 @@ class Component extends DCLogic {
     const body = this._cpEmailBody(p, this._invoiceModel(p, null), sc.first || '', false, null, this.currentUser() || {});
     this.setState(s => (s.invoiceSend ? { invoiceSend: Object.assign({}, s.invoiceSend, { message: body, generated: body }) } : {}));
   }
-  // The timesheet a cost-plus claim sends for the labour on it: each person-week claimed, as it was recorded when
-  // the claim took it. Drawn by the same page as a labour commitment's timesheet.
-  _cpTimesheetContext(p, m) {
-    const lab = (m && m.cp && m.cp.labour) || [];
+  // A timesheet a cost-plus claim sends: the person-weeks of one labour line (or all its labour, for an invoice issued
+  // before claims were made in lines), as recorded when the claim took them. Drawn by the same page as a labour
+  // commitment's timesheet.
+  _cpTimesheetContext(p, m, sheet) {
+    const lab = sheet ? (sheet.items || []) : ((m && m.cp && m.cp.labour) || []);
     if (!lab.length) return null;
     const rows = lab.map(it => {
       const days = (Array.isArray(it.days) ? it.days : []).map(x => this._num(x)).concat([0, 0, 0, 0, 0, 0, 0]).slice(0, 7);
@@ -14272,16 +14445,17 @@ class Component extends DCLogic {
     const cust = (p.customers && p.customers[0]) || null;
     const net = this._r2(rows.reduce((a, r) => a + r.cost, 0));
     const claimed = this._r2(lab.reduce((a, it) => a + this._num(it.claim), 0));
-    const credits = this._r2((m.cp.items || []).filter(it => it.kind === 'labour' && this._num(it.claim) < -0.005).reduce((a, it) => a + this._num(it.claim), 0));
+    // labour credits are told once, on the first of the claim's timesheets
+    const credits = (!sheet || sheet.first) ? this._r2((m.cp.items || []).filter(it => it.kind === 'labour' && this._num(it.claim) < -0.005).reduce((a, it) => a + this._num(it.claim), 0)) : 0;
     const taxRate = this._num(m.gst), gst = this._r2(net * taxRate / 100);
     const starts = rows.map(r => r.weekStart).filter(Boolean).sort();
     const codes = lab.map(it => it.code).filter(Boolean).filter((c, i, a) => a.indexOf(c) === i).sort();
     const from = starts[0] || '', to = starts[starts.length - 1] || '';
     const notes = [];
-    if (Math.abs(claimed - net) > 0.005) notes.push('This claim charges ' + this.money(claimed) + ' excluding GST for these hours: amounts were changed on the claim, or part of them was claimed before.');
+    if (Math.abs(claimed - net) > 0.005) notes.push('This claim charges ' + this.money(claimed) + ' excluding GST for these hours: the earliest weeks first, the rest to come on a later claim, or part of them was claimed before.');
     if (credits < 0) notes.push('It also takes back ' + this.money(-credits) + ' for hours changed or removed since they were claimed.');
     notes.push('Hours as recorded on the Labour hours screen, charged at the rate each week was entered at, with no fee added.');
-    const fileName = this._fileName('Labour timesheet', m.no, 'pdf', p);
+    const fileName = sheet ? sheet.name : this._fileName('Labour timesheet', m.no, 'pdf', p);
     return {
       projName: p.name || '', projCode: p.code || '', billNo: m.no, billDate: m.date || '',
       vendor: '', code: '', lineDesc: '', from, to, rows, dayLabels: this._labourDayLabels(),
@@ -14289,7 +14463,7 @@ class Component extends DCLogic {
       billAmount: net, missing: 0,
       coName: (co.name || '').trim(), coSlogan: this._coSlogan(), coAbn: this._abn(), coAddr: this._coAddress(),
       coContact: [co.phone, (this._accountsEmail && this._accountsEmail()) || '', co.website].filter(Boolean).join('  -  '),
-      fileName, subTitle: 'HOURS CLAIMED ON TAX INVOICE ' + m.no, boxLabel: 'TAX INVOICE NO.',
+      fileName, subTitle: (sheet && sheet.isBill ? 'HOURS ON ' + (sheet.ref ? 'COMMITMENT ' + sheet.ref : 'A COMMITMENT') + ', CLAIMED ON TAX INVOICE ' : 'HOURS CLAIMED ON TAX INVOICE ') + m.no, boxLabel: 'TAX INVOICE NO.',
       kv: [
         ['Project', (p.name || '') + (p.code ? ' (' + p.code + ')' : '')],
         ['Client', (cust && (cust.company || cust.name)) || p.client || '-'],
@@ -14299,33 +14473,55 @@ class Component extends DCLogic {
       claimNotes: notes,
     };
   }
-  // Promise<{ blob, name }> or null when the claim has no labour on it.
-  _cpTimesheetPdf(p, m) {
+  // Promise<{ blob, name }> or null when there is no labour to show.
+  _cpTimesheetPdf(p, m, sheet) {
     let ctx = null;
-    try { ctx = this._cpTimesheetContext(p, m); } catch (e) { ctx = null; }
+    try { ctx = this._cpTimesheetContext(p, m, sheet); } catch (e) { ctx = null; }
     if (!ctx) return Promise.resolve(null);
     return this._pdfLogo()
       .then(logo => this._pdfBuild(d => this._layoutLabourTimesheet(d, ctx, logo), { title: this._docTitleOf(ctx.fileName), landscape: true }))
       .then(blob => (blob ? { blob, name: ctx.fileName } : null))
       .catch(() => null);
   }
-  cpTimesheetDownload(invoiceId) {
+  // One of an invoice's timesheets, by its labour line: the commitment's own is opened, one the claim makes is drawn.
+  cpTimesheetDownload(invoiceId, lineKey) {
     const p = this.proj(this.state.pid); if (!p) return;
     const m = this._invoiceModel(p, invoiceId || null);
-    const name = this._fileName('Labour timesheet', m.no, 'pdf', p);
-    this._previewDoc(() => this._cpTimesheetPdf(p, m).then(r => (r ? r.blob : null)), 'Labour timesheet', () => {}, name);
+    const sheets = (m.cp && m.cp.sheets) || [];
+    const s = sheets.find(x => x.line === lineKey) || sheets[0]; if (!s) return;
+    if (s.doc) { this.openAttachment({ name: s.name, url: s.doc.url, type: s.doc.type || 'application/pdf' }); return; }
+    this._previewDoc(() => this._cpTimesheetPdf(p, m, s).then(r => (r ? r.blob : null)), 'Labour timesheet', () => {}, s.name);
   }
-  // The files that go with a claim besides its PDF: the timesheet, uploaded now, then the supplier invoices already in
-  // Storage. One that cannot be uploaded is left off rather than stopping the email.
+  // The timesheet of a labour line on the claim being drafted: when it is ticked, exactly the one that will be sent;
+  // unticked, the one it would send - its weeks at what it would claim, or all of them when it would claim nothing.
+  _cpLineSheetPreview(lineKey) {
+    const p = this.proj(this.state.pid); if (!p) return;
+    const m = this._invoiceModel(p, null);
+    if ((m.cp.sheets || []).some(s => s.line === lineKey)) { this.cpTimesheetDownload(null, lineKey); return; }
+    const line = ((m.cp.draft && m.cp.draft.lines) || []).find(l => l.key === lineKey); if (!line) return;
+    if (line.sheetDoc) { this.openAttachment({ name: line.sheetDoc.name, url: line.sheetDoc.url, type: line.sheetDoc.type || 'application/pdf' }); return; }
+    const whole = !(line.typedClaim > 0.005);
+    const items = line.weeks.map(w => Object.assign({}, w, { claim: whole ? w.avail : w.typedClaim }));
+    const s = this._cpSheets(p, items, m.no)[0]; if (!s) return;
+    s.first = false;
+    this._previewDoc(() => this._cpTimesheetPdf(p, m, s).then(r => (r ? r.blob : null)), 'Labour timesheet', () => {}, s.name);
+  }
+  // The files that go with a claim besides its PDF: its labour timesheets - a commitment's as it is in Storage, the
+  // others uploaded now - then the supplier invoices already in Storage. One that cannot be uploaded is left off
+  // rather than stopping the email.
   _invoiceMoreAtts(more) {
     const docs = this._mailAttachments((more && more.docs) || []);
-    const sheet = (more && more.sheet) ? Promise.resolve(more.sheet).then(r => {
-      if (!r || !r.blob) return null;
+    const up = r => {
+      if (!r) return Promise.resolve(null);
+      if (r.url) return Promise.resolve(/^https?:/i.test(String(r.url)) ? { url: r.url, name: r.name || 'Timesheet', type: r.type || 'application/pdf' } : null);
+      if (!r.blob) return Promise.resolve(null);
       let file = r.blob;
       try { file = new File([r.blob], r.name, { type: 'application/pdf' }); } catch (e) { try { r.blob.name = r.name; } catch (e2) {} }
-      return this._sbUploadFile(file, 'invoices').then(url => ((url && String(url).indexOf('http') === 0) ? { url, name: r.name, type: 'application/pdf' } : null));
-    }).catch(() => null) : Promise.resolve(null);
-    return sheet.then(a => (a ? [a].concat(docs) : docs));
+      return this._sbUploadFile(file, 'invoices').then(url => ((url && String(url).indexOf('http') === 0) ? { url, name: r.name, type: 'application/pdf' } : null)).catch(() => null);
+    };
+    const sheets = (more && more.sheets) ? Promise.resolve(more.sheets).then(arr => Promise.all((arr || []).map(up)))
+      : ((more && more.sheet) ? Promise.resolve(more.sheet).then(up).then(a => [a]) : Promise.resolve([]));
+    return sheets.then(arr => arr.filter(Boolean).concat(docs), () => docs);
   }
   // The mail service takes ten files an email (resend-email). A claim with more goes as its own email with the first
   // ten - it says so, once the files that really go are known - then "supporting documents" emails with ten each.
@@ -14440,8 +14636,7 @@ class Component extends DCLogic {
         refDate: m.refDate || '', claimNo: m.claimNo || '', claimOf: m.claimOf || '', po: m.po || '',
         periodFrom: m.periodFrom || '', periodTo: m.periodTo || '', retentionPct: String(m.retPct),
         backCharges: String(m.back || ''), notes: m.notes || '', depApply: m.cp.depApply ? String(m.cp.depApply) : '',
-        cpItems: m.cp.items.map(it => ({ key: it.key, code: it.code || '', desc: it.desc || '', catLabel: this._cpCatLabel(it.cat),
-          pct: this._num(it.pct), was: this._r2(it.claim), amount: String(this._r2(it.claim)) })),
+        cpItems: this._cpEditRows(m.cp.items),
         lines: [] } });
       return;
     }
@@ -14494,12 +14689,20 @@ class Component extends DCLogic {
   // Worked the same way for the dialog, the checks and the save.
   _cpEditBuild(pr, old, e) {
     const byKey = {}; (e.cpItems || []).forEach(r => { byKey[r.key] = r; });
+    // a labour line lowered: its earliest weeks keep what they were claimed at, the latest give way first
+    (e.cpItems || []).forEach(r => {
+      if (!r.keys) return;
+      let left = this._cpEditClamp(r);
+      ((old.cp && old.cp.items) || []).filter(it => r.keys.indexOf(it.key) >= 0)
+        .sort((a, b) => String(a.date).localeCompare(String(b.date)) || String(a.person || '').localeCompare(String(b.person || '')))
+        .forEach(it => { const w = this._num(it.amount), take = this._r2(Math.min(w, Math.max(0, left))); left = this._r2(left - take); byKey[it.key] = { key: it.key, was: w, amount: String(take), dropSheet: this._cpEditClamp(r) < this._num(r.was) - 0.005 }; });
+    });
     const items = ((old.cp && old.cp.items) || []).map(it => {
       const r = byKey[it.key]; if (!r) return Object.assign({}, it, { claim: this._num(it.amount) });
       const was = this._num(it.amount), wasFee = this._num(it.fee);
       const now = this._cpEditClamp({ was, amount: r.amount });
       const fee = it.gone ? (was ? this._r2s(now * wasFee / was) : 0) : this._r2s(now * this._num(it.pct) / 100);
-      return Object.assign({}, it, { amount: now, fee, claim: now });
+      return Object.assign({}, it, { amount: now, fee, claim: now }, r.dropSheet ? { sheetDoc: null } : {});
     });
     const live = items.filter(it => Math.abs(this._num(it.amount)) > 0.005);
     this._cpShareFees(live);
@@ -15333,8 +15536,8 @@ class Component extends DCLogic {
   // ---- a cost-plus invoice, in words and rows every rendering shares ----
   _cpSopText() { return 'This is a payment claim made under the Building and Construction Industry Security of Payment Act 1999 (NSW).'; }
   _cpBasisText(cp) {
-    const n = ((cp && cp.docs) || []).length, sheet = ((cp && cp.labour) || []).length > 0;
-    const sent = [n ? n + (n === 1 ? ' supplier invoice' : ' supplier invoices') : '', sheet ? 'the labour timesheet' : ''].filter(Boolean);
+    const n = ((cp && cp.docs) || []).length, t = ((cp && cp.sheets) || []).length;
+    const sent = [n ? n + (n === 1 ? ' supplier invoice' : ' supplier invoices') : '', t ? (t === 1 ? 'the labour timesheet' : t + ' labour timesheets') : ''].filter(Boolean);
     return 'Costs are the supplier and subcontractor invoices received and the labour hours recorded, excluding GST, with the fee for each category added. '
       + 'Own labour is charged at charge-out rates, with no fee. GST is charged on the whole claim.'
       + (sent.length ? ' Sent with this claim: ' + sent.join(' and ') + '.' : '');
@@ -19705,7 +19908,7 @@ class Component extends DCLogic {
       if (_ivm.costPlus) {
         const cpm = _ivm.cp;
         const list = [{ name: this.invoicePdfName(_ivId), kind: 'Tax invoice', canOpen: true, onOpen: () => this.previewInvoicePdf(_ivId) }]
-          .concat(cpm.labour.length ? [{ name: this._fileName('Labour timesheet', _ivm.no, 'pdf', p), kind: 'Timesheet', canOpen: true, onOpen: () => this.cpTimesheetDownload(_ivId) }] : [])
+          .concat((cpm.sheets || []).map(s => ({ name: s.name, kind: 'Timesheet', canOpen: true, onOpen: () => this.cpTimesheetDownload(_ivId, s.line) })))
           .concat(cpm.docs.map(d => ({ name: d.name, kind: 'Supplier invoice', canOpen: true, onOpen: () => this.openAttachment({ name: d.name, url: d.url, type: d.type || '' }) })));
         Object.assign(invoiceSendV, { isCp: true, notCp: false, attachList: list, attachCount: String(list.length),
           cpPeriod: this.fmtDate(_ivm.periodFrom) + ' to ' + this.fmtDate(_ivm.periodTo) + ', retention ' + this._r2(_ivm.retPct) + '%, deposit ' + this.money(cpm.depApply),
