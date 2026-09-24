@@ -2412,7 +2412,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                 <div style="display:flex;flex-wrap:var(--cpms-wrap,nowrap);justify-content:space-between;gap:10px;font-size:14px;padding:9px 0 2px;border-top:1px solid #e4e8ee;margin-top:4px"><span style="font-weight:700;color:#0f1720">Total this invoice</span><span class="mono" style="font-weight:700;color:#2b59c3;font-size:16px">{{ invoiceV.total }}</span></div>
               </div>
             </div>
-            <div style="font-size:12px;color:#8894a2;line-height:1.5;margin-top:12px">Each ticked cost is claimed at its amount <strong style="color:#6b7787">excluding GST</strong>, with the markup for its <strong style="color:#6b7787">category</strong> &mdash; which comes from its budget line, and can be changed on the row (kept for that cost from then on); your own labour at its Labour hours rate, with no markup. <strong style="color:#6b7787">Untick</strong> a cost, or <strong style="color:#6b7787">lower</strong> its amount, to leave it for a later claim &mdash; what is left comes back on the next one, and a cost that goes down after it is claimed comes back as a credit. The client's invoice shows one total per cost code; on <strong style="color:#6b7787">Send</strong>, each supplier invoice and each labour line's timesheet go with it as separate files. GST is added to the whole claim.</div>
+            <div style="font-size:12px;color:#8894a2;line-height:1.5;margin-top:12px">Each ticked cost is claimed at its amount <strong style="color:#6b7787">excluding GST</strong>, with the markup for its <strong style="color:#6b7787">category</strong> &mdash; which comes from its budget line, and can be changed on the row (kept for that cost from then on); your own labour at its Labour hours rate, with no markup. <strong style="color:#6b7787">Untick</strong> a cost, or <strong style="color:#6b7787">lower</strong> its amount, to leave it for a later claim &mdash; what is left comes back on the next one, and a cost that goes down after it is claimed comes back as a credit. The client's invoice lists each cost on a line of its own, as above, with its figures before GST; on <strong style="color:#6b7787">Send</strong>, each supplier invoice and each labour line's timesheet go with it as separate files. GST is added to the whole claim.</div>
           </sc-if>
 
         </sc-if>
@@ -13439,11 +13439,22 @@ class Component extends DCLogic {
     });
     return items;
   }
+  // Whether a cost kept on an issued invoice takes back markup it was charged before - a credit for a cost that went
+  // down or went - and so keeps exactly the markup the invoice gave it rather than having markup worked on it again.
+  // The draft knew (fixedFee); invoices issued before that was kept are worked out the way the draft did: the cost went
+  // down since it was claimed. Without it a reopened invoice priced such a credit as a new cost, and its lines no longer
+  // added up to the totals the client was sent.
+  _cpKeptBack(it) {
+    if (it.fixedFee != null) return !!it.fixedFee;
+    const was = this._num(it.before);
+    return !!(it.gone || (Math.abs(was) > 0.005 && this._num(it.recorded) - was < -0.005));
+  }
   // What a cost-plus invoice comes to, worked from the costs it keeps - so two windows editing it at once cannot leave
   // the register, its payments and its PDF disagreeing. Any other invoice: the figures it was saved with.
   _cpRecordTotals(iv) {
     const cp = iv.cp || {}, ex = iv.extra || {};
-    const live = (cp.items || []).filter(it => Math.abs(this._num(it.amount)) > 0.005).map(it => Object.assign({}, it, { claim: this._num(it.amount), fee: this._num(it.fee) }));
+    const live = (cp.items || []).filter(it => Math.abs(this._num(it.amount)) > 0.005)
+      .map(it => Object.assign({}, it, { claim: this._num(it.amount), fee: this._num(it.fee), fixedFee: this._cpKeptBack(it) }));
     return this._cpTotals(live, { retPct: ex.retentionPct, back: ex.backCharges, depApply: cp.depApply, depHeld: cp.depApply, gst: iv.gstRate });
   }
   _ivTotal(iv) { return (iv && iv.kind === 'cost_plus' && iv.cp) ? this._cpRecordTotals(iv).total : this._num(iv && iv.total); }
@@ -13875,9 +13886,9 @@ class Component extends DCLogic {
     const gstAmt = this._r2(net * this._num(o.gst) / 100);
     return { cost, fee, subtotal, retPct, retAmt, back, depApply, net, gstAmt, total: this._r2(net + gstAmt) };
   }
-  // What the client sees: one row per cost code and category, with its fee worked on the row, so every row checks with
-  // a calculator. A cost no longer there takes back the fee it was charged, in a row of its own. Supplier detail
-  // travels only in the invoices sent with the claim; the description is the budget line's as it was when claimed.
+  // The markup on a claim: one row per cost code, category and %, with the markup worked and rounded on the row, and
+  // each cost then given its share of it (_cpShareFees). A cost no longer there takes back the markup it was charged, in
+  // a row of its own. The client does not see these rows any more: the claim lists each cost (_cpClientRows).
   _cpGroups(p, items) {
     const lines = (p && p.costLines) || [], g = {}, order = [];
     items.forEach(it => {
@@ -13904,6 +13915,59 @@ class Component extends DCLogic {
       return Object.assign(x, { fee, total: this._r2(x.cost + fee) });
     // by code, and the costs with no code last
     }).sort((a, b) => ((a.code ? 0 : 1) - (b.code ? 0 : 1)) || String(a.code).localeCompare(String(b.code), undefined, { numeric: true }) || a.cat.localeCompare(b.cat) || ((a.fixed ? 1 : 0) - (b.fixed ? 1 : 0)));
+  }
+  // What the client sees on the claim: each cost on a line of its own, just as the claim screen lists it - a supplier
+  // cost as itself, a labour line as one line however many weeks it covers - in the screen's order, with the screen's
+  // figures. Ivan: "i need to see the same number before gst in the pdf preview". It had been one line per cost code,
+  // which added two costs on one code into a figure the screen never showed. The markup on each is its share of its
+  // code's rounded markup, so the lines add up to the claim's totals to the cent. The description only: the supplier
+  // and their invoice number travel in the files sent with the claim (his answer, 2026-09-24).
+  // Works on a draft's ticked costs and on an issued invoice's kept ones alike: both carry line and lineLabel. all: every
+  // cost the claim carries, those at nothing included, so a labour line can tell whether it is charged whole.
+  _cpClientRows(items, all) {
+    const rows = [], lines = {};
+    (items || []).forEach(it => {
+      const claim = this._num(it.claim);
+      if (Math.abs(claim) <= 0.005) return;
+      // the weeks of a labour line are one line, as on the screen; a labour credit stays a line of its own
+      if (it.kind === 'labour' && it.line && claim > 0) {
+        let r = lines[it.line];
+        if (!r) {
+          r = lines[it.line] = { key: it.line, date: it.date || '', codes: [], desc: it.lineLabel || 'Labour hours', cat: 'own',
+            catLabel: this._cpCatLabel('own'), pct: 0, cost: 0, fee: 0 };
+          rows.push(r);
+        }
+        if (it.code && r.codes.indexOf(it.code) < 0) r.codes.push(it.code);
+        if (it.date && (!r.date || it.date < r.date)) r.date = it.date;
+        r.cost = this._r2(r.cost + claim); r.fee = this._r2(r.fee + this._num(it.fee));
+        return;
+      }
+      // a supplier's credit note never claimed before is a cost like any other; only a credit on one claimed is taken back
+      const back = !!(it.fixedFee || it.gone);
+      rows.push({ key: it.key, date: it.date || '', codes: it.code ? [it.code] : [],
+        desc: (it.desc || it.lineDesc || this._cpCatLabel(it.cat)) + (back ? ' (taken back)' : ''),
+        cat: it.cat, catLabel: this._cpCatLabel(it.cat), pct: this._num(it.pct), cost: this._r2(claim), fee: this._r2(this._num(it.fee)) });
+    });
+    // A labour line's label names every week and hour on it. Charged whole, that is what the client is charged for; lowered
+    // - its earliest weeks first - or carrying weeks part-claimed before, it would claim hours this invoice does not
+    // charge, so it says only whose weeks and which, and the hours only when every one of those weeks is charged in full.
+    const due = w => (w.avail != null ? this._num(w.avail) : this._r2(this._num(w.recorded) - this._num(w.before)));
+    const prior = w => this._num(w.done != null ? w.done : w.before);
+    const whole = w => Math.abs(this._num(w.claim) - due(w)) <= 0.005 && Math.abs(prior(w)) <= 0.005;
+    rows.forEach(r => {
+      if (!lines[r.key] || lines[r.key] !== r) return;
+      const weeks = (all || items || []).filter(w => w.kind === 'labour' && w.line === r.key);
+      if (weeks.length && weeks.every(whole)) return;
+      const charged = (items || []).filter(w => w.kind === 'labour' && w.line === r.key && this._num(w.claim) > 0.005)
+        .sort((a, b) => String(a.date).localeCompare(String(b.date)) || String(a.person || '').localeCompare(String(b.person || '')));
+      if (!charged.length) return;
+      const names = charged.map(w => w.person).filter(Boolean).filter((x, i, a) => a.indexOf(x) === i);
+      const hours = this._r2(charged.reduce((a, w) => a + this._num(w.hours), 0));
+      r.desc = 'Labour hours' + (names.length ? ' — ' + names.join(', ') : '') + ' — weeks from ' + this.fmtDate(charged[0].date)
+        + ' to ' + this.fmtDate(charged[charged.length - 1].date) + (charged.every(whole) ? ' (' + hours + ' h)' : '');
+    });
+    return rows.map(r => Object.assign(r, { code: r.codes.slice().sort().join(', '), total: this._r2(r.cost + r.fee) }))
+      .sort((a, b) => String(a.date).localeCompare(String(b.date)) || String(a.key).localeCompare(String(b.key)));
   }
   // The supplier invoices a claim sends with it: one file per invoice, however many cost codes it was split over.
   // Each knows which costs it stands for, so a file uploaded as the claim goes out can be kept against them.
@@ -13945,7 +14009,7 @@ class Component extends DCLogic {
       // a file that was only in this browser when the claim went out was kept by name: if it has been uploaded
       // since, a re-send carries it
       items = (cp.items || []).map(it => {
-        const k = Object.assign({}, it, { claim: this._num(it.amount), fee: this._num(it.fee) });
+        const k = Object.assign({}, it, { claim: this._num(it.amount), fee: this._num(it.fee), fixedFee: this._cpKeptBack(it) });
         if (it.kind === 'bill' && it.doc && it.doc.local && !it.doc.url) {
           const b = (p.bills || []).find(x => 'b:' + x.id === it.key);
           // gone from the cost as well: the claim says it has no file, rather than naming one it cannot send
@@ -13986,7 +14050,7 @@ class Component extends DCLogic {
       claim: t.subtotal, retPct: t.retPct, retAmt: t.retAmt, back: t.back, net: t.net, gst, gstAmt: t.gstAmt, total: t.total,
       vars, varTotal: vars.reduce((a, v) => a + this._num(v.value), 0),
       termDays: this._termDays(),
-      cp: { items: live, groups, cost: t.cost, fee: t.fee, subtotal: t.subtotal, depApply: t.depApply, depHeld, uncatPct: uncat == null ? '' : String(uncat),
+      cp: { items: live, groups, costRows: this._cpClientRows(live, issued ? items : draft.items.filter(it => it.on)), cost: t.cost, fee: t.fee, subtotal: t.subtotal, depApply: t.depApply, depHeld, uncatPct: uncat == null ? '' : String(uncat),
         est: E.est, vars: E.vars, revised: E.revised, prev: E.prev, toDate, remaining: this._r2(E.revised - toDate), noEstimate: !(E.revised > 0),
         sheets: this._cpSheets(p, live, issued ? issued.no : nextNo), docs: this._cpDocs(live), labour: live.filter(it => it.kind === 'labour' && this._num(it.claim) > 0.005),
         noDoc: live.filter(it => it.kind === 'bill' && !it.gone && !it.doc && this._num(it.claim) > 0.005).length, draft },
@@ -14492,7 +14556,7 @@ class Component extends DCLogic {
       const k = { key: it.key, origin: it.origin || it.key, kind: it.kind, refId: it.refId, date: it.date || '', code: it.code || '', cat: it.cat,
         desc: it.desc || '', lineDesc: it.lineDesc == null ? '' : String(it.lineDesc),
         pct: this._num(it.pct), amount: this._r2(it.claim), fee: this._r2(it.fee),
-        recorded: this._r2(this._num(it.now)), before: this._r2(this._num(it.done)), gone: !!it.gone, doc: this._keptDoc(it.doc) };
+        recorded: this._r2(this._num(it.now)), before: this._r2(this._num(it.done)), gone: !!it.gone, fixedFee: !!it.fixedFee, doc: this._keptDoc(it.doc) };
       if (it.kind === 'labour') Object.assign(k, { line: it.line || '', lineRef: it.lineRef || '', lineLabel: it.lineLabel || '', sheetDoc: it.sheetDoc || null,
         person: it.person || '', personId: it.personId || '', role: it.role || '',
         days: (it.days || []).slice(), hours: this._num(it.hours), rate: this._num(it.rate) });
@@ -14872,11 +14936,12 @@ class Component extends DCLogic {
         .forEach(it => { const w = this._num(it.amount), take = this._r2(Math.min(w, Math.max(0, left))); left = this._r2(left - take); byKey[it.key] = { key: it.key, was: w, amount: String(take), dropSheet: this._cpEditClamp(r) < this._num(r.was) - 0.005 }; });
     });
     const items = ((old.cp && old.cp.items) || []).map(it => {
-      const r = byKey[it.key]; if (!r) return Object.assign({}, it, { claim: this._num(it.amount) });
+      const back = this._cpKeptBack(it);
+      const r = byKey[it.key]; if (!r) return Object.assign({}, it, { claim: this._num(it.amount), fixedFee: back });
       const was = this._num(it.amount), wasFee = this._num(it.fee);
       const now = this._cpEditClamp({ was, amount: r.amount });
-      const fee = it.gone ? (was ? this._r2s(now * wasFee / was) : 0) : this._r2s(now * this._num(it.pct) / 100);
-      return Object.assign({}, it, { amount: now, fee, claim: now }, r.dropSheet ? { sheetDoc: null } : {});
+      const fee = back ? (was ? this._r2s(now * wasFee / was) : 0) : this._r2s(now * this._num(it.pct) / 100);
+      return Object.assign({}, it, { amount: now, fee, claim: now, fixedFee: back }, r.dropSheet ? { sheetDoc: null } : {});
     });
     const live = items.filter(it => Math.abs(this._num(it.amount)) > 0.005);
     this._cpShareFees(live);
@@ -15140,9 +15205,9 @@ class Component extends DCLogic {
       r = push([{ v: 'COSTS THIS CLAIM', s: S.head }]); mg(r, 0, 6);
       r = push(['Cost code', 'Description', 'Category', 'Cost (excl. GST)', 'Markup %', 'Markup', 'Total (excl. GST)'].map(t => ({ v: t, s: S.th })));
       heights[r] = 28;
-      cp.groups.forEach(g => push([{ v: g.code || '-', s: S.val }, { v: g.desc || '', s: S.val }, { v: g.catLabel, s: S.val }, { n: mn(g.cost), s: S.money },
+      cp.costRows.forEach(g => push([{ v: g.code || '-', s: S.valWrap }, { v: g.desc || '', s: S.valWrap }, { v: g.catLabel, s: S.val }, { n: mn(g.cost), s: S.money },
         { v: this._r2(g.pct) + '%', s: S.val }, { n: mn(g.fee), s: S.money }, { n: mn(g.total), s: S.moneyB }]));
-      if (!cp.groups.length) { r = push([{ v: 'No costs claimed this period', s: S.val }, { v: '', s: S.val }, { v: '', s: S.val }, { v: '', s: S.val }, { v: '', s: S.val }, { v: '', s: S.val }, { v: '', s: S.val }]); mg(r, 0, 6); }
+      if (!cp.costRows.length) { r = push([{ v: 'No costs claimed this period', s: S.val }, { v: '', s: S.val }, { v: '', s: S.val }, { v: '', s: S.val }, { v: '', s: S.val }, { v: '', s: S.val }, { v: '', s: S.val }]); mg(r, 0, 6); }
       r = push([{ v: 'Totals this claim (excl. GST)', s: S.sub }, { v: '', s: S.sub }, { v: '', s: S.sub }, { n: mn(cp.cost), s: S.subMoney }, { v: '', s: S.sub }, { n: mn(cp.fee), s: S.subMoney }, { n: mn(cp.subtotal), s: S.subMoney }]);
       mg(r, 0, 2);
       r = push([{ v: this._cpBasisText(cp), s: S.note }]); mg(r, 0, 6); heights[r] = 30;
@@ -15538,21 +15603,23 @@ class Component extends DCLogic {
         y += 24;
       };
       need(60); phead();
-      if (!cp.groups.length) {
+      if (!cp.costRows.length) {
         d.rect(M, y, CW, 20, { stroke: BORD, lw: 0.4 });
         d.text('No costs claimed this period', M + CW / 2, y + 13, { size: 8, align: 'center', color: MUT });
         y += 20;
       }
-      cp.groups.forEach(g => {
+      cp.costRows.forEach(g => {
         const dl = d.wrap(g.desc || '', 8, false, pc[1].w - 8);
-        const rh = Math.max(dl.length * 10 + 8, 18);
+        const cl = d.wrap(g.code || '-', 8, false, pc[0].w - 8);
+        const rh = Math.max(Math.max(dl.length, cl.length) * 10 + 8, 18);
         if (y + rh > d.H - M - 24) { footer(); startPage(); phead(); }
         d.rect(M, y, CW, rh, { stroke: BORD, lw: 0.4 });
-        const cells = [g.code || '-', '', g.catLabel, money(g.cost), this._r2(g.pct) + '%', money(g.fee), money(g.total)];
+        const cells = ['', '', g.catLabel, money(g.cost), this._r2(g.pct) + '%', money(g.fee), money(g.total)];
         let cx = M;
         pc.forEach((col, i) => {
           if (i > 0) d.line(cx, y, cx, y + rh, { color: BORD, lw: 0.4 });
-          if (i === 1) dl.forEach((ln, k) => d.text(ln, cx + 4, y + 12 + k * 10, { size: 8 }));
+          if (i === 0) cl.forEach((ln, k) => d.text(ln, cx + 4, y + 12 + k * 10, { size: 8 }));
+          else if (i === 1) dl.forEach((ln, k) => d.text(ln, cx + 4, y + 12 + k * 10, { size: 8 }));
           else d.text(cells[i], col.a === 'right' ? cx + col.w - 4 : cx + 4, y + 12, { size: 8, align: col.a, bold: i === 6 });
           cx += col.w;
         });
@@ -15761,7 +15828,7 @@ class Component extends DCLogic {
   // The body of the preview page of a cost-plus invoice.
   _cpDocHtmlBody(m, esc, money, sumRow) {
     const cp = m.cp;
-    const rows = cp.groups.map(g => '<tr><td class="cc">' + esc(g.code || '-') + '</td><td>' + esc(g.desc) + '</td><td>' + esc(g.catLabel) + '</td>'
+    const rows = cp.costRows.map(g => '<tr><td class="cc">' + esc(g.code || '-') + '</td><td>' + esc(g.desc) + '</td><td>' + esc(g.catLabel) + '</td>'
       + '<td class="r">' + money(g.cost) + '</td><td class="r">' + this._r2(g.pct) + '%</td><td class="r">' + money(g.fee) + '</td>'
       + '<td class="r" style="font-weight:700">' + money(g.total) + '</td></tr>').join('')
       || '<tr><td colspan="7" style="text-align:center;color:#9AA0AC">No costs claimed this period</td></tr>';
