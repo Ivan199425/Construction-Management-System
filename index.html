@@ -2444,17 +2444,14 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
               <div class="colhdr dark" style="display:grid;grid-template-columns:112px 1.1fr 1.1fr 1.1fr 1fr 104px 104px .85fr 58px .85fr 100px 156px 96px 40px;padding:11px 16px;background:#2A3580;border-bottom:1px solid #e4e8ee;font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#fff;text-transform:uppercase;gap:9px">
                 <div>Bill #</div><div>Vendor</div><div>Commitment</div><div>Cost code</div><div>Description</div><div>Bill date</div><div>Due date</div><div style="text-align:right">Amount</div><div style="text-align:right">Tax %</div><div style="text-align:right">Total</div><div>Invoice</div><div>Payment</div><div>Send</div><div></div>
               </div>
+              <datalist id="billVendorList"><sc-for list="{{ billVendorList }}" as="o" hint-placeholder-count="3"><option value="{{ o.label }}"></option></sc-for></datalist>
               <sc-for list="{{ billRows }}" as="r" hint-placeholder-count="5">
                 <div style="display:grid;grid-template-columns:112px 1.1fr 1.1fr 1.1fr 1fr 104px 104px .85fr 58px .85fr 100px 156px 96px 40px;padding:8px 16px;border-bottom:1px solid #eef1f4;align-items:start;gap:9px" style-hover="background:#f9fafc">
                   <div>
                     <input value="{{ r.billNo }}" onInput="{{ r.onBillNo }}" placeholder="BILL-0000" class="mono" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 8px;font-size:12px;font-family:'IBM Plex Mono',monospace;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none">
                     <sc-if value="{{ r.fromClaim }}" hint-placeholder-val="{{ false }}"><span title="Auto-posted from a certified progress claim" style="display:inline-block;margin-top:3px;font-size:8.5px;font-weight:700;letter-spacing:.3px;color:#15803d;background:#e6f4ea;border-radius:4px;padding:1px 5px">↩ FROM CLAIM</span></sc-if><sc-if value="{{ r.fromAp }}" hint-placeholder-val="{{ false }}"><span title="Posted automatically from an approved supplier invoice — edit it in Company → Supplier Invoices, not here" style="display:inline-block;margin-top:3px;font-size:8.5px;font-weight:700;letter-spacing:.3px;color:#2b59c3;background:#e7eefc;border-radius:4px;padding:1px 5px">🧾 FROM INVOICE</span></sc-if><sc-if value="{{ r.fromLabour }}" hint-placeholder-val="{{ false }}"><span title="Made from recorded Labour hours. Its weeks are locked on the Labour hours screen; delete it to put them back." style="display:inline-block;margin-top:3px;font-size:8.5px;font-weight:700;letter-spacing:.3px;color:#6d28d9;background:#f1ebfd;border-radius:4px;padding:1px 5px">⏱ FROM LABOUR HOURS</span></sc-if><sc-if value="{{ r.hasTimesheetBtn }}" hint-placeholder-val="{{ false }}"><button onClick="{{ r.onTimesheet }}" title="{{ r.timesheetTitle }}" style="display:inline-block;margin-top:3px;border:0;cursor:pointer;font-family:inherit;font-size:8.5px;font-weight:700;letter-spacing:.3px;color:#2b59c3;background:#e7eefc;border-radius:4px;padding:1px 5px" style-hover="background:#d6e2fb">{{ r.timesheetLabel }}</button></sc-if>
                   </div>
-                  <select value="{{ r.vendorId }}" onChange="{{ r.onVendor }}" title="Select or create a vendor" style="width:100%;border:1px solid {{ r.vendorBorder }};border-radius:6px;padding:6px 6px;font-size:12px;font-family:inherit;color:#0f1720;background:{{ r.vendorBg }};cursor:pointer" style-focus="border-color:#2b59c3;outline:none">
-                    <option value="">— Select vendor —</option>
-                    <sc-for list="{{ r.vendorOptions }}" as="o" hint-placeholder-count="3"><option value="{{ o.id }}">{{ o.label }}</option></sc-for>
-                    <option value="__new__">＋ New vendor…</option>
-                  </select>
+                  <input value="{{ r.vendorText }}" list="billVendorList" onFocus="{{ r.onVendorFocus }}" onInput="{{ r.onVendorType }}" onBlur="{{ r.onVendorBlur }}" placeholder="{{ r.vendorPlaceholder }}" title="Type to search the vendors, or pick ＋ New vendor… at the bottom of the list" style="width:100%;border:1px solid {{ r.vendorBorder }};border-radius:6px;padding:6px 8px;font-size:12px;font-family:inherit;color:#0f1720;background:{{ r.vendorBg }}" style-focus="border-color:#2b59c3;outline:none">
                   <select value="{{ r.commitmentId }}" onChange="{{ r.onCommitment }}" title="Link to a commitment" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 6px;font-size:12px;font-family:inherit;color:#0f1720;background:#fff;cursor:pointer" style-focus="border-color:#2b59c3;outline:none">
                     <option value="">— No commitment —</option>
                     <sc-for list="{{ r.commitmentOptions }}" as="o" hint-placeholder-count="3"><option value="{{ o.id }}">{{ o.label }}</option></sc-for>
@@ -5811,6 +5808,7 @@ class Component extends DCLogic {
       financial: this._loadFinancial(),
       myPw: { new: '', confirm: '', msg: '', ok: false, busy: false },
       editCell: '',
+      vendorEdit: null,   // the vendor cell being typed in: { id, text }
       labourRaw: null,
       predEditId: '',
       predEditText: '',
@@ -17057,9 +17055,52 @@ class Component extends DCLogic {
     const fromClaims = this._lineClaimsUnbilled(l, proj).filter(c => c.status === 'paid').reduce((s, c) => s + this.claimTotal(c), 0);
     return fromBills + fromClaims;
   }
-  onBillVendor(id, val) {
-    if (val === '__new__') { this.setState({ vendorModal: { billId: id }, vendorForm: { type: 'supplier', company: '', rep: '', abn: '', phone: '', email: '', address: '' } }); return; }
+  onBillVendor(id, val, typed) {
+    if (val === '__new__') { this.setState({ vendorModal: { billId: id }, vendorForm: { type: 'supplier', company: String(typed || '').trim(), rep: '', abn: '', phone: '', email: '', address: '' } }); return; }
     this.setBillField(id, 'vendorId', val);
+  }
+  // ---- the vendor cell on a commitment: type to search ----------------------------------------------------------
+  // The directory runs past a hundred names, too many to scroll a dropdown for. The cell is a text box over the
+  // browser's own suggestion list: typing narrows it, picking a name sets the vendor, and what was typed is only
+  // held on screen until then - nothing is saved for a half-typed name.
+  _newVendorLabel() { return '＋ New vendor…'; }
+  _billVendorOpts() {
+    return [...(this.state.vendors || [])].sort((a, b) => String(a.company || '').localeCompare(String(b.company || '')))
+      .map(v => ({ id: v.id, company: String(v.company || ''), label: String(v.company || '') + ' · ' + this.vendorTypeLabel(v.type) }));
+  }
+  // What a finished entry means: the name exactly, or the only vendor it could be. Anything else changes nothing.
+  _billVendorMatch(text) {
+    const t = String(text || '').trim().toLowerCase();
+    if (!t) return null;
+    const opts = this._billVendorOpts();
+    const exact = opts.find(o => o.label.toLowerCase() === t) || opts.find(o => o.company.toLowerCase() === t);
+    if (exact) return exact.id;
+    const some = opts.filter(o => o.label.toLowerCase().indexOf(t) >= 0);
+    return some.length === 1 ? some[0].id : null;
+  }
+  // Opening the cell empties it, so the whole list is offered rather than only the name already there.
+  billVendorFocus(id) { this.setState({ vendorEdit: { id, text: '' } }); }
+  billVendorType(id, text) {
+    const ed = this.state.vendorEdit;
+    const before = (ed && ed.id === id) ? ed.text : '';
+    if (text === this._newVendorLabel()) { this.setState({ vendorEdit: null }); this.onBillVendor(id, '__new__', before); return; }
+    // a name picked from the list arrives whole
+    const hit = this._billVendorOpts().find(o => o.label === text);
+    if (hit) {
+      this.setState({ vendorEdit: null });
+      const b = ((this.proj(this.state.pid) || {}).bills || []).find(x => x.id === id);
+      if (!b || b.vendorId !== hit.id) this.onBillVendor(id, hit.id);
+      return;
+    }
+    this.setState({ vendorEdit: { id, text } });
+  }
+  billVendorBlur(id) {
+    const ed = this.state.vendorEdit;
+    if (!ed || ed.id !== id) return;
+    const hit = this._billVendorMatch(ed.text);
+    this.setState({ vendorEdit: null });
+    const b = ((this.proj(this.state.pid) || {}).bills || []).find(x => x.id === id);
+    if (hit && (!b || b.vendorId !== hit)) this.onBillVendor(id, hit);
   }
   setVendorForm(k, v) { this.setState(s => ({ vendorForm: { ...s.vendorForm, [k]: v } })); }
   closeVendorModal() { this.setState({ vendorModal: null }); }
@@ -21083,10 +21124,13 @@ class Component extends DCLogic {
     // progress claims
     // bills
     let billFilterV = { sortOptions: [], vendorOptions: [] };
-    let billRows = [], billTotals = { net: '', tax: '', gross: '' }, vendorOptions = [], billSearchV = { has: false };
+    let billRows = [], billTotals = { net: '', tax: '', gross: '' }, vendorOptions = [], billSearchV = { has: false }, billVendorList = [];
     if (showBills) {
       const codeCatalog = this.costCodeOptions();
       vendorOptions = [...S.vendors].sort((a, b) => a.company.localeCompare(b.company)).map(v => ({ id: v.id, label: v.company + ' · ' + this.vendorTypeLabel(v.type) }));
+      billVendorList = this._billVendorOpts().concat([{ id: '__new__', label: this._newVendorLabel() }]);
+      const _vendorLabelOf = x => { const o = billVendorList.find(v => v.id === x.vendorId && v.id !== '__new__'); return o ? o.label : (x.vendor || ''); };
+      const _vEd = S.vendorEdit || null;
       const commitmentOptions = p.commitments.map(cm => ({ id: cm.id, label: cm.ref + ' — ' + cm.vendor }));
       const _vendorName = id => { const v = S.vendors.find(x => x.id === id); return v ? v.company : ""; };
       const _bnameOf = x => (_vendorName(x.vendorId) || x.vendor || "").toLowerCase();
@@ -21177,6 +21221,12 @@ class Component extends DCLogic {
           onCommitment: e => this.setBillField(x.id, 'commitmentId', e.target.value),
           onBillNo: e => this.setBillField(x.id, 'billNo', e.target.value),
           onVendor: e => this.onBillVendor(x.id, e.target.value),
+          // while typing, the current vendor sits in the placeholder so it is still in view
+          vendorText: (_vEd && _vEd.id === x.id) ? _vEd.text : _vendorLabelOf(x),
+          vendorPlaceholder: ((_vEd && _vEd.id === x.id) && _vendorLabelOf(x)) ? _vendorLabelOf(x) : 'Search vendor…',
+          onVendorFocus: () => this.billVendorFocus(x.id),
+          onVendorType: e => this.billVendorType(x.id, e.target.value),
+          onVendorBlur: () => this.billVendorBlur(x.id),
           onCode: e => this.setBillField(x.id, 'code', e.target.value),
           onDesc: e => this.setBillField(x.id, 'desc', e.target.value),
           onAmount: e => this.setBillField(x.id, 'amount', e.target.value),
@@ -22702,7 +22752,7 @@ class Component extends DCLogic {
         onClick: () => this.setState({ commitTab: t.key }),
         fg2: _commitTab === t.key ? '#0f1720' : '#8894a2',
         underline: _commitTab === t.key ? '#2b59c3' : 'transparent' })),
-      billRows, billTotals, billSearchV, billFilterV, paymentsViewV, onAddBill: () => this.addBill(),
+      billRows, billTotals, billSearchV, billFilterV, billVendorList, paymentsViewV, onAddBill: () => this.addBill(),
       vendorModal: S.vendorModal ? { open: true, ...S.vendorForm } : { open: false },
       onVendorType: (e) => this.setVendorForm('type', e.target.value), onVendorCompany: (e) => this.setVendorForm('company', e.target.value),
       onVendorRep: (e) => this.setVendorForm('rep', e.target.value), onVendorPhone: (e) => this.setVendorForm('phone', e.target.value),
