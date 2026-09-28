@@ -3497,9 +3497,15 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                   </div>
                   <div style="padding:4px 10px 0;overflow-x:auto">
                     <svg viewBox="0 0 {{ reportV.scurve.w }} {{ reportV.scurve.h }}" style="width:100%;min-width:600px;height:auto;display:block">
-                      <sc-for list="{{ reportV.scurve.yGrid }}" as="g" hint-placeholder-count="5"><line x1="{{ reportV.scurve.plotLeft }}" y1="{{ g.y }}" x2="{{ reportV.scurve.plotRight }}" y2="{{ g.y }}" stroke="#eef1f4" stroke-width="1"></line><text x="{{ reportV.scurve.plotLeft }}" y="{{ g.y }}" dx="-6" dy="3" text-anchor="end" font-size="9" fill="#a4afba">{{ g.label }}</text></sc-for>
-                      <sc-for list="{{ reportV.scurve.xTicks }}" as="t" hint-placeholder-count="9"><text x="{{ t.x }}" y="{{ reportV.scurve.plotBottom }}" dy="16" text-anchor="middle" font-size="8.5" fill="#a4afba">{{ t.label }}</text></sc-for>
-                      <sc-if value="{{ reportV.scurve.todayIn }}" hint-placeholder-val="{{ false }}"><line x1="{{ reportV.scurve.todayX }}" y1="{{ reportV.scurve.todayY0 }}" x2="{{ reportV.scurve.todayX }}" y2="{{ reportV.scurve.todayY1 }}" stroke="#dc2626" stroke-width="1.2" stroke-dasharray="4 3"></line><text x="{{ reportV.scurve.todayX }}" y="{{ reportV.scurve.todayY0 }}" dy="-3" text-anchor="middle" font-size="8.5" font-weight="700" fill="#dc2626">Today</text></sc-if>
+                      <sc-for list="{{ reportV.scurve.yGrid }}" as="g" hint-placeholder-count="5"><line x1="{{ reportV.scurve.plotLeft }}" y1="{{ g.y }}" x2="{{ reportV.scurve.plotRight }}" y2="{{ g.y }}" stroke="#eef1f4" stroke-width="1"></line><text x="{{ reportV.scurve.plotLeft }}" y="{{ g.y }}" dx="-7" dy="3.5" text-anchor="end" font-size="10.5" fill="#6b7787">{{ g.label }}</text></sc-for>
+                      <sc-for list="{{ reportV.scurve.xTicks }}" as="t" hint-placeholder-count="9"><line x1="{{ t.x }}" y1="{{ reportV.scurve.plotTop }}" x2="{{ t.x }}" y2="{{ reportV.scurve.plotBottom }}" stroke="#f4f6f9" stroke-width="1"></line><line x1="{{ t.x }}" y1="{{ reportV.scurve.plotBottom }}" x2="{{ t.x }}" y2="{{ reportV.scurve.tickMarkY }}" stroke="#c3ccd6" stroke-width="1"></line><text x="{{ t.x }}" y="{{ reportV.scurve.tickY }}" text-anchor="middle" font-size="10.5" fill="#6b7787">{{ t.label }}</text></sc-for>
+                      <line x1="{{ reportV.scurve.plotLeft }}" y1="{{ reportV.scurve.plotBottom }}" x2="{{ reportV.scurve.plotRight }}" y2="{{ reportV.scurve.plotBottom }}" stroke="#c3ccd6" stroke-width="1"></line>
+                      <line x1="{{ reportV.scurve.plotLeft }}" y1="{{ reportV.scurve.plotTop }}" x2="{{ reportV.scurve.plotLeft }}" y2="{{ reportV.scurve.plotBottom }}" stroke="#c3ccd6" stroke-width="1"></line>
+                      <text x="{{ reportV.scurve.xTitleX }}" y="{{ reportV.scurve.xTitleY }}" text-anchor="middle" font-size="10" font-weight="600" fill="#8894a2">{{ reportV.scurve.xAxisTitle }}</text>
+                      <text x="14" y="{{ reportV.scurve.yTitleY }}" transform="{{ reportV.scurve.yTitleTransform }}" text-anchor="middle" font-size="10" font-weight="600" fill="#8894a2">Cost</text>
+                      <line x1="{{ reportV.scurve.plotLeft }}" y1="{{ reportV.scurve.budgetY }}" x2="{{ reportV.scurve.plotRight }}" y2="{{ reportV.scurve.budgetY }}" stroke="#b45309" stroke-width="1.2" stroke-dasharray="6 4" opacity="0.7"></line>
+                      <text x="{{ reportV.scurve.budgetLabelX }}" y="{{ reportV.scurve.budgetLabelY }}" font-size="10" font-weight="700" fill="#b45309" stroke="#fff" stroke-width="3" paint-order="stroke">{{ reportV.scurve.budgetText }}</text>
+                      <sc-if value="{{ reportV.scurve.todayIn }}" hint-placeholder-val="{{ false }}"><line x1="{{ reportV.scurve.todayX }}" y1="{{ reportV.scurve.todayY0 }}" x2="{{ reportV.scurve.todayX }}" y2="{{ reportV.scurve.todayY1 }}" stroke="#dc2626" stroke-width="1.2" stroke-dasharray="4 3"></line><text x="{{ reportV.scurve.todayX }}" y="{{ reportV.scurve.todayY0 }}" dy="-5" text-anchor="middle" font-size="10" font-weight="700" fill="#dc2626">Today</text></sc-if>
                       <polyline points="{{ reportV.scurve.plannedPts }}" fill="none" stroke="#9aa7b5" stroke-width="1.8" stroke-dasharray="5 4"></polyline>
                       <sc-for list="{{ reportV.scurve.plannedDots }}" as="d" hint-placeholder-count="13"><circle cx="{{ d.cx }}" cy="{{ d.cy }}" r="2.6" fill="#fff" stroke="#9aa7b5" stroke-width="1.4"></circle></sc-for>
                       <sc-if value="{{ reportV.scurve.hasCommitted }}" hint-placeholder-val="{{ false }}"><polyline points="{{ reportV.scurve.committedPts }}" fill="none" stroke="#c3ccd8" stroke-width="2.2"></polyline></sc-if>
@@ -3510,8 +3516,10 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                       </sc-if>
                       <polyline points="{{ reportV.scurve.actualPts }}" fill="none" stroke="{{ reportV.scurve.color }}" stroke-width="2.8"></polyline>
                       <sc-for list="{{ reportV.scurve.actualDots }}" as="d" hint-placeholder-count="11"><circle cx="{{ d.cx }}" cy="{{ d.cy }}" r="3" fill="{{ reportV.scurve.color }}"></circle></sc-for>
+                      <sc-for list="{{ reportV.scurve.todayLabels }}" as="l" hint-placeholder-count="3"><text x="{{ l.x }}" y="{{ l.y }}" dy="3.5" text-anchor="{{ l.anchor }}" font-size="10.5" font-weight="700" fill="{{ l.color }}" stroke="#fff" stroke-width="3" paint-order="stroke">{{ l.text }}</text></sc-for>
+                      <sc-if value="{{ reportV.scurve.hasForecast }}" hint-placeholder-val="{{ false }}"><text x="{{ reportV.scurve.fcLabel.x }}" y="{{ reportV.scurve.fcLabel.y }}" text-anchor="{{ reportV.scurve.fcLabel.anchor }}" font-size="10.5" font-weight="700" fill="{{ reportV.scurve.eacColor }}" stroke="#fff" stroke-width="3" paint-order="stroke">{{ reportV.scurve.fcLabel.text }}</text></sc-if>
                     </svg>
-                    <div style="display:flex;gap:16px;padding:2px 8px 8px 66px;font-size:10.5px;color:#8894a2;flex-wrap:wrap">
+                    <div style="display:flex;gap:16px;padding:2px 8px 8px 70px;font-size:10.5px;color:#8894a2;flex-wrap:wrap">
                       <span><span style="display:inline-block;width:14px;height:0;border-top:1.8px dashed #9aa7b5;vertical-align:middle;margin-right:5px"></span>Planned {{ reportV.scurve.plannedLabel }}</span>
                       <sc-if value="{{ reportV.scurve.hasCommitted }}" hint-placeholder-val="{{ false }}"><span><span style="display:inline-block;width:14px;height:0;border-top:2.2px solid #c3ccd8;vertical-align:middle;margin-right:5px"></span>Committed {{ reportV.scurve.committedLabel }}</span></sc-if>
                       <span><span style="display:inline-block;width:14px;height:0;border-top:2.8px solid {{ reportV.scurve.color }};vertical-align:middle;margin-right:5px"></span>Actual {{ reportV.scurve.actualLabel }}</span>
@@ -9203,13 +9211,13 @@ class Component extends DCLogic {
     const span = Math.max(1, fcEndN - minN);
     const top = Math.max(budget, eac, committedNow) * 1.06;
     // round the axis to a 1/2/2.5/5 step so the gridlines read as round money
-    const raw = top / 4;
+    const raw = top / 5;   // about five steps: $0-$25m by $5m reads better than $0-$30m by $10m
     const mag = Math.pow(10, Math.floor(Math.log(raw) / Math.LN10));
     const norm = raw / mag;
     const stepMul = norm <= 1 ? 1 : (norm <= 2 ? 2 : (norm <= 2.5 ? 2.5 : (norm <= 5 ? 5 : 10)));
     const gstep = stepMul * mag;
     const nice = Math.ceil(top / gstep) * gstep || 1;
-    const W = 820, H = 280, padL = 66, padR = 18, padT = 14, padB = 38;
+    const W = 820, H = 300, padL = 70, padR = 24, padT = 26, padB = 46;
     const plotW = W - padL - padR, plotH = H - padT - padB;
     const xF = n => padL + (n - minN) / span * plotW;
     const yF = v => padT + (1 - Math.max(0, Math.min(nice, v)) / nice) * plotH;
@@ -9244,22 +9252,41 @@ class Component extends DCLogic {
     const weeksLeft = Math.max(1, (fcEndN - todayN) / 7);
     const needed = Math.max(0, eac - actualNow) / weeksLeft;
 
-    const mLab = v => { const a = Math.abs(v); if (a >= 1e6) return '$' + (v / 1e6).toFixed(1) + 'm'; if (a >= 1000) return '$' + Math.round(v / 1000) + 'k'; return '$' + Math.round(v); };
+    // Money short enough for a chart: $750, $7.5k, $20.8k, $1.2m - one decimal where it says something.
+    const mLab = v => { const a = Math.abs(v); const f = (x, sfx) => String(Math.round(x * 10) / 10) + sfx; if (a >= 1e6) return '$' + f(v / 1e6, 'm'); if (a >= 1000) return '$' + f(v / 1000, 'k'); return '$' + Math.round(v); };
     const monShort = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    // A month-long programme needs week markers; a year-long one needs months.
-    const shortRun = (fcEndN - minN) <= 70;
+    // Dates sized to the job, as on the Schedule S-curve: weekly (Mondays) up to ~5 months, monthly up to ~2.5
+    // years, quarterly beyond - at most ten, and none crowding the money labels on the left.
+    const weekly = (fcEndN - minN) <= 150;
     let ticks = [];
-    if (shortRun) {
-      const monday = n => { const d = new Date(n * 864e5); return n - ((d.getUTCDay() + 6) % 7); };
-      let w = monday(minN); if (w < minN) w += 7;
-      let g = 0; while (w <= fcEndN && g < 60) { ticks.push(w); w += 7; g++; }
-      if (ticks.length < 3) ticks = samp(minN, fcEndN, 4);
+    if (weekly) {
+      let m = minN + ((8 - new Date(minN * 864e5).getUTCDay()) % 7);
+      for (let g = 0; m <= fcEndN && g < 60; g++, m += 7) ticks.push(m);
     } else {
+      const every = (fcEndN - minN) <= 900 ? 1 : 3;
       const d0 = new Date(minN * 864e5); let ty = d0.getUTCFullYear(), tm = d0.getUTCMonth();
-      let cur = Math.round(Date.UTC(ty, tm, 1) / 864e5); let g = 0;
-      while (cur <= fcEndN && g < 200) { if (cur >= minN) ticks.push(cur); tm++; if (tm > 11) { tm = 0; ty++; } cur = Math.round(Date.UTC(ty, tm, 1) / 864e5); g++; }
-      if (ticks.length > 9) { const st = Math.ceil(ticks.length / 9); ticks = ticks.filter((_, i) => i % st === 0); }
+      if (every === 3) tm = tm - (tm % 3);
+      for (let g = 0; g < 200; g++) { const cur = Math.round(Date.UTC(ty, tm, 1) / 864e5); if (cur > fcEndN) break; if (cur >= minN) ticks.push(cur); tm += every; while (tm > 11) { tm -= 12; ty++; } }
     }
+    if (ticks.length > 10) { const st = Math.ceil(ticks.length / 10); ticks = ticks.filter((_, i) => i % st === 0); }
+    ticks = ticks.filter(n => xF(n) >= padL + 14 && xF(n) <= W - padR - 10);
+    // The amounts that matter today, beside the curves where the Today line crosses them: spread so none sits on
+    // another, and moved to the left of the line when Today is near the right edge.
+    const _tx = xF(todayN), _tLeft = _tx > W - padR - 120;
+    const todayLabels = (todayN >= minN && todayN <= fcEndN) ? [
+      { v: plannedNow, color: '#6b7787', text: 'Planned ' + mLab(plannedNow) },
+      committedNow > 0 ? { v: committedNow, color: '#8894a2', text: 'Committed ' + mLab(committedNow) } : null,
+      { v: actualNow, color, text: 'Actual ' + mLab(actualNow) },
+    ].filter(Boolean).map(o => ({ color: o.color, text: o.text, y: yF(o.v), x: Math.round(_tx + (_tLeft ? -7 : 7)), anchor: _tLeft ? 'end' : 'start' })) : [];
+    todayLabels.sort((a, b) => a.y - b.y);
+    for (let i = 1; i < todayLabels.length; i++) if (todayLabels[i].y - todayLabels[i - 1].y < 13) todayLabels[i].y = todayLabels[i - 1].y + 13;
+    const _over = todayLabels.length ? todayLabels[todayLabels.length - 1].y - (padT + plotH - 4) : 0;
+    if (_over > 0) todayLabels.forEach(o => { o.y -= _over; });
+    todayLabels.forEach(o => { o.y = Math.round(Math.max(padT + 8, o.y)); });
+    // the forecast's end: above its dot when it lands over budget, below when under, so it keeps clear of the budget line
+    const _fx = xF(fcEndN), _fy = yF(eac);
+    const fcLabel = { x: Math.round(_fx - 8), y: Math.round(eac >= budget ? _fy - 9 : _fy + 16), anchor: 'end',
+      text: 'Forecast ' + mLab(eac) + ' · ' + this.fmtDate(numToIso(fcEndN)) };
 
     return {
       has: true, w: W, h: H,
@@ -9269,10 +9296,15 @@ class Component extends DCLogic {
       forecastPts: pts(fcNs, fcAt), forecastDots: dots(fcNs, fcAt), hasForecast: fcNs.length > 0,
       forecastEndX: Math.round(xF(fcEndN)), forecastEndY: Math.round(yF(eac)),
       todayIn: todayN >= minN && todayN <= fcEndN, todayX: Math.round(xF(todayN)), todayY0: padT, todayY1: padT + plotH,
-      yGrid: [0, 0.25, 0.5, 0.75, 1].map(f => ({ y: Math.round(yF(nice * f)), label: mLab(nice * f) })),
+      // every gridline on a round step of the scale, so each label is a round amount
+      yGrid: Array.from({ length: Math.round(nice / gstep) + 1 }, (_, i) => ({ y: Math.round(yF(gstep * i)), label: mLab(gstep * i) })),
       xTicks: ticks.map(n => { const d = new Date(n * 864e5);
         return { x: Math.round(xF(n)),
-          label: shortRun ? (d.getUTCDate() + ' ' + monShort[d.getUTCMonth()]) : (monShort[d.getUTCMonth()] + " '" + String(d.getUTCFullYear()).slice(2)) }; }),
+          label: weekly ? (d.getUTCDate() + ' ' + monShort[d.getUTCMonth()]) : (monShort[d.getUTCMonth()] + " '" + String(d.getUTCFullYear()).slice(2)) }; }),
+      todayLabels, fcLabel,
+      budgetY: Math.round(yF(budget)), budgetText: 'Budget ' + mLab(budget), budgetLabelX: padL + 6, budgetLabelY: Math.round(yF(budget)) - 5,
+      tickY: padT + plotH + 17, tickMarkY: padT + plotH + 4, xAxisTitle: weekly ? 'Date (weeks starting Monday)' : 'Date',
+      xTitleX: Math.round(padL + plotW / 2), xTitleY: H - 6, yTitleY: Math.round(padT + plotH / 2), yTitleTransform: 'rotate(-90 14 ' + Math.round(padT + plotH / 2) + ')',
       plotLeft: padL, plotRight: W - padR, plotTop: padT, plotBottom: padT + plotH,
       color, bg, status,
       varPct: this.money(Math.abs(varAmt)) + (over ? ' over plan' : ' under plan'),
