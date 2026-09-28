@@ -9270,13 +9270,13 @@ class Component extends DCLogic {
     }
     if (ticks.length > 10) { const st = Math.ceil(ticks.length / 10); ticks = ticks.filter((_, i) => i % st === 0); }
     ticks = ticks.filter(n => xF(n) >= padL + 14 && xF(n) <= W - padR - 10);
-    // The amounts that matter today, beside the curves where the Today line crosses them: spread so none sits on
+    // The amounts that matter today, in full, beside the curves where the Today line crosses them: spread so none sits on
     // another, and moved to the left of the line when Today is near the right edge.
-    const _tx = xF(todayN), _tLeft = _tx > W - padR - 120;
+    const _tx = xF(todayN), _tLeft = _tx > W - padR - 175;
     const todayLabels = (todayN >= minN && todayN <= fcEndN) ? [
-      { v: plannedNow, color: '#6b7787', text: 'Planned ' + mLab(plannedNow) },
-      committedNow > 0 ? { v: committedNow, color: '#8894a2', text: 'Committed ' + mLab(committedNow) } : null,
-      { v: actualNow, color, text: 'Actual ' + mLab(actualNow) },
+      { v: plannedNow, color: '#6b7787', text: 'Planned ' + this.money(plannedNow) },
+      committedNow > 0 ? { v: committedNow, color: '#8894a2', text: 'Committed ' + this.money(committedNow) } : null,
+      { v: actualNow, color, text: 'Actual ' + this.money(actualNow) },
     ].filter(Boolean).map(o => ({ color: o.color, text: o.text, y: yF(o.v), x: Math.round(_tx + (_tLeft ? -7 : 7)), anchor: _tLeft ? 'end' : 'start' })) : [];
     todayLabels.sort((a, b) => a.y - b.y);
     for (let i = 1; i < todayLabels.length; i++) if (todayLabels[i].y - todayLabels[i - 1].y < 13) todayLabels[i].y = todayLabels[i - 1].y + 13;
@@ -9286,7 +9286,24 @@ class Component extends DCLogic {
     // the forecast's end: above its dot when it lands over budget, below when under, so it keeps clear of the budget line
     const _fx = xF(fcEndN), _fy = yF(eac);
     const fcLabel = { x: Math.round(_fx - 8), y: Math.round(eac >= budget ? _fy - 9 : _fy + 16), anchor: 'end',
-      text: 'Forecast ' + mLab(eac) + ' · ' + this.fmtDate(numToIso(fcEndN)) };
+      text: 'Forecast ' + this.money(eac) + ' · ' + this.fmtDate(numToIso(fcEndN)) };
+    // Where each label will sit, roughly: 6.1 units a character at this size, measured from its baseline. A label
+    // that would land on another moves - the forecast up (or down, if the top is reached), the budget below its line.
+    const _box = (l, base) => { const w = String(l.text).length * 6.1, x0 = l.anchor === 'end' ? l.x - w : l.x, b = l.y + (base || 0); return { x0, x1: x0 + w, y0: b - 10, y1: b + 3 }; };
+    const _hit = (a, b) => a.x0 < b.x1 && b.x0 < a.x1 && a.y0 < b.y1 && b.y0 < a.y1;
+    const _todayBoxes = todayLabels.map(l => _box(l, 3.5));
+    const _free = (box, taken) => !taken.some(t => _hit(box, t));
+    {
+      const y0 = fcLabel.y, tries = [];
+      for (let k = 1; k <= 12; k++) tries.push(y0 - 13 * k);
+      for (let k = 1; k <= 12; k++) tries.push(y0 + 13 * k);
+      if (!_free(_box(fcLabel), _todayBoxes)) {
+        const ok = tries.find(y => y >= padT + 10 && y <= padT + plotH - 4 && _free(_box(Object.assign({}, fcLabel, { y })), _todayBoxes));
+        if (ok != null) fcLabel.y = Math.round(ok);
+      }
+    }
+    const budgetLabel = { x: padL + 6, y: Math.round(yF(budget)) - 5, anchor: 'start', text: 'Budget ' + this.money(budget) };
+    if (!_free(_box(budgetLabel), _todayBoxes.concat([_box(fcLabel)]))) budgetLabel.y = Math.round(yF(budget)) + 14;
 
     return {
       has: true, w: W, h: H,
@@ -9302,7 +9319,7 @@ class Component extends DCLogic {
         return { x: Math.round(xF(n)),
           label: weekly ? (d.getUTCDate() + ' ' + monShort[d.getUTCMonth()]) : (monShort[d.getUTCMonth()] + " '" + String(d.getUTCFullYear()).slice(2)) }; }),
       todayLabels, fcLabel,
-      budgetY: Math.round(yF(budget)), budgetText: 'Budget ' + mLab(budget), budgetLabelX: padL + 6, budgetLabelY: Math.round(yF(budget)) - 5,
+      budgetY: Math.round(yF(budget)), budgetText: budgetLabel.text, budgetLabelX: budgetLabel.x, budgetLabelY: budgetLabel.y,
       tickY: padT + plotH + 17, tickMarkY: padT + plotH + 4, xAxisTitle: weekly ? 'Date (weeks starting Monday)' : 'Date',
       xTitleX: Math.round(padL + plotW / 2), xTitleY: H - 6, yTitleY: Math.round(padT + plotH / 2), yTitleTransform: 'rotate(-90 14 ' + Math.round(padT + plotH / 2) + ')',
       plotLeft: padL, plotRight: W - padR, plotTop: padT, plotBottom: padT + plotH,
