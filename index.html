@@ -86,6 +86,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
     .cpms-topbar{gap:8px !important;padding-top:7px !important;padding-bottom:7px !important}
     .cpms-topbar > button{flex:1 1 0;max-width:none !important;min-width:0}
     .cpms-secmenu{left:8px !important;right:8px !important}
+    .cpms-favbar{flex:1 1 100% !important;order:3}
     /* A column sized in fractions still refuses to go narrower than its longest word, and
        a field refuses to go under about twenty characters. Both were quietly pushing pages
        sideways; here they may shrink and let the words wrap instead. */
@@ -303,6 +304,14 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
       <span style="font-size:10px;color:#8493a3;flex:0 0 auto">{{ secPickV.caret }}</span>
     </button>
 
+    <sc-if value="{{ favBarV.has }}" hint-placeholder-val="{{ false }}">
+      <div class="cpms-favbar" style="flex:0 1 auto;min-width:0;display:flex;align-items:center;gap:6px;overflow-x:auto;scrollbar-width:none">
+        <sc-for list="{{ favBarV.items }}" as="f" hint-placeholder-count="3">
+          <button onClick="{{ f.onClick }}" title="{{ f.title }}" style="flex:0 0 auto;display:inline-flex;align-items:center;gap:6px;border:1px solid {{ f.border }};background:{{ f.bg }};color:{{ f.fg }};border-radius:16px;padding:5px 11px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap" style-hover="border-color:rgba(255,255,255,.35)"><span style="color:#f5c542;font-size:11px;line-height:1">★</span>{{ f.label }}</button>
+        </sc-for>
+      </div>
+    </sc-if>
+
     <div style="flex:1;min-width:0"></div>
 
     <div style="display:flex;flex-wrap:var(--cpms-wrap,nowrap);align-items:center;gap:10px;flex:0 0 var(--cpms-grow,auto)">
@@ -345,20 +354,26 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
         <div style="min-width:0">
           <div style="font-size:10px;font-weight:700;letter-spacing:.9px;color:#ffffff;text-transform:uppercase;padding:2px 10px 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Company</div>
           <sc-for list="{{ secPickV.company }}" as="l" hint-placeholder-count="4">
-            <button onClick="{{ l.onClick }}" style="width:100%;display:flex;align-items:center;gap:8px;padding:7px 10px;border:0;background:{{ l.bg }};color:{{ l.fg }};border-radius:6px;cursor:pointer;text-align:left;font-family:inherit;font-size:13px;margin-bottom:1px" style-hover="background:rgba(255,255,255,.07)">
-              <span style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ l.label }}</span>
-              <sc-if value="{{ l.badgeShow }}" hint-placeholder-val="{{ false }}"><span style="font-size:9.5px;font-weight:700;color:#fff;background:#c2410c;border-radius:9px;padding:1px 6px;flex:0 0 auto">{{ l.badge }}</span></sc-if>
-            </button>
+            <div style="display:flex;align-items:center;gap:2px;margin-bottom:1px">
+              <button onClick="{{ l.onClick }}" style="flex:1;min-width:0;display:flex;align-items:center;gap:8px;padding:7px 10px;border:0;background:{{ l.bg }};color:{{ l.fg }};border-radius:6px;cursor:pointer;text-align:left;font-family:inherit;font-size:13px" style-hover="background:rgba(255,255,255,.07)">
+                <span style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ l.label }}</span>
+                <sc-if value="{{ l.badgeShow }}" hint-placeholder-val="{{ false }}"><span style="font-size:9.5px;font-weight:700;color:#fff;background:#c2410c;border-radius:9px;padding:1px 6px;flex:0 0 auto">{{ l.badge }}</span></sc-if>
+              </button>
+              <button onClick="{{ l.onFav }}" title="{{ l.favTitle }}" style="flex:0 0 auto;border:0;background:transparent;color:{{ l.favColor }};font-size:14px;line-height:1;padding:6px 7px;border-radius:6px;cursor:pointer;font-family:inherit" style-hover="background:rgba(255,255,255,.07);color:#f5c542">{{ l.favIcon }}</button>
+            </div>
           </sc-for>
         </div>
         <sc-if value="{{ secPickV.hasProject }}" hint-placeholder-val="{{ true }}">
           <div style="min-width:0">
             <div style="font-size:10px;font-weight:700;letter-spacing:.9px;color:#ffffff;text-transform:uppercase;padding:2px 10px 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ secPickV.projectHeading }}</div>
             <sc-for list="{{ secPickV.project }}" as="l" hint-placeholder-count="8">
-              <button onClick="{{ l.onClick }}" style="width:100%;display:flex;align-items:center;gap:8px;padding:7px 10px;border:0;background:{{ l.bg }};color:{{ l.fg }};border-radius:6px;cursor:pointer;text-align:left;font-family:inherit;font-size:13px;margin-bottom:1px" style-hover="background:rgba(255,255,255,.07)">
-                <span style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ l.label }}</span>
-                <sc-if value="{{ l.badgeShow }}" hint-placeholder-val="{{ false }}"><span style="font-size:8.5px;letter-spacing:.5px;border:1px solid #2a3844;color:#4a5a6a;border-radius:4px;padding:1px 5px;flex:0 0 auto">{{ l.badge }}</span></sc-if>
-              </button>
+              <div style="display:flex;align-items:center;gap:2px;margin-bottom:1px">
+                <button onClick="{{ l.onClick }}" style="flex:1;min-width:0;display:flex;align-items:center;gap:8px;padding:7px 10px;border:0;background:{{ l.bg }};color:{{ l.fg }};border-radius:6px;cursor:pointer;text-align:left;font-family:inherit;font-size:13px" style-hover="background:rgba(255,255,255,.07)">
+                  <span style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ l.label }}</span>
+                  <sc-if value="{{ l.badgeShow }}" hint-placeholder-val="{{ false }}"><span style="font-size:8.5px;letter-spacing:.5px;border:1px solid #2a3844;color:#4a5a6a;border-radius:4px;padding:1px 5px;flex:0 0 auto">{{ l.badge }}</span></sc-if>
+                </button>
+                <button onClick="{{ l.onFav }}" title="{{ l.favTitle }}" style="flex:0 0 auto;border:0;background:transparent;color:{{ l.favColor }};font-size:14px;line-height:1;padding:6px 7px;border-radius:6px;cursor:pointer;font-family:inherit" style-hover="background:rgba(255,255,255,.07);color:#f5c542">{{ l.favIcon }}</button>
+              </div>
             </sc-for>
           </div>
         </sc-if>
@@ -367,9 +382,12 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
             <div style="font-size:10px;font-weight:700;letter-spacing:.9px;color:#ffffff;text-transform:uppercase;padding:2px 10px 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Financial</div>
             <sc-for list="{{ secPickV.financial }}" as="l" hint-placeholder-count="7">
               <sc-if value="{{ l.headShow }}" hint-placeholder-val="{{ false }}"><div style="font-size:10px;font-weight:700;letter-spacing:.9px;color:#ffffff;text-transform:uppercase;padding:14px 10px 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ l.head }}</div></sc-if>
-              <button onClick="{{ l.onClick }}" style="width:100%;display:flex;align-items:center;gap:8px;padding:7px 10px;border:0;background:{{ l.bg }};color:{{ l.fg }};border-radius:6px;cursor:pointer;text-align:left;font-family:inherit;font-size:13px;margin-bottom:1px" style-hover="background:rgba(255,255,255,.07)">
-                <span style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ l.label }}</span>
-              </button>
+              <div style="display:flex;align-items:center;gap:2px;margin-bottom:1px">
+                <button onClick="{{ l.onClick }}" style="flex:1;min-width:0;display:flex;align-items:center;gap:8px;padding:7px 10px;border:0;background:{{ l.bg }};color:{{ l.fg }};border-radius:6px;cursor:pointer;text-align:left;font-family:inherit;font-size:13px" style-hover="background:rgba(255,255,255,.07)">
+                  <span style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ l.label }}</span>
+                </button>
+                <button onClick="{{ l.onFav }}" title="{{ l.favTitle }}" style="flex:0 0 auto;border:0;background:transparent;color:{{ l.favColor }};font-size:14px;line-height:1;padding:6px 7px;border-radius:6px;cursor:pointer;font-family:inherit" style-hover="background:rgba(255,255,255,.07);color:#f5c542">{{ l.favIcon }}</button>
+              </div>
             </sc-for>
           </div>
         </sc-if>
@@ -5783,6 +5801,7 @@ class Component extends DCLogic {
       navOpen: false,
       projPick: false,
       secPick: false,
+      favs: this._loadFavs(),   // the screens starred in the Section menu, in the order they were starred
       labourWeek: '',
       statusFilter: 'all',
       commitTab: 'budget',
@@ -12757,6 +12776,22 @@ class Component extends DCLogic {
     this.setState({ view: 'project', module: 'commitments', commitTab: key,
       anim: this.state.anim + 1, navOpen: false, projPick: false, secPick: false });
   }
+  // ---- favourites -------------------------------------------------------------------------------------------------
+  _loadFavs() {
+    try { if (typeof localStorage === 'undefined') return []; const a = JSON.parse(localStorage.getItem('cubicFavs') || '[]'); return Array.isArray(a) ? a.filter(k => typeof k === 'string') : []; } catch (e) { return []; }
+  }
+  _saveFavs(a) {
+    try { if (typeof localStorage !== 'undefined') localStorage.setItem('cubicFavs', JSON.stringify(a)); } catch (e) {}
+    this._prefsStamp('favs');
+    this._sbSavePrefs();
+  }
+  toggleFav(key) {
+    if (!key) return;
+    const cur = Array.isArray(this.state.favs) ? this.state.favs : [];
+    const next = cur.indexOf(key) >= 0 ? cur.filter(k => k !== key) : cur.concat([key]);
+    this._saveFavs(next);
+    this.setState({ favs: next });
+  }
   toggleSectionPicker() { this.setState(s => ({ secPick: !s.secPick, projPick: false })); }
   closeSectionPicker() { this.setState({ secPick: false }); }
   toggleProjectPicker() { this.setState(s => ({ projPick: !s.projPick, secPick: false })); }
@@ -17231,6 +17266,7 @@ class Component extends DCLogic {
       budgetOrder: this._loadBudgetColOrder() || [],
       budgetHidden: this._loadBudgetColHidden(),
       tables: this._tblColW || {},
+      favs: this._loadFavs(),
     }, at: this._prefsAt() };
   }
   // When each part of the layout was last changed on purpose on this computer: { budgetW, budgetOrder, budgetHidden,
@@ -17259,6 +17295,7 @@ class Component extends DCLogic {
       const bw = obj(c.budgetW); if (bw) { this._saveBudgetColW(bw); patch.budgetColW = bw; }
       const bh = obj(c.budgetHidden); if (bh) { this._saveBudgetColHidden(bh); patch.budgetColHidden = bh; }
       if (Array.isArray(c.budgetOrder)) { this._saveBudgetColOrder(c.budgetOrder); patch.budgetColOrder = c.budgetOrder.length ? c.budgetOrder : null; }
+      if (Array.isArray(c.favs)) { this._saveFavs(c.favs); patch.favs = c.favs; }
       if (Object.keys(patch).length) this.setState(patch);
       const tb = obj(c.tables);
       if (tb) { this._tblColW = tb; this._tblColSave(); this._tblColPaint(); }
@@ -17339,7 +17376,10 @@ class Component extends DCLogic {
     if (w.at) at.budgetW = w.at;
     if (o.at) at.budgetOrder = o.at;
     if (h.at) at.budgetHidden = h.at;
-    return { cols: { budgetW: w.v || {}, budgetOrder: o.v || [], budgetHidden: h.v || {}, tables }, at };
+    // favourites: the list starred most recently wins whole, so one removed on the phone stays removed
+    const fv = pick(sv.favs, lc.favs, sa.favs, la.favs, Array.isArray);
+    if (fv.at) at.favs = fv.at;
+    return { cols: { budgetW: w.v || {}, budgetOrder: o.v || [], budgetHidden: h.v || {}, tables, favs: fv.v || [] }, at };
   }
   // Two copies hold the same layout: the same widths, order and hidden columns, and the same dates, whatever order
   // the keys were written in and whether an empty date set was written at all.
@@ -17349,6 +17389,7 @@ class Component extends DCLogic {
       const c = (p && p.cols) || {}, at = (p && p.at) || {};
       const t = {}; Object.keys(at.tables || {}).sort().forEach(k => { if (at.tables[k]) t[k] = at.tables[k]; });
       return JSON.stringify({ w: sorted(c.budgetW), o: Array.isArray(c.budgetOrder) ? c.budgetOrder : [], h: sorted(c.budgetHidden), tables: sorted(c.tables),
+        f: Array.isArray(c.favs) ? c.favs : [], af: at.favs || 0,
         aw: at.budgetW || 0, ao: at.budgetOrder || 0, ah: at.budgetHidden || 0, t });
     };
     return norm(a) === norm(b);
@@ -17356,7 +17397,7 @@ class Component extends DCLogic {
   _prefsEmpty(p) {
     const c = (p && p.cols) || {};
     const n = o => (o && typeof o === 'object' && !Array.isArray(o)) ? Object.keys(o).length : 0;
-    return !n(c.budgetW) && !n(c.budgetHidden) && !n(c.tables) && !(Array.isArray(c.budgetOrder) && c.budgetOrder.length);
+    return !n(c.budgetW) && !n(c.budgetHidden) && !n(c.tables) && !(Array.isArray(c.budgetOrder) && c.budgetOrder.length) && !(Array.isArray(c.favs) && c.favs.length) && !((p && p.at) || {}).favs;
   }
   _sbLoadPrefs() { return this._prefsSync(); }
   _prefsSync() {
@@ -19467,22 +19508,32 @@ class Component extends DCLogic {
     // Financial keeps behind one name. Every one of them is a screen that already existed;
     // a permission that hides a screen hides it here too, because these are the same lists.
     const _secOpen = !!S.secPick;
-    const _secLink = (label, on, go, badge) => ({ label, onClick: go,
-      bg: on ? 'rgba(43,89,195,.30)' : 'transparent', fg: on ? '#fff' : '#9fb0c0',
-      badgeShow: !!badge, badge: badge || '' });
+    const _favs = Array.isArray(S.favs) ? S.favs : [];
+    const _favLinks = {};   // key -> link, for the bar
+    const _secLink = (label, on, go, badge, fk) => {
+      const fav = !!fk && _favs.indexOf(fk) >= 0;
+      const l = { label, onClick: go, on: !!on,
+        bg: on ? 'rgba(43,89,195,.30)' : 'transparent', fg: on ? '#fff' : '#9fb0c0',
+        badgeShow: !!badge, badge: badge || '',
+        favIcon: fav ? '★' : '☆', favColor: fav ? '#f5c542' : '#4a5a6a',
+        favTitle: fav ? 'Remove from favourites' : 'Add to favourites — it appears in the top bar',
+        onFav: () => this.toggleFav(fk) };
+      if (fk) _favLinks[fk] = l;
+      return l;
+    };
 
     const _companyLinks = [];
-    if (navAp.show) _companyLinks.push(_secLink('Supplier Invoices', S.view === 'apinbox', () => this.goApInvoices(), _apPending > 0 ? String(_apPending) : ''));
-    _companyLinks.push(_secLink('Portfolio overview', S.view === 'portfolio', () => this.goPortfolio()));
-    if (navVendors.show) _companyLinks.push(_secLink('Vendor directory', S.view === 'vendors', () => this.goVendors()));
-    if (navUsers.show) _companyLinks.push(_secLink('Users & access', S.view === 'users', () => this.goUsers()));
-    if (navSettings.show) _companyLinks.push(_secLink('Settings', S.view === 'settings', () => this.goSettings()));
+    if (navAp.show) _companyLinks.push(_secLink('Supplier Invoices', S.view === 'apinbox', () => this.goApInvoices(), _apPending > 0 ? String(_apPending) : '', 'c:apinbox'));
+    _companyLinks.push(_secLink('Portfolio overview', S.view === 'portfolio', () => this.goPortfolio(), '', 'c:portfolio'));
+    if (navVendors.show) _companyLinks.push(_secLink('Vendor directory', S.view === 'vendors', () => this.goVendors(), '', 'c:vendors'));
+    if (navUsers.show) _companyLinks.push(_secLink('Users & access', S.view === 'users', () => this.goUsers(), '', 'c:users'));
+    if (navSettings.show) _companyLinks.push(_secLink('Settings', S.view === 'settings', () => this.goSettings(), '', 'c:settings'));
 
     const _projLinks = moduleNav.filter(m => m.key !== 'commitments')
-      .map(m => _secLink(m.label, inProject && S.module === m.key, m.onClick, m.badgeShow ? 'SOON' : ''));
+      .map(m => _secLink(m.label, inProject && S.module === m.key, m.onClick, m.badgeShow ? 'SOON' : '', 'm:' + m.key));
     const _finOn = !!p && this.moduleVisible('commitments');
     const _finLinks = _finOn ? this._commitTabDefs().map(t =>
-      Object.assign(_secLink(t.label, inProject && S.module === 'commitments' && S.commitTab === t.key, () => this.goCommitTab(t.key)), { head: t.group || '', headShow: !!t.headStart })) : [];
+      Object.assign(_secLink(t.label, inProject && S.module === 'commitments' && S.commitTab === t.key, () => this.goCommitTab(t.key), '', 'f:' + t.key), { head: t.group || '', headShow: !!t.headStart })) : [];
 
     // The button wears the name of the screen you are looking at, so the bar always answers
     // "where am I" without being asked.
@@ -19514,6 +19565,15 @@ class Component extends DCLogic {
       financial: _finLinks, hasFinancial: _finLinks.length > 0,
       projectHeading: inProject && p ? p.name : '',
     };
+    // The starred screens, in the order they were starred. A project screen needs a project open: with none, it
+    // waits rather than guessing which project was meant.
+    const _favItems = _favs.map(k => _favLinks[k]).filter(Boolean).map(l => ({
+      label: l.label, onClick: () => { this.closeSectionPicker(); l.onClick(); },
+      title: 'Go to ' + l.label + ' (star it again in the Section menu to remove it)',
+      bg: l.on ? 'rgba(43,89,195,.30)' : 'rgba(255,255,255,.04)', fg: l.on ? '#fff' : '#c3ccd6',
+      border: l.on ? 'rgba(111,150,235,.55)' : 'rgba(255,255,255,.14)',
+    }));
+    const favBarV = { has: _favItems.length > 0, items: _favItems };
 
     // KPI strip
     let kpis = [];
@@ -22750,7 +22810,7 @@ class Component extends DCLogic {
         onClick: () => this.setState({ commitTab: t.key }),
         fg2: _commitTab === t.key ? '#0f1720' : '#8894a2',
         underline: _commitTab === t.key ? '#2b59c3' : 'transparent' })),
-      billRows, billTotals, billSearchV, billFilterV, vendorPickList: this._vendorPickList(), paymentsViewV, onAddBill: () => this.addBill(),
+      favBarV, billRows, billTotals, billSearchV, billFilterV, vendorPickList: this._vendorPickList(), paymentsViewV, onAddBill: () => this.addBill(),
       vendorModal: S.vendorModal ? { open: true, ...S.vendorForm } : { open: false },
       onVendorType: (e) => this.setVendorForm('type', e.target.value), onVendorCompany: (e) => this.setVendorForm('company', e.target.value),
       onVendorRep: (e) => this.setVendorForm('rep', e.target.value), onVendorPhone: (e) => this.setVendorForm('phone', e.target.value),
