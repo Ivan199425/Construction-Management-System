@@ -509,6 +509,10 @@
       return () => txt;
     }
     const parts = txt.split(/\{\{([\s\S]+?)\}\}/g);
+    // Inside SVG an HTML <span> is not drawn at all, so a value in a chart label vanished. <tspan> is the SVG
+    // element for a run of text, and it is drawn.
+    const pn = node.parentNode;
+    const tag = pn && pn.namespaceURI === "http://www.w3.org/2000/svg" ? "tspan" : "span";
     return (vals, ctx, key) => h(
       getReact().Fragment,
       { key },
@@ -519,7 +523,7 @@
           if (!ctx?.__streamingNow) {
             if (document.body?.hasAttribute("data-dc-editor-on")) {
               return h(
-                "span",
+                tag,
                 { key: i, className: "sc-interp sc-unresolved" },
                 "{{ " + p.trim() + " }}"
               );
@@ -531,7 +535,7 @@
             return null;
           }
           return h(
-            "span",
+            tag,
             { key: i, className: "sc-interp sc-missing" },
             p.trim()
           );
@@ -540,7 +544,7 @@
           return h(getReact().Fragment, { key: i }, v);
         }
         if (v === null || typeof v === "boolean") return null;
-        return h("span", { key: i, className: "sc-interp" }, String(v));
+        return h(tag, { key: i, className: "sc-interp" }, String(v));
       })
     );
   }
