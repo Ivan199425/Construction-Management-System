@@ -6642,6 +6642,13 @@ class Component extends DCLogic {
   }
   _sendEmailNow(payload) {
     const c = this._SB;
+    // Who it is from, and so who the replies reach: the send screen's From field if it has one, else whoever is
+    // signed in. The server sends from that address where the mailbox may, and sets it as Reply-To otherwise.
+    const _me = this.currentUser() || {};
+    payload = Object.assign({}, payload, {
+      from: String((payload && payload.from) || _me.email || '').trim(),
+      fromName: String((payload && payload.fromName) || _me.name || '').trim(),
+    });
     // What the handoff shows has to be what the recipient would have received. It used to
     // capture the payload as it arrived, whose attachment links are unsigned and answer 404
     // to anyone who clicks them.
@@ -8426,7 +8433,7 @@ class Component extends DCLogic {
     const _nl = String.fromCharCode(10);
     const sig = _nl + _nl + ['—', (this.currentUser() || {}).name || '', (p && p.name) || '', 'Cubic PM System'].filter(Boolean).join(_nl);
     const payload = {
-      to, cc,
+      to, cc, from: c.from,
       subject: String(c.subject).trim(),
       text: String(c.message || '') + sig,
       attachments: this._mailAttachments(c.atts || []),
@@ -9411,7 +9418,7 @@ class Component extends DCLogic {
   setRfiFrom(v) { this.setState(s => s.rfiSend ? { rfiSend: { ...s.rfiSend, from: v } } : {}); }
   setRfiSubject(v) { this.setState(s => s.rfiSend ? { rfiSend: { ...s.rfiSend, subject: v } } : {}); }
   confirmSendRfi() { const st = this.state; const sc = st.rfiSend; if (!sc) return; const recips = sc.recipients || []; if (!recips.length) return; const p = this.proj(st.pid); const d = (p.docs || []).find(x => x.id === sc.id); if (!d) { this.setState({ rfiSend: null }); return; } const cmt = (sc.message || '').trim(); const note = 'RFI ' + d.ref + ' sent for answer to ' + recips.length + ' recipient(s): ' + recips.join(', ') + ' on ' + this.fmtDate(this.todayLocal()) + (cmt ? ' — “' + cmt + '”' : ''); const outText = 'Sent RFI for answer to ' + recips.join(', ') + '.' + (cmt ? ' ' + cmt : '');
-    this._sendEmailNow({ to: recips, subject: sc.subject || '', text: sc.message || '', attachments: this._mailAttachments(d.attachments) }); const msg = { id: 'm' + Date.now().toString(36), dir: 'out', author: 'Cubic (PM)', text: outText, at: this.todayLocal() }; this.setState(s => ({ projects: s.projects.map(x => x.id !== s.pid ? x : { ...x, senderEmail: sc.from || x.senderEmail, docs: x.docs.map(dd => dd.id !== sc.id ? dd : { ...dd, sentForAnswerAt: note, thread: [...(dd.thread || []), msg] }) }), rfiSend: null })); }
+    this._sendEmailNow({ to: recips, from: sc.from, subject: sc.subject || '', text: sc.message || '', attachments: this._mailAttachments(d.attachments) }); const msg = { id: 'm' + Date.now().toString(36), dir: 'out', author: 'Cubic (PM)', text: outText, at: this.todayLocal() }; this.setState(s => ({ projects: s.projects.map(x => x.id !== s.pid ? x : { ...x, senderEmail: sc.from || x.senderEmail, docs: x.docs.map(dd => dd.id !== sc.id ? dd : { ...dd, sentForAnswerAt: note, thread: [...(dd.thread || []), msg] }) }), rfiSend: null })); }
   previewRfiPdf(id) {
     const p = this.proj(this.state.pid); if (!p) return; const d = (p.docs || []).find(x => x.id === id); if (!d) return;
     const esc = x => String(x == null ? '' : x).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -9451,7 +9458,7 @@ class Component extends DCLogic {
   setEotFrom(v) { this.setState(s => s.eotSend ? { eotSend: { ...s.eotSend, from: v } } : {}); }
   setEotSubject(v) { this.setState(s => s.eotSend ? { eotSend: { ...s.eotSend, subject: v } } : {}); }
   confirmSendEot() { const st = this.state; const sc = st.eotSend; if (!sc) return; const recips = sc.recipients || []; if (!recips.length) return; const p = this.proj(st.pid); const e = (p.eots || []).find(x => x.id === sc.id); if (!e) { this.setState({ eotSend: null }); return; } const msg = (sc.message || '').trim() ? ' — “' + sc.message.trim() + '”' : ''; const note = 'EOT ' + e.ref + ' sent for approval to ' + recips.length + ' recipient(s): ' + recips.join(', ') + ' on ' + this.fmtDate(this.todayLocal()) + msg;
-    this._sendEmailNow({ to: recips, subject: sc.subject || '', text: sc.message || '', attachments: this._mailAttachments(e.attachments) }); this.setState(s => ({ projects: s.projects.map(x => x.id !== s.pid ? x : { ...x, senderEmail: sc.from || x.senderEmail, eots: x.eots.map(ee => ee.id !== sc.id ? ee : { ...ee, status: ee.status === 'draft' ? 'submitted' : ee.status, sentForApprovalAt: note }) }), eotSend: null })); }
+    this._sendEmailNow({ to: recips, from: sc.from, subject: sc.subject || '', text: sc.message || '', attachments: this._mailAttachments(e.attachments) }); this.setState(s => ({ projects: s.projects.map(x => x.id !== s.pid ? x : { ...x, senderEmail: sc.from || x.senderEmail, eots: x.eots.map(ee => ee.id !== sc.id ? ee : { ...ee, status: ee.status === 'draft' ? 'submitted' : ee.status, sentForApprovalAt: note }) }), eotSend: null })); }
   previewEotPdf(id) {
     const p = this.proj(this.state.pid); if (!p) return; const e = (p.eots || []).find(x => x.id === id); if (!e) return;
     const esc = x => String(x == null ? '' : x).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -12006,7 +12013,7 @@ class Component extends DCLogic {
     if (st.attachOriginal) (inv.attachments || []).forEach(a => atts.push({ name: a.name, url: a.url }));
     this.setState({ apSend: Object.assign({}, st, { busy: true, error: '' }) });
     const body = st.message + (st.attachSummary ? '\n\n----------------------------------------\n' + this.apAllocSummaryText(inv) : '');
-    this._sendEmailNow({ to: st.to, cc: st.cc, subject: st.subject, text: body, attachments: atts }).then(res => {
+    this._sendEmailNow({ to: st.to, cc: st.cc, from: st.from, subject: st.subject, text: body, attachments: atts }).then(res => {
       // A send that did not go through leaves the invoice cost coded. It is never marked sent
       // on the strength of an attempt (BR-4.48).
       if (!res || res.ok !== true) { this.setState(s => ({ apSend: Object.assign({}, s.apSend, { busy: false, error: 'The email did not go out. The invoice is still cost coded — try again.' }) })); return; }
@@ -16422,7 +16429,7 @@ class Component extends DCLogic {
     // only an up-to-date one: a sheet made before the commitment changed would say something else
     const _ts = st.attachTimesheet ? this._billTimesheetFresh(p, bill) : null;
     if (_ts) atts.push({ name: _ts.name, url: _ts.url });
-    this._sendEmailNow({ to: recips, subject: st.subject || '', text: st.message || '', attachments: atts });
+    this._sendEmailNow({ to: recips, from: st.from, subject: st.subject || '', text: st.message || '', attachments: atts });
     const attLabel = [(st.attachInvoice && bill.invoice) ? bill.invoice : '', _ts ? _ts.name : ''].filter(Boolean).join(' + ') || 'no invoice file';
     this.setState(s => ({ projects: s.projects.map(pr => pr.id !== s.pid ? pr : { ...pr, senderEmail: st.from || pr.senderEmail,
       bills: (pr.bills || []).map(b => b.id !== st.id ? b : { ...b,
@@ -16518,7 +16525,7 @@ class Component extends DCLogic {
     const recips = (st.recipients || []).filter(Boolean); if (!recips.length) return;
     const p = this.proj(this.state.pid); const c = (p.claims || []).find(x => x.id === st.id); if (!c) return;
     const atts = (st.attachInvoice && c.invoiceUrl) ? [{ name: c.invoice || 'claim', url: c.invoiceUrl }] : [];
-    this._sendEmailNow({ to: recips, subject: st.subject || '', text: st.message || '', attachments: atts });
+    this._sendEmailNow({ to: recips, from: st.from, subject: st.subject || '', text: st.message || '', attachments: atts });
     this.setState(s => ({ projects: s.projects.map(pr => pr.id !== s.pid ? pr : { ...pr, senderEmail: st.from || pr.senderEmail,
       claims: (pr.claims || []).map(x => x.id !== st.id ? x : { ...x,
         sentAt: 'Sent ' + this.now() + ' → ' + recips.join(', '),
