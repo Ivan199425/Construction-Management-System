@@ -1198,7 +1198,8 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                     </div>
                     <div class="mono" style="text-align:right;font-size:12.5px;font-weight:600;color:#0f1720">{{ r.amount }}</div>
                     <div style="display:flex;flex-direction:column;gap:3px;align-items:flex-start">
-                      <span style="font-size:10px;font-weight:600;padding:2px 9px;border-radius:12px;background:{{ r.statusBg }};color:{{ r.statusColor }}">{{ r.statusLabel }}</span>
+                      <sc-if value="{{ r.hasStatusMenu }}" hint-placeholder-val="{{ false }}"><select value="{{ r.statusKey }}" onChange="{{ r.onStatus }}" title="Change the status. A step marked … asks for a reason or opens its screen first." style="max-width:100%;font-size:10.5px;font-weight:600;padding:3px 4px 3px 8px;border-radius:12px;border:1px solid {{ r.statusBg }};background:{{ r.statusBg }};color:{{ r.statusColor }};cursor:pointer;font-family:inherit" style-focus="outline:none;border-color:{{ r.statusColor }}"><sc-for list="{{ r.statusOptions }}" as="o" hint-placeholder-count="4"><option value="{{ o.v }}">{{ o.label }}</option></sc-for></select></sc-if>
+                      <sc-if value="{{ r.noStatusMenu }}" hint-placeholder-val="{{ true }}"><span style="font-size:10px;font-weight:600;padding:2px 9px;border-radius:12px;background:{{ r.statusBg }};color:{{ r.statusColor }}">{{ r.statusLabel }}</span></sc-if>
                       <sc-if value="{{ r.overdue }}" hint-placeholder-val="{{ false }}"><span style="font-size:9px;font-weight:700;letter-spacing:.3px;color:#b91c1c">⚠ {{ r.overdueLabel }}</span></sc-if>
                     </div>
                     <div style="min-width:0">
@@ -12386,6 +12387,63 @@ class Component extends DCLogic {
     if (skipped) bits.push((skipped === 1 ? 'One was' : skipped + ' were') + ' left as they were \u2014 ' + why + '.');
     this.setState({ apSel: {}, apNotice: bits.join(' ') });
   }
+  // ---- the status menu on each row --------------------------------------------------------------------------------
+  // The moves open from each status. A label ending in '…' opens a dialog or a screen first.
+  apStatusOptions(x) {
+    if (!x) return [];
+    const cur = { v: x.voided ? 'void' : x.status, label: this.apStatusMeta(x.voided ? 'void' : x.status).label };
+    const o = (v, label) => ({ v, label });
+    const aside = [o('duplicate', 'Duplicate'), o('not_collected', 'Not an invoice'), o('void', 'Closed')];
+    const moves = {
+      received: [o('in_review', 'In review'), o('rejected', 'Rejected\u2026')].concat(aside),
+      unallocated: [o('in_review', 'In review'), o('rejected', 'Rejected\u2026')].concat(aside),
+      in_review: [o('approved', 'Approved'), o('query', 'Query raised\u2026'), o('rejected', 'Rejected\u2026')].concat(aside),
+      query: [o('in_review', 'In review (query resolved)'), o('approved', 'Approved'), o('rejected', 'Rejected\u2026'), o('void', 'Closed')],
+      approved: [o('coded', 'Cost coded\u2026')],
+      coded: [o('sent', 'Sent to accountant\u2026')],
+      sent: [o('paid', 'Paid\u2026'), o('recall', 'Recall\u2026')],
+      paid: [],
+      duplicate: [o('in_review', 'In review\u2026 (not a duplicate)'), o('not_collected', 'Not an invoice'), o('void', 'Closed')],
+      rejected: [o('in_review', 'In review\u2026 (reinstate)'), o('void', 'Closed')],
+      not_collected: [o('in_review', 'In review (collect it)'), o('void', 'Closed')],
+      void: [],
+    }[cur.v] || [];
+    return [cur].concat(moves);
+  }
+  apChangeStatus(id, to) {
+    const x = this.apInv(id); if (!x || !to) return;
+    const from = x.voided ? 'void' : x.status;
+    if (to === from) return;
+    if (!this.apStatusOptions(x).some(o => o.v === to)) return;
+    const u = this.currentUser();
+    const say = t => this.setState({ apNotice: t });
+    if (to === 'in_review') {
+      if (from === 'not_collected') return this.apCollectAnyway(id);
+      if (from === 'query') return this.apResolveQuery(id);
+      if (from === 'rejected') return this.can('admin', 'edit') ? this.openApPrompt('reinstate', id) : say('Only an administrator can reinstate a rejected invoice.');
+      if (from === 'duplicate') return this.can('admin', 'edit') ? this.openApPrompt('dupoverride', id) : say('Only an administrator can clear a duplicate flag.');
+      if (!x.pid) return say('Choose its project first \u2014 an invoice goes to review once it belongs to a project.');
+      return this.apSendToReview(id);
+    }
+    if (to === 'approved') return this.apApprove(id);
+    if (to === 'query') return this.openApPrompt('query', id);
+    if (to === 'rejected') return this.can('apInvoices', 'approve') ? this.openApPrompt('reject', id) : say('Your role cannot reject invoices.');
+    if (to === 'duplicate') return this.apMarkDuplicate(id);
+    if (to === 'not_collected') {
+      if (this._apWorked(x)) return say('This invoice has commitments posted from it, so it cannot be set aside.');
+      return this._apCommit(id, { status: 'not_collected', notInvoice: true, notCollectedReason: 'Marked not an invoice by ' + ((u && u.name) || 'a user') + '.',
+        pid: '', commitmentId: '', matchRule: '', matchConf: 0, assignedTo: '' }, 'Marked not an invoice', '');
+    }
+    if (to === 'void') {
+      if (!this.can('apInvoices', 'approve')) return say('Closing invoices needs approval rights on Invoice Management.');
+      if (this._apWorked(x)) return say('This invoice has commitments posted from it, so it cannot be closed from here.');
+      return this._apCommit(id, { status: 'void', voided: true, voidReason: 'Closed by ' + ((u && u.name) || 'a user') }, 'Closed', 'Closed from the status menu');
+    }
+    if (to === 'coded') return this.openApAlloc(id);
+    if (to === 'sent') return this.openApSend(id);
+    if (to === 'paid') return this.can('apInvoices', 'approve') ? this.openApPrompt('paid', id) : say('Your role cannot mark invoices paid.');
+    if (to === 'recall') return this.can('admin', 'edit') ? this.openApPrompt('recall', id) : say('Only an administrator can recall an invoice from the accountant.');
+  }
   apSelectAll(ids) {
     const cur = this.state.apSel || {};
     const all = (ids || []).length > 0 && ids.every(id => cur[id]);
@@ -22381,6 +22439,7 @@ class Component extends DCLogic {
           : 'width:16px;height:16px;border-radius:4px;background:#fff;border:1.5px solid #c3ccd8;color:transparent;display:inline-flex;align-items:center;justify-content:center;font-size:10px;flex:0 0 auto';
 
         const _apDel = this.apCanDelete();
+        const _apCanEditRow = this.can('apInvoices', 'edit');
         const rows = _apRows.map(x => {
           const sm = this.apStatusMeta(x.status);
           const recv = String(x.source && x.source.receivedAt || x.createdAt || '');
@@ -22401,6 +22460,9 @@ class Component extends DCLogic {
             amount: this.apMoney(this.apTotal(x)),
             statusLabel: sm.label, statusColor: sm.color, statusBg: sm.bg,
             hasWarn: warns.length > 0, warnText: warns.length ? warns[0].text : '',
+            ...((opts => ({ statusKey: x.voided ? 'void' : x.status, statusOptions: opts,
+              hasStatusMenu: _apCanEditRow && opts.length > 1, noStatusMenu: !(_apCanEditRow && opts.length > 1),
+              onStatus: e => this.apChangeStatus(x.id, e.target.value) }))(this.apStatusOptions(x))),
             overdue: od >= (this._num(_apCfg.overdueDays) || 7), overdueLabel: od + 'd waiting',
             matchNote: x.matchRule ? (x.matchRule + ' · ' + x.matchConf + '%') : '',
             hasMatchNote: !!x.matchRule && !!x.pid,
