@@ -12113,7 +12113,20 @@ class Component extends DCLogic {
   _apBillsFor(inv) {
     const v = this.apVendor(inv);
     const rate = this.apNet(inv) > 0 ? this._r2(this.apGst(inv) / this.apNet(inv) * 100) : 0;
-    return (inv.alloc || []).map(a => ({
+    // Approved but not yet fully coded: the coded parts go in as they are, and the rest as one line awaiting its
+    // cost code, so the project's Commitments shows the whole invoice from the moment it is approved.
+    if (inv.status === 'approved') {
+      const coded = (inv.alloc || []).filter(a => this._num(a.amount) !== 0);
+      const rest = this._r2(this.apNet(inv) - coded.reduce((t, a) => t + this._num(a.amount), 0));
+      const lines = coded.map(a => Object.assign({}, a));
+      if (rest > 0.005) lines.push({ id: 'rest', code: this.commitCode(this.apCommitment(inv)), amount: rest,
+        desc: 'Invoice ' + (inv.invoiceNo || inv.ref || '') + (v ? ' \u2014 ' + v.company : '') + ' \u00b7 awaiting cost coding' });
+      return lines.map(a => this._apBillLine(inv, a, v, rate));
+    }
+    return (inv.alloc || []).map(a => this._apBillLine(inv, a, v, rate));
+  }
+  _apBillLine(inv, a, v, rate) {
+    return (({
       id: 'billap-' + inv.id + '-' + a.id,
       billNo: inv.ref || ('SI-' + inv.id.slice(-4)),
       vendorId: inv.vendorId || '', code: a.code || '',
@@ -12127,13 +12140,18 @@ class Component extends DCLogic {
       apId: inv.id, fromAp: true,
     }));
   }
+  // Invoices approved before approval posted to Commitments, and any approved in another window: put in once.
+  // Nothing is written for an invoice whose lines are already there.
+  apSyncApproved() {
+    (this.state.apInvoices || []).filter(x => x && x.status === 'approved' && x.pid && !x.voided).forEach(x => this._apSyncBills(x.id));
+  }
   // Runs after every change to an invoice and makes the posted bills match what the invoice now
   // says: posted while it is coded, sent or paid, gone otherwise, and moved with it if the
   // project changes. It rewrites nothing when nothing differs — returning a fresh projects array
   // on every keystroke would set the whole project blob saving over and over.
   _apSyncBills(id) {
     const inv = this.apInv(id); if (!inv) return;
-    const posts = ['coded', 'sent', 'paid'].indexOf(inv.status) >= 0 && !!inv.pid && !inv.voided;
+    const posts = ['approved', 'coded', 'sent', 'paid'].indexOf(inv.status) >= 0 && !!inv.pid && !inv.voided;
     const same = (a, b) => a && b && a.code === b.code && a.amount === b.amount && a.taxRate === b.taxRate
       && a.desc === b.desc && a.billDate === b.billDate && a.dueDate === b.dueDate
       && a.vendorId === b.vendorId && a.commitmentId === b.commitmentId && a.invoice === b.invoice;
@@ -12342,7 +12360,7 @@ class Component extends DCLogic {
   goApSettings() { this.setState({ view: 'settings', settingsTab: 'ingestion', anim: this.state.anim + 1, navOpen: false, projPick: false, secPick: false }); }
 
   // ---- navigation ------------------------------------------------------------------------------
-  goApInvoices() { this.setState({ view: 'apinbox', apScreen: 'inbox', apOpen: '', anim: this.state.anim + 1, navOpen: false, projPick: false, secPick: false }); }
+  goApInvoices() { this.setState({ view: 'apinbox', apScreen: 'inbox', apOpen: '', anim: this.state.anim + 1, navOpen: false, projPick: false, secPick: false }); this._withCatalog('ap_invoices', () => { if (this._projLoaded) this.apSyncApproved(); }); }
   setApTab(t) { this.setState({ apTab: t, apSel: {} }); }
   openApReview(id) {
     const inv = this.apInv(id); if (!inv) return;
