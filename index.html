@@ -4522,10 +4522,10 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
               </select>
             </div>
           </sc-if>
-          <div>
+          <sc-if value="{{ apPromptV.hasNote }}" hint-placeholder-val="{{ true }}"><div>
             <label style="font-size:12px;font-weight:600;color:#4a5765;display:block;margin-bottom:5px">{{ apPromptV.noteLabel }}</label>
             <textarea value="{{ apPromptV.note }}" onInput="{{ apPromptV.onNote }}" rows="3" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:12.5px;font-family:inherit;color:#0f1720;background:#fff;resize:vertical;line-height:1.5" style-focus="border-color:#2b59c3;outline:none"></textarea>
-          </div>
+          </div></sc-if>
           <sc-if value="{{ apPromptV.canEmail }}" hint-placeholder-val="{{ false }}">
             <div style="display:flex;align-items:center;gap:9px">
               <span onClick="{{ apPromptV.onToggleEmail }}" style="{{ apPromptV.emailStyle }};cursor:pointer">{{ apPromptV.emailTick }}</span>
@@ -12296,6 +12296,7 @@ class Component extends DCLogic {
       recall: { title: 'Recall from the accountant', lead: 'The invoice goes back to Cost coded and the accountant is emailed to hold payment.', noteLabel: 'Reason for the recall', confirm: 'Recall invoice', danger: true, needNote: true },
       reinstate: { title: 'Reinstate invoice', lead: 'The invoice returns to review. The original rejection stays in the audit trail.', noteLabel: 'Reason for reinstating', confirm: 'Reinstate', danger: false, needNote: true },
       dupoverride: { title: 'Override the duplicate flag', lead: 'Only do this when you are certain the two invoices are genuinely different.', noteLabel: 'Why this is not a duplicate', confirm: 'Override', danger: true, needNote: true },
+      bulkdelete: { title: 'Delete invoices', lead: '', noteLabel: '', confirm: 'Delete for good', danger: true, noNote: true },
       paid: { title: 'Mark as paid', lead: 'Confirms the accountant has paid it. The payment is written against every cost code this invoice was coded to.', noteLabel: 'Payment reference (optional)', confirm: 'Mark paid', danger: false, needNote: false },
     }[kind] || { title: '', lead: '', noteLabel: '', confirm: 'OK', danger: false };
   }
@@ -12318,6 +12319,7 @@ class Component extends DCLogic {
     else if (p.kind === 'reinstate') this.apReinstate(p.id, p.note);
     else if (p.kind === 'dupoverride') this.apOverrideDuplicate(p.id, p.note);
     else if (p.kind === 'paid') this.apMarkPaid(p.id, p.note);
+    else if (p.kind === 'bulkdelete') this._apDeleteIds(p.ids, p.left);
     this.setState({ apPrompt: null });
   }
 
@@ -12418,16 +12420,21 @@ class Component extends DCLogic {
     const ok = ids.filter(id => { const x = this.apInv(id); return x && !this._apWorked(x) && (x.status === 'duplicate' || x.status === 'not_collected' || x.status === 'rejected' || x.voided); });
     const left = ids.length - ok.length;
     if (!ok.length) { this._apBulkSay(0, 'deleted', left, 'only duplicates, not-invoices (Not collected) and closed invoices can be deleted'); return; }
-    let sure = true;
-    try { sure = window.confirm('Delete ' + ok.length + (ok.length === 1 ? ' invoice' : ' invoices') + ' for good?\n\nOnly duplicates, not-invoices and closed invoices are deleted' + (left ? ' \u2014 ' + left + ' other selected ' + (left === 1 ? 'one stays' : 'ones stay') : '') + '. This cannot be undone.'); } catch (e) {}
-    if (!sure) return;
+    // Asked in the app's own dialog. The browser's confirm() is not shown in every window - the app pane answers it
+    // 'Cancel' without showing it - and a delete that silently does nothing is how this was first reported.
+    this.setState({ apPrompt: { kind: 'bulkdelete', ids: ok, left, note: '' } });
+  }
+  _apDeleteIds(ids, left) {
+    if (!(this.can('apInvoices', 'approve') || this.can('admin', 'edit'))) return;
+    // checked again at the moment of deleting: something may have been worked on since the dialog opened
+    const ok = (ids || []).filter(id => { const x = this.apInv(id); return x && !this._apWorked(x) && (x.status === 'duplicate' || x.status === 'not_collected' || x.status === 'rejected' || x.voided); });
     const gone = {}; ok.forEach(id => { gone[id] = true; });
     this._withCatalog('ap_invoices', () => this.setState(st => {
       const list = (st.apInvoices || []).filter(x => !gone[x.id]);
       this._saveApInvoices(list);
       return { apInvoices: list };
     }));
-    this._apBulkSay(ok.length, 'deleted', left, 'only duplicates, not-invoices and closed invoices can be deleted');
+    this._apBulkSay(ok.length, 'deleted', (left || 0) + ((ids || []).length - ok.length), 'only duplicates, not-invoices and closed invoices can be deleted');
   }
   setApFilter(k, v) { this.setState(s => ({ apFilter: Object.assign({}, s.apFilter || {}, { [k]: v }) })); }
   clearApNotice() { this.setState({ apNotice: '' }); }
@@ -22701,7 +22708,11 @@ class Component extends DCLogic {
       const meta = this.apPromptMeta(pr.kind);
       const ready = (!meta.needReason || !!pr.reason) && (!meta.needNote || !!String(pr.note || '').trim());
       apPromptV = {
-        open: true, title: meta.title, lead: meta.lead, noteLabel: meta.noteLabel,
+        open: true, title: meta.title, lead: meta.lead, noteLabel: meta.noteLabel, hasNote: !meta.noNote,
+        ...(pr.kind === 'bulkdelete' ? {
+          title: 'Delete ' + (pr.ids || []).length + ((pr.ids || []).length === 1 ? ' invoice' : ' invoices') + ' for good?',
+          lead: 'Only duplicates, not-invoices and closed invoices are deleted' + (pr.left ? ' \u2014 the other ' + pr.left + ' selected ' + (pr.left === 1 ? 'stays' : 'stay') : '') + '. This cannot be undone. The files and the emails they came from are kept.',
+        } : {}),
         needReason: !!meta.needReason,
         reasons: (this.apSettings().rejectReasons || []).map(r => ({ v: r, label: r })),
         reason: pr.reason || '', onReason: e => this.setApPromptField('reason', e.target.value),
