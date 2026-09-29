@@ -1161,6 +1161,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                 </select>
                 <sc-if value="{{ apV.filter.filtered }}" hint-placeholder-val="{{ false }}"><button onClick="{{ apV.filter.onClear }}" style="border:1px solid #cfd8e2;background:#fff;color:#4a5765;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">Clear</button></sc-if>
                 <sc-if value="{{ apV.search.has }}" hint-placeholder-val="{{ false }}"><span style="font-size:12px;color:#8894a2;white-space:nowrap">{{ apV.search.shown }} of {{ apV.search.total }}</span></sc-if>
+                <sc-if value="{{ apV.canDeleteShown }}" hint-placeholder-val="{{ false }}"><button onClick="{{ apV.onDeleteShown }}" title="Delete every invoice on this tab that is shown - it asks first. Approved, coded, sent and paid invoices are never deleted." style="border:1px solid #b91c1c;background:#fff;color:#b91c1c;border-radius:8px;padding:8px 13px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap" style-hover="background:#fbeef0">{{ apV.deleteShownLabel }}</button></sc-if>
               </div>
             </div>
 
@@ -1212,6 +1213,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                     <div style="display:flex;align-items:center;gap:5px;flex-wrap:var(--cpms-wrap,nowrap);justify-content:flex-end">
                       <sc-if value="{{ r.hasDoc }}" hint-placeholder-val="{{ true }}"><button onClick="{{ r.onDoc }}" title="Open the original document" style="border:1px solid #cfd8e2;background:#fff;color:#2b59c3;border-radius:6px;padding:5px 7px;font-size:11px;cursor:pointer;flex:0 0 auto" style-hover="border-color:#2b59c3">👁</button></sc-if>
                       <sc-if value="{{ r.canCollect }}" hint-placeholder-val="{{ false }}"><button onClick="{{ r.onCollect }}" title="{{ r.notCollectedReason }} Take it in anyway — it will be matched again and queued." style="border:1px solid #cfd8e2;background:#fff;color:#4a5765;border-radius:6px;padding:5px 9px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap" style-hover="border-color:#2b59c3;color:#2b59c3">Collect</button></sc-if>
+                      <sc-if value="{{ r.canDelete }}" hint-placeholder-val="{{ false }}"><button onClick="{{ r.onDelete }}" title="Delete - it asks first" style="border:1px solid #efd0d0;background:#fff;color:#b91c1c;border-radius:6px;padding:5px 7px;font-size:11px;cursor:pointer;flex:0 0 auto" style-hover="background:#fbeef0">&#128465;</button></sc-if>
                       <button onClick="{{ r.onOpen }}" style="border:1px solid #cdddf8;background:#f2f6fd;color:#2b59c3;border-radius:6px;padding:5px 9px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap" style-hover="background:#e8eefc">{{ r.openLabel }}</button>
                     </div>
                   </div>
@@ -1469,6 +1471,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                   </div>
                   <div style="display:flex;gap:8px">
                     <sc-if value="{{ apReviewV.editable }}" hint-placeholder-val="{{ true }}"><button onClick="{{ apReviewV.onVoid }}" title="Records created in error are voided, never deleted" style="border:1px solid #cfd8e2;background:#fff;color:#8894a2;border-radius:8px;padding:9px 14px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="color:#b91c1c;border-color:#efd0d0">Void…</button></sc-if>
+                    <sc-if value="{{ apReviewV.canDelete }}" hint-placeholder-val="{{ false }}"><button onClick="{{ apReviewV.onDelete }}" title="Delete this invoice for good - it asks first" style="border:1px solid #b91c1c;background:#fff;color:#b91c1c;border-radius:8px;padding:9px 14px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="background:#fbeef0">&#128465; Delete</button></sc-if>
                     <button onClick="{{ apReviewV.onBack }}" style="border:1px solid #cfd8e2;background:#fff;color:#4a5765;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="border-color:#2b59c3;color:#2b59c3">Save &amp; close</button>
                   </div>
                 </div>
@@ -12417,18 +12420,31 @@ class Component extends DCLogic {
   apBulkDelete() {
     if (!(this.can('apInvoices', 'approve') || this.can('admin', 'edit'))) { this.setState({ apNotice: 'Deleting invoices needs approval rights on Invoice Management.' }); return; }
     const ids = this.apSelIds();
-    const ok = ids.filter(id => { const x = this.apInv(id); return x && !this._apWorked(x) && (x.status === 'duplicate' || x.status === 'not_collected' || x.status === 'rejected' || x.voided); });
+    const ok = ids.filter(id => this.apDeletable(this.apInv(id)));
     const left = ids.length - ok.length;
     if (!ok.length) { this._apBulkSay(0, 'deleted', left, 'only duplicates, not-invoices (Not collected) and closed invoices can be deleted'); return; }
     // Asked in the app's own dialog. The browser's confirm() is not shown in every window - the app pane answers it
     // 'Cancel' without showing it - and a delete that silently does nothing is how this was first reported.
     this.setState({ apPrompt: { kind: 'bulkdelete', ids: ok, left, note: '' } });
   }
+  // What may be deleted: something not wanted - a duplicate, one set aside (not an invoice, or not ours), a rejected
+  // or a closed one - and never anything approved, coded, sent or paid.
+  apCanDelete() { return this.can('apInvoices', 'approve') || this.can('admin', 'edit'); }
+  apDeletable(x) { return !!x && !this._apWorked(x) && (x.status === 'duplicate' || x.status === 'not_collected' || x.status === 'rejected' || !!x.voided); }
+  // Ask about a given list: one row, a whole tab, or the invoice being looked at.
+  apAskDelete(ids) {
+    if (!this.apCanDelete()) { this.setState({ apNotice: 'Deleting invoices needs approval rights on Invoice Management.' }); return; }
+    const ok = (ids || []).filter(id => this.apDeletable(this.apInv(id)));
+    if (!ok.length) { this.setState({ apNotice: 'Only duplicates, invoices set aside under Not collected, and rejected or closed invoices can be deleted.' }); return; }
+    this.setState({ apPrompt: { kind: 'bulkdelete', ids: ok, left: (ids || []).length - ok.length, note: '' } });
+  }
   _apDeleteIds(ids, left) {
     if (!(this.can('apInvoices', 'approve') || this.can('admin', 'edit'))) return;
     // checked again at the moment of deleting: something may have been worked on since the dialog opened
-    const ok = (ids || []).filter(id => { const x = this.apInv(id); return x && !this._apWorked(x) && (x.status === 'duplicate' || x.status === 'not_collected' || x.status === 'rejected' || x.voided); });
+    const ok = (ids || []).filter(id => this.apDeletable(this.apInv(id)));
     const gone = {}; ok.forEach(id => { gone[id] = true; });
+    // the invoice being looked at is gone: back to the list
+    if (gone[this.state.apOpen]) this.setState({ apScreen: 'inbox', apOpen: '' });
     this._withCatalog('ap_invoices', () => this.setState(st => {
       const list = (st.apInvoices || []).filter(x => !gone[x.id]);
       this._saveApInvoices(list);
@@ -22355,6 +22371,7 @@ class Component extends DCLogic {
           ? 'width:16px;height:16px;border-radius:4px;background:#2b59c3;border:1px solid #2b59c3;color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:10px;flex:0 0 auto'
           : 'width:16px;height:16px;border-radius:4px;background:#fff;border:1.5px solid #c3ccd8;color:transparent;display:inline-flex;align-items:center;justify-content:center;font-size:10px;flex:0 0 auto';
 
+        const _apDel = this.apCanDelete();
         const rows = _apRows.map(x => {
           const sm = this.apStatusMeta(x.status);
           const recv = String(x.source && x.source.receivedAt || x.createdAt || '');
@@ -22391,6 +22408,7 @@ class Component extends DCLogic {
             notCollectedReason: x.notCollectedReason || 'It did not match a project in this system.',
             canCollect: x.status === 'not_collected' && this.apCanCollect(),
             onCollect: () => this.apCollectAnyway(x.id),
+            canDelete: _apDel && this.apDeletable(x), onDelete: () => this.apAskDelete([x.id]),
             assignedTo: this._apAddr(x.assignedTo), assigneeName: this.apAssigneeName(x.assignedTo) || 'Nobody',
             assigneeOptions: _apOwnerOpts, onAssignee: e => this.setApAssignee(x.id, e.target.value),
             assigneeEditable: !this.apLocked(x), assigneeIsMe: !!_apMe && this._apAddr(x.assignedTo) === _apMe,
@@ -22429,6 +22447,10 @@ class Component extends DCLogic {
           onBulkReview: () => this.apBulkReview(), onBulkDuplicate: () => this.apBulkDuplicate(),
           onBulkCollect: () => this.apBulkCollect(), onBulkNotInvoice: () => this.apBulkNotInvoice(),
           onBulkClose: () => this.apBulkClose(), onBulkDelete: () => this.apBulkDelete(), onBulkClear: () => this.apBulkClear(),
+          // 'Delete all shown' on the two tabs that hold what is not wanted, respecting any search or filter
+          canDeleteShown: _apDel && (_apTab === 'not_collected' || _apTab === 'closed') && _apRows.some(x => this.apDeletable(x)),
+          deleteShownLabel: '\u{1F5D1} Delete all ' + _apRows.filter(x => this.apDeletable(x)).length + ' shown',
+          onDeleteShown: () => this.apAskDelete(_apRows.filter(x => this.apDeletable(x)).map(x => x.id)),
           onSelAll: () => this.apSelectAll(_pickIds), selAllStyle: _chk(_allOn), selAllTick: _allOn ? '\u2713' : '', canSelAll: _pickIds.length > 0,
           busy: S.apBusy > 0, busyLabel: S.apBusy > 0 ? ('Reading ' + S.apBusy + ' file(s)…') : '',
           canEdit: this.can('apInvoices', 'edit'),
@@ -22569,6 +22591,7 @@ class Component extends DCLogic {
           onQuery: () => this.openApPrompt('query', x.id),
           onReject: () => this.openApPrompt('reject', x.id),
           onVoid: () => this.openApPrompt('void', x.id),
+          canDelete: this.apCanDelete() && this.apDeletable(x), onDelete: () => this.apAskDelete([x.id]),
           onBack: () => this.apBack(),
           isQuery: x.status === 'query', onResolveQuery: () => this.apResolveQuery(x.id), queryNote: x.queryNote || '',
           isRejected: x.status === 'rejected', rejectNote: (x.rejectReason || '') + (x.rejectNote ? ' — ' + x.rejectNote : ''),
