@@ -1167,11 +1167,11 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
             <div style="background:#fff;border:1px solid #e4e8ee;border-radius:12px;overflow:hidden">
               <div style="overflow-x:auto"><div style="min-width:1420px">
                 <div class="colhdr dark" style="display:grid;grid-template-columns:34px 96px 104px 1.15fr 116px 1.3fr 118px 138px 132px 92px;padding:11px 16px;background:#2A3580;border-bottom:1px solid #e4e8ee;font-size:10.5px;font-weight:600;letter-spacing:.3px;color:#fff;text-transform:uppercase;gap:10px">
-                  <div></div><div>Ref</div><div>Received</div><div>Supplier</div><div>Invoice</div><div>Project</div><div style="text-align:right">Amount</div><div>Status</div><div>With</div><div></div>
+                  <div><sc-if value="{{ apV.canSelAll }}" hint-placeholder-val="{{ true }}"><span onClick="{{ apV.onSelAll }}" title="Select every invoice shown (again to clear)" style="{{ apV.selAllStyle }};cursor:pointer">{{ apV.selAllTick }}</span></sc-if></div><div>Ref</div><div>Received</div><div>Supplier</div><div>Invoice</div><div>Project</div><div style="text-align:right">Amount</div><div>Status</div><div>With</div><div></div>
                 </div>
                 <sc-for list="{{ apV.rows }}" as="r" hint-placeholder-count="5">
                   <div style="display:grid;grid-template-columns:34px 96px 104px 1.15fr 116px 1.3fr 118px 138px 132px 92px;padding:9px 16px;border-bottom:1px solid #eef1f4;align-items:center;gap:10px" style-hover="background:#f9fafc">
-                    <sc-if value="{{ r.canPick }}" hint-placeholder-val="{{ true }}"><span onClick="{{ r.onSel }}" title="Select for a bulk action" style="{{ r.selStyle }};cursor:pointer">{{ r.selTick }}</span></sc-if>
+                    <sc-if value="{{ r.canPick }}" hint-placeholder-val="{{ true }}"><span onClick="{{ r.onSel }}" title="Select for a bulk action" style="{{ r.selStyle }};cursor:pointer">{{ r.selTick }}</span></sc-if><sc-if value="{{ r.noPick }}" hint-placeholder-val="{{ false }}"><span></span></sc-if>
                     <div>
                       <div class="mono" style="font-size:11.5px;font-weight:600;color:#2b59c3">{{ r.ref }}</div>
                       <sc-if value="{{ r.fromEmail }}" hint-placeholder-val="{{ false }}"><span title="Captured from an email" style="font-size:8.5px;font-weight:700;letter-spacing:.3px;color:#6b7787">✉ EMAIL</span></sc-if>
@@ -1235,6 +1235,11 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                 </select>
                 <button onClick="{{ apV.onBulkReview }}" style="border:1px solid #cfd8e2;background:#fff;color:#4a5765;border-radius:8px;padding:8px 13px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="border-color:#2b59c3;color:#2b59c3">Send to review</button>
                 <button onClick="{{ apV.onBulkDuplicate }}" style="border:1px solid #efd0d0;background:#fff;color:#b91c1c;border-radius:8px;padding:8px 13px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="background:#fbeef0">Mark duplicate</button>
+                <button onClick="{{ apV.onBulkCollect }}" title="Bring invoices from Not collected back into the queue" style="border:1px solid #cfd8e2;background:#fff;color:#4a5765;border-radius:8px;padding:8px 13px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="border-color:#2b59c3;color:#2b59c3">Collect</button>
+                <button onClick="{{ apV.onBulkNotInvoice }}" title="Move to Not collected as not invoices - nothing is deleted" style="border:1px solid #cfd8e2;background:#fff;color:#4a5765;border-radius:8px;padding:8px 13px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="border-color:#2b59c3;color:#2b59c3">Not an invoice</button>
+                <button onClick="{{ apV.onBulkClose }}" title="Close: will not be paid, no more work. Goes to the Closed tab with who closed it" style="border:1px solid #cfd8e2;background:#fff;color:#4a5765;border-radius:8px;padding:8px 13px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="border-color:#2b59c3;color:#2b59c3">Close</button>
+                <button onClick="{{ apV.onBulkDelete }}" title="Delete for good - only duplicates, not-invoices and closed invoices; asks first" style="border:1px solid #b91c1c;background:#b91c1c;color:#fff;border-radius:8px;padding:8px 13px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="background:#991b1b">Delete</button>
+                <button onClick="{{ apV.onBulkClear }}" title="Untick everything" style="border:1px solid transparent;background:transparent;color:#6b7787;border-radius:8px;padding:8px 13px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="color:#2b59c3">Clear selection</button>
               </div>
             </sc-if>
 
@@ -11270,10 +11275,12 @@ class Component extends DCLogic {
         if (!raw.trim()) return this._apFinishMail(row.id, 'failed', 'The message arrived empty', []).then(() => step(i + 1, made));
         return this._apFromEmlText(raw).then(recs => {
           const got = (recs || []).filter(Boolean);
-          if (!got.length) return this._apFinishMail(row.id, 'failed', 'Nothing could be read from the message', []).then(() => step(i + 1, made));
+          const skipped = (recs && recs.skipped) || [];
+          const skipNote = skipped.length ? 'Not an invoice, not brought in: ' + skipped.join(', ') : '';
+          if (!got.length) return this._apFinishMail(row.id, skipped.length ? 'skipped' : 'failed', skipNote || 'Nothing could be read from the message', []).then(() => step(i + 1, made));
           got.forEach(r => { mine[r.id] = 1; });
           return new Promise(res => this._apAdd(got, res))
-            .then(() => this._apFinishMail(row.id, 'collected', '', got.map(x => x.id)))
+            .then(() => this._apFinishMail(row.id, 'collected', skipNote, got.map(x => x.id)))
             .then(() => step(i + 1, made + got.length), () => step(i + 1, made + got.length));
         });
       }).catch(() => {
@@ -11456,7 +11463,15 @@ class Component extends DCLogic {
         const blob = new File([a.bytes], a.name, { type: a.mime || 'application/octet-stream' });
         // each record its own copy: they used to share one, and all showed the last file's name
         return this._apFromFile(blob, Object.assign({}, source), mail.body || '');
-      })).then(rs => this._apDedupeBatch([].concat.apply([], rs)));
+      })).then(rs => {
+        const all = [].concat.apply([], rs);
+        // A PDF that can be read and does not say invoice is not brought in at all. Its email keeps a note of it in the
+        // mail queue, so nothing is lost - it is only not on anybody's list.
+        const keep = all.filter(r => !(r.notInvoice && r.extract && r.extract.ok));
+        const out = this._apDedupeBatch(keep);
+        out.skipped = all.filter(r => keep.indexOf(r) < 0).map(r => (r.source && r.source.fileName) || 'attachment');
+        return out;
+      });
     });
   }
 
@@ -11486,26 +11501,33 @@ class Component extends DCLogic {
   // Only mail is judged: a document somebody uploaded or typed in by hand was put there on purpose.
   _apDocKind(inv, docText) {
     if (!inv || !inv.source || inv.source.kind !== 'email') return { notInvoice: false };
+    // What a supplier's bill calls itself. A subcontractor under the SOP Act bills with a payment or progress claim.
+    const INV_DOC = /\b(tax\s+invoice|invoice|progress\s+claim|payment\s+claim|claim\s+for\s+payment)\b/i;
+    // Words a picture's file name or email may use for a bill it cannot show in text.
     const INV = /\b(tax\s+invoice|invoice|progress\s+claim|payment\s+claim|claim\s+for\s+payment|receipt|reimburs\w*|bill\s+for)\b/i;
     const NOT = /\b(quot(e|es|ation)|estimate|tender|proposal|progress\s+report|site\s+report|weekly\s+report|access\s+report|delivery\s+docket|remittance(\s+advice)?|purchase\s+order|order\s+confirmation|sales\s+order|statement\s+of\s+account)\b/i;
     const what = t => { const m = String(t || '').match(NOT); return m ? m[0].toLowerCase().replace(/\s+/g, ' ') : ''; };
     // 'This is not a tax invoice' and 'a tax invoice will be issued' are what quotes say - they do not make one.
     const text = String(docText || '').replace(/\b(not\s+an?\s+(tax\s+)?invoice|(an?\s+)?(tax\s+)?invoice\s+will\s+be\s+(issued|provided|sent|raised))\b/gi, ' ');
-    const title = text.slice(0, 600), head = text.slice(0, 2500);
+    const readable = String(docText || '').replace(/\s/g, '').length > 40;
+    const no = (w, where) => ({ notInvoice: true, readable, reason: 'Not an invoice \u2014 ' + where + ' calls it a ' + w + ' and never an invoice. Collect it if it should be paid.' });
+    // The PDF can be read: it decides alone. Its top line names the document (QUOTATION there wins), and after
+    // that it is an invoice only if it says so. The file name and the email subject no longer count.
+    if (readable) {
+      const top = text.replace(/^\s+/, '').slice(0, 150), title = text.slice(0, 600);
+      if (what(top) && !INV_DOC.test(top)) return no(what(top), 'the document');
+      if (what(title) && !INV_DOC.test(title)) return no(what(title), 'the document');
+      if (INV_DOC.test(text)) return { notInvoice: false };
+      return { notInvoice: true, readable, reason: 'Not an invoice \u2014 the PDF does not say invoice anywhere. Collect it if it should be paid.' };
+    }
+    // A scan or photo: nothing to read, so the file name and the email say what they can.
     const fileName = (inv && ((inv.attachments || [])[0] || {}).name) || (inv && inv.source && inv.source.fileName) || '';
     const subject = (inv && inv.source && inv.source.subject) || '';
-    const no = (w, where) => ({ notInvoice: true, reason: 'Not an invoice \u2014 ' + where + ' calls it a ' + w + ' and never an invoice. Collect it if it should be paid.' });
-    // the very top of the page names the document; QUOTATION there wins over an invoice mentioned further down
-    const top = text.replace(/^\s+/, '').slice(0, 150);
-    if (what(top) && !INV.test(top)) return no(what(top), 'the document');
-    if (what(title) && !INV.test(title)) return no(what(title), 'the document');
-    if (INV.test(title) || INV.test(head)) return { notInvoice: false };
-    if (what(head)) return no(what(head), 'the document');
     if (INV.test(fileName)) return { notInvoice: false };
     if (what(fileName)) return no(what(fileName), 'its file name');
     if (INV.test(subject)) return { notInvoice: false };
     if (what(subject)) return no(what(subject), 'the email');
-    if (!inv.invoiceNo && !(this._num(inv.total) > 0)) return { notInvoice: true, reason: 'Nothing on it reads like an invoice \u2014 no invoice number, no amount, and neither the file nor the email calls it one. Collect it if it should be paid.' };
+    if (!inv.invoiceNo && !(this._num(inv.total) > 0)) return { notInvoice: true, readable, reason: 'Nothing on it reads like an invoice \u2014 no invoice number, no amount, and neither the file nor the email calls it one. Collect it if it should be paid.' };
     return { notInvoice: false };
   }
   // The attachments of one email are read together, so none of them is on the list yet when each is checked for a
@@ -11560,7 +11582,11 @@ class Component extends DCLogic {
           aside('A picture from the email, not the invoice \u2014 ' + ((x.source && pdfMail[x.source.messageId]) ? 'the same email carried the invoice as a PDF.' : 'a signature, logo or screenshot.') + ' Collect it if it should be paid.');
           patch.notInvoice = true; counts.picture++;
         } else {
-          const kind = this._apDocKind(cur, String((x.extract && x.extract.ok && x.extract.text) || '').slice(0, 2500));
+          // the PDF's own words: the email's text was stored after them, and must not vote
+          const _full = String((x.extract && x.extract.ok && x.extract.text) || '');
+          const _body = String((x.source && x.source.body) || '').trim();
+          const _cut = _body ? _full.lastIndexOf(_body.slice(0, 200)) : -1;
+          const kind = this._apDocKind(cur, _cut > 0 ? _full.slice(0, _cut) : _full);
           if (kind.notInvoice) { aside(kind.reason); patch.notInvoice = true; counts.notInvoice++; }
           else if (cur.invoiceNo) {
             const k = String(cur.vendorId || cur.supplierName || '').trim().toLowerCase() + '|' + String(cur.invoiceNo).trim().toLowerCase();
@@ -12335,9 +12361,74 @@ class Component extends DCLogic {
   apBack() { this.setState({ apScreen: 'inbox', apOpen: '', anim: this.state.anim + 1, navOpen: false, projPick: false, secPick: false }); }
   toggleApSel(id) { this.setState(s => { const sel = Object.assign({}, s.apSel || {}); if (sel[id]) delete sel[id]; else sel[id] = true; return { apSel: sel }; }); }
   apSelIds() { return Object.keys(this.state.apSel || {}); }
-  apBulkProject(pid) { if (!pid) return; this.apSelIds().forEach(id => this.apSetProject(id, pid)); this.setState({ apSel: {} }); }
+  apBulkProject(pid) { if (!pid) return; this.apSelIds().forEach(id => { const x = this.apInv(id); if (!x || x.voided || ['duplicate', 'rejected', 'not_collected'].indexOf(x.status) >= 0) return; this.apSetProject(id, pid); }); this.setState({ apSel: {} }); }
   apBulkReview() { this.apSelIds().forEach(id => { const i = this.apInv(id); if (i && i.pid && (i.status === 'unallocated' || i.status === 'received')) this.apSendToReview(id); }); this.setState({ apSel: {} }); }
   apBulkDuplicate() { this.apSelIds().forEach(id => this.apMarkDuplicate(id)); this.setState({ apSel: {} }); }
+  // Nothing that has been approved, coded, sent or paid is moved by a bulk action: those have commitments behind them
+  // and are undone one at a time, on purpose.
+  _apWorked(x) { return !x || ['approved', 'coded', 'sent', 'paid'].indexOf(x.status) >= 0 || (x.billIds || []).length > 0; }
+  _apBulkSay(done, what, skipped, why) {
+    const bits = [done ? (done === 1 ? 'One invoice ' : done + ' invoices ') + what + '.' : 'Nothing was ' + what + '.'];
+    if (skipped) bits.push((skipped === 1 ? 'One was' : skipped + ' were') + ' left as they were \u2014 ' + why + '.');
+    this.setState({ apSel: {}, apNotice: bits.join(' ') });
+  }
+  apSelectAll(ids) {
+    const cur = this.state.apSel || {};
+    const all = (ids || []).length > 0 && ids.every(id => cur[id]);
+    const next = {}; if (!all) ids.forEach(id => { next[id] = true; });
+    this.setState({ apSel: next });
+  }
+  apBulkClear() { this.setState({ apSel: {} }); }
+  apBulkCollect() {
+    if (!this.apCanCollect()) { this.setState({ apNotice: 'Your role cannot collect invoices that were set aside.' }); return; }
+    const ids = this.apSelIds(); let n = 0;
+    ids.forEach(id => { const x = this.apInv(id); if (x && x.status === 'not_collected') { this.apCollectAnyway(id); n++; } });
+    this._apBulkSay(n, 'collected', ids.length - n, 'only invoices on the Not collected tab can be collected');
+  }
+  apBulkNotInvoice() {
+    if (!this.can('apInvoices', 'edit')) return;
+    const u = this.currentUser(); const ids = this.apSelIds(); let n = 0;
+    ids.forEach(id => {
+      const x = this.apInv(id);
+      if (!x || x.voided || x.status === 'not_collected' || this._apWorked(x)) return;
+      this._apCommit(id, { status: 'not_collected', notInvoice: true, notCollectedReason: 'Marked not an invoice by ' + ((u && u.name) || 'a user') + '.',
+        pid: '', commitmentId: '', matchRule: '', matchConf: 0, assignedTo: '' }, 'Marked not an invoice', '');
+      n++;
+    });
+    this._apBulkSay(n, 'moved to Not collected as not invoices', ids.length - n, 'already set aside, closed, or approved and past the point of a bulk change');
+  }
+  // Close: a record that will not be paid and needs no more work. It is voided with the reason on it, so the Closed
+  // tab shows who closed it and when.
+  apBulkClose() {
+    if (!this.can('apInvoices', 'approve')) { this.setState({ apNotice: 'Closing invoices needs approval rights on Invoice Management.' }); return; }
+    const u = this.currentUser(); const ids = this.apSelIds(); let n = 0;
+    ids.forEach(id => {
+      const x = this.apInv(id);
+      if (!x || x.voided || this._apWorked(x)) return;
+      this._apCommit(id, { status: 'void', voided: true, voidReason: 'Closed from the list by ' + ((u && u.name) || 'a user') }, 'Closed', 'Closed from the list');
+      n++;
+    });
+    this._apBulkSay(n, 'closed', ids.length - n, 'already closed, or approved and past the point of a bulk change');
+  }
+  // Delete takes a record off the list for good. Only what is not wanted can go: a duplicate, something that is not
+  // an invoice, or one already closed. The file stays in storage and the email in the mail queue.
+  apBulkDelete() {
+    if (!(this.can('apInvoices', 'approve') || this.can('admin', 'edit'))) { this.setState({ apNotice: 'Deleting invoices needs approval rights on Invoice Management.' }); return; }
+    const ids = this.apSelIds();
+    const ok = ids.filter(id => { const x = this.apInv(id); return x && !this._apWorked(x) && (x.status === 'duplicate' || x.status === 'not_collected' || x.status === 'rejected' || x.voided); });
+    const left = ids.length - ok.length;
+    if (!ok.length) { this._apBulkSay(0, 'deleted', left, 'only duplicates, not-invoices (Not collected) and closed invoices can be deleted'); return; }
+    let sure = true;
+    try { sure = window.confirm('Delete ' + ok.length + (ok.length === 1 ? ' invoice' : ' invoices') + ' for good?\n\nOnly duplicates, not-invoices and closed invoices are deleted' + (left ? ' \u2014 ' + left + ' other selected ' + (left === 1 ? 'one stays' : 'ones stay') : '') + '. This cannot be undone.'); } catch (e) {}
+    if (!sure) return;
+    const gone = {}; ok.forEach(id => { gone[id] = true; });
+    this._withCatalog('ap_invoices', () => this.setState(st => {
+      const list = (st.apInvoices || []).filter(x => !gone[x.id]);
+      this._saveApInvoices(list);
+      return { apInvoices: list };
+    }));
+    this._apBulkSay(ok.length, 'deleted', left, 'only duplicates, not-invoices and closed invoices can be deleted');
+  }
   setApFilter(k, v) { this.setState(s => ({ apFilter: Object.assign({}, s.apFilter || {}, { [k]: v }) })); }
   clearApNotice() { this.setState({ apNotice: '' }); }
   openApDoc(inv) {
@@ -22266,7 +22357,7 @@ class Component extends DCLogic {
           const od = this.apOverdueDays(x);
           const warns = this.apWarnings(x).filter(w => w.block && !(x.ack || {})[w.key]);
           const sel = !!(S.apSel || {})[x.id];
-          const canPick = x.status !== 'sent' && x.status !== 'paid' && x.status !== 'not_collected' && !x.voided;
+          const canPick = x.status !== 'sent' && x.status !== 'paid';
           return {
             id: x.id, ref: x.ref || '', when, time,
             supplier: this.apSupplierLabel(x), invoiceNo: x.invoiceNo || '—',
@@ -22286,7 +22377,7 @@ class Component extends DCLogic {
             forwardNote: (() => { const u = this.apUserByEmail((x.source && x.source.forwardedBy) || ''); return 'Forwarded by ' + ((u && u.name) || (x.source && x.source.forwardedBy) || ''); })(),
             inBills: this.apExistingBills(x).length > 0,
             inBillsNote: (() => { const e = this.apExistingBills(x); return e.length ? ('Already entered in Commitments on ' + e[0].project + ' — ' + e.length + (e.length === 1 ? ' line' : ' lines')) : ''; })(),
-            sel, selStyle: _chk(sel), selTick: sel ? '✓' : '', onSel: () => this.toggleApSel(x.id), canPick,
+            sel, selStyle: _chk(sel), selTick: sel ? '✓' : '', onSel: () => this.toggleApSel(x.id), canPick, noPick: !canPick,
             onOpen: () => (x.status === 'approved' ? this.openApAlloc(x.id) : this.openApReview(x.id)),
             openLabel: x.status === 'approved' ? 'Code ›' : (this.apLocked(x) ? 'View ›' : 'Review ›'),
             notCollected: x.status === 'not_collected',
@@ -22301,6 +22392,8 @@ class Component extends DCLogic {
         });
 
         const selIds = this.apSelIds();
+        const _pickIds = _apRows.filter(x => x.status !== 'sent' && x.status !== 'paid').map(x => x.id);
+        const _allOn = _pickIds.length > 0 && _pickIds.every(id => (S.apSel || {})[id]);
         apV = {
           isInbox: true, isReview: false, isAlloc: false,
           rows, empty: rows.length === 0,
@@ -22327,6 +22420,9 @@ class Component extends DCLogic {
           hasSel: selIds.length > 0, selLabel: selIds.length + ' selected',
           bulkProjects: _apProjOpts, onBulkProject: e => { const v = e.target.value; e.target.value = ''; this.apBulkProject(v); },
           onBulkReview: () => this.apBulkReview(), onBulkDuplicate: () => this.apBulkDuplicate(),
+          onBulkCollect: () => this.apBulkCollect(), onBulkNotInvoice: () => this.apBulkNotInvoice(),
+          onBulkClose: () => this.apBulkClose(), onBulkDelete: () => this.apBulkDelete(), onBulkClear: () => this.apBulkClear(),
+          onSelAll: () => this.apSelectAll(_pickIds), selAllStyle: _chk(_allOn), selAllTick: _allOn ? '\u2713' : '', canSelAll: _pickIds.length > 0,
           busy: S.apBusy > 0, busyLabel: S.apBusy > 0 ? ('Reading ' + S.apBusy + ' file(s)…') : '',
           canEdit: this.can('apInvoices', 'edit'),
           onUpload: e => { this.apIngestFiles(e.target.files); e.target.value = ''; },
