@@ -12371,7 +12371,16 @@ class Component extends DCLogic {
   apBulkDuplicate() { this.apSelIds().forEach(id => this.apMarkDuplicate(id)); this.setState({ apSel: {} }); }
   // Nothing that has been approved, coded, sent or paid is moved by a bulk action: those have commitments behind them
   // and are undone one at a time, on purpose.
-  _apWorked(x) { return !x || ['approved', 'coded', 'sent', 'paid'].indexOf(x.status) >= 0 || (x.billIds || []).length > 0; }
+  _apWorked(x) { return !x || ['approved', 'coded', 'sent', 'paid'].indexOf(x.status) >= 0 || this._apLiveBills(x) > 0; }
+  // Commitment lines this invoice posted that are still in a project. An id left behind by a line removed since does
+  // not count - that is how SI-0001, a duplicate approved once in August, could be neither closed nor deleted.
+  _apLiveBills(x) {
+    if (!x) return 0;
+    const ids = {}; (x.billIds || []).forEach(i => { ids[i] = 1; });
+    let n = 0;
+    (this.state.projects || []).forEach(p => (p.bills || []).forEach(b => { if (ids[b.id] || (b.apId && b.apId === x.id)) n++; }));
+    return n;
+  }
   _apBulkSay(done, what, skipped, why) {
     const bits = [done ? (done === 1 ? 'One invoice ' : done + ' invoices ') + what + '.' : 'Nothing was ' + what + '.'];
     if (skipped) bits.push((skipped === 1 ? 'One was' : skipped + ' were') + ' left as they were \u2014 ' + why + '.');
