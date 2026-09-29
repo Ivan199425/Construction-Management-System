@@ -6955,6 +6955,15 @@ class Component extends DCLogic {
       .catch(() => ({ ok: false, row: null }));
   }
 
+  // The same value with every NUL character removed. Anything that had none comes back as the very same object,
+  // so the three-way merge, which reads an unchanged reference as 'not touched here', is not misled.
+  _stripNul(v) {
+    const NUL = String.fromCharCode(0);
+    if (typeof v === 'string') return v.indexOf(NUL) >= 0 ? v.split(NUL).join('') : v;
+    if (Array.isArray(v)) { let ch = false; const out = v.map(x => { const y = this._stripNul(x); if (y !== x) ch = true; return y; }); return ch ? out : v; }
+    if (v && typeof v === 'object') { let ch = false; const out = {}; Object.keys(v).forEach(k => { const y = this._stripNul(v[k]); if (y !== v[k]) ch = true; out[k] = y; }); return ch ? out : v; }
+    return v;
+  }
   _sameJson(a, b) { try { return JSON.stringify(a) === JSON.stringify(b); } catch (e) { return a === b; } }
   _isPlain(o) { return !!o && typeof o === 'object' && !Array.isArray(o); }
   _idOf(x) { return (x && typeof x === 'object') ? (x.id != null ? x.id : (x.key != null ? x.key : (x.parentCode != null ? x.parentCode : x.code))) : undefined; }
@@ -7064,6 +7073,10 @@ class Component extends DCLogic {
       return run;
     }
     const url = c.url + '/rest/v1/app_catalog';
+    // Postgres will not store the NUL character in jsonb, and refuses the whole document for a single one - a PDF
+    // read as UTF-16 once left thousands in one invoice, and every save of the invoice list after it failed.
+    const clean = this._stripNul(data);
+    if (clean !== data) { data = clean; this._adoptCatalog(key, clean); }
     // On this machine before it goes anywhere. If the network never answers, or the window
     // closes mid-flight, this is what the next session finds.
     this._writeWal(key, data);
@@ -10663,7 +10676,9 @@ class Component extends DCLogic {
     this._withCatalog('ap_invoices', () => this.setState(s => {
       const cur = s.apInvoices || [];
       let n = cur.reduce((mx, x) => { const m = String(x.ref || '').match(/^SI-(\d+)$/); return m ? Math.max(mx, Number(m[1])) : mx; }, 0);
-      const stamped = records.map(r => { n++; return Object.assign({}, r, { ref: 'SI-' + String(n).padStart(4, '0') }); });
+      // A name that came out of the document as control characters is not a name: leave it for a person to fill in.
+      const _junkName = t => { const x = String(t || ''); return !!x && (x.replace(/[\u0000-\u001f\u007f-\u009f\ufffd]/g, '').trim().length < Math.max(2, x.length / 2)); };
+      const stamped = records.map(r => { n++; const c = this._stripNul(r); return Object.assign({}, c, { ref: 'SI-' + String(n).padStart(4, '0') }, _junkName(r.supplierName) ? { supplierName: '' } : {}); });
       const list = cur.concat(stamped);
       this._saveApInvoices(list);
       return { apInvoices: list };
