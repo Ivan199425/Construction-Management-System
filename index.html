@@ -1127,6 +1127,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
               <div style="display:flex;flex-wrap:var(--cpms-wrap,nowrap);align-items:center;gap:8px;flex:0 0 var(--cpms-grow,auto)">
                 <sc-if value="{{ apV.isAdmin }}" hint-placeholder-val="{{ true }}"><button onClick="{{ apV.onSettings }}" title="Mailbox, matching rules and accountant routing" style="border:1px solid #cfd8e2;background:#fff;color:#4a5765;border-radius:8px;padding:9px 14px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="border-color:#2b59c3;color:#2b59c3">⚙ Ingestion settings</button></sc-if>
                 <sc-if value="{{ apV.hasStrays }}" hint-placeholder-val="{{ false }}"><button onClick="{{ apV.onSetAsideStrays }}" title="Move every invoice that matches no project in this system out of the queue and into Not collected. Nothing is deleted — Collect brings any of them back." style="border:1px solid #e6d3b3;background:#fff;color:#b45309;border-radius:8px;padding:9px 14px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="border-color:#b45309">🧹 Set aside {{ apV.strayCount }} with no project</button></sc-if>
+                <sc-if value="{{ apV.canRecheck }}" hint-placeholder-val="{{ false }}"><button onClick="{{ apV.onRecheck }}" title="Run the intake rules over invoices nobody has worked on yet: quotes, reports, pictures from emails and repeats go to Not collected with the reason; supplier names come from the Directory. Nothing is deleted." style="border:1px solid #cfd8e2;background:#fff;color:#4a5765;border-radius:8px;padding:9px 14px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="border-color:#2b59c3;color:#2b59c3">&#10227; Re-check</button></sc-if>
                 <sc-if value="{{ apV.canCheckMail }}" hint-placeholder-val="{{ true }}"><button onClick="{{ apV.onCheckMail }}" title="Look in the receiving mailbox now. Anything waiting is read and matched exactly as an upload is." style="border:1px solid #cfd8e2;background:#fff;color:#4a5765;border-radius:8px;padding:9px 14px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="border-color:#2b59c3;color:#2b59c3">{{ apV.checkMailLabel }}</button></sc-if>
                 <button onClick="{{ apV.onExport }}" title="Export every invoice you can see to a spreadsheet" style="border:1px solid #cfd8e2;background:#fff;color:#4a5765;border-radius:8px;padding:9px 14px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="border-color:#15803d;color:#15803d">📊 Export</button>
                 <sc-if value="{{ apV.canEdit }}" hint-placeholder-val="{{ true }}">
@@ -11425,7 +11426,7 @@ class Component extends DCLogic {
       const docs = (mail.attachments || []).filter(a => /pdf$/i.test(a.mime) || /^image\//i.test(a.mime) || /\.(pdf|png|jpe?g|gif|webp|tiff?)$/i.test(a.name));
       // Statements, quotes and delivery dockets are not invoices; the email is still kept, but
       // only the attachments that read like an invoice become records (BR-4.03, BR-4.05).
-      const useful = docs.filter(a => !/^(signature|logo|image00\d)/i.test(a.name));
+      const useful = this._apPickDocs(docs);
       // Who really sent it, and who passed it on. Everything downstream — the supplier match,
       // the project rules, the query reply — uses the supplier's address, never the colleague's.
       const who = this.apOriginalSender(mail);
@@ -11440,7 +11441,7 @@ class Component extends DCLogic {
         inv.source = source;
         inv.status = 'received';
         inv.extract = { ok: false, engine: 'eml', text: mail.body || '', conf: {} };
-        const rec = this._apFinalise(inv, mail.body || '');
+        const rec = this._apFinalise(inv, '', mail.body || '');
         // Nothing was attached. If the mailbox is set to invoices only, this is not one.
         if (this.apSettings().requireAttachment && rec.status !== 'not_collected') {
           rec.status = 'not_collected';
@@ -11453,11 +11454,134 @@ class Component extends DCLogic {
       // Each attachment is assessed on its own; one email can produce several invoices (BR-4.04).
       return Promise.all(useful.map(a => {
         const blob = new File([a.bytes], a.name, { type: a.mime || 'application/octet-stream' });
-        return this._apFromFile(blob, source, mail.body || '');
-      })).then(rs => [].concat.apply([], rs));
+        // each record its own copy: they used to share one, and all showed the last file's name
+        return this._apFromFile(blob, Object.assign({}, source), mail.body || '');
+      })).then(rs => this._apDedupeBatch([].concat.apply([], rs)));
     });
   }
 
+  // Which attachments are documents. PDFs are. A photo or scan counts only when the email carries no PDF (a receipt
+  // photographed on site); a picture placed in the text, a signature or logo, or anything too small to be a page never
+  // does. The same file attached twice is read once.
+  _apPickDocs(docs) {
+    const isPdf = a => /pdf$/i.test(a.mime || '') || /\.pdf$/i.test(a.name || '');
+    const isImg = a => /^image\//i.test(a.mime || '') || /\.(png|jpe?g|gif|webp|tiff?|heic)$/i.test(a.name || '');
+    const seen = {};
+    const once = (docs || []).filter(a => { const k = String(a.name || '').toLowerCase() + '|' + ((a.bytes && a.bytes.length) || 0); if (seen[k]) return false; seen[k] = 1; return true; });
+    const pdfs = once.filter(isPdf);
+    if (pdfs.length) return pdfs;
+    return once.filter(a => isImg(a) && !a.inline && !/^(signature|logo|image\d{0,4}\.|outlook-|~wrd|att\d+\.)/i.test(a.name || '') && ((a.bytes && a.bytes.length) || 0) >= 20000).slice(0, 3);
+  }
+  // A line that is not a company name: a greeting, a sign-off, a forwarded-message banner, a label, control characters.
+  _apNotAName(s) {
+    const t = String(s || '').trim();
+    if (!t) return true;
+    if (t.replace(/[\u0000-\u001f\u007f-\u009f\ufffd]/g, '').trim().length < Math.max(2, t.length / 2)) return true;
+    return /^(hi|hello|hey|dear|morning|afternoon|evening|good\s+(morning|afternoon|evening|day)|thanks|thank\s+you|regards|kind\s+regards|cheers|best|-{2,}|begin\s+forwarded|forwarded|fwd?:|re:|from:|sent:|to:|subject:|cc:|date:|e-?mail:?|e:|ph(one)?:?|mob(ile)?:?|m:|tel:?|t:|total\b|account\s+name|bank\b|bsb\b|our\s+showroom|\d+[.)]\s)/i.test(t)
+      || /,\s*$/.test(t) || t.length < 3 || /^[A-Za-z]{1,2}\s*:\s/.test(t) || /^[+\d\s().-]{8,}$/.test(t);
+  }
+  // What the document is. Its title decides first, then the rest of its text, then the file name, then the email's
+  // subject. A quote, tender, estimate, report, remittance or order that never calls itself an invoice is not one;
+  // nor is a picture with no invoice number and no amount that nothing calls an invoice.
+  // Only mail is judged: a document somebody uploaded or typed in by hand was put there on purpose.
+  _apDocKind(inv, docText) {
+    if (!inv || !inv.source || inv.source.kind !== 'email') return { notInvoice: false };
+    const INV = /\b(tax\s+invoice|invoice|progress\s+claim|payment\s+claim|claim\s+for\s+payment|receipt|reimburs\w*|bill\s+for)\b/i;
+    const NOT = /\b(quot(e|es|ation)|estimate|tender|proposal|progress\s+report|site\s+report|weekly\s+report|access\s+report|delivery\s+docket|remittance(\s+advice)?|purchase\s+order|order\s+confirmation|sales\s+order|statement\s+of\s+account)\b/i;
+    const what = t => { const m = String(t || '').match(NOT); return m ? m[0].toLowerCase().replace(/\s+/g, ' ') : ''; };
+    // 'This is not a tax invoice' and 'a tax invoice will be issued' are what quotes say - they do not make one.
+    const text = String(docText || '').replace(/\b(not\s+an?\s+(tax\s+)?invoice|(an?\s+)?(tax\s+)?invoice\s+will\s+be\s+(issued|provided|sent|raised))\b/gi, ' ');
+    const title = text.slice(0, 600), head = text.slice(0, 2500);
+    const fileName = (inv && ((inv.attachments || [])[0] || {}).name) || (inv && inv.source && inv.source.fileName) || '';
+    const subject = (inv && inv.source && inv.source.subject) || '';
+    const no = (w, where) => ({ notInvoice: true, reason: 'Not an invoice \u2014 ' + where + ' calls it a ' + w + ' and never an invoice. Collect it if it should be paid.' });
+    // the very top of the page names the document; QUOTATION there wins over an invoice mentioned further down
+    const top = text.replace(/^\s+/, '').slice(0, 150);
+    if (what(top) && !INV.test(top)) return no(what(top), 'the document');
+    if (what(title) && !INV.test(title)) return no(what(title), 'the document');
+    if (INV.test(title) || INV.test(head)) return { notInvoice: false };
+    if (what(head)) return no(what(head), 'the document');
+    if (INV.test(fileName)) return { notInvoice: false };
+    if (what(fileName)) return no(what(fileName), 'its file name');
+    if (INV.test(subject)) return { notInvoice: false };
+    if (what(subject)) return no(what(subject), 'the email');
+    if (!inv.invoiceNo && !(this._num(inv.total) > 0)) return { notInvoice: true, reason: 'Nothing on it reads like an invoice \u2014 no invoice number, no amount, and neither the file nor the email calls it one. Collect it if it should be paid.' };
+    return { notInvoice: false };
+  }
+  // The attachments of one email are read together, so none of them is on the list yet when each is checked for a
+  // duplicate. Check them against each other: the same supplier and invoice number is the same invoice.
+  // A picture with no text of its own took its amount from the email, so for those the amount stands in for the
+  // number. The first copy counts whatever became of it: set aside or not, the next one is still a copy.
+  _apDedupeBatch(recs) {
+    const first = {};
+    (recs || []).forEach(r => {
+      if (!r || r.status === 'duplicate') return;
+      const own = !!(r.extract && r.extract.ok);
+      const id = r.invoiceNo ? String(r.invoiceNo).trim().toLowerCase() : (!own && this._num(r.total) > 0 ? '$' + this._num(r.total).toFixed(2) : '');
+      if (!id) return;
+      const k = String(r.vendorId || r.supplierName || '').trim().toLowerCase() + '|' + id;
+      if (first[k]) { r.status = 'duplicate'; r.duplicateOf = first[k].id; (r.audit = r.audit || []).push({ at: new Date().toISOString(), by: 'System', action: 'Duplicate', detail: 'Same invoice as another attachment of the same email' }); }
+      else first[k] = r;
+    });
+    return recs;
+  }
+  // Re-check: the rules above, run over what is already in. Only invoices nobody has worked on - still in review or
+  // unallocated, not approved, coded, sent or posted - and every change is written into the invoice's history.
+  // Nothing is deleted: a record set aside is on the Not collected tab, and Collect brings it back.
+  apRecheckIntake() {
+    if (!this.apCanCollect()) return;
+    const u = this.currentUser();
+    const by = (u && u.name) || 'System';
+    const counts = { notInvoice: 0, picture: 0, duplicate: 0, named: 0 };
+    this._withCatalog('ap_invoices', () => this.setState(st => {
+      const all = st.apInvoices || [];
+      const untouched = x => x && !x.voided && x.source && x.source.kind === 'email' && (x.status === 'in_review' || x.status === 'unallocated' || x.status === 'received')
+        && !x.approvedAt && !x.sentAt && !(x.billIds || []).length;
+      // which emails brought a PDF: a picture from one of those is part of the email, not the invoice
+      const pdfMail = {};
+      all.forEach(x => { const a = (x.attachments || [])[0] || {}; const mid = x.source && x.source.messageId; if (mid && /\.pdf$/i.test(a.name || '')) pdfMail[mid] = 1; });
+      const firstOf = {};
+      all.forEach(x => { if (x && !x.voided && x.invoiceNo && ['duplicate', 'not_collected', 'rejected'].indexOf(x.status) < 0 && !untouched(x)) firstOf[String(x.vendorId || x.supplierName || '').trim().toLowerCase() + '|' + String(x.invoiceNo).trim().toLowerCase()] = x.id; });
+      const vend = id => (st.vendors || []).find(v => v.id === id);
+      const at = new Date().toISOString();
+      const list = all.map(x => {
+        if (!untouched(x)) return x;
+        const a = (x.attachments || [])[0] || {};
+        const patch = {}, notes = [];
+        // the file name each record shows is its own
+        if (a.name && x.source && x.source.fileName !== a.name) patch.source = Object.assign({}, x.source, { fileName: a.name });
+        const v = x.vendorId && vend(x.vendorId);
+        if (v && v.company && x.supplierName !== v.company) { patch.supplierName = v.company; notes.push(['Supplier named from the Directory', v.company]); counts.named++; }
+        else if (!v && x.supplierName && this._apNotAName(x.supplierName)) { patch.supplierName = ''; notes.push(['Supplier name cleared', '\u201c' + String(x.supplierName).slice(0, 40) + '\u201d is not a company name']); counts.named++; }
+        const cur = Object.assign({}, x, patch);
+        const isPic = /\.(png|jpe?g|gif|webp|tiff?|heic)$/i.test(a.name || '');
+        const aside = reason => { patch.status = 'not_collected'; patch.notCollectedReason = reason; patch.pid = ''; patch.commitmentId = ''; patch.matchRule = ''; patch.matchConf = 0; patch.assignedTo = ''; notes.push(['Set aside on re-check', reason]); };
+        if (isPic && ((x.source && pdfMail[x.source.messageId]) || /^(signature|logo|image\d{0,4}\.|outlook-|screenshot)/i.test(a.name || '') || (this._num(a.size) > 0 && this._num(a.size) < 20000))) {
+          aside('A picture from the email, not the invoice \u2014 ' + ((x.source && pdfMail[x.source.messageId]) ? 'the same email carried the invoice as a PDF.' : 'a signature, logo or screenshot.') + ' Collect it if it should be paid.');
+          patch.notInvoice = true; counts.picture++;
+        } else {
+          const kind = this._apDocKind(cur, String((x.extract && x.extract.ok && x.extract.text) || '').slice(0, 2500));
+          if (kind.notInvoice) { aside(kind.reason); patch.notInvoice = true; counts.notInvoice++; }
+          else if (cur.invoiceNo) {
+            const k = String(cur.vendorId || cur.supplierName || '').trim().toLowerCase() + '|' + String(cur.invoiceNo).trim().toLowerCase();
+            if (firstOf[k] && firstOf[k] !== x.id) { patch.status = 'duplicate'; patch.duplicateOf = firstOf[k]; notes.push(['Duplicate on re-check', 'Same supplier and invoice number as ' + ((all.find(y => y.id === firstOf[k]) || {}).ref || 'another invoice')]); counts.duplicate++; }
+            else firstOf[k] = x.id;
+          }
+        }
+        if (!Object.keys(patch).length) return x;
+        return Object.assign({}, x, patch, { updatedAt: at, audit: (x.audit || []).concat(notes.map(n => ({ at, by, action: n[0], detail: n[1] }))) });
+      });
+      this._saveApInvoices(list);
+      const bits = [];
+      if (counts.notInvoice) bits.push(counts.notInvoice + ' not invoices (quotes, tenders, reports)');
+      if (counts.picture) bits.push(counts.picture + ' pictures from emails');
+      if (counts.duplicate) bits.push(counts.duplicate + ' duplicates');
+      const named = counts.named ? ' ' + counts.named + ' supplier name' + (counts.named === 1 ? '' : 's') + ' corrected.' : '';
+      return { apInvoices: list, apNotice: bits.length
+        ? 'Re-checked: set aside ' + bits.join(', ') + '. They are on the Not collected tab with the reason, and Collect brings any of them back.' + named
+        : 'Re-checked: nothing needed setting aside.' + named };
+    }));
+  }
   _apFromFile(file, source, extraText) {
     const inv = this.apBlank();
     if (source) inv.source = source;
@@ -11468,17 +11592,24 @@ class Component extends DCLogic {
       inv.attachments = url ? [{ name: file.name || 'invoice', url, type: file.type || '', size: file.size || 0, original: true }] : [];
       const full = [text || '', extraText || ''].join('\n').trim();
       inv.extract = { ok: (text || '').replace(/\s/g, '').length > 40, engine: isPdf ? 'pdf-text' : 'none', text: full.slice(0, 60000), conf: {} };
-      return this._apFinalise(inv, full);
-    }).catch(() => this._apFinalise(inv, extraText || ''));
+      return this._apFinalise(inv, text || '', extraText || '');
+    }).catch(() => this._apFinalise(inv, '', extraText || ''));
   }
 
   // Extraction, supplier match, project match and the opening status, in that order — the order
   // matters because the project rules read the supplier, and the status reads the project.
-  _apFinalise(inv, text) {
+  _apFinalise(inv, text, bodyText) {
     const res = this.apExtractFields(text || '');
     const f = res.fields;
+    // The email's text only fills what the document itself did not say - and never the supplier: its first lines
+    // are a greeting or a forwarded-message banner, which is how 'Morning Valentina,' became a supplier.
+    if (bodyText) {
+      const b = this.apExtractFields(bodyText);
+      ['abn', 'invoiceNo', 'invoiceDate', 'dueDate', 'poRef', 'bsb', 'acct'].forEach(k => { if ((f[k] == null || f[k] === '') && b.fields[k]) { f[k] = b.fields[k]; res.conf[k] = Math.min(0.6, b.conf[k] || 0.6); } });
+      if (f.total == null && b.fields.total != null) ['total', 'subtotal', 'gst'].forEach(k => { f[k] = b.fields[k]; res.conf[k] = Math.min(0.5, b.conf[k] || 0.5); });
+    }
     inv.extract.conf = res.conf;
-    inv.supplierName = f.supplierName || inv.supplierName;
+    inv.supplierName = (this._apNotAName(f.supplierName) ? '' : f.supplierName) || inv.supplierName;
     inv.abn = f.abn || '';
     inv.invoiceNo = f.invoiceNo || '';
     inv.invoiceDate = f.invoiceDate || '';
@@ -11497,7 +11628,9 @@ class Component extends DCLogic {
       inv.extract.conf = Object.assign({}, inv.extract.conf, { supplierName: 0.9 });
     }
     const v = this.apMatchVendor({ abn: f.abn, supplierName: inv.supplierName }, (inv.source && inv.source.senderAddress) || '');
-    if (v) inv.vendorId = v.id;
+    // A supplier the Directory knows is named as the Directory names it - never as a line guessed off the page.
+    if (v) { inv.vendorId = v.id; if (v.company) inv.supplierName = v.company; }
+    else if (this._apNotAName(inv.supplierName)) inv.supplierName = '';
     // A missing due date is taken from the supplier's payment terms, defaulting to 30 days.
     if (!inv.dueDate && inv.invoiceDate) {
       inv.dueDate = this.addCalendarDays(inv.invoiceDate, this._num(v && v.terms) || 30);
@@ -11516,7 +11649,10 @@ class Component extends DCLogic {
     // Judged after the project match, because whether it is ours is exactly what the match
     // answers. A duplicate of one of our own invoices is by definition ours, so the scope
     // never has to be weighed against it.
-    const verdict = this.apCollectVerdict(inv, m);
+    // Not an invoice at all - a quote, a tender, a report - is set aside first, whatever the collection setting.
+    const kind = this._apDocKind(inv, text || '');
+    const verdict = kind.notInvoice ? { keep: false, reason: kind.reason } : this.apCollectVerdict(inv, m);
+    if (kind.notInvoice) inv.notInvoice = true;
     if (!verdict.keep) {
       inv.status = 'not_collected';
       inv.notCollectedReason = verdict.reason;
@@ -11589,7 +11725,7 @@ class Component extends DCLogic {
     const pending = this.apNotCollected();
     if (!pending.length) return;
     const threshold = this._num(this.apSettings().confidence) || 80;
-    const takeable = pending.filter(inv => { const m = this.apMatchProject(inv); return m.pid && m.conf >= threshold; });
+    const takeable = pending.filter(inv => { if (inv.notInvoice) return false; const m = this.apMatchProject(inv); return m.pid && m.conf >= threshold; });
     takeable.forEach(inv => this.apCollectAnyway(inv.id));
     this.setState({ apNotice: takeable.length
       ? (takeable.length === 1 ? 'One invoice now matches a project and has been collected.'
@@ -12646,7 +12782,10 @@ class Component extends DCLogic {
         const name = this._apDecodeWords(nameM[1]).trim();
         const mime = ctype.split(';')[0].trim();
         const bytes = enc === 'base64' ? this._apB64ToBytes(content) : new Uint8Array(0);
-        if (bytes.length) out.attachments.push({ name, mime, bytes });
+        // A picture placed in the text (a signature, a pasted screenshot) is 'inline' or carries a Content-ID; a file
+        // the sender attached is 'attachment'. Only the second is ever a document to read.
+        const inline = /^\s*inline/i.test(disp) || (!/attachment/i.test(disp) && !!headers['content-id']);
+        if (bytes.length) out.attachments.push({ name, mime, bytes, inline });
         return;
       }
       if (/^text\/plain/.test(ctype) && !out.body) {
@@ -22195,6 +22334,7 @@ class Component extends DCLogic {
           checkingMail: !!(S.apMail || {}).busy,
           checkMailLabel: (S.apMail || {}).busy ? '… Checking mail' : '✉ Check mail',
           onCheckMail: () => this.apCollectMail(true),
+          canRecheck: this.apCanCollect(), onRecheck: () => this.apRecheckIntake(),
           onExport: () => this.apExportCsv(), onSettings: () => this.goApSettings(),
           strayCount: String(this.apUnallocatedStrays().length),
           hasStrays: this.apCanCollect() && this.apUnallocatedStrays().length > 0,
