@@ -1175,6 +1175,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                   <div style="position:absolute;right:0;top:calc(100% + 6px);z-index:41;background:#fff;border:1px solid #e4e8ee;border-radius:10px;box-shadow:0 12px 30px rgba(15,26,36,.16);padding:6px;min-width:220px">
                     <sc-if value="{{ apV.canCheckMail }}" hint-placeholder-val="{{ true }}"><button onClick="{{ apV.onMoreMail }}" title="Look in the receiving mailbox now. Anything waiting is read and matched exactly as an upload is." style="display:block;width:100%;text-align:left;border:0;background:#fff;color:#0f1720;border-radius:7px;padding:9px 12px;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;white-space:nowrap" style-hover="background:#f2f6fd;color:#2b59c3">{{ apV.checkMailLabel }}</button></sc-if>
                     <sc-if value="{{ apV.canRecheck }}" hint-placeholder-val="{{ false }}"><button onClick="{{ apV.onMoreRecheck }}" title="Run the intake rules over invoices nobody has worked on yet: quotes, reports, pictures from emails and repeats go to Not collected with the reason; supplier names come from the Directory. Nothing is deleted." style="display:block;width:100%;text-align:left;border:0;background:#fff;color:#0f1720;border-radius:7px;padding:9px 12px;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;white-space:nowrap" style-hover="background:#f2f6fd;color:#2b59c3">&#10227; Re-check</button></sc-if>
+                    <sc-if value="{{ apV.canRecheck }}" hint-placeholder-val="{{ false }}"><button onClick="{{ apV.onMoreRecollect }}" title="Match everything on the Not collected tab again, against the projects as they stand now, and take back whatever fits. Nothing an admin set aside as not an invoice is touched." style="display:block;width:100%;text-align:left;border:0;background:#fff;color:#0f1720;border-radius:7px;padding:9px 12px;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;white-space:nowrap" style-hover="background:#f2f6fd;color:#2b59c3">&#8634; Match not collected again</button></sc-if>
                     <button onClick="{{ apV.onMoreExport }}" title="Export every invoice you can see to a spreadsheet" style="display:block;width:100%;text-align:left;border:0;background:#fff;color:#0f1720;border-radius:7px;padding:9px 12px;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;white-space:nowrap" style-hover="background:#f2f6fd;color:#2b59c3">📊 Export</button>
                     <sc-if value="{{ apV.isAdmin }}" hint-placeholder-val="{{ true }}"><button onClick="{{ apV.onMoreSettings }}" title="Mailbox, matching rules and accountant routing" style="display:block;width:100%;text-align:left;border:0;background:#fff;color:#0f1720;border-radius:7px;padding:9px 12px;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;white-space:nowrap" style-hover="background:#f2f6fd;color:#2b59c3">⚙ Ingestion settings</button></sc-if>
                   </div>
@@ -11188,6 +11189,14 @@ class Component extends DCLogic {
     all.forEach(p => { const how = this._apMentionsCode(raw, String(p.code || '').trim(), po); if (how) codes[how].push({ p }); });
     const labelled = pick(codes.label, h => 'Project number ' + h.p.code, 90);
     if (labelled) return labelled;
+    const told = this._apSubjectProject(title, all);
+    // Named on purpose, so a closed job that shares the word (the finished BALMAIN hall beside the BALMAIN house now
+    // being built) does not turn it into a guess: the one still running is meant.
+    if (told && told.labelled) {
+      const live = told.hits.filter(h => h.p.status !== 'closed');
+      const one = told.hits.length === 1 ? told.hits[0] : (live.length === 1 ? live[0] : null);
+      if (one) return { pid: one.p.id, rule: 'Project named in the subject ("' + told.said + '")', conf: 88, commitmentId: '' };
+    }
     const nameOf = p => String(p.name || '').trim().toLowerCase();
     const named = all.filter(p => nameOf(p).length >= 5 && text.indexOf(nameOf(p)) >= 0);
     const byName = named.filter(p => !named.some(q => nameOf(q).length > nameOf(p).length && nameOf(q).indexOf(nameOf(p)) >= 0)).map(p => ({ p }));
@@ -11201,13 +11210,54 @@ class Component extends DCLogic {
       return pick(byStreet, h => 'Site address (' + h.hit.num + ' ' + h.hit.street + ')', 85);
     };
     const bare = codes.label.length ? null : pick(codes.bare, h => 'Project number ' + h.p.code, 90);
-    if (!bare) return n || street();
+    // the subject naming a job without a label is a lead for a person, never a filing
+    const hinted = () => { const h = told && !told.labelled ? pick(told.hits, () => 'x', 0) : null;
+      return h ? { pid: h.pid, rule: 'Suggested ' + this.proj(h.pid).name + ': the subject says "' + told.said + '"', conf: low, commitmentId: '' } : null; };
+    if (!bare) return n || street() || hinted();
     const other = n || street();
     if (other && other.pid !== bare.pid) return other;
     const bp = codes.bare.find(h => h.p.id === bare.pid).p;
     const code = String(bp.code).trim();
     if (other || this._apMentionsRef(title, code, code !== code.toLowerCase())) return bare;
     return { pid: bp.id, rule: 'Suggested ' + bp.name + ': project number ' + code + ' appears in the document', conf: low, commitmentId: '' };
+  }
+  // The job as people name it in a subject line: a word or two of its name next to "project", "job" or "site"
+  // ("Balmain project", "project: Balmain", "Gallimore Ave job"). Up to four words either side of the label are tried,
+  // longest first, as whole words of each project's name and then of its site address. Without a label, the first part
+  // of a project's name ("BALMAIN" of "BALMAIN — 5 GALLIMORE AVE") in the subject is returned as unlabelled.
+  // Returns { hits: [{p}], said, labelled } or null.
+  _apSubjectProject(title, all) {
+    // street types compare as one word whichever way they are written: Ave is Avenue, St is Street
+    const CANON = {}; this._apStreetTypeGroups().forEach(g => { const w = g.split('|'); w.forEach(x => { CANON[x] = w[0]; }); });
+    const toks = s => String(s || '').toLowerCase().replace(/[\u2018\u2019']/g, '').split(/[^a-z0-9&]+/).filter(Boolean).map(w => CANON[w] || w);
+    const t = toks(title);
+    if (!t.length) return null;
+    const LABEL = { project: 1, proj: 1, job: 1, site: 1 };
+    const FILL = { the: 1, a: 1, an: 1, and: 1, for: 1, of: 1, at: 1, to: 1, on: 1, our: 1, your: 1, new: 1, this: 1, re: 1, fw: 1, fwd: 1, invoice: 1, invoices: 1, tax: 1 };
+    const within = (hay, ph) => (' ' + hay.join(' ') + ' ').indexOf(' ' + ph.join(' ') + ' ') >= 0;
+    const keys = (all || []).map(p => ({ p, name: toks(p.name), addr: toks(p.address) }));
+    const tries = [];
+    t.forEach((w, i) => {
+      if (!LABEL[w]) return;
+      for (let k = Math.min(4, i); k >= 1; k--) tries.push(t.slice(i - k, i));
+      for (let k = Math.min(4, t.length - i - 1); k >= 1; k--) tries.push(t.slice(i + 1, i + 1 + k));
+    });
+    const usable = ph => ph.some(w => !FILL[w] && !LABEL[w]) && ph.join('').replace(/[^a-z]/g, '').length >= 4 && !LABEL[ph[0]] && !LABEL[ph[ph.length - 1]];
+    tries.sort((a, b) => b.join(' ').length - a.join(' ').length);
+    for (const where of ['name', 'addr']) {
+      for (const ph of tries) {
+        if (!usable(ph)) continue;
+        const hits = keys.filter(k => k[where].length && within(k[where], ph)).map(k => ({ p: k.p }));
+        if (hits.length) { const at = t.indexOf(ph[0]); const lab = LABEL[t[at + ph.length]] ? ph.concat(t[at + ph.length]) : [t[at - 1]].concat(ph);
+          return { hits, said: lab.join(' '), labelled: true }; }
+      }
+    }
+    // no label: the first part of a project's name, if it is distinctive enough to mean the job
+    const heads = keys.map(k => ({ p: k.p, head: toks(String(k.p.name || '').split(/\s+[\u2013\u2014-]\s+|,|\(|\s\d/)[0]) }))
+      .filter(h => h.head.length && h.head.join('').length >= 5 && h.head.some(w => !FILL[w]));
+    const hit = heads.filter(h => within(t, h.head));
+    if (hit.length) return { hits: hit.map(h => ({ p: h.p })), said: hit[0].head.join(' '), labelled: false };
+    return null;
   }
   // How a project number appears: 'label' (as the job's reference), 'bare' (a code of letters on its own), or ''.
   _apMentionsCode(raw, code, po) {
@@ -11554,6 +11604,8 @@ class Component extends DCLogic {
     const t = String(s || '').trim();
     if (!t) return true;
     if (t.replace(/[\u0000-\u001f\u007f-\u009f\ufffd]/g, '').trim().length < Math.max(2, t.length / 2)) return true;
+    // a scanner's page count ("1 / 5"), a date or an amount: a name has letters in it
+    if ((t.match(/[A-Za-z]/g) || []).length < 2) return true;
     return /^(hi|hello|hey|dear|morning|afternoon|evening|good\s+(morning|afternoon|evening|day)|thanks|thank\s+you|regards|kind\s+regards|cheers|best|-{2,}|begin\s+forwarded|forwarded|fwd?:|re:|from:|sent:|to:|subject:|cc:|date:|e-?mail:?|e:|ph(one)?:?|mob(ile)?:?|m:|tel:?|t:|total\b|account\s+name|bank\b|bsb\b|our\s+showroom|\d+[.)]\s)/i.test(t)
       || /,\s*$/.test(t) || t.length < 3 || /^[A-Za-z]{1,2}\s*:\s/.test(t) || /^[+\d\s().-]{8,}$/.test(t);
   }
@@ -22711,7 +22763,7 @@ class Component extends DCLogic {
           canRecheck: this.apCanCollect(), onRecheck: () => this.apRecheckIntake(),
           onExport: () => this.apExportCsv(), onSettings: () => this.goApSettings(),
           moreOpen: !!S.apMore, onMore: () => this.setState(s => ({ apMore: !s.apMore })), onMoreClose: () => this.setState({ apMore: false }),
-          onMoreMail: () => { this.setState({ apMore: false }); this.apCollectMail(true); }, onMoreRecheck: () => { this.setState({ apMore: false }); this.apRecheckIntake(); },
+          onMoreMail: () => { this.setState({ apMore: false }); this.apCollectMail(true); }, onMoreRecheck: () => { this.setState({ apMore: false }); this.apRecheckIntake(); }, onMoreRecollect: () => { this.setState({ apMore: false }); this.apRecollectAll(); },
           onMoreExport: () => { this.setState({ apMore: false }); this.apExportCsv(); }, onMoreSettings: () => { this.setState({ apMore: false }); this.goApSettings(); },
           strayCount: String(this.apUnallocatedStrays().length),
           hasStrays: this.apCanCollect() && this.apUnallocatedStrays().length > 0,
