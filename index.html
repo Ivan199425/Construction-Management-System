@@ -436,6 +436,27 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
 
         <!-- ============ PORTFOLIO ============ -->
         <sc-if value="{{ showPortfolio }}" hint-placeholder-val="{{ true }}">
+          <sc-if value="{{ attentionV.has }}" hint-placeholder-val="{{ false }}">
+          <div style="background:#fff;border:1px solid #e4e8ee;border-radius:12px;overflow:hidden;margin-bottom:18px">
+            <div style="display:flex;align-items:center;gap:10px;padding:13px 18px;border-bottom:1px solid #eef1f4">
+              <span style="font-size:14px;font-weight:700;color:#0f1720">Needs attention</span>
+              <span style="font-size:11px;font-weight:700;color:#fff;background:#b91c1c;border-radius:10px;padding:1px 8px">{{ attentionV.count }}</span>
+              <span style="flex:1"></span><span style="font-size:12px;color:#6b7787">Across every open project you can see</span>
+            </div>
+            <sc-for list="{{ attentionV.rows }}" as="a" hint-placeholder-count="3">
+              <button onClick="{{ a.onOpen }}" style="width:100%;display:grid;grid-template-columns:10px minmax(0,1fr) minmax(0,220px) 150px 70px;gap:14px;align-items:center;padding:11px 18px;border:0;border-bottom:1px solid #eef1f4;background:#fff;color:#0f1720;text-align:left;cursor:pointer;font-family:inherit" style-hover="background:#f8fafc">
+                <span style="width:8px;height:8px;border-radius:50%;background:{{ a.dot }}"></span>
+                <span style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ a.text }}</span>
+                <span style="font-size:12.5px;color:#4a5765;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ a.where }}</span>
+                <span class="mono" style="font-size:12.5px;text-align:right;color:#0f1720">{{ a.amount }}</span>
+                <span style="font-size:12px;font-weight:600;color:#2b59c3;text-align:right">Open &#8250;</span>
+              </button>
+            </sc-for>
+          </div>
+          </sc-if>
+          <sc-if value="{{ attentionV.none }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #e4e8ee;border-radius:12px;padding:12px 18px;margin-bottom:18px;font-size:13px;color:#15803d;font-weight:600"><span style="width:8px;height:8px;border-radius:50%;background:#15803d"></span>Nothing is waiting on anyone across your projects.</div>
+          </sc-if>
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
             <span style="font-size:12px;color:#8894a2;font-weight:500">Filter:</span>
             <sc-for list="{{ statusFilters }}" as="f" hint-placeholder-count="4">
@@ -1579,6 +1600,26 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
 
         <!-- ============ PROJECT DASHBOARD ============ -->
         <sc-if value="{{ showDashboard }}" hint-placeholder-val="{{ true }}">
+          <sc-if value="{{ projAttentionV.has }}" hint-placeholder-val="{{ false }}">
+          <div style="background:#fff;border:1px solid #e4e8ee;border-radius:12px;overflow:hidden;margin-bottom:16px">
+            <div style="display:flex;align-items:center;gap:10px;padding:12px 18px;border-bottom:1px solid #eef1f4">
+              <span style="font-size:12px;font-weight:600;letter-spacing:.4px;color:#8894a2;text-transform:uppercase">Needs attention on this project</span>
+              <span style="font-size:11px;font-weight:700;color:#fff;background:#b91c1c;border-radius:10px;padding:1px 8px">{{ projAttentionV.count }}</span>
+            </div>
+            <sc-for list="{{ projAttentionV.rows }}" as="a" hint-placeholder-count="3">
+              <button onClick="{{ a.onOpen }}" style="width:100%;display:grid;grid-template-columns:10px minmax(0,1fr) minmax(0,220px) 150px 70px;gap:14px;align-items:center;padding:11px 18px;border:0;border-bottom:1px solid #eef1f4;background:#fff;color:#0f1720;text-align:left;cursor:pointer;font-family:inherit" style-hover="background:#f8fafc">
+                <span style="width:8px;height:8px;border-radius:50%;background:{{ a.dot }}"></span>
+                <span style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ a.text }}</span>
+                <span style="font-size:12.5px;color:#4a5765;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ a.where }}</span>
+                <span class="mono" style="font-size:12.5px;text-align:right;color:#0f1720">{{ a.amount }}</span>
+                <span style="font-size:12px;font-weight:600;color:#2b59c3;text-align:right">Open &#8250;</span>
+              </button>
+            </sc-for>
+          </div>
+          </sc-if>
+          <sc-if value="{{ projAttentionV.none }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #e4e8ee;border-radius:12px;padding:11px 18px;margin-bottom:16px;font-size:12.5px;color:#15803d;font-weight:600"><span style="width:8px;height:8px;border-radius:50%;background:#15803d"></span>Nothing is waiting on anyone on this project.</div>
+          </sc-if>
           <div class="cpms-dash2">
           <div style="background:#fff;border:1px solid #e4e8ee;border-radius:12px;padding:20px">
             <div style="font-size:12px;font-weight:600;letter-spacing:.4px;color:#8894a2;text-transform:uppercase;margin-bottom:10px">Project description</div>
@@ -1602,7 +1643,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                       <div style="display:flex;align-items:center;gap:7px;margin-bottom:6px"><span style="width:7px;height:7px;border-radius:2px;background:{{ a.barColor }};flex:0 0 auto"></span><div style="min-width:0;flex:1"><div style="font-size:12px;color:#0f1720;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ a.name }}</div><div style="font-size:10px;color:#8894a2">{{ a.pct }}% · due {{ a.finishFmt }}</div></div></div>
                     </sc-for>
                   </sc-if>
-                  <sc-if value="{{ scheduleSummary.hasActive }}" hint-placeholder-val="{{ false }}"><div style="font-size:11.5px;color:#a4afba">Nothing active today.</div></sc-if>
+                  <sc-if value="{{ scheduleSummary.noActive }}" hint-placeholder-val="{{ false }}"><div style="font-size:11.5px;color:#a4afba">Nothing active today.</div></sc-if>
                 </div>
                 <div>
                   <div style="font-size:10.5px;font-weight:700;letter-spacing:.3px;color:#b91c1c;text-transform:uppercase;margin-bottom:7px">Overdue · {{ scheduleSummary.overdueCount }}</div>
@@ -1611,7 +1652,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                       <div style="margin-bottom:6px"><div style="font-size:12px;color:#0f1720;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ a.name }}</div><div style="font-size:10px;color:#b91c1c">{{ a.pct }}% · was due {{ a.finishFmt }}</div></div>
                     </sc-for>
                   </sc-if>
-                  <sc-if value="{{ scheduleSummary.hasOverdue }}" hint-placeholder-val="{{ false }}"><div style="font-size:11.5px;color:#15803d">None overdue.</div></sc-if>
+                  <sc-if value="{{ scheduleSummary.noOverdue }}" hint-placeholder-val="{{ false }}"><div style="font-size:11.5px;color:#15803d">None overdue.</div></sc-if>
                 </div>
                 <div>
                   <div style="font-size:10.5px;font-weight:700;letter-spacing:.3px;color:#8894a2;text-transform:uppercase;margin-bottom:7px">Starting soon</div>
@@ -1620,7 +1661,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                       <div style="margin-bottom:6px"><div style="font-size:12px;color:#0f1720;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ a.name }}</div><div style="font-size:10px;color:#8894a2">starts {{ a.startFmt }}</div></div>
                     </sc-for>
                   </sc-if>
-                  <sc-if value="{{ scheduleSummary.hasUpcoming }}" hint-placeholder-val="{{ false }}"><div style="font-size:11.5px;color:#a4afba">Nothing in the next 45 days.</div></sc-if>
+                  <sc-if value="{{ scheduleSummary.noUpcoming }}" hint-placeholder-val="{{ false }}"><div style="font-size:11.5px;color:#a4afba">Nothing in the next 45 days.</div></sc-if>
                 </div>
               </div>
             </div>
@@ -2940,7 +2981,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                                   <span style="width:17px;height:17px;flex-shrink:0;border:1.5px solid {{ c.checkBorder }};background:{{ c.checkBg }};border-radius:5px;color:#fff;font-size:11px;display:flex;align-items:center;justify-content:center;font-weight:700">{{ c.check }}</span>
                                   <div style="flex:1;min-width:0"><div style="font-size:12.5px;font-weight:600;color:#0f1720;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.name }}</div><div style="font-size:10.5px;color:#8894a2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.sub }} · {{ c.email }}</div></div>
                                   <sc-if value="{{ c.hasPhone }}" hint-placeholder-val="{{ true }}"><span title="Has mobile — SMS capable" style="font-size:10px;color:#15803d;background:#e6f4ea;border-radius:10px;padding:2px 7px;white-space:nowrap">📱 {{ c.phone }}</span></sc-if>
-                                  <sc-if value="{{ c.hasPhone }}" hint-placeholder-val="{{ false }}"><span title="No mobile on file" style="font-size:10px;color:#a4afba">no SMS</span></sc-if>
+                                  <sc-if value="{{ c.noPhone }}" hint-placeholder-val="{{ false }}"><span title="No mobile on file" style="font-size:10px;color:#a4afba">no SMS</span></sc-if>
                                 </div>
                               </sc-for>
                             </div>
@@ -3009,7 +3050,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                       <sc-if value="{{ d.hasPriority }}" hint-placeholder-val="{{ true }}">
                         <select value="{{ d.priority }}" onChange="{{ d.onPriority }}" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 5px;font-size:11px;font-weight:600;font-family:inherit;color:{{ d.priColor }};background:#fff;cursor:pointer" style-focus="border-color:#2b59c3;outline:none"><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option></select>
                       </sc-if>
-                      <sc-if value="{{ d.hasPriority }}" hint-placeholder-val="{{ false }}"><div style="color:#c0c8d1;font-size:12px;text-align:center">—</div></sc-if>
+                      <sc-if value="{{ d.noPriority }}" hint-placeholder-val="{{ false }}"><div style="color:#c0c8d1;font-size:12px;text-align:center">—</div></sc-if>
                       <select value="{{ d.status }}" onChange="{{ d.onStatus }}" style="width:100%;border:1px solid {{ d.statusColor }};border-radius:14px;padding:4px 8px;font-size:10.5px;font-weight:600;font-family:inherit;color:{{ d.statusColor }};background:{{ d.statusBg }};cursor:pointer" style-focus="outline:none"><sc-for list="{{ d.statusOptions }}" as="o" hint-placeholder-count="3"><option value="{{ o.v }}">{{ o.label }}</option></sc-for></select>
                       <button onClick="{{ d.onDelete }}" title="Delete" style="border:0;background:transparent;color:#c0c8d1;cursor:pointer;min-width:var(--cpms-tap,auto);min-height:var(--cpms-tap,auto);font-size:13px;padding:2px;line-height:1" style-hover="color:#b91c1c">✕</button>
                     </div>
@@ -3776,7 +3817,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                     <select value="{{ r.costCode }}" onChange="{{ r.onCostCode }}" title="Pick the budget line this activity delivers, by its description. That line's % complete then follows the activities mapped to it." style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 4px;font-size:10px;font-family:inherit;color:#0f1720;background:#fff;cursor:pointer" style-focus="border-color:#2b59c3;outline:none"><option value="">&#8212; not linked &#8212;</option><sc-for list="{{ scheduleV.codeOpts }}" as="c" hint-placeholder-count="6"><option value="{{ c.v }}">{{ c.label }}</option></sc-for></select>
                     <div style="text-align:center"><span style="display:inline-block;font-size:10px;font-weight:700;color:{{ r.statusColor }};background:{{ r.statusBg }};border-radius:12px;padding:2px 8px">{{ r.statusLabel }}</span></div>
                     <input value="{{ r.predValue }}" onFocus="{{ r.onPredFocus }}" onInput="{{ r.onPredInput }}" onBlur="{{ r.onPredBlur }}" placeholder="e.g. 3, 5SS+10" title="Predecessors: task # + optional type (FS/SS/FF/SF) + lag, comma-separated (e.g. 3, 5SS+10). Applied when you click away." class="mono" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 6px;font-size:10px;font-family:'IBM Plex Mono',monospace;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none">
-                    <div style="text-align:center"><button onClick="{{ r.onCritical }}" title="Toggle critical path" style="border:0;background:transparent;cursor:pointer;font-size:15px;padding:2px;line-height:1;color:{{ r.barColor }}"><sc-if value="{{ r.critical }}" hint-placeholder-val="{{ true }}">◆</sc-if><sc-if value="{{ r.critical }}" hint-placeholder-val="{{ false }}"><span style="color:#c7d0db">◇</span></sc-if></button></div>
+                    <div style="text-align:center"><button onClick="{{ r.onCritical }}" title="Toggle critical path" style="border:0;background:transparent;cursor:pointer;font-size:15px;padding:2px;line-height:1;color:{{ r.barColor }}"><sc-if value="{{ r.critical }}" hint-placeholder-val="{{ true }}">◆</sc-if><sc-if value="{{ r.notCritical }}" hint-placeholder-val="{{ false }}"><span style="color:#c7d0db">◇</span></sc-if></button></div>
                     <button onClick="{{ r.onDelete }}" title="Delete" style="border:0;background:transparent;color:#c0c8d1;cursor:pointer;min-width:var(--cpms-tap,auto);min-height:var(--cpms-tap,auto);font-size:13px;padding:2px;line-height:1" style-hover="color:#b91c1c">✕</button>
                   </div>
                 </sc-for>
@@ -4549,7 +4590,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
   <sc-if value="{{ apNoticeV.show }}" hint-placeholder-val="{{ false }}">
     <div style="position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:70;max-width:560px;display:flex;align-items:flex-start;gap:11px;background:#0f1a24;color:#fff;border-radius:11px;padding:12px 15px;box-shadow:0 10px 30px rgba(15,23,32,.3);animation:fadeUp .18s ease">
       <span style="font-size:14px;line-height:1.4;flex:0 0 auto">ℹ</span>
-      <span style="flex:1;font-size:12.5px;line-height:1.55">{{ apNoticeV.text }}</span>
+      <span style="flex:1;font-size:12.5px;line-height:1.55;white-space:pre-line">{{ apNoticeV.text }}</span>
       <button onClick="{{ apNoticeV.onClose }}" style="border:0;background:transparent;color:#9aa8b6;cursor:pointer;font-size:15px;padding:0;line-height:1;flex:0 0 auto" style-hover="color:#fff">✕</button>
     </div>
   </sc-if>
@@ -4699,7 +4740,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
               <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;border-bottom:1px solid #f4f6f9">
                 <div style="flex:1;min-width:0"><div style="font-size:12.5px;font-weight:600;color:#0f1720">{{ r.name }}<sc-if value="{{ r.isChair }}" hint-placeholder-val="{{ false }}"><span style="font-size:9.5px;font-weight:700;color:#2b59c3;background:#e7eefc;border-radius:8px;padding:1px 7px;margin-left:6px">CHAIR</span></sc-if></div><div style="font-size:10.5px;color:#8894a2">{{ r.email }}</div></div>
                 <sc-if value="{{ r.hasPhone }}" hint-placeholder-val="{{ true }}"><span style="font-size:10px;color:#15803d">📱 {{ r.phone }}</span></sc-if>
-                <sc-if value="{{ r.hasPhone }}" hint-placeholder-val="{{ false }}"><span style="font-size:10px;color:#a4afba">no SMS</span></sc-if>
+                <sc-if value="{{ r.noPhone }}" hint-placeholder-val="{{ false }}"><span style="font-size:10px;color:#a4afba">no SMS</span></sc-if>
               </div>
             </sc-for>
           </div>
@@ -6748,7 +6789,7 @@ class Component extends DCLogic {
       return true;
     } catch (e) {
       const w = window.open('', '_blank');
-      if (!w) { alert('Could not open the ' + (label || 'document') + '.'); return null; }
+      if (!w) { this._say('Could not open the ' + (label || 'document') + '.'); return null; }
       w.document.open(); w.document.write(html); w.document.close(); return w;   // already marked above
     }
   }
@@ -6801,7 +6842,7 @@ class Component extends DCLogic {
   openPdfPreviewTab() {
     const pv = this.state.pdfPreview; if (!pv || !pv.url) return;
     let w = null; try { w = window.open(pv.url, '_blank'); } catch (e) {}
-    if (!w) alert('Your browser blocked the new tab. Use Print / Save as PDF here instead — it works without pop-ups.');
+    if (!w) this._say('Your browser blocked the new tab. Use Print / Save as PDF here instead — it works without pop-ups.');
   }
   _saveVendors(arr) {
     try { if (typeof localStorage !== 'undefined') localStorage.setItem('cubicVendors', JSON.stringify(arr || [])); } catch (e) {}
@@ -8059,7 +8100,7 @@ class Component extends DCLogic {
     if (claims) held.push(many(claims, 'progress claim', 'progress claims'));
     if (ap) held.push(many(ap, 'supplier invoice', 'supplier invoices'));
     if (held.length) {
-      alert((cm.ref || 'This sub-contract') + ' cannot be deleted yet: it has ' + held.join(' and ') + ' against it.'
+      this._say((cm.ref || 'This sub-contract') + ' cannot be deleted yet: it has ' + held.join(' and ') + ' against it.'
         + String.fromCharCode(10) + String.fromCharCode(10) + 'Delete those or move them to another sub-contract first.');
       return;
     }
@@ -10050,7 +10091,7 @@ class Component extends DCLogic {
   downloadAgreementPdf(cmId) {
     const name = this.agreementPdfName(cmId);
     this.agreementPdfBlob(cmId).then(blob => {
-      if (!blob) { alert('Could not build the PDF.'); return; }
+      if (!blob) { this._say('Could not build the PDF.'); return; }
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url; a.download = name; a.style.display = 'none';
@@ -10278,7 +10319,7 @@ class Component extends DCLogic {
   downloadVariationPdf(vid) {
     const name = this.variationPdfName(vid);
     this.variationPdfBlob(vid).then(blob => {
-      if (!blob) { alert('Could not build the PDF.'); return; }
+      if (!blob) { this._say('Could not build the PDF.'); return; }
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url; a.download = name; a.style.display = 'none';
@@ -12320,6 +12361,7 @@ class Component extends DCLogic {
       recall: { title: 'Recall from the accountant', lead: 'The invoice goes back to Cost coded and the accountant is emailed to hold payment.', noteLabel: 'Reason for the recall', confirm: 'Recall invoice', danger: true, needNote: true },
       reinstate: { title: 'Reinstate invoice', lead: 'The invoice returns to review. The original rejection stays in the audit trail.', noteLabel: 'Reason for reinstating', confirm: 'Reinstate', danger: false, needNote: true },
       dupoverride: { title: 'Override the duplicate flag', lead: 'Only do this when you are certain the two invoices are genuinely different.', noteLabel: 'Why this is not a duplicate', confirm: 'Override', danger: true, needNote: true },
+      siglink: { title: 'Add a link', lead: 'Select the words in your signature first, then paste the web address they should open.', noteLabel: 'Web address', confirm: 'Add link', danger: false, needNote: true },
       bulkdelete: { title: 'Delete invoices', lead: '', noteLabel: '', confirm: 'Delete for good', danger: true, noNote: true },
       paid: { title: 'Mark as paid', lead: 'Confirms the accountant has paid it. The payment is written against every cost code this invoice was coded to.', noteLabel: 'Payment reference (optional)', confirm: 'Mark paid', danger: false, needNote: false },
     }[kind] || { title: '', lead: '', noteLabel: '', confirm: 'OK', danger: false };
@@ -12344,6 +12386,7 @@ class Component extends DCLogic {
     else if (p.kind === 'dupoverride') this.apOverrideDuplicate(p.id, p.note);
     else if (p.kind === 'paid') this.apMarkPaid(p.id, p.note);
     else if (p.kind === 'bulkdelete') this._apDeleteIds(p.ids, p.left);
+    else if (p.kind === 'siglink') this._sigLinkTo(p.note);
     this.setState({ apPrompt: null });
   }
 
@@ -12541,6 +12584,62 @@ class Component extends DCLogic {
   }
   setApFilter(k, v) { this.setState(s => ({ apFilter: Object.assign({}, s.apFilter || {}, { [k]: v }) })); }
   clearApNotice() { this.setState({ apNotice: '' }); }
+  // A message for whoever is at the screen, in the app's own bar. The browser's alert() is closed unseen by the app pane,
+  // so a warning shown that way was a button that did nothing.
+  // ---- what is waiting on someone ---------------------------------------------------------------------------------
+  // Worked out from what the app already holds - nothing is stored - so it cannot disagree with the screen it opens.
+  // `projects` limits it: every open project on the Portfolio, the one project on its Summary.
+  _attention(projects, scope) {
+    const today = this.todayLocal();
+    const items = [];
+    const n = (k, one, many) => k + ' ' + (k === 1 ? one : many);
+    const go = (pid, patch) => () => this.setState(Object.assign({ view: 'project', pid, anim: this.state.anim + 1, navOpen: false, projPick: false, secPick: false }, patch));
+    const pids = (projects || []).map(p => p.id);
+    if (this.can('apInvoices', 'view')) {
+      const mine = x => x && !x.voided && (scope === 'all' || pids.indexOf(x.pid) >= 0);
+      const wait = this.apAll().filter(x => mine(x) && (x.status === 'in_review' || x.status === 'query'));
+      if (wait.length) items.push({ tone: 'amber', text: n(wait.length, 'supplier invoice waiting for approval', 'supplier invoices waiting for approval'),
+        where: scope === 'all' ? 'All projects' : 'Supplier Invoices', amount: wait.reduce((t, x) => t + this.apTotal(x), 0),
+        onOpen: () => { this.goApInvoices(); this.setApTab('in_review'); } });
+      if (scope === 'all') {
+        const loose = this.apAll().filter(x => x && !x.voided && x.status === 'unallocated');
+        if (loose.length) items.push({ tone: 'amber', text: n(loose.length, 'supplier invoice with no project', 'supplier invoices with no project'),
+          where: 'Unallocated', amount: loose.reduce((t, x) => t + this.apTotal(x), 0), onOpen: () => { this.goApInvoices(); this.setApTab('unallocated'); } });
+      }
+    }
+    (projects || []).forEach(p => {
+      if (this.moduleVisible('documents')) {
+        const rfis = (p.docs || []).filter(d => d.category === 'rfi' && d.status !== 'closed' && d.dueDate && d.dueDate < today
+          && !((d.thread || []).some(m => m.dir === 'in') || String(d.response || '').trim()));
+        if (rfis.length) items.push({ tone: 'red', text: n(rfis.length, 'RFI overdue with no answer', 'RFIs overdue with no answer'), where: p.name, amount: null,
+          onOpen: go(p.id, { module: 'documents', docTab: 'rfi' }) });
+      }
+      if (this.can('bills', 'view')) {
+        const late = (p.bills || []).filter(b => this.billStatusFor(b) !== 'paid' && b.dueDate && b.dueDate < today);
+        if (late.length) items.push({ tone: 'red', text: n(late.length, 'commitment past its due date, unpaid', 'commitments past their due date, unpaid'), where: p.name,
+          amount: late.reduce((t, b) => t + this.billOutstanding(b), 0), onOpen: go(p.id, { module: 'commitments', commitTab: 'bills' }) });
+      }
+      if (this.can('invoices', 'view')) {
+        const due = (p.invoices || []).filter(iv => this.invoiceStatus(iv) !== 'paid' && iv.dueDate && iv.dueDate < today);
+        if (due.length) items.push({ tone: 'red', text: n(due.length, 'client invoice overdue', 'client invoices overdue'), where: p.name,
+          amount: due.reduce((t, iv) => t + this.invoiceOutstanding(iv), 0), onOpen: go(p.id, { module: 'commitments', commitTab: 'invoices' }) });
+      }
+      if (this.moduleVisible('schedule')) {
+        const acts = ((p.schedule && p.schedule.activities) || []).filter(a => (Number(a.pct) || 0) < 100 && a.finish && a.finish < today);
+        if (acts.length) items.push({ tone: 'amber', text: n(acts.length, 'activity past its finish date', 'activities past their finish date'), where: p.name, amount: null,
+          onOpen: go(p.id, { module: 'schedule' }) });
+      }
+    });
+    // what can cost money or a relationship first
+    items.sort((a, b) => (a.tone === b.tone ? 0 : (a.tone === 'red' ? -1 : 1)));
+    return items;
+  }
+  _attentionV(items) {
+    const rows = items.map(x => ({ text: x.text, where: x.where, onOpen: x.onOpen,
+      dot: x.tone === 'red' ? '#b91c1c' : '#b45309', hasAmount: x.amount != null, amount: x.amount != null ? this.money(x.amount) : '' }));
+    return { has: rows.length > 0, none: rows.length === 0, count: String(rows.length), rows };
+  }
+  _say(msg) { this.setState({ apNotice: String(msg == null ? '' : msg) }); }
   openApDoc(inv) {
     const items = (inv.attachments || []).map(a => ({ name: a.name, url: a.url, type: a.type }));
     if (!items.length) return;
@@ -14263,7 +14362,7 @@ class Component extends DCLogic {
     if (!missed || !missed.length) return;
     const NL2 = String.fromCharCode(10) + String.fromCharCode(10);
     const one = missed.length === 1;
-    alert((one ? 'One supplier invoice could not be sent with the claim:' : missed.length + ' supplier invoices could not be sent with the claim:')
+    this._say((one ? 'One supplier invoice could not be sent with the claim:' : missed.length + ' supplier invoices could not be sent with the claim:')
       + NL2 + missed.join(String.fromCharCode(10)) + NL2
       + (one ? 'That file is' : 'Those files are') + ' kept in this browser, not in the file store, and the upload failed again just now.'
       + ' Check you are signed in and online, attach the file again on the claim or on Commitments, then re-send the invoice.');
@@ -15043,7 +15142,7 @@ class Component extends DCLogic {
       any = true;
     });
     // Nothing to claim is a mistake worth hearing about, not a dialog that quietly closes.
-    if (!any) { alert('Nothing is being claimed on this invoice.' + String.fromCharCode(10) + String.fromCharCode(10) + 'Enter an amount in \u201cThis claim\u201d, or a progress %, on at least one budget line \u2014 and check the line is ticked.'); return; }
+    if (!any) { this._say('Nothing is being claimed on this invoice.' + String.fromCharCode(10) + String.fromCharCode(10) + 'Enter an amount in \u201cThis claim\u201d, or a progress %, on at least one budget line \u2014 and check the line is ticked.'); return; }
     const today = this.todayLocal(); const no = (Number(p.clientInvoiceNo) || 0) + 1;
     const noStr = 'INV-' + String(no).padStart(3, '0'); const total = claim + claim * gst / 100; const due = this.addDays(today, 15);
     const e = sc.edit || {};
@@ -15066,9 +15165,9 @@ class Component extends DCLogic {
     const recips = sc.recipients || [];
     const m = this._invoiceModel(p, null), cp = m.cp;
     const NL2 = String.fromCharCode(10) + String.fromCharCode(10);
-    if (m.periodFrom && m.periodTo && m.periodTo < m.periodFrom) { alert('The claim period ends before it starts: ' + this.fmtDate(m.periodFrom) + ' to ' + this.fmtDate(m.periodTo) + '.' + NL2 + 'Set the period on the claim before sending it.'); return; }
-    if (!cp.items.length) { alert('Nothing is being claimed on this invoice.' + NL2 + 'Tick at least one cost on the claim, and check the claim period reaches its date.'); return; }
-    if (cp.subtotal < -0.005) { alert('This claim comes to less than nothing: its credits are more than its costs.' + NL2 + 'Untick a credit, or tick more costs, before sending it. If an invoice was issued twice, delete the copy from the register.'); return; }
+    if (m.periodFrom && m.periodTo && m.periodTo < m.periodFrom) { this._say('The claim period ends before it starts: ' + this.fmtDate(m.periodFrom) + ' to ' + this.fmtDate(m.periodTo) + '.' + NL2 + 'Set the period on the claim before sending it.'); return; }
+    if (!cp.items.length) { this._say('Nothing is being claimed on this invoice.' + NL2 + 'Tick at least one cost on the claim, and check the claim period reaches its date.'); return; }
+    if (cp.subtotal < -0.005) { this._say('This claim comes to less than nothing: its credits are more than its costs.' + NL2 + 'Untick a credit, or tick more costs, before sending it. If an invoice was issued twice, delete the copy from the register.'); return; }
     const today = this.todayLocal(); const no = this._cpNextNo(p);
     const noStr = 'INV-' + String(no).padStart(3, '0');
     const e = sc.edit || {};
@@ -15478,16 +15577,16 @@ class Component extends DCLogic {
     const old0 = p0 && (p0.invoices || []).find(x => x.id === e.id);
     if (!old0 || old0.kind !== 'cost_plus') { this.setState({ invoiceEdit: null }); return; }
     if (e.periodFrom && e.periodTo && e.periodTo < e.periodFrom) {
-      alert('The claim period ends before it starts: ' + this.fmtDate(e.periodFrom) + ' to ' + this.fmtDate(e.periodTo) + '.' + NL2 + 'Correct the period before saving.');
+      this._say('The claim period ends before it starts: ' + this.fmtDate(e.periodFrom) + ' to ' + this.fmtDate(e.periodTo) + '.' + NL2 + 'Correct the period before saving.');
       return;
     }
     const pre = this._cpEditBuild(p0, old0, e);
     if (!pre.live.length) {
-      alert('Every cost has been taken off this invoice.' + NL2 + 'To cancel the invoice, delete it from the register instead — its costs are released for the next claim.');
+      this._say('Every cost has been taken off this invoice.' + NL2 + 'To cancel the invoice, delete it from the register instead — its costs are released for the next claim.');
       return;
     }
     if (pre.t.subtotal < -0.005) {
-      alert('This invoice would come to less than nothing: its credits would be more than its costs.' + NL2 + 'Keep more of its costs on it, or take its credits off as well.');
+      this._say('This invoice would come to less than nothing: its credits would be more than its costs.' + NL2 + 'Keep more of its costs on it, or take its credits off as well.');
       return;
     }
     this.setState(st => ({ projects: st.projects.map(pr => {
@@ -15667,7 +15766,7 @@ class Component extends DCLogic {
       a.href = url; a.download = opt.filename || 'export.xlsx'; a.style.display = 'none';
       document.body.appendChild(a); a.click();
       setTimeout(() => { try { a.remove(); URL.revokeObjectURL(url); } catch (e) {} }, 150);
-    } catch (e) { alert('Could not generate the Excel file.'); }
+    } catch (e) { this._say('Could not generate the Excel file.'); }
   }
   // Excel export of the Tax Invoice — same sections, columns and figures as the PDF.
   exportInvoiceExcel(invoiceId) {
@@ -15789,7 +15888,7 @@ class Component extends DCLogic {
       a.href = url; a.download = filename; a.style.display = 'none';
       document.body.appendChild(a); a.click();
       setTimeout(() => { try { a.remove(); URL.revokeObjectURL(url); } catch (e) {} }, 100);
-    } catch (e) { alert('Could not generate the CSV.'); }
+    } catch (e) { this._say('Could not generate the CSV.'); }
   }
   // Builds the invoice PDF, parks it in Storage and sends it as a real attachment.
   // If the PDF or the upload fails the email still goes out, with a note in place of the file.
@@ -16383,7 +16482,7 @@ class Component extends DCLogic {
   downloadInvoicePdf(invoiceId) {
     const name = this.invoicePdfName(invoiceId);
     this.invoicePdfBlob(invoiceId).then(blob => {
-      if (!blob) { alert('Could not build the PDF.'); return; }
+      if (!blob) { this._say('Could not build the PDF.'); return; }
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url; a.download = name; a.style.display = 'none';
@@ -18557,7 +18656,17 @@ class Component extends DCLogic {
     try { document.execCommand(cmd, false, (val == null ? undefined : val)); } catch (e2) {}
     if (el) this.setMyProfileField('signature', el.innerHTML);
   }
-  sigLink() { let url = ''; try { url = window.prompt('Link URL', 'https://'); } catch (e) {} if (url) this.sigExec('createLink', url); }
+  // Asked in the app's own box: the browser's prompt() never showed in the app pane. The words selected in the signature
+  // are remembered first, because clicking into the box takes the selection away.
+  sigLink() {
+    try { const sel = window.getSelection(); const ed = document.getElementById('sigEditor'); this._sigRange = (sel && sel.rangeCount && ed && ed.contains(sel.anchorNode)) ? sel.getRangeAt(0).cloneRange() : null; } catch (e) { this._sigRange = null; }
+    this.setState({ apPrompt: { kind: 'siglink', id: '', note: 'https://' } });
+  }
+  _sigLinkTo(url) {
+    const u = String(url || '').trim(); if (!u || u === 'https://') return;
+    try { const ed = document.getElementById('sigEditor'); if (ed) ed.focus(); if (this._sigRange) { const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(this._sigRange); } } catch (e) {}
+    this.sigExec('createLink', /^[a-z]+:/i.test(u) ? u : 'https://' + u);
+  }
   _cid() { return this._rid('cc'); }
 
   // ---- the cost-code catalogue, section by section ---------------------------------------------
@@ -19165,7 +19274,7 @@ class Component extends DCLogic {
   downloadReportPdf() {
     const name = this.reportPdfName();
     this.reportPdfBlob().then(blob => {
-      if (!blob) { alert('Could not build the report PDF.'); return; }
+      if (!blob) { this._say('Could not build the report PDF.'); return; }
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url; a.download = name; a.style.display = 'none';
@@ -19247,7 +19356,7 @@ class Component extends DCLogic {
   downloadCostReportPdf() {
     const name = this.costReportPdfName();
     this.costReportPdfBlob().then(blob => {
-      if (!blob) { alert('Could not build the cost report PDF.'); return; }
+      if (!blob) { this._say('Could not build the cost report PDF.'); return; }
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url; a.download = name; a.style.display = 'none';
@@ -20161,9 +20270,9 @@ class Component extends DCLogic {
           else if (s != null && s > tN && s <= tN + 45) upcoming.push(item); });
         upcoming.sort((a, b) => a.finishFmt < b.finishFmt ? -1 : 1);
         scheduleSummary = { show: true, overallPct: String(sumD ? Math.round(sumP / sumD * 100) : 0),
-          activeNow: activeNow.slice(0, 6), hasActive: activeNow.length > 0, activeCount: String(activeNow.length),
-          overdue: overdueNow.slice(0, 4), hasOverdue: overdueNow.length > 0, overdueCount: String(overdueNow.length),
-          upcoming: upcoming.slice(0, 4), hasUpcoming: upcoming.length > 0,
+          activeNow: activeNow.slice(0, 6), hasActive: activeNow.length > 0, noActive: activeNow.length === 0, activeCount: String(activeNow.length),
+          overdue: overdueNow.slice(0, 4), hasOverdue: overdueNow.length > 0, noOverdue: overdueNow.length === 0, overdueCount: String(overdueNow.length),
+          upcoming: upcoming.slice(0, 4), hasUpcoming: upcoming.length > 0, noUpcoming: !(upcoming.length > 0),
           todayLabel: this.fmtDate(this.todayLocal()), onOpen: () => this.setModule('schedule') };
       }
       clientRepRows = (p.clientReps || []).map((r, i) => ({
@@ -20375,7 +20484,7 @@ class Component extends DCLogic {
           pct: String(pct), durLabel: dur + ' d', durInput: String(dur), statusLabel: st, statusColor: col, statusBg: bg,
           predText: predToStr(a), predValue: (S.predEditId === a.id) ? (S.predEditText || '') : predToStr(a),
           variance: (variance > 0 ? '+' : '') + variance + '%', varColor: variance < -4 ? '#b91c1c' : (variance > 4 ? '#15803d' : '#8894a2'), showVar: pct < 100 && s != null && s <= todayN,
-          critical: a.critical, barColor: a.critical ? '#dc2626' : '#2b59c3', barFill: a.critical ? '#b91c1c' : '#1d4ed8',
+          critical: a.critical, notCritical: !a.critical, barColor: a.critical ? '#dc2626' : '#2b59c3', barFill: a.critical ? '#b91c1c' : '#1d4ed8',
           barColor2: (a.critical && vCrit) ? '#dc2626' : '#2b59c3', barFill2: (a.critical && vCrit) ? '#b91c1c' : '#1d4ed8',
           labelLeft: (s != null && f != null) ? Math.min(pctPos(f) + 0.7, 99.5) : ((s != null ? pctPos(s) : 0) + 0.7),
           onName: e => this.setScheduleActivity(a.id, 'name', e.target.value), onStart: e => this.setActivityStart(a.id, e.target.value), onFinish: e => this.setScheduleActivity(a.id, 'finish', e.target.value),
@@ -21016,7 +21125,7 @@ class Component extends DCLogic {
           id: d.id, ref: d.ref, title: d.title || '', party: d.party || '', date: d.date || '', dueDate: d.dueDate || '',
           status: d.status, statusOptions: cat.statuses.map(s => ({ v: s, label: this.docStatusMeta(s).label })), statusLabel: sm.label, statusColor: sm.color, statusBg: sm.bg,
           priority: d.priority || 'medium', priLabel: pm.label, priColor: pm.color, notes: d.notes || '', overdue,
-          hasDue: cat.hasDue, hasPriority: cat.hasPriority,
+          hasDue: cat.hasDue, hasPriority: cat.hasPriority, noPriority: !cat.hasPriority,
           onTitle: ev => this.setDocField(d.id, 'title', ev.target.value), onParty: ev => this.setDocField(d.id, 'party', ev.target.value),
           onDate: ev => this.setDocField(d.id, 'date', ev.target.value), onDue: ev => this.setDocField(d.id, 'dueDate', ev.target.value),
           onStatus: ev => this.setDocField(d.id, 'status', ev.target.value), onPriority: ev => this.setDocField(d.id, 'priority', ev.target.value),
@@ -21074,7 +21183,7 @@ class Component extends DCLogic {
           const sm = this.docStatusMeta(d.status); const pm = priMeta2(d.priority);
           const chair = contacts.find(c => c.email === d.chairEmail);
           const attList = (d.attendees || []).map(e => contacts.find(c => c.email === e)).filter(Boolean);
-          const attendeeChecks = contacts.map(c => { const on = (d.attendees || []).indexOf(c.email) >= 0; return { name: c.name, email: c.email, phone: c.phone || '', sub: c.sub, hasPhone: !!c.phone, checked: on, check: on ? '✓' : '', checkBg: on ? '#2b59c3' : '#fff', checkBorder: on ? '#2b59c3' : '#cfd8e2', onToggle: () => this.toggleMeetingAttendee(d.id, c.email) }; });
+          const attendeeChecks = contacts.map(c => { const on = (d.attendees || []).indexOf(c.email) >= 0; return { name: c.name, email: c.email, phone: c.phone || '', sub: c.sub, hasPhone: !!c.phone, noPhone: !c.phone, checked: on, check: on ? '✓' : '', checkBg: on ? '#2b59c3' : '#fff', checkBorder: on ? '#2b59c3' : '#cfd8e2', onToggle: () => this.toggleMeetingAttendee(d.id, c.email) }; });
           const durLabel = (Number(d.durationMin) || 60) >= 60 ? (((Number(d.durationMin) || 60) / 60).toString().replace(/\.0$/, '') + ' hr') : ((Number(d.durationMin) || 60) + ' min');
           const cc = d.costCode || '';
           const isKnownCode = cc && knownCodes.indexOf(cc) >= 0;
@@ -21196,7 +21305,7 @@ class Component extends DCLogic {
         if (msel) {
           const contacts = this.projectContacts(p);
           const emails = [msel.chairEmail].concat(msel.attendees || []).filter(Boolean);
-          const recips = emails.map(e => { const c = contacts.find(x => x.email === e) || { name: e, email: e }; return { name: c.name, email: c.email, phone: c.phone || '', hasPhone: !!c.phone, isChair: e === msel.chairEmail }; });
+          const recips = emails.map(e => { const c = contacts.find(x => x.email === e) || { name: e, email: e }; return { name: c.name, email: c.email, phone: c.phone || '', hasPhone: !!c.phone, noPhone: !c.phone, isChair: e === msel.chairEmail }; });
           const emailN = S.meetingSend.viaEmail ? recips.filter(r => r.email).length : 0;
           const smsN = S.meetingSend.viaSms ? recips.filter(r => r.hasPhone).length : 0;
           meetingSendV = {
@@ -21223,7 +21332,7 @@ class Component extends DCLogic {
         isMeeting, meetingRows, meetingHasRows: isMeeting && meetingRows.length > 0, meetingEmpty: isMeeting && meetingRows.length === 0,
         showGenericTable: !isRfi && !isPermit && !isDrawing && !isMeeting && rows.length > 0, showGenericEmpty: !isRfi && !isPermit && !isDrawing && !isMeeting && rows.length === 0,
         catLabel: cat.label, titleLabel: cat.titleLabel, partyLabel: cat.partyLabel, dateLabel: cat.dateLabel, dueLabel: cat.dueLabel,
-        hasDue: cat.hasDue, hasPriority: cat.hasPriority,
+        hasDue: cat.hasDue, hasPriority: cat.hasPriority, noPriority: !cat.hasPriority,
         total: String(isRfi ? rfiRows.length : (isPermit ? permitRows.length : (isMeeting ? meetingRows.length : rows.length))), openCount: String(isRfi ? rfiOpenCount : openCount), showOpenCount: !isPermit,
         onAdd: () => this.addDoc(activeKey),
         onExpandAll: () => this.expandAllRfi(true), onCollapseAll: () => this.expandAllRfi(false),
@@ -23307,7 +23416,8 @@ class Component extends DCLogic {
       onVendorEmail: (e) => this.setVendorForm('email', e.target.value), onVendorAddress: (e) => this.setVendorForm('address', e.target.value), onVendorAbn: (e) => this.setVendorForm('abn', e.target.value),
       onCloseVendorModal: () => this.closeVendorModal(), onSaveVendor: () => this.saveVendor(),
       pageTitle, pageSub, crumb1, crumb2, pageStatus, primaryAction, kpis, hasKpis: kpis.length > 0,
-      statusFilters, portfolioRows, totals, dashModules,
+      statusFilters, portfolioRows, totals, dashModules, attentionV: (showPortfolio ? this._attentionV(this._attention(this.accessibleProjects().filter(pr => pr.status !== 'closed'), 'all')) : { has: false, none: false, rows: [] }),
+      projAttentionV: (showDashboard && p ? this._attentionV(this._attention([p], 'project')) : { has: false, none: false, rows: [] }),
       contractFields, contractVarRows, contractCalc, hasContractFile, contractFileName, onViewContract: () => this.viewProjectContract(), projectsSaveV, globalSaveV, newVersionV,
       commitmentRows, commitSearchV, looseClaimsV, costLineRows, costTotals, chart, costInsight, markupSummary, budgetColTemplate, budgetMinWidth, budgetHeaderCols, budgetTotalCols, colMenuItems, budgetColMenu: S.budgetColMenu, onToggleColMenu: () => this.toggleBudgetColMenu(), onCloseColMenu: () => this.closeBudgetColMenu(), onResetBudgetCols: () => this.resetBudgetCols(), budgetCatOptions, budgetCatValue, budgetFiltered, budgetRowCount, budgetTotalLineCount, onBudgetCatFilter: e => this.setBudgetCatFilter(e.target.value), budgetHasLines: (p && (p.costLines || []).length > 0), onGenSchedule: () => this.generateScheduleFromBudget(), budgetVarRows, varSearchV, varScreenV, budgetVarApproved, budgetVarHas, budgetVarEmpty, onAddVariation: () => this.addVariation(varReg), onAddCostLine: () => this.addCostLine(),
       onExportCsv: () => this.exportCostReportExcel(), onExportPdf: () => this.previewCostReportPdf(),
