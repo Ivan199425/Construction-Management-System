@@ -17901,7 +17901,8 @@ class Component extends DCLogic {
   _tblColPaint() {
     if (!this._tblColSheet) return;
     const w = this._tblColW || {};
-    this._tblColSheet.textContent = Object.keys(w).map(id => '.' + id + ' > * { grid-template-columns:' + w[id] + ' !important }').join('');
+    // the header's siblings, and any row deeper in the table tagged as laid out on the header's columns
+    this._tblColSheet.textContent = Object.keys(w).map(id => '.' + id + ' > *, .' + id + '-r { grid-template-columns:' + w[id] + ' !important }').join('');
   }
   _colResizeScan() {
     if (typeof document === 'undefined' || !this._tblColOn) return;
@@ -17910,6 +17911,15 @@ class Component extends DCLogic {
       const p = hdr.parentElement; if (!p) return;
       const id = this._tblColId(hdr); if (!id) return;
       if (!p.classList.contains(id)) p.classList.add(id);
+      // Rows wrapped one level down (an RFI row sits in a box with its detail) are not siblings of the header. Tag
+      // every grid inside the table that uses exactly the header's own columns, so a drag moves the whole column.
+      const cols = hdr.style && hdr.style.gridTemplateColumns;
+      if (!cols) return;
+      const tag = id + '-r';
+      p.querySelectorAll('[style*="grid-template-columns"]').forEach(el => {
+        if (el === hdr || el.parentElement === p || el.classList.contains(tag)) return;
+        if (el.style.gridTemplateColumns === cols) el.classList.add(tag);
+      });
     });
   }
   _colResizeInit() {
