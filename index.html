@@ -8329,7 +8329,7 @@ class Component extends DCLogic {
       '',
       'Add it to your calendar: ' + this.meetingCalUrl(d, p),
       '',
-      'Cubic PM System',
+      this._coName(),
     ].join(String.fromCharCode(10));
     const today = this.todayLocal();
     // The register records what was attempted, and _sendEmailNow tells the user plainly if
@@ -8547,7 +8547,7 @@ class Component extends DCLogic {
     // filter(Boolean) would eat the empty string that separates the message from the sign-off,
     // running the last sentence straight into the dash.
     const _nl = String.fromCharCode(10);
-    const sig = _nl + _nl + ['—', (this.currentUser() || {}).name || '', (p && p.name) || '', 'Cubic PM System'].filter(Boolean).join(_nl);
+    const sig = _nl + _nl + ['—', (this.currentUser() || {}).name || '', (p && p.name) || '', this._coName()].filter(Boolean).join(_nl);
     const payload = {
       to, cc, from: c.from,
       subject: String(c.subject).trim(),
@@ -11455,47 +11455,27 @@ class Component extends DCLogic {
   }
 
   // One message per batch, listing what needs a project. A message per invoice would be noise
-  // on a morning where twenty arrive at once.
+  // on a morning where twenty arrive at once. What was not collected sends nothing (Ivan, 01/10): it waits on the
+  // Not collected tab, where Collect brings any of it back.
   apNotifyUnallocated(records) {
     const cfg = this.apSettings();
     const list = (records || []).filter(x => x && x.status === "unallocated");
-    // Refusing an invoice quietly is worse than queueing it: nobody is watching a tab they
-    // have no reason to open. What was set aside rides along in the same message.
-    const skipped = (records || []).filter(x => x && x.status === 'not_collected');
-    if (!cfg.notifyUnallocated || (!list.length && !skipped.length)) return Promise.resolve({ ok: false });
+    if (!cfg.notifyUnallocated || !list.length) return Promise.resolve({ ok: false });
     const to = this.apUnallocatedOwners();
     if (!to.length) return Promise.resolve({ ok: false });
     const lines = list.map(x => {
       const fw = (x.source && x.source.forwardedBy) ? ('  (forwarded by ' + this.apAssigneeName(x.source.forwardedBy) + ')') : '';
       return '  ' + (x.ref || '') + '   ' + this.apSupplierLabel(x) + '   ' + (x.invoiceNo || 'no invoice number') + '   ' + this.money(this.apTotal(x)) + fw;
     });
-    const n = list.length, s = skipped.length;
-    const skipLines = skipped.map(x => '  ' + (x.ref || '') + '   ' + this.apSupplierLabel(x) + '   ' + (x.invoiceNo || 'no invoice number') + '   ' + this.money(this.apTotal(x)));
-    const parts = [];
-    if (n) {
-      parts.push(n === 1 ? 'An invoice has arrived that could not be matched to a project.'
-                         : n + ' invoices have arrived that could not be matched to a project.');
-      parts.push('');
-      parts.push('Open Supplier Invoices and clear the Unallocated tab — assigning a project moves each one straight into review.');
-      parts.push('');
-      parts.push.apply(parts, lines);
-    }
-    if (s) {
-      if (n) parts.push('');
-      parts.push(s === 1 ? 'One more was not collected, because Invoice ingestion is set to take in only invoices for a project here:'
-                         : s + ' more were not collected, because Invoice ingestion is set to take in only invoices for a project here:');
-      parts.push('');
-      parts.push.apply(parts, skipLines);
-      parts.push('');
-      parts.push('Nothing has been deleted. They are on the Not collected tab, and Collect puts any of them back.');
-    }
-    const subj = n && s ? (n + ' invoice' + (n === 1 ? '' : 's') + ' waiting for a project, ' + s + ' not collected')
-               : (n ? n + ' supplier invoice' + (n === 1 ? '' : 's') + ' waiting for a project'
-                    : s + ' supplier invoice' + (s === 1 ? '' : 's') + ' not collected');
+    const n = list.length;
+    const parts = [n === 1 ? 'An invoice has arrived that could not be matched to a project.'
+                           : n + ' invoices have arrived that could not be matched to a project.',
+      '', 'Open Supplier Invoices and clear the Unallocated tab — assigning a project moves each one straight into review.', ''].concat(lines);
+    const co = this._coName();
     return this._sendEmailNow({
       to,
-      subject: subj,
-      text: parts.concat(['', 'Cubic PM System']).join(String.fromCharCode(10)),
+      subject: n + ' supplier invoice' + (n === 1 ? '' : 's') + ' waiting for a project',
+      text: parts.concat(co ? ['', co] : []).join(String.fromCharCode(10)),
       attachments: [],
     });
   }
