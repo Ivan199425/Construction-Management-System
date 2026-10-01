@@ -1895,7 +1895,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                       </div>
                     </sc-for>
                     <div style="display:flex;flex-wrap:var(--cpms-wrap,nowrap);justify-content:space-between;font-size:13px;font-weight:600;padding:10px 0 2px"><span style="color:#0f1720">Current committed value</span><span class="mono">{{ c.current }}</span></div>
-                    <div style="display:flex;flex-wrap:var(--cpms-wrap,nowrap);justify-content:space-between;font-size:13px;padding:7px 0 2px;color:#6b7787"><span>Billed to date <span style="color:#6b7787">({{ c.billCount }} commitments)</span></span><span class="mono">{{ c.billed }}</span></div>
+                    <div style="display:flex;flex-wrap:var(--cpms-wrap,nowrap);justify-content:space-between;font-size:13px;padding:7px 0 2px;color:#6b7787"><span>Billed to date, ex GST <span style="color:#6b7787">({{ c.billCount }} commitments)</span></span><span class="mono">{{ c.billed }}</span></div>
                     <div style="display:flex;flex-wrap:var(--cpms-wrap,nowrap);justify-content:space-between;font-size:13px;padding:2px 0;font-weight:600"><span style="color:#4a5765">Remaining to bill</span><span class="mono" style="color:{{ c.remainingColor }}">{{ c.remaining }}</span></div>
                     <sc-if value="{{ c.showClaimBlock }}" hint-placeholder-val="{{ true }}">
                     <div style="display:flex;flex-wrap:var(--cpms-wrap,nowrap);align-items:center;justify-content:space-between;gap:10px;margin-top:14px;padding-top:12px;border-top:1px solid #e7ebf0">
@@ -6609,7 +6609,8 @@ class Component extends DCLogic {
     if (t < -0.005) return (this.billPaidRecords(b).length && pd <= t + 0.005) ? "paid" : "unpaid";
     return pd <= 0 ? "unpaid" : (pd + 0.005 >= t ? "paid" : "partial");
   }
-  commitmentBilled(cmId, p) { const proj = p || this.proj(this.state.pid) || {}; return this._r2((proj.bills || []).filter(b => b.commitmentId === cmId).reduce((s, b) => s + this.billTotal(b), 0)); }
+  // Before GST, like the contract value, the variations and the claims it is set against.
+  commitmentBilled(cmId, p) { const proj = p || this.proj(this.state.pid) || {}; return this._r2((proj.bills || []).filter(b => b.commitmentId === cmId).reduce((s, b) => s + this._num(b.amount), 0)); }
   canIssue() { return this.state.role === 'PM' || this.state.role === 'Admin'; }
   // ===== Authentication & RBAC (Phase 1) =====
   roleList() { return [
