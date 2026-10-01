@@ -1119,20 +1119,21 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
 
         <sc-if value="{{ showVendors }}" hint-placeholder-val="{{ true }}">
           <div style="display:flex;align-items:center;flex-wrap:var(--cpms-wrap,nowrap);justify-content:space-between;gap:12px;margin-bottom:12px">
-            <div style="display:flex;align-items:center;gap:9px;width:100%;max-width:460px;border:1.5px solid #b9c3d0;border-radius:10px;background:#fff;padding:10px 14px"><span style="font-size:15px;line-height:1;flex:0 0 auto">🔍</span><input value="{{ vendorSearchV.value }}" onInput="{{ vendorSearchV.onInput }}" placeholder="Search vendors — company, contact, email, type" style="flex:1;min-width:0;border:0;outline:none;background:transparent;font-size:15px;color:#0f1720;font-family:inherit"></div>
+            <div style="display:flex;align-items:center;gap:9px;width:100%;max-width:460px;border:1.5px solid #b9c3d0;border-radius:10px;background:#fff;padding:10px 14px"><span style="font-size:15px;line-height:1;flex:0 0 auto">🔍</span><input value="{{ vendorSearchV.value }}" onInput="{{ vendorSearchV.onInput }}" placeholder="Search vendors — company, contact, email, ABN, type" style="flex:1;min-width:0;border:0;outline:none;background:transparent;font-size:15px;color:#0f1720;font-family:inherit"></div>
             <sc-if value="{{ vendorSearchV.has }}" hint-placeholder-val="{{ false }}"><span style="font-size:12px;color:#6b7787;white-space:nowrap">{{ vendorSearchV.shown }} of {{ vendorSearchV.total }} vendors</span></sc-if>
           </div>
           <div style="background:#fff;border:1px solid #e4e8ee;border-radius:12px;overflow:hidden">
-            <div style="overflow-x:auto"><div style="min-width:1180px">
-              <div class="colhdr dark" style="display:grid;grid-template-columns:120px 1.4fr 1.1fr 130px 1.4fr 1.6fr 150px 42px;padding:11px 16px;background:#2A3580;border-bottom:1px solid #e4e8ee;font-size:11px;font-weight:600;letter-spacing:.3px;color:#fff;text-transform:uppercase;gap:10px">
-                <div>Type</div><div>Company</div><div>Representative</div><div>Contact</div><div>Email</div><div>Address</div><div style="text-align:right">Billed / activity</div><div></div>
+            <div style="overflow-x:auto"><div style="min-width:1320px">
+              <div class="colhdr dark" style="display:grid;grid-template-columns:120px 1.4fr 136px 1.1fr 130px 1.4fr 1.6fr 150px 84px;padding:11px 16px;background:#2A3580;border-bottom:1px solid #e4e8ee;font-size:11px;font-weight:600;letter-spacing:.3px;color:#fff;text-transform:uppercase;gap:10px">
+                <div>Type</div><div>Company</div><div>ABN</div><div>Representative</div><div>Contact</div><div>Email</div><div>Address</div><div style="text-align:right">Billed / activity</div><div></div>
               </div>
               <sc-for list="{{ vendorRows }}" as="r" hint-placeholder-count="5">
-                <div style="display:grid;grid-template-columns:120px 1.4fr 1.1fr 130px 1.4fr 1.6fr 150px 42px;padding:8px 16px;border-bottom:1px solid #eef1f4;align-items:center;gap:10px" style-hover="background:#f9fafc">
+                <div style="display:grid;grid-template-columns:120px 1.4fr 136px 1.1fr 130px 1.4fr 1.6fr 150px 84px;padding:8px 16px;border-bottom:1px solid #eef1f4;align-items:center;gap:10px" style-hover="background:#f9fafc">
                   <select value="{{ r.type }}" onChange="{{ r.onType }}" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 6px;font-size:12px;font-family:inherit;color:#0f1720;background:#fff;cursor:pointer" style-focus="border-color:#2b59c3;outline:none">
                     <option value="contractor">Contractor</option><option value="supplier">Supplier</option><option value="service">Service</option>
                   </select>
                   <input value="{{ r.company }}" onInput="{{ r.onCompany }}" placeholder="Company" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 9px;font-size:13px;font-weight:500;font-family:inherit;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none">
+                  <input value="{{ r.abn }}" onInput="{{ r.onAbn }}" placeholder="Add ABN" title="ABN - shown on the subcontract agreement, and used to recognise this supplier on its invoices" class="mono" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 8px;font-size:12px;font-family:'IBM Plex Mono',monospace;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none">
                   <input value="{{ r.rep }}" onInput="{{ r.onRep }}" placeholder="Representative" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 9px;font-size:13px;font-family:inherit;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none">
                   <input value="{{ r.phone }}" onInput="{{ r.onPhone }}" placeholder="+1 …" class="mono" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 8px;font-size:12px;font-family:'IBM Plex Mono',monospace;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none">
                   <input value="{{ r.email }}" onInput="{{ r.onEmail }}" placeholder="email@company.com" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 9px;font-size:12px;font-family:inherit;color:#2b59c3;background:#fff" style-focus="border-color:#2b59c3;outline:none">
@@ -1140,6 +1141,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                   <div style="text-align:right"><div class="mono" style="font-size:13px;font-weight:600;color:#0f1720">{{ r.billTotal }}</div><div style="font-size:11px;color:#6b7787">{{ r.billCount }} commitments · {{ r.projectCount }} projects</div></div>
                   <div style="display:flex;align-items:center;gap:4px;flex-wrap:var(--cpms-wrap,nowrap);justify-content:flex-end">
                     <sc-if value="{{ r.canMessage }}" hint-placeholder-val="{{ true }}"><button onClick="{{ r.onMessage }}" title="{{ r.messageTitle }}" style="border:1px solid #cdddf8;background:#f2f6fd;color:#2b59c3;border-radius:6px;padding:4px 8px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;line-height:1.3" style-hover="background:#e8eefc">✉</button></sc-if>
+                    <button onClick="{{ r.onEdit }}" title="Edit every detail - ABN, payment terms, bank details" style="border:1px solid #cfd8e2;background:#fff;color:#4a5765;border-radius:6px;padding:4px 7px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;line-height:1.3" style-hover="border-color:#2b59c3;color:#2b59c3">&#9998;</button>
                     <button onClick="{{ r.onDelete }}" title="Delete vendor" style="border:0;background:transparent;color:#c0c8d1;cursor:pointer;min-width:var(--cpms-tap,auto);min-height:var(--cpms-tap,auto);font-size:15px;padding:2px;line-height:1" style-hover="color:#b91c1c">✕</button>
                   </div>
                 </div>
@@ -5799,7 +5801,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
   <sc-if value="{{ vendorModal.open }}" hint-placeholder-val="{{ false }}">
     <div onClick="{{ onCloseVendorModal }}" style="position:fixed;inset:0;background:rgba(15,23,32,.42);display:flex;align-items:center;justify-content:center;z-index:50;animation:fadeUp .15s ease">
       <div onClick="{{ stop }}" style="background:#fff;border-radius:14px;width:520px;max-width:92vw;box-shadow:0 24px 60px rgba(15,23,32,.28);overflow:hidden">
-        <div style="padding:18px 22px;border-bottom:1px solid #eef1f4"><div style="font-size:15px;font-weight:600;color:#0f1720">New vendor</div><div style="font-size:13px;color:#6b7787;margin-top:2px">Saved to the vendor directory and selected where you opened this</div></div>
+        <div style="padding:18px 22px;border-bottom:1px solid #eef1f4"><div style="font-size:15px;font-weight:600;color:#0f1720">{{ vendorModal.title }}</div><div style="font-size:13px;color:#6b7787;margin-top:2px">{{ vendorModal.sub }}</div></div>
         <div style="padding:20px 22px;display:flex;flex-direction:column;gap:15px">
           <div><label style="font-size:12px;font-weight:600;color:#4a5765;display:block;margin-bottom:5px">Vendor type</label>
             <select value="{{ vendorModal.type }}" onChange="{{ onVendorType }}" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:inherit;background:#fff;cursor:pointer">
@@ -5814,10 +5816,16 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
           <div><label style="font-size:12px;font-weight:600;color:#4a5765;display:block;margin-bottom:5px">Email</label><input value="{{ vendorModal.email }}" onInput="{{ onVendorEmail }}" placeholder="accounts@company.com" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:inherit"></div>
           <div><label style="font-size:12px;font-weight:600;color:#4a5765;display:block;margin-bottom:5px">Address</label><input value="{{ vendorModal.address }}" onInput="{{ onVendorAddress }}" placeholder="Street, city" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:inherit"></div>
           <div><label style="font-size:12px;font-weight:600;color:#4a5765;display:block;margin-bottom:5px">ABN <span style="color:#6b7787;font-weight:400">· shown on the subcontract agreement</span></label><input value="{{ vendorModal.abn }}" onInput="{{ onVendorAbn }}" placeholder="12 345 678 901" class="mono" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:'IBM Plex Mono',monospace"></div>
+          <div style="display:grid;grid-template-columns:var(--cpms-3col,110px 1fr 1.4fr);gap:12px">
+            <div><label style="font-size:12px;font-weight:600;color:#4a5765;display:block;margin-bottom:5px">Payment terms</label><div style="display:flex;align-items:center;gap:6px"><input value="{{ vendorModal.terms }}" onInput="{{ onVendorTerms }}" placeholder="30" class="mono" style="width:64px;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:'IBM Plex Mono',monospace"><span style="font-size:12px;color:#6b7787">days</span></div></div>
+            <div><label style="font-size:12px;font-weight:600;color:#4a5765;display:block;margin-bottom:5px">BSB</label><input value="{{ vendorModal.bsb }}" onInput="{{ onVendorBsb }}" placeholder="062-000" class="mono" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:'IBM Plex Mono',monospace"></div>
+            <div><label style="font-size:12px;font-weight:600;color:#4a5765;display:block;margin-bottom:5px">Account number</label><input value="{{ vendorModal.acct }}" onInput="{{ onVendorAcct }}" placeholder="1234 5678" class="mono" style="width:100%;border:1px solid #cfd8e2;border-radius:8px;padding:9px 11px;font-size:13px;font-family:'IBM Plex Mono',monospace"></div>
+          </div>
+          <div style="font-size:12px;color:#6b7787;line-height:1.5;margin-top:-6px">Terms set the due date when an invoice does not give one. The bank details are what each supplier invoice is checked against before it goes for payment.</div>
         </div>
         <div style="padding:15px 22px;border-top:1px solid #eef1f4;display:flex;flex-wrap:var(--cpms-wrap,nowrap);justify-content:flex-end;gap:10px">
           <button onClick="{{ onCloseVendorModal }}" style="border:1px solid #cfd8e2;background:#fff;color:#4a5765;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Cancel</button>
-          <button onClick="{{ onSaveVendor }}" style="border:0;background:#2b59c3;color:#fff;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="background:#244dab">Save vendor</button>
+          <button onClick="{{ onSaveVendor }}" style="border:0;background:#2b59c3;color:#fff;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="background:#244dab">{{ vendorModal.saveLabel }}</button>
         </div>
       </div>
     </div>
@@ -8219,6 +8227,12 @@ class Component extends DCLogic {
       this._saveVendors(next);
       return { vendors: next, projects: s.projects.map(p => ({ ...p, bills: (p.bills || []).map(b => b.vendorId === id ? { ...b, vendorId: '' } : b) })) };
     }));
+  }
+  // Every field of a vendor, in the same form New vendor uses.
+  openVendorEdit(id) {
+    const v = (this.state.vendors || []).find(x => x.id === id); if (!v) return;
+    const f = k => (v[k] == null ? '' : String(v[k]));
+    this.setState({ vendorModal: { editId: id }, vendorForm: { type: v.type || 'supplier', company: f('company'), rep: f('rep'), abn: f('abn'), phone: f('phone'), email: f('email'), address: f('address'), terms: f('terms'), bsb: f('bsb'), acct: f('acct') } });
   }
   openVendorModal() { this.setState({ vendorModal: { billId: null }, vendorForm: { type: 'supplier', company: '', rep: '', abn: '', phone: '', email: '', address: '' } }); }
   vendorStats(id) {
@@ -17738,9 +17752,17 @@ class Component extends DCLogic {
   closeVendorModal() { this.setState({ vendorModal: null }); }
   saveVendor() {
     const { vendorModal, vendorForm } = this.state;
-    if (!vendorModal || !vendorForm.company.trim()) return;
+    if (!vendorModal || !String(vendorForm.company || '').trim()) return;
+    const tr = k => String(vendorForm[k] || '').trim();
+    const fields = { type: vendorForm.type, company: tr('company'), rep: tr('rep'), abn: tr('abn'), phone: tr('phone'), email: tr('email'), address: tr('address'), terms: tr('terms'), bsb: tr('bsb'), acct: tr('acct') };
+    if (vendorModal.editId) {
+      const eid = vendorModal.editId;
+      this._commitVendors(list => list.map(v => v.id === eid ? Object.assign({}, v, fields) : v));
+      this.setState({ vendorModal: null });
+      return;
+    }
     const id = 'v' + Date.now();
-    const vendor = { id, type: vendorForm.type, company: vendorForm.company.trim(), rep: vendorForm.rep.trim(), abn: (vendorForm.abn || '').trim(), phone: vendorForm.phone.trim(), email: vendorForm.email.trim(), address: vendorForm.address.trim() };
+    const vendor = Object.assign({ id }, fields);
     this._withCatalog('vendors', () => this.setState(s => {
       const nextVendors = [...(s.vendors || []), vendor];
       this._saveVendors(nextVendors);
@@ -21829,14 +21851,15 @@ class Component extends DCLogic {
     if (showVendors) {
       let _vs = [...S.vendors].sort((a, b) => a.company.localeCompare(b.company));
       const _vAll = _vs.length; const _vq = this._q('vendors');
-      if (_vq) _vs = _vs.filter(v => [v.company, v.rep, v.phone, v.email, v.address, this.vendorTypeLabel(v.type)].join(' ').toLowerCase().indexOf(_vq) >= 0);
+      if (_vq) _vs = _vs.filter(v => [v.company, v.rep, v.phone, v.email, v.address, v.abn, String(v.abn || '').replace(/\s/g, ''), this.vendorTypeLabel(v.type)].join(' ').toLowerCase().indexOf(_vq) >= 0);
       vendorSearchV = { value: S.search.vendors || '', has: !!_vq, shown: _vs.length, total: _vAll, onInput: e => this.setSearch('vendors', e.target.value) };
       vendorRows = _vs.map(v => {
         const st = this.vendorStats(v.id);
-        return { id: v.id, type: v.type, company: v.company, rep: v.rep, phone: v.phone, email: v.email, address: v.address,
+        return { id: v.id, type: v.type, company: v.company, abn: v.abn || '', rep: v.rep, phone: v.phone, email: v.email, address: v.address,
           typeLabel: this.vendorTypeLabel(v.type), billCount: st.count, billTotal: this.money(st.total), projectCount: st.projects,
           onType: e => this.setVendorField(v.id, 'type', e.target.value),
           onCompany: e => this.setVendorField(v.id, 'company', e.target.value),
+          onAbn: e => this.setVendorField(v.id, 'abn', e.target.value),
           onRep: e => this.setVendorField(v.id, 'rep', e.target.value),
           onPhone: e => this.setVendorField(v.id, 'phone', e.target.value),
           onEmail: e => this.setVendorField(v.id, 'email', e.target.value),
@@ -21844,7 +21867,7 @@ class Component extends DCLogic {
           canMessage: this.msgIsEmail(v.email) && this.msgCanSend(),
           messageTitle: 'Write to ' + (v.company || v.rep || 'this vendor'),
           onMessage: () => this.openEmailCompose(String(v.email || '').trim().toLowerCase(), { subject: '' }),
-          onDelete: () => this.deleteVendor(v.id) };
+          onEdit: () => this.openVendorEdit(v.id), onDelete: () => this.deleteVendor(v.id) };
       });
     }
 
@@ -23498,10 +23521,13 @@ class Component extends DCLogic {
         fg2: _commitTab === t.key ? '#0f1720' : '#6b7787',
         underline: _commitTab === t.key ? '#2b59c3' : 'transparent' })),
       coName: this._coName(), favBarV, billRows, billTotals, billSearchV, billFilterV, vendorPickList: this._vendorPickList(), paymentsViewV, onAddBill: () => this.addBill(),
-      vendorModal: S.vendorModal ? { open: true, ...S.vendorForm } : { open: false },
+      vendorModal: S.vendorModal ? Object.assign({ open: true, terms: '', bsb: '', acct: '' }, S.vendorForm, S.vendorModal.editId
+        ? { title: 'Edit vendor', sub: 'Changes apply everywhere this vendor is used', saveLabel: 'Save changes' }
+        : { title: 'New vendor', sub: 'Saved to the vendor directory and selected where you opened this', saveLabel: 'Save vendor' }) : { open: false },
       onVendorType: (e) => this.setVendorForm('type', e.target.value), onVendorCompany: (e) => this.setVendorForm('company', e.target.value),
       onVendorRep: (e) => this.setVendorForm('rep', e.target.value), onVendorPhone: (e) => this.setVendorForm('phone', e.target.value),
       onVendorEmail: (e) => this.setVendorForm('email', e.target.value), onVendorAddress: (e) => this.setVendorForm('address', e.target.value), onVendorAbn: (e) => this.setVendorForm('abn', e.target.value),
+      onVendorTerms: (e) => this.setVendorForm('terms', e.target.value.replace(/[^\d]/g, '').slice(0, 3)), onVendorBsb: (e) => this.setVendorForm('bsb', e.target.value), onVendorAcct: (e) => this.setVendorForm('acct', e.target.value),
       onCloseVendorModal: () => this.closeVendorModal(), onSaveVendor: () => this.saveVendor(),
       pageTitle, pageSub, crumb1, crumb2, pageStatus, primaryAction, kpis, hasKpis: kpis.length > 0,
       statusFilters, portfolioRows, totals, dashModules, attentionV: (showPortfolio ? this._attentionV(this._attention(this.accessibleProjects().filter(pr => pr.status !== 'closed'), 'all')) : { has: false, none: false, rows: [] }),
