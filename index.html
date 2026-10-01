@@ -1781,7 +1781,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
             </div>
           </div>
           <div style="display:flex;align-items:center;flex-wrap:var(--cpms-wrap,nowrap);justify-content:space-between;margin-bottom:12px">
-            <div style="font-size:15px;font-weight:600;color:#0f1720">Variations / change orders</div>
+            <div style="display:flex;align-items:baseline;gap:12px;flex-wrap:wrap"><div style="font-size:15px;font-weight:600;color:#0f1720">Variations / change orders</div><button onClick="{{ onOpenVariations }}" title="The same list on the Financial screen, with search, documents and sending" style="border:0;background:transparent;color:#2b59c3;padding:0;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit">Open in Variations &#8250;</button></div>
             <button onClick="{{ onAddContractVar }}" style="border:1px solid #cfd8e2;background:#fff;color:#2b59c3;border-radius:7px;padding:6px 13px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">＋ Add variation</button>
           </div>
           <div style="background:#fff;border:1px solid #e4e8ee;border-radius:12px;overflow:hidden">
@@ -1874,7 +1874,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                       </div>
                     </sc-if>
                     <div style="display:flex;align-items:center;flex-wrap:var(--cpms-wrap,nowrap);justify-content:space-between;margin-bottom:8px">
-                      <div style="font-size:12px;font-weight:600;letter-spacing:.4px;color:#6b7787;text-transform:uppercase">Variations</div>
+                      <div style="font-size:12px;font-weight:600;letter-spacing:.4px;color:#6b7787;text-transform:uppercase">Subcontractor variations</div>
                       <button onClick="{{ c.onAdd }}" style="border:1px solid #cfd8e2;background:#fff;color:#2b59c3;border-radius:6px;padding:4px 11px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">＋ Add variation</button>
                     </div>
                     <div style="display:flex;flex-wrap:var(--cpms-wrap,nowrap);justify-content:space-between;font-size:12px;color:#6b7787;padding:4px 0 6px;border-bottom:1px solid #e8ecf1"><span>Original commitment</span><span class="mono">{{ c.original }}</span></div>
@@ -13546,14 +13546,17 @@ class Component extends DCLogic {
   }
   // The tab strip on the Financial screen and the menu at the top of the app are two ways to
   // the same seven screens, so they read their names from one place.
+  // Variations is the project's one register of variations and change orders - the Summary's list (key 'variations',
+  // kept so links in emails already sent still open it). The old cost-side register only appears for a project that
+  // still has entries in it. A subcontractor's variation lives on its sub-contract.
+  _hasBudgetOnlyVars(p) { const proj = p === undefined ? this.proj(this.state.pid) : p; return !!(proj && (proj.costVariations || []).length); }
   _commitTabDefs() { return [
     { key: 'budget', label: 'Budget' }, { key: 'bills', label: 'Commitments' },
     { key: 'agreements', label: 'Sub-contracts' }, { key: 'apreg', label: 'Supplier Invoices' },
-    { key: 'costvars', label: 'Variations' },
-    // the client register keeps the key it has always had, so links in variation emails already sent still open it
-    { key: 'variations', label: 'Client Variations', group: 'Client', headStart: true },
-    { key: 'invoices', label: 'Client Invoices', group: 'Client' },
-  ]; }
+    { key: 'variations', label: 'Variations' },
+  ].concat(this._hasBudgetOnlyVars() ? [{ key: 'costvars', label: 'Budget-only variations' }] : []).concat([
+    { key: 'invoices', label: 'Client Invoices', group: 'Client', headStart: true },
+  ]); }
   // From the menu, a Financial screen is a place you go to, not a tab you switch: the project
   // screen has to be Financial before the tab means anything.
   goCommitTab(key) {
@@ -20065,7 +20068,7 @@ class Component extends DCLogic {
     const showDocuments = inProject && S.module === 'documents';
     const moduleCommitments = inProject && S.module === 'commitments';
     // Progress claims are part of the Sub-contracts screen now, so anything still pointing at their own tab lands there.
-    const _commitTab = S.commitTab === 'claims' ? 'agreements' : S.commitTab;
+    const _commitTab = S.commitTab === 'claims' ? 'agreements' : (S.commitTab === 'costvars' && !this._hasBudgetOnlyVars(p) ? 'variations' : S.commitTab);
     const showCommitments = moduleCommitments && _commitTab === 'agreements';
     const showBills = moduleCommitments && S.commitTab === 'bills';
     const showCost = moduleCommitments && S.commitTab === 'budget';
@@ -20109,8 +20112,8 @@ class Component extends DCLogic {
       if (showBills) { crumb2 = 'Financial'; }
       if (showCost) { pageTitle = 'Financial'; pageSub = 'Budget — budget vs committed vs actual vs forecast, all before GST — ' + p.name; crumb2 = 'Financial'; }
       if (showInvoices) { pageTitle = 'Financial'; pageSub = 'Client Invoices — customer billing & receivables — ' + p.name; crumb2 = 'Financial'; }
-      if (showClientVars) { pageTitle = 'Financial'; pageSub = 'Client Variations — change orders sent to the client for approval — ' + p.name; crumb2 = 'Client'; }
-      if (showCostVars) { pageTitle = 'Financial'; pageSub = 'Variations — change orders on the cost side — ' + p.name; crumb2 = 'Financial'; }
+      if (showClientVars) { pageTitle = 'Financial'; pageSub = 'Variations & change orders — the same list as the Summary — ' + p.name; crumb2 = 'Financial'; }
+      if (showCostVars) { pageTitle = 'Financial'; pageSub = 'Budget-only variations — raised on the cost side before the registers were joined — ' + p.name; crumb2 = 'Financial'; }
       if (showDefects) { pageTitle = 'Defects'; pageSub = 'Defect register & rectification tracking — ' + p.name; crumb2 = 'Defects'; if (this.can('punchList', 'edit')) primaryAction = { show: true, label: '＋ Raise defect', onClick: () => this.addDefect() }; }
       if (showBills) { pageTitle = 'Financial'; pageSub = 'Commitments — planned spend per cost code — ' + p.name; if (this.can('bills', 'edit')) primaryAction = { show: true, label: '＋ Add commitment', onClick: () => this.addBill() }; }
       if (showApReg) { pageTitle = 'Financial'; pageSub = 'Supplier Invoices — every supplier invoice allocated to ' + p.name; crumb2 = 'Financial'; }
@@ -22016,12 +22019,12 @@ class Component extends DCLogic {
       budgetVarApproved = this.signed(vlist2.filter(v => v.status === 'approved').reduce((s, v) => s + this._num(v.value), 0));
       budgetVarHas = vlist2.length > 0; budgetVarEmpty = vlist2.length === 0;
       varScreenV = showCostVars
-        ? { title: 'Variations', hint: 'Raise a variation on the cost side, send it for approval, and link it to the budget.',
-            empty: 'No variations yet. Click ＋ Variation to raise one.',
-            foot: 'Create a variation, link it to a cost code, then ✉ send it for approval (with a PDF and supporting documents). On approval it is added to that cost code as approved change. Client change orders belong under Client — Client Variations.' }
-        : { title: 'Client Variations', hint: 'Raise a variation, send it to the client for approval, and link it to the budget.',
-            empty: 'No client variations yet. Click ＋ Variation to raise one and send it to the client for approval.',
-            foot: 'Create a variation, link it to a cost code, then ✉ send it to the client for approval (with a PDF and supporting documents). On approval it is added to the contract sum and to that cost code as approved change.' };
+        ? { title: 'Budget-only variations', hint: 'Raised on the cost side before Variations became one list. New variations go under Variations; a subcontractor\u2019s goes on its sub-contract.',
+            empty: 'No budget-only variations.',
+            foot: 'These stay linked to their cost codes as approved change. Nothing new is raised here.' }
+        : { title: 'Variations & change orders', hint: 'The project\u2019s variations - the same list as the Summary. Raise one, send it to the client for approval, and link it to the budget.',
+            empty: 'No variations yet. Click \uff0b Variation to raise one and send it to the client for approval.',
+            foot: 'Create a variation, link it to a cost code, then \u2709 send it to the client for approval (with a PDF and supporting documents). On approval it is added to the contract sum and to that cost code as approved change. A subcontractor\u2019s variation is raised on its sub-contract, under Sub-contracts.' };
     }
 
     // vendor directory
@@ -23694,6 +23697,7 @@ class Component extends DCLogic {
         onOriginal: e => this.setContractForm('original', e.target.value), onRetention: e => this.setContractForm('retentionPct', e.target.value),
         onTerms: e => this.setContractForm('paymentTermsDays', e.target.value), onStart: e => this.setContractForm('start', e.target.value),
         onEnd: e => this.setContractForm('end', e.target.value), onSave: () => this.saveContract(), onClose: () => this.closeContractModal() } : { open: false },
+      onOpenVariations: () => this.goCommitTab('variations'),
       commitTabs: this._commitTabDefs().map(t => ({ ...t, active: _commitTab === t.key,
         onClick: () => this.setState({ commitTab: t.key }),
         fg2: _commitTab === t.key ? '#0f1720' : '#6b7787',
