@@ -1121,6 +1121,10 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
           <div style="display:flex;align-items:center;flex-wrap:var(--cpms-wrap,nowrap);justify-content:space-between;gap:12px;margin-bottom:12px">
             <div style="display:flex;align-items:center;gap:9px;width:100%;max-width:460px;border:1.5px solid #b9c3d0;border-radius:10px;background:#fff;padding:10px 14px"><span style="font-size:15px;line-height:1;flex:0 0 auto">🔍</span><input value="{{ vendorSearchV.value }}" onInput="{{ vendorSearchV.onInput }}" placeholder="Search vendors — company, contact, email, ABN, type" style="flex:1;min-width:0;border:0;outline:none;background:transparent;font-size:15px;color:#0f1720;font-family:inherit"></div>
             <sc-if value="{{ vendorSearchV.has }}" hint-placeholder-val="{{ false }}"><span style="font-size:12px;color:#6b7787;white-space:nowrap">{{ vendorSearchV.shown }} of {{ vendorSearchV.total }} vendors</span></sc-if>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-left:auto">
+              <button onClick="{{ vendorIoV.onExport }}" title="Every vendor and every field, as an Excel workbook" style="border:1px solid #cfd8e2;background:#fff;color:#4a5765;border-radius:8px;padding:9px 14px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap" style-hover="border-color:#15803d;color:#15803d">&#128202; Export Excel</button>
+              <sc-if value="{{ vendorIoV.canImport }}" hint-placeholder-val="{{ true }}"><label title="Add or update vendors from an Excel workbook (.xlsx) or .csv with the same headings as the export. A blank cell never erases anything; you see what will change before it does." style="display:inline-flex;align-items:center;border:1px solid #cfd8e2;background:#fff;color:#4a5765;border-radius:8px;padding:9px 14px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap" style-hover="border-color:#2b59c3;color:#2b59c3">&#11014; Import Excel<input type="file" accept=".xlsx,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv" onChange="{{ vendorIoV.onImport }}" style="display:none"></label></sc-if>
+            </div>
           </div>
           <div style="background:#fff;border:1px solid #e4e8ee;border-radius:12px;overflow:hidden">
             <div style="overflow-x:auto"><div style="min-width:1320px">
@@ -5798,6 +5802,23 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
   </sc-if>
 
   <!-- NEW VENDOR MODAL -->
+  <sc-if value="{{ vendorIoV.open }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ vendorIoV.onCancel }}" class="cpms-modal" style="position:fixed;inset:0;background:rgba(15,23,32,.42);display:flex;align-items:center;justify-content:center;z-index:50;animation:fadeUp .15s ease">
+      <div onClick="{{ stop }}" style="background:#fff;border-radius:14px;width:560px;max-width:92vw;box-shadow:0 24px 60px rgba(15,23,32,.28);overflow:hidden">
+        <div style="padding:18px 22px;border-bottom:1px solid #eef1f4"><div style="font-size:15px;font-weight:600;color:#0f1720">Import vendors</div><div style="font-size:13px;color:#6b7787;margin-top:2px;word-break:break-word">From {{ vendorIoV.fileName }} &middot; nothing changes until you import</div></div>
+        <div style="padding:18px 22px;display:flex;flex-direction:column;gap:13px;max-height:60vh;overflow-y:auto">
+          <sc-if value="{{ vendorIoV.hasAdds }}" hint-placeholder-val="{{ true }}"><div><div style="font-size:13px;font-weight:600;color:#15803d">&#65291; {{ vendorIoV.addText }}</div><div style="font-size:12px;color:#4a5765;margin-top:3px;line-height:1.5">{{ vendorIoV.addNames }}</div></div></sc-if>
+          <sc-if value="{{ vendorIoV.hasUpd }}" hint-placeholder-val="{{ true }}"><div><div style="font-size:13px;font-weight:600;color:#2b59c3">&#9998; {{ vendorIoV.updText }}</div><div style="font-size:12px;color:#4a5765;margin-top:3px;line-height:1.5">{{ vendorIoV.updNames }}</div></div></sc-if>
+          <sc-if value="{{ vendorIoV.hasRest }}" hint-placeholder-val="{{ false }}"><div style="font-size:12px;color:#6b7787">{{ vendorIoV.restText }}</div></sc-if>
+          <div style="font-size:12px;color:#6b7787;line-height:1.5;border-top:1px solid #eef1f4;padding-top:11px">Rows are matched to a vendor by ABN, then by company name. A blank cell never erases what the Directory holds, and no vendor is deleted.</div>
+        </div>
+        <div style="padding:15px 22px;border-top:1px solid #eef1f4;display:flex;flex-wrap:var(--cpms-wrap,nowrap);justify-content:flex-end;gap:10px">
+          <button onClick="{{ vendorIoV.onCancel }}" style="border:1px solid #cfd8e2;background:#fff;color:#4a5765;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Cancel</button>
+          <button onClick="{{ vendorIoV.onConfirm }}" style="border:0;background:#2b59c3;color:#fff;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="background:#244dab">Import</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
   <sc-if value="{{ vendorModal.open }}" hint-placeholder-val="{{ false }}">
     <div onClick="{{ onCloseVendorModal }}" style="position:fixed;inset:0;background:rgba(15,23,32,.42);display:flex;align-items:center;justify-content:center;z-index:50;animation:fadeUp .15s ease">
       <div onClick="{{ stop }}" style="background:#fff;border-radius:14px;width:520px;max-width:92vw;box-shadow:0 24px 60px rgba(15,23,32,.28);overflow:hidden">
@@ -8235,6 +8256,156 @@ class Component extends DCLogic {
     this.setState({ vendorModal: { editId: id }, vendorForm: { type: v.type || 'supplier', company: f('company'), rep: f('rep'), abn: f('abn'), phone: f('phone'), email: f('email'), address: f('address'), terms: f('terms'), bsb: f('bsb'), acct: f('acct') } });
   }
   openVendorModal() { this.setState({ vendorModal: { billId: null }, vendorForm: { type: 'supplier', company: '', rep: '', abn: '', phone: '', email: '', address: '' } }); }
+  // ---- Vendor directory: .xlsx export and import ----------------------------------------------------------------
+  _vendorCols() {
+    return [
+      { k: 'type', h: 'Type', w: 13, al: /^(vendor)?type$|^category$/ },
+      { k: 'company', h: 'Company', w: 32, al: /^(company|companyname|vendor|vendorname|supplier|suppliername|business|businessname|name|tradingname)$/ },
+      { k: 'abn', h: 'ABN', w: 16, al: /^abn$|^australianbusinessnumber$/ },
+      { k: 'rep', h: 'Representative', w: 22, al: /^(representative|rep|contactname|contactperson|contact)$/ },
+      { k: 'phone', h: 'Contact number', w: 18, al: /^(contactnumber|phone|phonenumber|mobile|mob|tel|telephone)$/ },
+      { k: 'email', h: 'Email', w: 30, al: /^(email|emailaddress|e-?mail)$/ },
+      { k: 'address', h: 'Address', w: 36, al: /^(address|streetaddress|postaladdress)$/ },
+      { k: 'terms', h: 'Payment terms (days)', w: 12, al: /^(paymentterms|paymenttermsdays|terms|termsdays|days)$/ },
+      { k: 'bsb', h: 'BSB', w: 11, al: /^bsb$/ },
+      { k: 'acct', h: 'Account number', w: 16, al: /^(accountnumber|accountno|account|acct|acctno|acctnumber)$/ },
+    ];
+  }
+  exportVendorsXlsx() {
+    const X = this._XS, cols = this._vendorCols();
+    const list = [...(this.state.vendors || [])].sort((a, b) => String(a.company || '').localeCompare(String(b.company || '')));
+    const head = cols.map(c => ({ v: c.h, s: X.th })).concat([{ v: 'Billed (incl. tax)', s: X.th }, { v: 'Commitments', s: X.th }, { v: 'Projects', s: X.th }]);
+    const rows = [head].concat(list.map(v => {
+      const st = this.vendorStats(v.id);
+      return cols.map(c => ({ v: c.k === 'type' ? this.vendorTypeLabel(v.type) : (v[c.k] == null ? '' : String(v[c.k])), s: X.val }))
+        .concat([{ n: Number(st.total) || 0, s: X.money }, { n: Number(st.count) || 0, s: X.val }, { n: Number(st.projects) || 0, s: X.val }]);
+    }));
+    this._xlsxDownload({ sheet: 'Vendors', cols: cols.map(c => c.w).concat([16, 13, 10]), rows, heights: { 1: 30 }, orientation: 'landscape',
+      filename: this._fileName('Vendor Directory', this.todayLocal(), 'xlsx', false) });
+  }
+  // The rows of the first sheet of an .xlsx, each a list of cell texts. A workbook is a zip of XML files.
+  _xlsxReadRows(buf) {
+    const u8 = new Uint8Array(buf);
+    const r16 = i => u8[i] | (u8[i + 1] << 8), r32 = i => (u8[i] | (u8[i + 1] << 8) | (u8[i + 2] << 16) | (u8[i + 3] << 24)) >>> 0;
+    let eocd = -1;
+    for (let i = u8.length - 22; i >= Math.max(0, u8.length - 70000); i--) { if (r32(i) === 0x06054b50) { eocd = i; break; } }
+    if (eocd < 0) return Promise.reject(new Error('not an xlsx'));
+    const n = r16(eocd + 10); let p = r32(eocd + 16);
+    const entries = {};
+    const dec = new TextDecoder('utf-8');
+    for (let k = 0; k < n; k++) {
+      if (r32(p) !== 0x02014b50) break;
+      const method = r16(p + 10), csize = r32(p + 20), nl = r16(p + 28), xl = r16(p + 30), cl = r16(p + 32), off = r32(p + 42);
+      entries[dec.decode(u8.subarray(p + 46, p + 46 + nl))] = { method, csize, off };
+      p += 46 + nl + xl + cl;
+    }
+    const read = name => {
+      const e = entries[name]; if (!e) return Promise.resolve('');
+      const start = e.off + 30 + r16(e.off + 26) + r16(e.off + 28);
+      const data = u8.subarray(start, start + e.csize);
+      if (e.method === 0) return Promise.resolve(dec.decode(data));
+      if (e.method !== 8 || typeof DecompressionStream === 'undefined') return Promise.reject(new Error('compression'));
+      const stream = new Blob([data]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
+      return new Response(stream).arrayBuffer().then(ab => dec.decode(new Uint8Array(ab)));
+    };
+    const unx = t => String(t || '').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&apos;/g, "'")
+      .replace(/&#x([0-9a-fA-F]+);/g, (m, h) => String.fromCodePoint(parseInt(h, 16))).replace(/&#(\d+);/g, (m, d) => String.fromCodePoint(Number(d))).replace(/&amp;/g, '&');
+    const texts = x => { const out = []; const re = /<t(?:\s[^>]*)?>([\s\S]*?)<\/t>/g; let m; while ((m = re.exec(x))) out.push(unx(m[1])); return out.join(''); };
+    return Promise.all([read('xl/workbook.xml'), read('xl/_rels/workbook.xml.rels'), read('xl/sharedStrings.xml')]).then(([wb, rels, ss]) => {
+      const shared = []; const reSi = /<si>([\s\S]*?)<\/si>/g; let m;
+      while ((m = reSi.exec(ss))) shared.push(texts(m[1]));
+      // the first sheet as the workbook lists it, which need not be sheet1.xml
+      let target = 'xl/worksheets/sheet1.xml';
+      const first = /<sheet\b[^>]*\br:id="([^"]+)"/.exec(wb);
+      if (first) { const rel = new RegExp('<Relationship\\b[^>]*\\bId="' + first[1] + '"[^>]*\\bTarget="([^"]+)"').exec(rels) || new RegExp('<Relationship\\b[^>]*\\bTarget="([^"]+)"[^>]*\\bId="' + first[1] + '"').exec(rels);
+        if (rel) target = rel[1].replace(/^\//, '').replace(/^(?!xl\/)/, 'xl/'); }
+      return read(target).then(sheet => {
+        const rows = []; const reRow = /<row\b[^>]*>([\s\S]*?)<\/row>/g; let r;
+        while ((r = reRow.exec(sheet))) {
+          const cells = []; const reC = /<c\b([^>]*?)(?:\/>|>([\s\S]*?)<\/c>)/g; let c, idx = 0;
+          while ((c = reC.exec(r[1]))) {
+            const ref = /\br="([A-Z]+)\d+"/.exec(c[1]);
+            if (ref) { idx = 0; for (const ch of ref[1]) idx = idx * 26 + (ch.charCodeAt(0) - 64); idx -= 1; }
+            const t = (/\bt="([^"]+)"/.exec(c[1]) || [])[1] || '';
+            const body = c[2] || '';
+            const v = (/<v>([\s\S]*?)<\/v>/.exec(body) || [])[1];
+            cells[idx] = t === 's' ? (shared[Number(v)] || '') : (t === 'inlineStr' ? texts(body) : unx(v == null ? '' : v));
+            idx++;
+          }
+          rows.push(Array.from(cells, x => (x == null ? '' : String(x))));
+        }
+        return rows;
+      });
+    });
+  }
+  _csvRows(text) {
+    const rows = []; let row = [], cell = '', q = false; const t = String(text || '').replace(/^\ufeff/, '');
+    for (let i = 0; i < t.length; i++) {
+      const ch = t[i];
+      if (q) { if (ch === '"') { if (t[i + 1] === '"') { cell += '"'; i++; } else q = false; } else cell += ch; continue; }
+      if (ch === '"') q = true; else if (ch === ',') { row.push(cell); cell = ''; }
+      else if (ch === '\n' || ch === '\r') { if (ch === '\r' && t[i + 1] === '\n') i++; row.push(cell); rows.push(row); row = []; cell = ''; }
+      else cell += ch;
+    }
+    if (cell || row.length) { row.push(cell); rows.push(row); }
+    return rows;
+  }
+  // What an import would do, worked out before anything changes.
+  _vendorImportPlan(rows) {
+    const cols = this._vendorCols();
+    const norm = h => String(h || '').toLowerCase().replace(/\(.*?\)/g, '').replace(/[^a-z-]/g, '');
+    let hr = -1, map = {};
+    for (let i = 0; i < Math.min(6, rows.length); i++) {
+      const m = {}; (rows[i] || []).forEach((h, ci) => { const c = cols.find(x => x.al.test(norm(h))); if (c && m[c.k] == null) m[c.k] = ci; });
+      if (m.company != null) { hr = i; map = m; break; }
+    }
+    if (hr < 0) return { error: 'No Company column was found. The first row should hold the headings: Company, ABN, Representative, Contact number, Email, Address and so on - the layout Export gives.' };
+    const digits = x => String(x || '').replace(/\D/g, '');
+    const typeOf = x => { const t = String(x || '').toLowerCase(); return /contract|sub/.test(t) ? 'contractor' : (/serv/.test(t) ? 'service' : (/suppl|material/.test(t) ? 'supplier' : '')); };
+    const list = this.state.vendors || [];
+    const plan = { adds: [], updates: [], unchanged: 0, skipped: 0, rows: 0 };
+    const fresh = {};
+    rows.slice(hr + 1).forEach(r => {
+      const cell = k => (map[k] == null ? '' : String((r || [])[map[k]] == null ? '' : r[map[k]]).trim());
+      if (!(r || []).some(x => String(x == null ? '' : x).trim())) return;
+      plan.rows++;
+      const company = cell('company');
+      if (!company) { plan.skipped++; return; }
+      const f = {};
+      cols.forEach(c => { if (c.k === 'type') { const t = typeOf(cell('type')); if (t) f.type = t; } else { const v = cell(c.k); if (v) f[c.k] = v; } });
+      if (f.terms) f.terms = digits(f.terms).slice(0, 3);
+      const abn = digits(f.abn);
+      const key = abn.length >= 9 ? 'abn:' + abn : 'co:' + company.toLowerCase();
+      if (fresh[key]) { Object.assign(fresh[key], f); return; }
+      const hit = (abn.length >= 9 && list.find(v => digits(v.abn) === abn)) || list.find(v => String(v.company || '').trim().toLowerCase() === company.toLowerCase());
+      if (!hit) { const v = Object.assign({ id: '', type: 'supplier', company, rep: '', abn: '', phone: '', email: '', address: '', terms: '', bsb: '', acct: '' }, f); fresh[key] = v; plan.adds.push(v); return; }
+      const patch = {};
+      Object.keys(f).forEach(k => { if (String(hit[k] == null ? '' : hit[k]).trim() !== f[k]) patch[k] = f[k]; });
+      if (Object.keys(patch).length) { const u = { id: hit.id, company: hit.company, patch }; fresh[key] = patch; plan.updates.push(u); } else plan.unchanged++;
+    });
+    return plan;
+  }
+  importVendorsFile(file) {
+    if (!file) return;
+    if (!this.can('directory', 'edit')) { this._say('Importing vendors needs edit access to the Directory.'); return; }
+    const isCsv = /\.csv$/i.test(file.name || '') || /csv/.test(file.type || '');
+    const reader = isCsv ? this._apReadText(file).then(t => this._csvRows(t)) : this._apReadBuffer(file).then(b => (b ? this._xlsxReadRows(b) : []));
+    reader.then(rows => {
+      const plan = this._vendorImportPlan(rows || []);
+      if (plan.error) { this._say(plan.error); return; }
+      if (!plan.adds.length && !plan.updates.length) { this._say('Nothing to import from \u201c' + (file.name || 'that file') + '\u201d: every row already matches the Directory' + (plan.skipped ? ', and ' + this._pl(plan.skipped, 'row') + ' had no company name' : '') + '.'); return; }
+      this.setState({ vendorImport: Object.assign({ fileName: file.name || '' }, plan) });
+    }).catch(() => this._say('That file could not be read as a spreadsheet. Save it from Excel as .xlsx (or .csv) and try again.'));
+  }
+  confirmVendorImport() {
+    const plan = this.state.vendorImport; if (!plan) return;
+    const stamp = Date.now().toString(36);
+    const adds = plan.adds.map((v, i) => Object.assign({}, v, { id: 'v' + stamp + i }));
+    const ups = {}; plan.updates.forEach(u => { ups[u.id] = u.patch; });
+    this._commitVendors(list => list.map(v => (ups[v.id] ? Object.assign({}, v, ups[v.id]) : v)).concat(adds));
+    this.setState({ vendorImport: null });
+    this._say('Imported: ' + this._pl(adds.length, 'vendor') + ' added, ' + this._pl(plan.updates.length, 'vendor') + ' updated.');
+  }
   vendorStats(id) {
     let count = 0, total = 0, projs = new Set();
     this.state.projects.forEach(p => (p.bills || []).forEach(b => { if (b.vendorId === id) { count++; total += this.billTotal(b); projs.add(p.id); } }));
@@ -23521,6 +23692,18 @@ class Component extends DCLogic {
         fg2: _commitTab === t.key ? '#0f1720' : '#6b7787',
         underline: _commitTab === t.key ? '#2b59c3' : 'transparent' })),
       coName: this._coName(), favBarV, billRows, billTotals, billSearchV, billFilterV, vendorPickList: this._vendorPickList(), paymentsViewV, onAddBill: () => this.addBill(),
+      vendorIoV: (() => { const vi = S.vendorImport; return {
+        canImport: this.can('directory', 'edit'), onExport: () => this.exportVendorsXlsx(),
+        onImport: e => { const f = e.target.files && e.target.files[0]; e.target.value = ''; this.importVendorsFile(f); },
+        open: !!vi, fileName: vi ? vi.fileName : '',
+        addText: vi ? this._pl(vi.adds.length, 'new vendor') : '', hasAdds: !!(vi && vi.adds.length),
+        addNames: vi ? vi.adds.slice(0, 8).map(v => v.company).join(', ') + (vi.adds.length > 8 ? ' and ' + (vi.adds.length - 8) + ' more' : '') : '',
+        updText: vi ? this._pl(vi.updates.length, 'vendor') + ' filled in or corrected' : '', hasUpd: !!(vi && vi.updates.length),
+        updNames: vi ? vi.updates.slice(0, 8).map(u => u.company + ' (' + Object.keys(u.patch).map(k => ({ type: 'type', company: 'name', abn: 'ABN', rep: 'representative', phone: 'contact', email: 'email', address: 'address', terms: 'terms', bsb: 'BSB', acct: 'account' }[k] || k)).join(', ') + ')').join('; ') + (vi.updates.length > 8 ? '; and ' + (vi.updates.length - 8) + ' more' : '') : '',
+        restText: vi ? [vi.unchanged ? this._pl(vi.unchanged, 'row') + ' already the same' : '', vi.skipped ? this._pl(vi.skipped, 'row') + ' skipped - no company name' : ''].filter(Boolean).join(' · ') : '',
+        hasRest: !!(vi && (vi.unchanged || vi.skipped)),
+        onConfirm: () => this.confirmVendorImport(), onCancel: () => this.setState({ vendorImport: null }),
+      }; })(),
       vendorModal: S.vendorModal ? Object.assign({ open: true, terms: '', bsb: '', acct: '' }, S.vendorForm, S.vendorModal.editId
         ? { title: 'Edit vendor', sub: 'Changes apply everywhere this vendor is used', saveLabel: 'Save changes' }
         : { title: 'New vendor', sub: 'Saved to the vendor directory and selected where you opened this', saveLabel: 'Save vendor' }) : { open: false },
