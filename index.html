@@ -2258,7 +2258,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
             <div style="background:#fff;border:1px solid #e4e8ee;border-radius:12px;overflow:hidden">
               <div style="overflow-x:auto"><div style="min-width:2000px">
                 <div class="colhdr dark" style="display:grid;grid-template-columns:84px 1.4fr 116px 104px 124px 132px 132px 132px 140px 168px 176px 156px;padding:11px 16px;background:#2A3580;border-bottom:1px solid #e4e8ee;font-size:11px;font-weight:600;letter-spacing:.3px;color:#fff;text-transform:uppercase;gap:10px">
-                  <div>Variation</div><div>Subject &amp; description</div><div style="text-align:right">Budget</div><div style="text-align:right">GST</div><div style="text-align:right">Total incl. GST</div><div>Start date</div><div style="text-align:right">Time delay</div><div>Finish date</div><div style="text-align:center">Status</div><div>Linked cost code</div><div>Client response</div><div style="text-align:right;position:sticky;right:0;background:#fafbfc;padding-left:6px">Actions</div>
+                  <div>Variation</div><div>Subject &amp; description</div><div style="text-align:right">Budget</div><div style="text-align:right">GST</div><div style="text-align:right">Total incl. GST</div><div>Start date</div><div style="text-align:right">Time delay</div><div>Finish date</div><div style="text-align:center">Status</div><div>Linked cost code</div><div>Client response</div><div style="text-align:right;position:sticky;right:0;background:#2A3580;padding-left:6px">Actions</div>
                 </div>
                 <sc-for list="{{ budgetVarRows }}" as="v" hint-placeholder-count="3">
                   <div style="display:grid;grid-template-columns:84px 1.4fr 116px 104px 124px 132px 132px 132px 140px 168px 176px 156px;padding:9px 16px;border-bottom:1px solid #eef1f4;align-items:center;gap:10px" style-hover="background:#f9fafc">
@@ -2267,7 +2267,7 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
                       <input value="{{ v.subject }}" onInput="{{ v.onSubject }}" placeholder="Subject" title="A short name for the variation" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 8px;font-size:12px;font-weight:600;font-family:inherit;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none">
                       <textarea value="{{ v.desc }}" onInput="{{ v.onDesc }}" placeholder="Describe the variation" rows="3" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 8px;font-size:12px;line-height:1.45;font-family:inherit;color:#0f1720;background:#fff;resize:vertical" style-focus="border-color:#2b59c3;outline:none"></textarea>
                     </div>
-                    <div><input value="{{ v.valueInput }}" onInput="{{ v.onValue }}" onFocus="{{ v.onValueFocus }}" onBlur="{{ v.onValueBlur }}" inputmode="decimal" placeholder="0.00" title="Budget impact in dollars — you can type 3,400 or $3,400.00" class="mono" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 8px;font-size:12px;text-align:right;font-family:'IBM Plex Mono',monospace;color:{{ v.valColor }};background:#fff" style-focus="border-color:#2b59c3;outline:none"><sc-if value="{{ v.hasValue }}" hint-placeholder-val="{{ true }}"><div class="mono" style="font-size:11px;font-weight:600;text-align:right;color:{{ v.valColor }};margin-top:3px">{{ v.valueFmt }}</div></sc-if></div>
+                    <div><button onClick="{{ v.onBuild }}" title="Open the budget: build it up from trade costs, or enter one figure" class="mono" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 8px;font-size:12px;text-align:right;font-family:'IBM Plex Mono',monospace;color:{{ v.valColor }};background:#fff;cursor:pointer" style-hover="border-color:#2b59c3">{{ v.valueBtn }}</button><button onClick="{{ v.onBuild }}" style="display:block;margin:3px 0 0 auto;border:0;background:transparent;padding:0;font-size:11px;font-weight:600;color:#2b59c3;cursor:pointer;font-family:inherit">{{ v.buildLabel }}</button></div>
                     <div class="mono" style="text-align:right;font-size:12px;color:#4a5765">{{ v.gstFmt }}<span style="display:block;font-size:11px;color:#6b7787">{{ v.gstLabel }}</span></div>
                     <div class="mono" style="text-align:right;font-size:13px;font-weight:700;color:#0f1720">{{ v.totalFmt }}</div>
                     <input value="{{ v.startDate }}" onInput="{{ v.onStart }}" type="date" title="Start date" class="mono" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 6px;font-size:11px;font-family:'IBM Plex Mono',monospace;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none">
@@ -5802,6 +5802,48 @@ window.CUBIC_LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAArwAAAGyCAYAAAA
   </sc-if>
 
   <!-- NEW VENDOR MODAL -->
+  <sc-if value="{{ varBuildV.open }}" hint-placeholder-val="{{ false }}">
+    <datalist id="varTradeList"><option value="Demolition"></option><option value="Excavation"></option><option value="Concreter"></option><option value="Formwork"></option><option value="Steel fixer"></option><option value="Bricklayer"></option><option value="Blocklayer"></option><option value="Carpenter"></option><option value="Structural steel"></option><option value="Roofer"></option><option value="Plumber"></option><option value="Drainer"></option><option value="Electrician"></option><option value="Mechanical"></option><option value="Fire services"></option><option value="Waterproofer"></option><option value="Tiler"></option><option value="Plasterer"></option><option value="Painter"></option><option value="Glazier"></option><option value="Joiner"></option><option value="Floor finishes"></option><option value="Landscaping"></option><option value="Labourer"></option><option value="Materials"></option><option value="Plant hire"></option><option value="Crane"></option><option value="Scaffold"></option><option value="Waste removal"></option><option value="Engineer"></option><option value="Certifier"></option><option value="Preliminaries"></option><option value="Supervision"></option></datalist>
+    <div onClick="{{ varBuildV.onClose }}" class="cpms-modal" style="position:fixed;inset:0;background:rgba(15,23,32,.42);display:flex;align-items:center;justify-content:center;z-index:50;animation:fadeUp .15s ease">
+      <div onClick="{{ stop }}" style="background:#fff;border-radius:14px;width:880px;max-width:96vw;max-height:92vh;display:flex;flex-direction:column;box-shadow:0 24px 60px rgba(15,23,32,.28);overflow:hidden">
+        <div style="padding:18px 22px;border-bottom:1px solid #eef1f4"><div style="font-size:15px;font-weight:600;color:#0f1720">Variation budget &middot; <span class="mono">{{ varBuildV.ref }}</span> {{ varBuildV.title }}</div><div style="font-size:13px;color:#6b7787;margin-top:2px">Build it up from trade costs, or enter one figure. All before GST.</div></div>
+        <div style="padding:16px 22px;overflow-y:auto;display:flex;flex-direction:column;gap:10px">
+          <div class="colhdr" style="display:grid;grid-template-columns:var(--cpms-stack,1.1fr 1.6fr 64px 64px 104px 112px 28px);gap:8px;align-items:center;font-size:11px;font-weight:600;letter-spacing:.3px;text-transform:uppercase;color:#6b7787;padding:0 0 2px"><div>Trade</div><div>Description</div><div style="text-align:right">Qty</div><div>Unit</div><div style="text-align:right">Rate</div><div style="text-align:right">Amount</div><div></div></div>
+          <sc-for list="{{ varBuildV.lines }}" as="l" hint-placeholder-count="3">
+            <div style="display:grid;grid-template-columns:var(--cpms-stack,1.1fr 1.6fr 64px 64px 104px 112px 28px);gap:8px;align-items:center">
+              <input list="varTradeList" value="{{ l.trade }}" onInput="{{ l.onTrade }}" readOnly="{{ varBuildV.readOnly }}" placeholder="Trade" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 8px;font-size:12px;font-family:inherit;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none">
+              <input value="{{ l.desc }}" onInput="{{ l.onDesc }}" readOnly="{{ varBuildV.readOnly }}" placeholder="What is included" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 8px;font-size:12px;font-family:inherit;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none">
+              <input value="{{ l.qty }}" onInput="{{ l.onQty }}" readOnly="{{ varBuildV.readOnly }}" placeholder="1" class="mono" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 8px;font-size:12px;font-family:'IBM Plex Mono',monospace;color:#0f1720;background:#fff;text-align:right" style-focus="border-color:#2b59c3;outline:none">
+              <input value="{{ l.unit }}" onInput="{{ l.onUnit }}" readOnly="{{ varBuildV.readOnly }}" placeholder="unit" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 8px;font-size:12px;font-family:inherit;color:#0f1720;background:#fff" style-focus="border-color:#2b59c3;outline:none">
+              <input value="{{ l.rate }}" onInput="{{ l.onRate }}" readOnly="{{ varBuildV.readOnly }}" placeholder="0.00" class="mono" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 8px;font-size:12px;font-family:'IBM Plex Mono',monospace;color:#0f1720;background:#fff;text-align:right" style-focus="border-color:#2b59c3;outline:none">
+              <div class="mono" style="text-align:right;font-size:12.5px;font-weight:600;color:#0f1720">{{ l.amount }}</div>
+              <sc-if value="{{ varBuildV.canEdit }}" hint-placeholder-val="{{ true }}"><button onClick="{{ l.onRemove }}" title="Remove this line" style="border:0;background:transparent;color:#c0c8d1;cursor:pointer;font-size:14px;padding:2px" style-hover="color:#b91c1c">&#10005;</button></sc-if>
+            </div>
+          </sc-for>
+          <sc-if value="{{ varBuildV.canEdit }}" hint-placeholder-val="{{ true }}"><div><button onClick="{{ varBuildV.onAdd }}" style="border:1px dashed #2b59c3;background:#f2f6fd;color:#2b59c3;border-radius:8px;padding:7px 14px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="background:#e8eefc">&#65291; Add trade line</button></div></sc-if>
+          <sc-if value="{{ varBuildV.noLines }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;border-top:1px solid #eef1f4;padding-top:12px"><span style="font-size:13px;color:#4a5765">Or one figure for the whole variation</span><div style="width:170px"><input value="{{ varBuildV.lump }}" onInput="{{ varBuildV.onLump }}" readOnly="{{ varBuildV.readOnly }}" placeholder="0.00" class="mono" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 8px;font-size:12px;font-family:'IBM Plex Mono',monospace;color:#0f1720;background:#fff;text-align:right;font-size:13px" style-focus="border-color:#2b59c3;outline:none"></div></div>
+          </sc-if>
+          <div style="display:flex;justify-content:flex-end;border-top:1px solid #eef1f4;padding-top:12px">
+            <div style="width:320px;max-width:100%;display:flex;flex-direction:column;gap:6px;font-size:13px">
+              <sc-if value="{{ varBuildV.usesLines }}" hint-placeholder-val="{{ true }}">
+                <div style="display:flex;justify-content:space-between;color:#4a5765"><span>Trade costs</span><span class="mono">{{ varBuildV.sub }}</span></div>
+                <div style="display:flex;justify-content:space-between;align-items:center;color:#4a5765;gap:10px"><span style="display:flex;align-items:center;gap:6px">Margin <span style="width:64px;display:inline-block"><input value="{{ varBuildV.marginPct }}" onInput="{{ varBuildV.onMargin }}" readOnly="{{ varBuildV.readOnly }}" placeholder="0" class="mono" style="width:100%;border:1px solid #e4e8ee;border-radius:6px;padding:6px 8px;font-size:12px;font-family:'IBM Plex Mono',monospace;color:#0f1720;background:#fff;text-align:right" style-focus="border-color:#2b59c3;outline:none"></span> %</span><span class="mono">{{ varBuildV.margin }}</span></div>
+              </sc-if>
+              <div style="display:flex;justify-content:space-between;font-weight:700;color:#0f1720;border-top:1px solid #eef1f4;padding-top:7px"><span>Budget (before GST)</span><span class="mono">{{ varBuildV.net }}</span></div>
+              <div style="display:flex;justify-content:space-between;color:#6b7787"><span>{{ varBuildV.gstLabel }}</span><span class="mono">{{ varBuildV.gst }}</span></div>
+              <div style="display:flex;justify-content:space-between;color:#0f1720;font-weight:600"><span>Total incl. GST</span><span class="mono">{{ varBuildV.total }}</span></div>
+            </div>
+          </div>
+          <sc-if value="{{ varBuildV.hasApprovedNote }}" hint-placeholder-val="{{ false }}"><div style="font-size:12px;color:#b45309;background:#fdf6ec;border:1px solid #f2e4cf;border-radius:8px;padding:8px 11px">{{ varBuildV.approvedNote }}</div></sc-if>
+        </div>
+        <div style="padding:15px 22px;border-top:1px solid #eef1f4;display:flex;flex-wrap:var(--cpms-wrap,nowrap);justify-content:flex-end;gap:10px">
+          <button onClick="{{ varBuildV.onClose }}" style="border:1px solid #cfd8e2;background:#fff;color:#4a5765;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Cancel</button>
+          <sc-if value="{{ varBuildV.canEdit }}" hint-placeholder-val="{{ true }}"><button onClick="{{ varBuildV.onSave }}" style="border:0;background:#2b59c3;color:#fff;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit" style-hover="background:#244dab">Save budget</button></sc-if>
+        </div>
+      </div>
+    </div>
+  </sc-if>
   <sc-if value="{{ vendorIoV.open }}" hint-placeholder-val="{{ false }}">
     <div onClick="{{ vendorIoV.onCancel }}" class="cpms-modal" style="position:fixed;inset:0;background:rgba(15,23,32,.42);display:flex;align-items:center;justify-content:center;z-index:50;animation:fadeUp .15s ease">
       <div onClick="{{ stop }}" style="background:#fff;border-radius:14px;width:560px;max-width:92vw;box-shadow:0 24px 60px rgba(15,23,32,.28);overflow:hidden">
@@ -8452,6 +8494,36 @@ class Component extends DCLogic {
   lineVarAdj(l, p) { const proj = p || this.proj(this.state.pid) || {}; const vars = this._varEvery(proj); return vars.reduce((s, v) => s + ((v.status === 'approved' && v.costCode && v.costCode === l.code) ? this._num(v.value) : 0), 0); }
   lineCurrent(l, p) { return (Number(l.orig) || 0) + (Number(l.adj) || 0) + this.lineVarAdj(l, p); }
   setVariationCostCode(vid, code) { if (!this.can('variations', 'edit')) return; this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : this._varPatch(p, vid, v => ({ ...v, costCode: code }))) })); }
+  // ---- a variation's budget, built up from trade costs ---------------------------------------------------------
+  _varBuildTotals(b) {
+    const lines = (b && b.lines) || [];
+    const amt = l => { const q = String(l.qty == null ? '' : l.qty).trim(); return this._r2((q === '' ? 1 : this._num(q)) * this._num(l.rate)); };
+    const sub = this._r2(lines.reduce((t, l) => t + amt(l), 0));
+    const m = this._num(b && b.marginPct);
+    const margin = this._r2(sub * m / 100);
+    return { amt, sub, margin, total: this._r2(sub + margin), used: lines.some(l => String(l.rate == null ? '' : l.rate).trim() !== '' || String(l.trade || l.desc || '').trim() !== '') };
+  }
+  openVarBuild(vid) {
+    const p = this.proj(this.state.pid); const v = p && this._findVariation(p, vid); if (!v) return;
+    const bu = v.buildUp || {};
+    const lines = (bu.lines || []).map(l => Object.assign({ id: this._rid('vb') }, l));
+    this.setState({ varBuild: { vid, lines: lines.length ? lines : [{ id: this._rid('vb'), trade: '', desc: '', qty: '', unit: '', rate: '' }],
+      marginPct: bu.marginPct == null ? '' : String(bu.marginPct), lump: lines.length ? '' : (v.value == null ? '' : String(v.value)) } });
+  }
+  setVarBuild(k, val) { this.setState(s => s.varBuild ? { varBuild: Object.assign({}, s.varBuild, { [k]: val }) } : {}); }
+  setVarBuildLine(i, k, val) { this.setState(s => s.varBuild ? { varBuild: Object.assign({}, s.varBuild, { lines: s.varBuild.lines.map((l, j) => j === i ? Object.assign({}, l, { [k]: val }) : l) }) } : {}); }
+  addVarBuildLine() { this.setState(s => s.varBuild ? { varBuild: Object.assign({}, s.varBuild, { lines: s.varBuild.lines.concat([{ id: this._rid('vb'), trade: '', desc: '', qty: '', unit: '', rate: '' }]) }) } : {}); }
+  removeVarBuildLine(i) { this.setState(s => s.varBuild ? { varBuild: Object.assign({}, s.varBuild, { lines: s.varBuild.lines.filter((l, j) => j !== i) }) } : {}); }
+  saveVarBuild() {
+    const b = this.state.varBuild; if (!b || !this.can('variations', 'edit')) return;
+    const keep = (b.lines || []).filter(l => ['trade', 'desc', 'qty', 'unit', 'rate'].some(k => String(l[k] == null ? '' : l[k]).trim() !== ''))
+      .map(l => ({ trade: String(l.trade || '').trim(), desc: String(l.desc || '').trim(), qty: String(l.qty == null ? '' : l.qty).trim(), unit: String(l.unit || '').trim(), rate: String(l.rate == null ? '' : l.rate).trim() }));
+    const t = this._varBuildTotals({ lines: keep, marginPct: b.marginPct });
+    const patch = keep.length
+      ? { value: t.total, buildUp: { lines: keep, marginPct: String(b.marginPct == null ? '' : b.marginPct).trim() } }
+      : { value: String(b.lump == null ? '' : b.lump).trim() === '' ? '' : this._r2(this._num(b.lump)), buildUp: null };
+    this.setState(s => ({ varBuild: null, projects: s.projects.map(p => p.id !== s.pid ? p : this._varPatch(p, b.vid, v => Object.assign({}, v, patch))) }));
+  }
   setVariationField(vid, field, val) { if (!this.can('variations', 'edit')) return; this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : this._varPatch(p, vid, v => ({ ...v, [field]: val }))) })); }
   // 'cost' for the Financial register (VAR-001), anything else for the client's (VO-001).
   addVariation(reg) {
@@ -21995,6 +22067,9 @@ class Component extends DCLogic {
           ref: v.ref, desc: v.desc || '', valueInput: this._mdisp(v.id + ":value", v.value), onValueFocus: () => this.startEdit(v.id + ":value"), onValueBlur: () => this.endEdit(),
           valColor: this._num(v.value) < 0 ? '#b91c1c' : '#0f1720',
           valueFmt: this.money(this._num(v.value)), hasValue: String(v.value == null ? '' : v.value).trim() !== '',
+          valueBtn: String(v.value == null ? '' : v.value).trim() !== '' ? this.money(this._num(v.value)) : 'Enter budget',
+          buildLabel: ((v.buildUp && v.buildUp.lines) || []).length ? this._pl(v.buildUp.lines.length, 'trade line') + ' \u203a' : 'Build up \u203a',
+          onBuild: () => this.openVarBuild(v.id),
           timeInput: String(v.time == null ? '' : v.time), hasTime: timeDays !== 0, timeLabel: (timeDays > 0 ? '+' : '') + timeDays + 'd',
           startDate: v.startDate || '', finishDate: this.fmtDate(this.addWorkingDays(v.startDate, timeDays, p)), hasFinish: !!this.addWorkingDays(v.startDate, timeDays, p),
           statusLabel: sm.label, statusColor: sm.color, statusBg: sm.bg, approved,
@@ -23703,6 +23778,29 @@ class Component extends DCLogic {
         fg2: _commitTab === t.key ? '#0f1720' : '#6b7787',
         underline: _commitTab === t.key ? '#2b59c3' : 'transparent' })),
       coName: this._coName(), favBarV, billRows, billTotals, billSearchV, billFilterV, vendorPickList: this._vendorPickList(), paymentsViewV, onAddBill: () => this.addBill(),
+      varBuildV: (() => {
+        const b = S.varBuild; if (!b) return { open: false };
+        const p0 = this.proj(S.pid); const v = p0 && this._findVariation(p0, b.vid); if (!v) return { open: false };
+        const can = this.can('variations', 'edit');
+        const t = this._varBuildTotals(b);
+        const rate = this._num(p0.gstRate);
+        const net = t.used ? t.total : this._r2(this._num(b.lump));
+        const gst = this._r2(net * rate / 100);
+        return { open: true, ref: v.ref || '', title: v.subject || v.desc || 'Variation', canEdit: can, readOnly: !can,
+          lines: b.lines.map((l, i) => ({ trade: l.trade || '', desc: l.desc || '', qty: l.qty == null ? '' : String(l.qty), unit: l.unit || '', rate: l.rate == null ? '' : String(l.rate),
+            amount: this.money(t.amt(l)),
+            onTrade: e => this.setVarBuildLine(i, 'trade', e.target.value), onDesc: e => this.setVarBuildLine(i, 'desc', e.target.value),
+            onQty: e => this.setVarBuildLine(i, 'qty', e.target.value), onUnit: e => this.setVarBuildLine(i, 'unit', e.target.value),
+            onRate: e => this.setVarBuildLine(i, 'rate', e.target.value), onRemove: () => this.removeVarBuildLine(i) })),
+          onAdd: () => this.addVarBuildLine(),
+          usesLines: t.used, noLines: !t.used,
+          lump: b.lump == null ? '' : String(b.lump), onLump: e => this.setVarBuild('lump', e.target.value),
+          marginPct: b.marginPct == null ? '' : String(b.marginPct), onMargin: e => this.setVarBuild('marginPct', e.target.value),
+          sub: this.money(t.sub), margin: this.money(t.margin), hasMargin: t.margin !== 0,
+          net: this.money(net), gstLabel: 'GST ' + rate + '%', gst: this.money(gst), total: this.money(this._r2(net + gst)),
+          approvedNote: v.status === 'approved' ? 'This variation is approved - changing its budget changes the contract value and the linked budget line.' : '', hasApprovedNote: v.status === 'approved',
+          onSave: () => this.saveVarBuild(), onClose: () => this.setState({ varBuild: null }) };
+      })(),
       vendorIoV: (() => { const vi = S.vendorImport; return {
         canImport: this.can('directory', 'edit'), onExport: () => this.exportVendorsXlsx(),
         onImport: e => { const f = e.target.files && e.target.files[0]; e.target.value = ''; this.importVendorsFile(f); },
