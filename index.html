@@ -6602,6 +6602,10 @@ class Component extends DCLogic {
     if (!recs.length) return this._r2(Math.max(0, Math.min(b ? Math.max(0, this.billTotal(b)) : 0, this._num(b && b.paid))));
     return this._r2(Math.min(this.billTotal(b), recs.reduce((a, r) => a + this._num(r.amount), 0)));
   }
+  // A bill as the budget counts it: before GST. What was paid is cash, GST and all, so its share before GST is the
+  // bill's own proportion - a bill paid in full counts its whole amount, half paid counts half.
+  billNet(b) { return this._r2(this._num(b && b.amount)); }
+  billPaidNet(b) { const t = this.billTotal(b), pd = this.billPaid(b); if (!pd) return 0; if (Math.abs(t) < 0.005) return 0; return this._r2(Math.abs(pd - t) < 0.005 ? this.billNet(b) : pd * this.billNet(b) / t); }
   billOutstanding(b) { return this._r2(Math.max(0, this.billTotal(b) - this.billPaid(b))); }
   billStatusFor(b) {
     const t = this.billTotal(b), pd = this.billPaid(b);
@@ -8231,8 +8235,9 @@ class Component extends DCLogic {
   // hand where there are none - plus the labour hours posted to the line.
   lineCommitted(l, p) {
     const proj = p || this.proj(this.state.pid) || {};
-    const fromBills = this.lineBills(l, proj).reduce((sum, b) => sum + this.billTotal(b), 0);
-    const fromClaims = this._lineClaimsUnbilled(l, proj).reduce((sum, c) => sum + this.claimTotal(c), 0);
+    // before GST, like the budget it is measured against
+    const fromBills = this.lineBills(l, proj).reduce((sum, b) => sum + this.billNet(b), 0);
+    const fromClaims = this._lineClaimsUnbilled(l, proj).reduce((sum, c) => sum + this.claimNet(c), 0);
     const total = fromBills + fromClaims;
     // Labour hours posted to this line are cost committed as well as spent, so they count here exactly as they count
     // in lineActual: on top of the commitments and claims, or of the manual figure where there are none.
@@ -8423,7 +8428,7 @@ class Component extends DCLogic {
     const paid = this.lineActualPaid(l, proj), lab = this.lineLabourCost(l, proj);
     const typed = Number(l.actual) || 0;
     const parts = [];
-    if (paid > 0) parts.push(this.money(paid) + ' paid on commitments and claims against this cost code');
+    if (paid > 0) parts.push(this.money(paid) + ' paid on commitments and claims against this cost code, before GST');
     else if (typed > 0) parts.push(this.money(typed) + ' entered by hand');
     if (lab > 0) parts.push(this.money(lab) + ' of hours recorded on Labour hours');
     return parts.length ? parts.join(', plus ') + '.' : 'Nothing recorded against this cost code yet.';
@@ -9433,12 +9438,12 @@ class Component extends DCLogic {
     (p.bills || []).forEach(b => {
       if (b.fromClaim || b.claimId) return;                 // the claim carries this money
       const n = dnum(b.billDate); if (n == null) return;
-      const paid = this.billPaid(b); if (paid > 0) paidEvents.push({ n, v: paid });
-      const tot = this.billTotal(b); if (tot > 0) commitEvents.push({ n, v: tot });
+      const paid = this.billPaidNet(b); if (paid > 0) paidEvents.push({ n, v: paid });
+      const tot = this.billNet(b); if (tot > 0) commitEvents.push({ n, v: tot });
     });
     (p.claims || []).forEach(c => {
       const sub = dnum(c.submitted), pd = dnum(c.paidDate || c.paidOn) || sub;
-      const tot = this.claimTotal(c);
+      const tot = this.claimNet(c);
       if (tot <= 0) return;
       if (sub != null) commitEvents.push({ n: sub, v: tot });
       if (c.status === 'paid' && pd != null) paidEvents.push({ n: pd, v: tot });
@@ -11113,7 +11118,7 @@ class Component extends DCLogic {
     if (!p || !c) return null;
     const line = (p.costLines || []).find(l => String(l.code || '').trim() === c);
     if (!line) return null;
-    const committed = (p.bills || []).filter(b => String(b.code || '').trim() === c && b.apId !== excludeApId).reduce((s, b) => s + this.billTotal(b), 0);
+    const committed = (p.bills || []).filter(b => String(b.code || '').trim() === c && b.apId !== excludeApId).reduce((s, b) => s + this.billNet(b), 0);
     return this._r2(this.lineCurrent(line, p) - committed);
   }
 
@@ -17854,8 +17859,9 @@ class Component extends DCLogic {
     const proj = p || this.proj(this.state.pid) || {};
     // what each bill's payment records say, as the Commitments table shows it - not the stored number, which goes
     // stale when an amount or GST is changed after paying
-    const fromBills = this.lineBills(l, proj).reduce((s, b) => s + this.billPaid(b), 0);
-    const fromClaims = this._lineClaimsUnbilled(l, proj).filter(c => c.status === 'paid').reduce((s, c) => s + this.claimTotal(c), 0);
+    // before GST, like the budget: the share of each payment that was not GST
+    const fromBills = this.lineBills(l, proj).reduce((s, b) => s + this.billPaidNet(b), 0);
+    const fromClaims = this._lineClaimsUnbilled(l, proj).filter(c => c.status === 'paid').reduce((s, c) => s + this.claimNet(c), 0);
     return fromBills + fromClaims;
   }
   onBillVendor(id, val, typed) {
@@ -20101,7 +20107,7 @@ class Component extends DCLogic {
       if (showDashboard) { pageTitle = p.name; pageStatus = { show: true, ...sm }; pageSub = p.client + ' · ' + p.code; crumb2 = 'Dashboard'; if (this.can('projectSetup', 'edit')) primaryAction = { show: true, label: '＋ Insert main contract', onClick: () => this.openContractModal() }; }
       if (showCommitments) { pageTitle = 'Financial'; pageSub = 'Subcontracts, purchase orders & progress claims — ' + p.name; crumb2 = 'Financial'; if (this.can('agreements', 'edit')) primaryAction = { show: true, label: '＋ Add subcontract', onClick: () => this.openSubCreate() }; }
       if (showBills) { crumb2 = 'Financial'; }
-      if (showCost) { pageTitle = 'Financial'; pageSub = 'Budget — budget vs committed vs actual vs forecast — ' + p.name; crumb2 = 'Financial'; }
+      if (showCost) { pageTitle = 'Financial'; pageSub = 'Budget — budget vs committed vs actual vs forecast, all before GST — ' + p.name; crumb2 = 'Financial'; }
       if (showInvoices) { pageTitle = 'Financial'; pageSub = 'Client Invoices — customer billing & receivables — ' + p.name; crumb2 = 'Financial'; }
       if (showClientVars) { pageTitle = 'Financial'; pageSub = 'Client Variations — change orders sent to the client for approval — ' + p.name; crumb2 = 'Client'; }
       if (showCostVars) { pageTitle = 'Financial'; pageSub = 'Variations — change orders on the cost side — ' + p.name; crumb2 = 'Financial'; }
