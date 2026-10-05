@@ -12019,6 +12019,9 @@ class Component extends DCLogic {
     inv.dueDate = f.dueDate || '';
     inv.poRef = f.poRef || '';
     inv.bsb = f.bsb || ''; inv.acct = f.acct || '';
+    // whatever the document left out of subtotal / GST / total is worked out from what it gave
+    if (f.subtotal != null && f.total == null) { const r = this._apGstRate(inv) / 100; if (f.gst == null) f.gst = this._r2(f.subtotal * r); f.total = this._r2(f.subtotal + f.gst); }
+    else if (f.total != null && f.subtotal == null) { const r = this._apGstRate(inv) / 100; if (f.gst == null) f.gst = this._r2(f.total - f.total / (1 + r)); f.subtotal = this._r2(f.total - f.gst); }
     inv.subtotal = f.subtotal != null ? f.subtotal : 0;
     inv.gst = f.gst != null ? f.gst : 0;
     inv.total = f.total != null ? f.total : 0;
@@ -12216,6 +12219,20 @@ class Component extends DCLogic {
     const lim = this._num((this.apSettings().approvalLimits || {})[u.role]);
     return lim > 0 && this.apTotal(inv) > lim;
   }
+  // The GST rate an invoice is worked out at: its project's, else 10%.
+  _apGstRate(inv) { const p = inv && inv.pid ? this.proj(inv.pid) : null; const r = p && String(p.gstRate == null ? '' : p.gstRate).trim() !== '' ? this._num(p.gstRate) : 10; return r >= 0 ? r : 10; }
+  // Given which of subtotal / GST / total was just set, the other two that follow from it.
+  _apSums(inv, field, v) {
+    const r = this._apGstRate(inv) / 100;
+    const sub = this._num(inv.subtotal), gst = this._num(inv.gst);
+    if (field === 'subtotal') { const g = this._r2(v * r); return { subtotal: v, gst: g, total: this._r2(v + g) }; }
+    if (field === 'gst') return { gst: v, total: this._r2(sub + v) };
+    if (field === 'total') {
+      if (!sub) { const s2 = this._r2(v / (1 + r)); return { total: v, subtotal: s2, gst: this._r2(v - s2) }; }
+      return { total: v, gst: this._r2(v - sub) };
+    }
+    return {};
+  }
   setApField(id, field, val) {
     const inv = this.apInv(id);
     if (!inv || this.apLocked(inv) || !this.can('apInvoices', 'edit')) return;
@@ -12231,7 +12248,11 @@ class Component extends DCLogic {
       if (inv.status === 'coded') patch.status = 'approved';
       if (!val) { patch.status = 'unallocated'; patch.assignedTo = inv.assignedTo || this.apOwnerFor(inv); }
     }
-    if (['subtotal', 'gst', 'total'].indexOf(field) >= 0) patch[field] = this._num(val);
+    if (['subtotal', 'gst', 'total'].indexOf(field) >= 0) {
+      patch[field] = this._num(val);
+      // a cleared box clears nothing else; a figure brings the other two with it
+      if (String(val == null ? '' : val).trim() !== '') Object.assign(patch, this._apSums(inv, field, this._num(val)));
+    }
     this._apCommit(id, patch, 'Field edited', field + ': ' + (old == null || old === '' ? '(blank)' : old) + ' → ' + (val === '' ? '(blank)' : val));
   }
   // Giving a project to an invoice that has none is the act this permission governs.
