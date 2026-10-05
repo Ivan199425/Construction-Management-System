@@ -6628,7 +6628,14 @@ class Component extends DCLogic {
   // being typed into, keyed off editCell the way the budget columns already work.
   // Blank stays blank - an empty claim must not read as $0.00.
   _mdisp(key, raw) {
-    if ((this.state.editCell || "") === key) return String(raw == null ? "" : raw);
+    if ((this.state.editCell || "") === key) {
+      // what was typed, not the number it was saved as - "100." must stay "100." until the 4 and 6 arrive
+      const t = this.state.editText;
+      if (t && t.key === key) return t.txt;
+      // a saved number shows to the cent, not as 39.03454545454548
+      if (typeof raw === "number") return isFinite(raw) ? String(this._r2(raw)) : "";
+      return String(raw == null ? "" : raw);
+    }
     if (raw === null || raw === undefined || raw === "") return "";
     return this.money(this._r2(Number(raw) || 0));
   }
@@ -18141,8 +18148,10 @@ class Component extends DCLogic {
     if (!this.can('financial', 'edit')) return;
     this.setState(s => ({ projects: s.projects.map(p => p.id !== s.pid ? p : { ...p, costLines: p.costLines.map(l => l.id === id ? { ...l, [field]: raw } : l) }) }));
   }
-  startEdit(key) { this.setState({ editCell: key }); }
-  endEdit() { this.setState({ editCell: '' }); }
+  startEdit(key) { this.setState({ editCell: key, editText: null }); }
+  endEdit() { this.setState({ editCell: '', editText: null }); }
+  // the text of a money box while it is being typed in, for boxes whose figure is saved as a number
+  typeEdit(key, txt) { this.setState({ editCell: key, editText: { key, txt: String(txt == null ? '' : txt) } }); }
   // ----- Budget: resizable columns (widths persisted per browser, across projects) -----
   _budgetColDefs() { return [{ id: 'parentCode', label: 'Parent code', align: 'left', w: 130 }, { id: 'code', label: 'Child code', align: 'left', w: 96 }, { id: 'desc', label: 'Description', align: 'left', w: 220 }, { id: 'cat', label: 'Category', align: 'left', w: 128 }, { id: 'orig', label: 'Budgeted', align: 'right', w: 122 }, { id: 'adj', label: 'Approved change', align: 'right', w: 130 }, { id: 'revised', label: 'Revised budget', align: 'right', w: 136 }, { id: 'committed', label: 'Committed', align: 'right', w: 150 }, { id: 'actual', label: 'Actual', align: 'right', w: 122 }, { id: 'prog', label: '% complete', align: 'right', w: 104 }, { id: 'cpi', label: 'CPI', align: 'right', w: 84 }, { id: 'ftc', label: 'FTC', align: 'right', w: 118 }, { id: 'eac', label: 'Est. at completion', align: 'right', w: 138 }, { id: 'variance', label: 'Variance', align: 'right', w: 122 }, { id: 'pct', label: '% spent', align: 'right', w: 96 }, { id: 'del', label: '', align: 'left', w: 42 }]; }
   // ---- Column layouts, kept against the signed-in user ------------------------------------------
@@ -23166,9 +23175,9 @@ class Component extends DCLogic {
           dueDate: fld('dueDate', 'Due date'),
           poRef: fld('poRef', 'PO / order reference'),
           bsb: fld('bsb', 'BSB'), acct: fld('acct', 'Account number'),
-          subtotal: { value: this._mdisp(x.id + ':subtotal', x.subtotal), onInput: e => this.setApField(x.id, 'subtotal', e.target.value), onFocus: () => this.startEdit(x.id + ':subtotal'), onBlur: () => this.endEdit(), border: lowBorder('subtotal'), bg: lowBg('subtotal') },
-          gst: { value: this._mdisp(x.id + ':gst', x.gst), onInput: e => this.setApField(x.id, 'gst', e.target.value), onFocus: () => this.startEdit(x.id + ':gst'), onBlur: () => this.endEdit(), border: lowBorder('gst'), bg: lowBg('gst') },
-          total: { value: this._mdisp(x.id + ':total', x.total), onInput: e => this.setApField(x.id, 'total', e.target.value), onFocus: () => this.startEdit(x.id + ':total'), onBlur: () => this.endEdit(), border: lowBorder('total'), bg: lowBg('total') },
+          subtotal: { value: this._mdisp(x.id + ':subtotal', x.subtotal), onInput: e => { this.typeEdit(x.id + ':subtotal', e.target.value); this.setApField(x.id, 'subtotal', e.target.value); }, onFocus: () => this.startEdit(x.id + ':subtotal'), onBlur: () => this.endEdit(), border: lowBorder('subtotal'), bg: lowBg('subtotal') },
+          gst: { value: this._mdisp(x.id + ':gst', x.gst), onInput: e => { this.typeEdit(x.id + ':gst', e.target.value); this.setApField(x.id, 'gst', e.target.value); }, onFocus: () => this.startEdit(x.id + ':gst'), onBlur: () => this.endEdit(), border: lowBorder('gst'), bg: lowBg('gst') },
+          total: { value: this._mdisp(x.id + ':total', x.total), onInput: e => { this.typeEdit(x.id + ':total', e.target.value); this.setApField(x.id, 'total', e.target.value); }, onFocus: () => this.startEdit(x.id + ':total'), onBlur: () => this.endEdit(), border: lowBorder('total'), bg: lowBg('total') },
           totalDisplay: this.apMoney(this.apTotal(x)),
           // allocation
           pid: x.pid || '', projectOptions: _apProjOpts, onProject: e => this.apSetProject(x.id, e.target.value),
@@ -23239,7 +23248,7 @@ class Component extends DCLogic {
             codeBorder: a.code ? '#e4e8ee' : '#eddcc0', codeBg: a.code ? '#fff' : '#fbf1e3',
             desc: a.desc || '', onDesc: e => this.setApAllocField(x.id, a.id, 'desc', e.target.value),
             amount: this._mdisp(a.id + ':amount', a.amount),
-            onAmount: e => this.setApAllocField(x.id, a.id, 'amount', e.target.value),
+            onAmount: e => { this.typeEdit(a.id + ':amount', e.target.value); this.setApAllocField(x.id, a.id, 'amount', e.target.value); },
             onAmountFocus: () => this.startEdit(a.id + ':amount'), onCellBlur: () => this.endEdit(),
             budgetLeft: left == null ? '—' : this.money(left),
             budgetColor: left == null ? '#6b7787' : (over ? '#b91c1c' : (left < 0 ? '#b91c1c' : '#4a5765')),
